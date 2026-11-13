@@ -6,6 +6,11 @@ const plans = new Map<string, PlanTask>()
 export const seedPlanTask = (seed: PlanTask) => plans.set(seed.taskId, seed)
 export const resetPlans = () => plans.clear()
 
+/** F4-3 接线：plans 域内该任务的权威计划视图（confirm/execute 的变更落在本域）。
+ *  taskDetail 以此合并 plan/confirmation——消费方（助手端计划卡）读单一任务详情即可取到最新凭据；
+ *  未登记（未 seed 的任务）返回 undefined，任务详情退回自带 plan。 */
+export const planAuthorityOf = (taskId: string) => plans.get(taskId)?.plan
+
 /** POST plans：baseRevision CAS——过期 409 PLAN_REVISION_CONFLICT；修订追加，旧确认凭据不继承。 */
 export function appendPlanRevision(taskId: string, req: { requestId: string; baseRevision: number }):
   { planId: string; revision: number; digest: string; validationStatus: string } | { error: string; httpStatus: number } {
@@ -32,9 +37,9 @@ export function confirmPlan(taskId: string, req: { requestId: string; digest: st
 export function executePlan(taskId: string, req: { requestId: string; planId: string; revision: number; digest: string }):
   { executionTaskId: string; pinnedRevision: number; pinnedDigest: string } | { error: string; httpStatus: number; userMessage: string } {
   const task = plans.get(taskId)
-  if (!task) return { error: "TASK_NOT_FOUND", httpStatus: 404 }
-  if (task.plan.digest !== req.digest) return { error: "PLAN_DIGEST_CHANGED", httpStatus: 409 }
-  if (task.plan.validationStatus !== "VALID") return { error: "PLAN_NOT_VALID", httpStatus: 409 }
+  if (!task) return { error: "TASK_NOT_FOUND", httpStatus: 404, userMessage: "任务不存在或不可见" }
+  if (task.plan.digest !== req.digest) return { error: "PLAN_DIGEST_CHANGED", httpStatus: 409, userMessage: "计划版本已变化，请基于最新版本重新操作" }
+  if (task.plan.validationStatus !== "VALID") return { error: "PLAN_NOT_VALID", httpStatus: 409, userMessage: "所选版本校验未通过" }
   if (task.plan.confirmation.state !== "CONFIRMED_VALID")
     return { error: "PLAN_NOT_CONFIRMED", httpStatus: 409, userMessage: "所选版本未确认或凭据已过期，请重新确认" }
   return { executionTaskId: `task-demo-exec-${req.revision}`, pinnedRevision: req.revision, pinnedDigest: req.digest }

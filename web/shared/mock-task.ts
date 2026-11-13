@@ -1,4 +1,5 @@
 /** T2-14 mock 契约（泳道 L4 首卡）：任务域——POST /v1/apps/{code}/tasks、详情/事件游标。仅 demo 装载（§5.4）。 */
+import { planAuthorityOf } from "./mock-plan"
 export type TaskMode = "PLAN" | "AGENT"
 export type TaskState =
   | "ACCEPTED" | "PLANNING" | "PLAN_READY" | "NEEDS_INPUT" | "WAITING_DEPENDENCIES" | "QUEUED"
@@ -96,7 +97,51 @@ export function taskEvents(taskId: string, afterSeq = 0, limit = 200):
 export const taskDetail = (taskId: string) => {
   const t = tasks.get(taskId)
   if (!t) return null
-  const canConfirm = t.plan?.confirmation.state !== "CONFIRMED_VALID"
-  return { ...t, canConfirm, canExecute: t.plan?.confirmation.state === "CONFIRMED_VALID" && t.plan.validationStatus === "VALID",
+  // F4-3：plan 域（mock-plan）经确认/执行变更后的权威视图合并进详情（接口稿 §5.2——
+  // 任务详情的 plan.confirmation/canConfirm/canExecute 与确认端点同一事实源）；
+  // plans 域未登记的任务退回自带 plan（T2-14 语义不变）。
+  const plan = planAuthorityOf(taskId) ?? t.plan
+  const canConfirm = plan?.confirmation.state !== "CONFIRMED_VALID"
+  return { ...t, plan, canConfirm, canExecute: plan?.confirmation.state === "CONFIRMED_VALID" && plan.validationStatus === "VALID",
     availableActions: availableActions(t.state), eventWatermark: t.events.at(-1)?.seq ?? 0 }
+}
+
+/** F4-2/F4-3 demo 驱动（仅演示）：推进一条演示任务一批事件并前移状态——
+ *  真实增量由服务端事件流驱动；此处只为 webapp 任务卡演示 taskEvents 游标增量消费。
+ *  PLAN 任务到达 PLAN_READY 时附带演示步骤并给出 UNCONFIRMED 计划（确认→执行闭环经 mock-plan）。 */
+export function demoAdvanceTask(taskId: string): MockTaskSeed | null {
+  const t = tasks.get(taskId)
+  if (!t || terminal(t.state) || t.state === "PLAN_READY") return t ?? null
+  const seq = (t.events.at(-1)?.seq ?? 0) + 1
+  if (t.mode === "PLAN") {
+    t.state = "PLAN_READY"
+    t.plan = { planId: `plan-${taskId}`, revision: 1, digest: "dg1", validationStatus: "VALID",
+      confirmation: { state: "UNCONFIRMED" } }
+    t.steps = [{ stepId: "collect_obs", state: "PENDING" }, { stepId: "plan_sequence", state: "PENDING" }]
+    t.events.push({ seq, type: "PLAN_VALIDATED", data: { revision: 1 } })
+    return t
+  }
+  if (t.state === "QUEUED") {
+    t.state = "RUNNING"
+    t.steps = [{ stepId: "demo_step", state: "RUNNING" }]
+    t.events.push({ seq, type: "STEP_STARTED", data: { stepId: "demo_step" } })
+    return t
+  }
+  t.state = "SUCCEEDED"
+  t.steps = t.steps.map((s) => ({ ...s, state: "SUCCEEDED", resultDigest: s.resultDigest ?? "de10" }))
+  t.events.push({ seq, type: "STEP_FINISHED", data: { stepId: t.steps.at(-1)?.stepId ?? "demo_step" } })
+  t.events.push({ seq: seq + 1, type: "TASK_FINISHED", data: { state: "SUCCEEDED" } })
+  return t
+}
+
+/** F4-3 demo 驱动（仅演示）：executePlan 受理后注册关联执行任务（RUNNING），供执行进度卡消费同源事件。 */
+export function demoCreateExecTask(executionTaskId: string, sourceTaskId: string): MockTaskSeed {
+  const source = tasks.get(sourceTaskId)
+  const task: MockTaskSeed = { taskId: executionTaskId, appCode: source?.appCode ?? "satellite-planning-assistant",
+    mode: "AGENT", purpose: "EXECUTE", state: "RUNNING", goal: source?.goal ?? "计划执行", principalId: "u-demo",
+    createdAt: new Date().toISOString(), stateVersion: 1, demo: true,
+    steps: [{ stepId: "exec_step", state: "RUNNING" }], recovery: null,
+    events: [{ seq: 1, type: "TASK_ACCEPTED", data: {} }, { seq: 2, type: "STEP_STARTED", data: { stepId: "exec_step" } }] }
+  tasks.set(executionTaskId, task)
+  return task
 }
