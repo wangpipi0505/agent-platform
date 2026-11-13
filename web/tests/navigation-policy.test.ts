@@ -24,11 +24,12 @@ const routerSource = readFileSync(
   "utf8",
 );
 
-it("单一来源：主入口（C0-1 裁剪后 15 个）与全部页面登记齐全且字段完整", () => {
+it("单一来源：主入口（F3-1 起任务工作台，共 16 个）与全部页面登记齐全且字段完整", () => {
   const menu = menuEntries();
-  // C0-1 裁剪：接入模板/语义与目标两条挂起线移出菜单（主方案 §2.1），17→15。
-  expect(menu.length).toBe(15);
-  expect(new Set(menu.map((e) => e.path)).size).toBe(15);
+  // C0-1 裁剪：接入模板/语义与目标两条挂起线移出菜单（主方案 §2.1），17→15；
+  // F3-1：任务工作台（方案 §5.3 管理台侧）入「任务与运行」组菜单，15→16。
+  expect(menu.length).toBe(16);
+  expect(new Set(menu.map((e) => e.path)).size).toBe(16);
   for (const entry of pageAccess) {
     expect(entry.title.length, entry.key).toBeGreaterThan(0);
     expect(entry.area.length, entry.key).toBeGreaterThan(0);

@@ -55,6 +55,9 @@ export const pageAccess: PageAccessEntry[] = [
   { key: "runs", path: "/runs", title: "运行监控", area: "任务与运行", read: "session", write: "", menu: true },
   { key: "run-detail", path: "/runs", route: "/runs/:runId", title: "运行详情", area: "任务与运行", read: "session", write: "", menu: false },
   { key: "services", path: "/services", title: "服务管理", area: "任务与运行", read: "session", write: "admin", menu: true },
+  // F3-1：任务工作台（方案 §5.3 管理台侧=监控与运维；任务发起入口在助手端 F4-2，本页只读+处置）——
+  // 追加式条目，既有行不重排；恢复/取消/对账处置按 §5.3 属授权 OPERATOR 语境，write 仅登记按钮上下文。
+  { key: "tasks", path: "/tasks", title: "任务工作台", area: "任务与运行", read: "session", write: "operator", menu: true },
   // ③ 构建资产（BUILDER/ADMIN：技能库/提示词模板；画布流程在工作区内，无独立菜单）
   { key: "skills", path: "/skills", title: "技能库", area: "构建资产", read: "session", write: "builder", menu: true },
   { key: "skill-detail", path: "/skills", route: "/skills/:code", title: "技能详情", area: "构建资产", read: "session", write: "builder", menu: false },
