@@ -126,4 +126,37 @@ class IntegrationPolicyTest {
         assertThat(IntegrationPolicy.digest(node)).isEqualTo(Digest.sha256(Json.canonical(Map.of("secretRef",node.path("secretRef"),"claimLimits",node.path("claimLimits"),"allowedOrigins",node.path("allowedOrigins")))));
         assertThat(IntegrationPolicy.allowedPath("/internal/iam/integration-policy/resolve","POST","ops")).isFalse();
     }
+
+    /** T2-15：任务域四端点白名单——逐路径断言放行与拒绝（与 authority 目录行一一对应）。 */
+    @Test
+    void taskDomainWhitelistsOnlyTheFourServiceEndpoints() {
+        // 白名单内四端点（首期仅 AGENT——mode=PLAN 由引擎 Tasks.create 外部 caller 分支拒绝并审计）。
+        assertThat(IntegrationPolicy.allowedPath("/v1/apps/ops/tasks", "POST", "ops")).isTrue();
+        assertThat(IntegrationPolicy.allowedPath("/v1/apps/other/tasks", "POST", "ops")).isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123", "GET", "ops")).isTrue();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/events", "GET", "ops")).isTrue();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/result", "GET", "ops")).isTrue();
+        // 白名单外：cancel/resume/execute/plans/对账/步骤调用/SSE 一律不放行。
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/cancel", "POST", "ops")).isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/resume", "POST", "ops")).isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/execute", "POST", "ops")).isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/plans", "POST", "ops")).isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/plans/p1/revisions/1", "GET", "ops"))
+                .isFalse();
+        assertThat(
+                        IntegrationPolicy.allowedPath(
+                                "/v1/tasks/123/plans/p1/revisions/1/confirm", "POST", "ops"))
+                .isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/steps/entry/calls", "GET", "ops"))
+                .isFalse();
+        assertThat(
+                        IntegrationPolicy.allowedPath(
+                                "/v1/tasks/123/steps/entry/calls/7/reconcile", "POST", "ops"))
+                .isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/events/stream", "GET", "ops"))
+                .isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/result", "POST", "ops")).isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/v1/tasks/123/results", "GET", "ops")).isFalse();
+        assertThat(IntegrationPolicy.allowedPath("/admin/tasks/123", "GET", "ops")).isFalse();
+    }
 }

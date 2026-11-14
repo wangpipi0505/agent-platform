@@ -78,6 +78,40 @@ class IntegrationSecurityTest {
                     exchange.getResponseBody().write(json);
                     exchange.close();
                 });
+        // T2-15：任务面夹具——绑定应用内/其他应用/引擎 404 三种详情响应（任务应用绑定核验用）。
+        fixture.createContext(
+                "/v1/tasks/t1",
+                exchange -> {
+                    byte[] json =
+                            Json.write(ApiResponse.ok(Map.of("taskId", "t1", "appCode", "ops")))
+                                    .getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, json.length);
+                    exchange.getResponseBody().write(json);
+                    exchange.close();
+                });
+        fixture.createContext(
+                "/v1/tasks/t9",
+                exchange -> {
+                    byte[] json =
+                            Json.write(ApiResponse.ok(Map.of("taskId", "t9", "appCode", "other")))
+                                    .getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, json.length);
+                    exchange.getResponseBody().write(json);
+                    exchange.close();
+                });
+        fixture.createContext(
+                "/v1/tasks/t404",
+                exchange -> {
+                    byte[] json =
+                            Json.write(ApiResponse.error(404, "TASK_NOT_FOUND", "任务不存在或无权读取"))
+                                    .getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(404, json.length);
+                    exchange.getResponseBody().write(json);
+                    exchange.close();
+                });
         fixture.createContext(
                 "/v1/apps/ops/runs",
                 exchange -> {
@@ -134,6 +168,12 @@ class IntegrationSecurityTest {
                                         "AGENT_JWT_SECRET",
                                         "abcdefghijklmnopqrstuvwxyz0123456789-TEST-ONLY"));
         System.setProperty("agent.jwt.secret", "abcdefghijklmnopqrstuvwxyz0123456789-TEST-ONLY");
+        // T2-15 修复既有装配漂移：EX-43 后 agent.security.mode 为启动必填（IntegrationHostTicketTest
+        // 同款四项），本类此前缺声明导致 SpringBootTest 上下文 SECURITY_MODE_REQUIRED 全员报错。
+        properties.add("agent.security.mode", () -> "dev-hmac");
+        properties.add("agent.security.service-id", () -> "gateway");
+        properties.add("agent.dev-auth", () -> "true");
+        properties.add("server.address", () -> "127.0.0.1");
         properties.add("agent.services.app", () -> base);
         properties.add("agent.services.engine", () -> base);
     }
@@ -230,6 +270,31 @@ class IntegrationSecurityTest {
                 .andExpect(status().isForbidden());
         mvc.perform(get("/v1/runs/other_run").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
+    }
+
+    /**
+     * T2-15：任务面四端点白名单全栈核验——绑定应用内详情透传；白名单外 cancel 403（不触达上游）；
+     * 其他应用任务 403 APP_BINDING_DENIED；引擎 404 收敛为 404 TASK_NOT_FOUND 不泄露存在性。
+     */
+    @Test
+    void serviceTicketTaskSurfaceIsLimitedToWhitelistedEndpointsAndBoundApp() throws Exception {
+        String token = ticket();
+        mvc.perform(get("/v1/tasks/t1").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.appCode").value("ops"));
+        mvc.perform(
+                        post("/v1/tasks/t1/cancel")
+                                .header("Authorization", "Bearer " + token)
+                                .contentType("application/json")
+                                .content("{}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("APP_BINDING_DENIED"));
+        mvc.perform(get("/v1/tasks/t9").header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("APP_BINDING_DENIED"));
+        mvc.perform(get("/v1/tasks/t404").header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TASK_NOT_FOUND"));
     }
 
     @Test

@@ -607,9 +607,9 @@
   "action": "proxy.engine.post.TaskController.create",
   "mode": "delegated",
   "integrationAllowed": true,
-  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:17",
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:32",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
-  "reason": "T2-2 任务受理（SERVICE 首期仅 AGENT，票据面另行约束）"
+  "reason": "T2-2 任务受理（T2-15：SERVICE 票据面首期仅 AGENT，引擎 Tasks.create 外部 caller 分支强制并审计）"
  },
  {
   "method": "GET",
@@ -618,10 +618,10 @@
   "target": "engine",
   "action": "proxy.engine.get.TaskController.detail",
   "mode": "delegated",
-  "integrationAllowed": false,
-  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:23",
+  "integrationAllowed": true,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:39",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
-  "reason": "T2-2 任务详情"
+  "reason": "T2-2 任务详情（T2-15 对 SERVICE 开放：凭据绑定主体归属，他人任务 404）"
  },
  {
   "method": "GET",
@@ -630,10 +630,10 @@
   "target": "engine",
   "action": "proxy.engine.get.TaskController.events",
   "mode": "delegated",
-  "integrationAllowed": false,
-  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:29",
+  "integrationAllowed": true,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:45",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
-  "reason": "T2-2 任务事件增量"
+  "reason": "T2-2 任务事件增量（T2-15 对 SERVICE 开放：凭据绑定主体归属）"
  },
  {
   "method": "GET",
@@ -645,7 +645,7 @@
   "integrationAllowed": false,
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:54",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
-  "reason": "T2-11 任务事件 SSE"
+  "reason": "T2-11 任务事件 SSE（T2-15 不入外部白名单）"
  },
  {
   "method": "POST",
@@ -655,9 +655,9 @@
   "action": "proxy.engine.post.TaskController.cancel",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:35",
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:63",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
-  "reason": "T2-2 任务取消"
+  "reason": "T2-2 任务取消（T2-15 不入外部白名单：网关 403 并记审计）"
  },
  {
   "method": "POST",
@@ -667,9 +667,93 @@
   "action": "proxy.engine.post.TaskController.resume",
   "mode": "delegated",
   "integrationAllowed": false,
-  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:41",
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:69",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
-  "reason": "T2-2 任务恢复"
+  "reason": "T2-2 任务恢复（T2-15 不入外部白名单：网关 403 并记审计）"
+ },
+ {
+  "method": "GET",
+  "template": "/v1/tasks/{taskId}/result",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.result",
+  "mode": "delegated",
+  "integrationAllowed": true,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:130",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-15 任务结果读取（首版形状：result=null+resultSummary=goal 摘要+artifacts=[]；T2-13 结果读回接线后承载无附件完整输出）"
+ },
+ {
+  "method": "GET",
+  "template": "/v1/tasks/{taskId}/steps/{stepId}/calls",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.stepCalls",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:84",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-2/T2-12 步骤调用列表（补登记基线缺失目录行；集成面不放行）"
+ },
+ {
+  "method": "POST",
+  "template": "/v1/tasks/{taskId}/steps/{stepId}/calls/{callId}/reconcile",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.reconcile",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:74",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-12 调用级对账提交（补登记基线缺失目录行；集成面不放行）"
+ },
+ {
+  "method": "POST",
+  "template": "/v1/tasks/{taskId}/plans",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.appendPlan",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:95",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-3 计划修订追加（补登记基线缺失目录行；集成面不放行）"
+ },
+ {
+  "method": "GET",
+  "template": "/v1/tasks/{taskId}/plans/{planId}/revisions/{revision}",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.planRevision",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:101",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-3 修订读（补登记基线缺失目录行；集成面不放行）"
+ },
+ {
+  "method": "POST",
+  "template": "/v1/tasks/{taskId}/plans/{planId}/revisions/{revision}/confirm",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.confirmPlan",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:110",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-3 计划版本级确认（补登记基线缺失目录行；集成面不放行）"
+ },
+ {
+  "method": "POST",
+  "template": "/v1/tasks/{taskId}/execute",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.executePlan",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:120",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-3 选定计划执行（补登记基线缺失目录行；集成面不放行）"
  },
  {
   "method": "GET",

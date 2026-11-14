@@ -219,8 +219,21 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
                         .equals(jwt.getClaimAsString("policy_digest")))
             throw new PlatformException(401, "INTEGRATION_TICKET_EXPIRED", "集成授权已变更，请重新出票");
         String path = req.getRequestURI();
-        if (!IntegrationPolicy.allowedPath(path, req.getMethod(), app))
-            throw new PlatformException(403, "APP_BINDING_DENIED", "出票仅可访问绑定应用的运行接口");
+        if (!IntegrationPolicy.allowedPath(path, req.getMethod(), app)) {
+            // T2-15：白名单外路径 403 并记审计（照 IntegrationRateLimit 超限审计行——凭据标识+
+            // 主体+路径，绝无密钥本体），满足"SERVICE 票据调 cancel/resume/execute→403 并记录"。
+            org.slf4j.LoggerFactory.getLogger(IntegrationAccess.class)
+                    .warn(
+                            "AUDIT INTEGRATION_PATH_FORBIDDEN credential={} tenant={} principal={} app={} method={} path={} traceId={}",
+                            id,
+                            actor.tenantId(),
+                            actor.principalId(),
+                            app,
+                            req.getMethod(),
+                            path,
+                            org.slf4j.MDC.get("traceId"));
+            throw new PlatformException(403, "APP_BINDING_DENIED", "出票仅可访问绑定应用的已登记接口");
+        }
         // 票据代理放行计一次；直连ApiKey请求已在 authenticate 出票时计数并打标，此处去重。
         if (!Boolean.TRUE.equals(req.getAttribute(IntegrationRateLimit.METERED_ATTRIBUTE)))
             rateLimit.admit(id.longValue(), null, path);
@@ -236,6 +249,26 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
                             .path("data");
             if (!app.equals(run.path("appCode").asText()))
                 throw new PlatformException(403, "APP_BINDING_DENIED", "运行不属于出票绑定应用");
+        }
+        if (path.startsWith("/v1/tasks/")) {
+            // T2-15：任务路径与 /v1/runs/ 同一应用绑定机制——同一业务主体在不同应用凭据下
+            // 派生的 principal 相同（IntegrationClaims.principal(biz,user)），仅凭 principal
+            // 归属挡不住跨应用读取；引擎 404（非凭据绑定主体）收敛为 TASK_NOT_FOUND 不泄露存在性。
+            String taskId = path.substring("/v1/tasks/".length()).split("/")[0];
+            JsonNode task;
+            try {
+                task =
+                        client.get()
+                                .uri(engineUrl + "/v1/tasks/" + taskId)
+                                .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+                                .retrieve()
+                                .body(JsonNode.class)
+                                .path("data");
+            } catch (org.springframework.web.client.HttpClientErrorException notOwned) {
+                throw new PlatformException(404, "TASK_NOT_FOUND", "任务不存在或无权读取");
+            }
+            if (!app.equals(task.path("appCode").asText()))
+                throw new PlatformException(403, "APP_BINDING_DENIED", "任务不属于出票绑定应用");
         }
     }
 
