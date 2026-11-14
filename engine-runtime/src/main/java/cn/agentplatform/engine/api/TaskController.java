@@ -50,6 +50,15 @@ public class TaskController {
     return ApiResponse.ok(tasks.events(taskId, afterSeq, limit, Actor.current()));
   }
 
+  /** T2-11（接口稿 §7）：任务事件 SSE——Last-Event-ID 排他续读，15s :ping，断开不取消任务。 */
+  @GetMapping("/v1/tasks/{taskId}/events/stream")
+  public org.springframework.web.servlet.mvc.method.annotation.SseEmitter stream(
+          @PathVariable("taskId") long taskId,
+          @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,
+          @RequestParam(value = "Last-Event-ID", required = false) String lastEventIdParam) {
+    return tasks.eventStream(taskId, lastEventId, lastEventIdParam, Actor.current());
+  }
+
   /** POST /v1/tasks/{taskId}/cancel：取消（终态幂等）。 */
   @PostMapping("/v1/tasks/{taskId}/cancel")
   public Object cancel(@PathVariable("taskId") long taskId, @RequestBody(required = false) JsonNode req) {
