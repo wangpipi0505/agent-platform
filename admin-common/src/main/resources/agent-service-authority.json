@@ -864,6 +864,18 @@
   "reason": ""
  },
  {
+  "method": "GET",
+  "template": "/v1/sessions/{id}/subagents",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.SubagentCatalogController.subagents",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/SubagentCatalogController.java:25",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
   "method": "POST",
   "template": "/admin/apps/{code}/sessions",
   "caller": "gateway",
