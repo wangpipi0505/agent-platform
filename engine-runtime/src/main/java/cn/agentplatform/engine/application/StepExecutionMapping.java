@@ -209,8 +209,9 @@ public class StepExecutionMapping {
                             "select coalesce(selected_plan_revision_id,0) from engine.task where id=?",
                             Integer.class,
                             taskId);
-    return cn.agentplatform.engine.application.Tasks.Digest.sha256(
-            String.join(":", tenant, String.valueOf(taskId), String.valueOf(revision), stepId));
+    // T2-6 起共用单点公式（TaskDispatcher.dispatchKeyOf）——admit 锚点与分派三要素同键不漂移
+    return TaskDispatcher.dispatchKeyOf(
+            tenant, taskId, revision == null ? 0L : revision, stepId);
   }
 
   private String stepKind(long taskId, String stepId) {
