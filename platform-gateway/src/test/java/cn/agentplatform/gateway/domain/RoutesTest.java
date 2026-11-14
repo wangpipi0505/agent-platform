@@ -89,6 +89,18 @@ class RoutesTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    /** T2-7：子代理目录查询显式接线；/v1/sessions 其余子路径不存在（会话面在 apps 前缀下）。 */
+    @Test
+    void routesSubagentCatalogQueryToEngine() {
+        assertThat(Routes.service("/v1/sessions/s_1/subagents")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/v1/sessions/s_1"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/v1/sessions/s_1/secret"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/v1/sessions/"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
     @Test
     void routesTaskEventIncrementAndStreamSubpathsToEngine() {
         // T2-2/T2-11：任务事件增量与 SSE 子路径显式接线；其余未登记任务子路径仍拒绝。

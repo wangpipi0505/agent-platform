@@ -29,6 +29,11 @@ public final class Routes {
             return "engine";
         if (path.matches("/(?:admin|v1)/apps/[^/]+/sessions(?:/.*)?"))
             throw new IllegalArgumentException("此会话入口不存在");
+        // T2-7：子代理目录查询（接口稿 §5.3）——/v1/sessions/{id}/subagents 显式接线；
+        // TASK_INTERNAL 根会话经关联任务访问（不入本人会话列表），分角色可见由 engine 核验，
+        // 其余 /v1/sessions 入口不存在（会话面在 /v1/apps/{code}/sessions 前缀下）。
+        if (path.matches("/v1/sessions/[A-Za-z0-9_-]+/subagents")) return "engine";
+        if (path.matches("/v1/sessions/.*")) throw new IllegalArgumentException("此会话入口不存在");
         // A3-4：跨会话记忆——五条入口显式接线（列表/单条/保存/更新审批/撤销）；
         // 归属、读范围与写策略由 engine 按发布快照 memoryPolicy 核验，其余未登记子路径仍拒绝。
         // T2-2：任务域——受理（应用前缀）+ 详情/事件/取消/恢复/步骤调用（任务前缀）；

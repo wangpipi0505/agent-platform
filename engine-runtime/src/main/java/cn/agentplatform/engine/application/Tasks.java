@@ -216,6 +216,29 @@ public class Tasks {
     view.put("goal", task.get("goal"));
     view.put("principalId", task.get("principal_id"));
     view.put("createdAt", String.valueOf(task.get("created_at")));
+    // T2-7：父子任务关联投影（接口稿 §5.2 detail 形状 parentTaskId/role/subtasks——任务卡消费
+    // subtasks 保留任务视角的执行与合并状态；合并决定读 subtask_receipt）。
+    view.put(
+            "parentTaskId",
+            task.get("parent_task_id") == null
+                    ? null
+                    : store
+                            .db()
+                            .queryForObject(
+                                    "select public_id from engine.task where id=?",
+                                    String.class,
+                                    task.get("parent_task_id")));
+    view.put("role", task.get("role"));
+    view.put(
+            "subtasks",
+            store.db()
+                    .queryForList(
+                            "select c.public_id as task_id, c.role, c.state,"
+                                + " r.merged_decision as merged_decision"
+                                + " from engine.task c"
+                                + " left join engine.subtask_receipt r on r.child_task_id=c.id"
+                                + " where c.parent_task_id=? order by c.id",
+                            taskId));
     view.put("availableActions", availableActions(state, task));
     // 恢复事实（接口稿 §5.2）：读取最近一条 TASK_RESUMED 事件事实投影——从未恢复→null。
     // 角色投影：USER 仅 recoverySource/reasonCode/reasonSummary；OPERATOR/ADMIN 另见

@@ -35,6 +35,7 @@ C0-2 契约冻结（台账#C0-2），2026-11-13。
 | `APPROVAL_UNAVAILABLE` | 409 | BUSINESS | 审批通道不可用＝fail-closed 拒绝 |
 | `MEMORY_VERSION_CONFLICT` | 409 | BUSINESS | 记忆更新期望版本号过期 |
 | `STATE_VERSION_CONFLICT` | 409 | BUSINESS | 状态版本 CAS 不一致（§2 通用约定表；task/step/dispatch 终态提交等场景） |
+| `SUBAGENT_NO_VALID_CANDIDATE` | —（任务终态原因码） | BUSINESS | 全部规划子代理无有效候选时父任务 FAILED 原因码（主方案 §5.5；经 TASK_FINISHED 事件 reasonCode 与任务详情暴露，非 HTTP 响应码。T2-7 登记转正，接口稿 §2 回写随文档同步） |
 
 ## 3. 待登记区（主方案引用、尚未列入接口稿 §2 表——使用前须先回写接口稿 §2）
 
@@ -43,7 +44,7 @@ C0-2 契约冻结（台账#C0-2），2026-11-13。
 | code | 出处 | 拟用场景 | 状态 |
 | --- | --- | --- | --- |
 | `MODEL_SWITCH_COMPACTION_FAILED` | 主方案 §5.4 | 切换模型的窗口检查失败（按目标模型窗口检查历史，浓缩未完成即拒绝，保留原请求头） | 待登记（T2-9 使用前） |
-| `SUBAGENT_NO_VALID_CANDIDATE` | 主方案 §5.5（数据库稿 §4.2 subtask_receipt） | 全部规划子代理无有效候选时父任务 FAILED 原因码 | 待登记（T2-7 使用前） |
+| `SUBAGENT_NO_VALID_CANDIDATE` | 主方案 §5.5（数据库稿 §4.2 subtask_receipt） | 全部规划子代理无有效候选时父任务 FAILED 原因码 | 已登记 §2（T2-7，2026-11-14） |
 | `OUTPUT_SCHEMA_INVALID` | 主方案 §6.7（接口稿 §5.5 retry.on） | 模型输出 Schema 校验失败：既是 retry.on 重试条件值，也是 `OUTPUT_INVALID` 的诊断映射目标；写 `model_invocation.output_validation` | 待登记（T2-10 使用前） |
 | `PLAN_NOT_CONFIRMED` 引导链 | 接口稿 §5.2 | 前端收到后按确认权展示"重新确认所选版本"动作（非新错误码，行为约定） | 已在 §2 表，无需动作 |
 
