@@ -30,6 +30,12 @@ public class Tasks {
 
   private final TraceStore store;
 
+  // T2-11：活动任务事件 SSE 观察流（每连接一个泵；closeTaskStreams/@PreDestroy 收口）。
+  private final Set<TaskEventPump> taskStreams = java.util.concurrent.ConcurrentHashMap.newKeySet();
+  /** :ping 心跳间隔（接口稿 §7：15s）；独立部署可调，测试经反射改短（照 ChatSessions 先例）。 */
+  @org.springframework.beans.factory.annotation.Value("${agent.task.sse.heartbeat-millis:15000}")
+  long taskHeartbeatMillis = 15000;
+
   public Tasks(TraceStore store) {
     this.store = store;
   }
@@ -151,14 +157,7 @@ public class Tasks {
       view.put("recovery", null);
     } else {
       var payload = Json.read(String.valueOf(resumedRows.getFirst().get("payload")), JsonNode.class);
-      if (privileged(actor)) view.put("recovery", payload);
-      else {
-        var userView = new LinkedHashMap<String, Object>();
-        userView.put("recoverySource", payload.path("recoverySource").asText());
-        userView.put("reasonCode", payload.path("reasonCode").asText());
-        userView.put("reasonSummary", payload.path("reasonSummary").asText());
-        view.put("recovery", userView);
-      }
+      view.put("recovery", recoveryProjection(payload, privileged(actor)));
     }
     // 步骤投影（task_step）
     view.put(
@@ -179,9 +178,11 @@ public class Tasks {
     return view;
   }
 
-  /** 事件增量：nextAfterSeq=本页最后扫描 seq（不 +1）；truncated 如实（照接口稿事件游标口径）。 */
+  /** 事件增量：nextAfterSeq=本页最后扫描 seq（不 +1）；truncated 如实（照接口稿事件游标口径）。
+   *  T2-11：TASK_RESUMED 事件 data 与详情/resume 共用角色裁剪——USER 不见检查点与复用清单。 */
   public Map<String, Object> events(long taskId, long afterSeq, int limit, Actor actor) {
     ownedTask(taskId, actor);
+    boolean privileged = privileged(actor);
     var rows =
             store.db()
                     .queryForList(
@@ -195,11 +196,15 @@ public class Tasks {
     for (var row : rows) {
       long seq = ((Number) row.get("seq")).longValue();
       nextAfterSeq = seq;
+      String type = String.valueOf(row.get("type"));
+      var payload = Json.read(String.valueOf(row.get("payload")), JsonNode.class);
+      Object data =
+              "TASK_RESUMED".equals(type) ? recoveryProjection(payload, privileged) : payload;
       events.add(
               Map.of(
                       "seq", seq,
-                      "type", String.valueOf(row.get("type")),
-                      "data", Json.read(String.valueOf(row.get("payload")), JsonNode.class),
+                      "type", type,
+                      "data", data,
                       "occurredAt", String.valueOf(row.get("created_at"))));
     }
     Long watermark =
@@ -210,6 +215,168 @@ public class Tasks {
                             taskId);
     boolean truncated = watermark != null && watermark > nextAfterSeq;
     return Map.of("taskId", taskId, "events", events, "nextAfterSeq", nextAfterSeq, "truncated", truncated);
+  }
+
+  /**
+   * T2-11（接口稿 §7）：任务事件 SSE——text/event-stream，帧 {@code id=<seq> event=<type>
+   * data=<角色投影后 json>}。Last-Event-ID（头优先、缺省取同名 query 参数）排他续读
+   * （{@code seq > id}，与 §5.2 afterSeq 游标同一语义）；TASK_RESUMED 帧按角色投影裁剪后出帧
+   * （与详情/events 同一 {@link #recoveryProjection} 口径）。生命周期（接口稿 §7）：SSE 只是观察
+   * 通道——客户端断开只停泵，<b>不取消任务</b>（取消必须显式 cancel）；15s 无事件补 {@code :ping}
+   * 注释帧；PG（事实源）即缓冲，未读积压超限判慢客户端直接断开（客户端以 Last-Event-ID 重连，
+   * 排他游标+seq 幂等去重保证补发不重不漏）。连接时固化调用者角色快照——泵线程无请求上下文。
+   */
+  public org.springframework.web.servlet.mvc.method.annotation.SseEmitter eventStream(
+          long taskId, String headerLastEventId, String paramLastEventId, Actor actor) {
+    ownedTask(taskId, actor);
+    boolean privileged = privileged(actor);
+    long after = parseStreamCursor(headerLastEventId, paramLastEventId);
+    var emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(0L);
+    var pump = new TaskEventPump(taskId, after, privileged, emitter);
+    taskStreams.add(pump);
+    emitter.onCompletion(pump::close);
+    emitter.onTimeout(pump::close);
+    emitter.onError(failure -> pump.close());
+    var thread = new Thread(pump, "task-events-stream-" + taskId);
+    thread.setDaemon(true);
+    thread.start();
+    return emitter;
+  }
+
+  /** 关闭指定任务的全部事件观察流（任务收口/测试收口用）。返回关闭的流数量。 */
+  public int closeTaskStreams(long taskId) {
+    int closed = 0;
+    for (var pump : taskStreams)
+      if (pump.taskId == taskId) {
+        pump.close();
+        closed++;
+      }
+    return closed;
+  }
+
+  @jakarta.annotation.PreDestroy
+  void shutdownTaskStreams() {
+    for (var pump : new ArrayList<>(taskStreams)) pump.close();
+  }
+
+  /**
+   * TASK_RESUMED 角色投影（接口稿 §5.2）：任务详情、resume 响应、事件增量与 SSE 共用同一口径——
+   * USER（非 OPERATOR/ADMIN）仅 recoverySource/reasonCode/reasonSummary（不返回检查点和内部
+   * 运行引用/复用清单/阻塞原因）；授权 OPERATOR/ADMIN 另见 checkpoint/reusedSteps/blockedReasons
+   * 原样负载（事件的 data 从该条事件事实生成，原始 payload 不对外返回）。
+   */
+  Object recoveryProjection(JsonNode payload, boolean privileged) {
+    if (privileged) return payload;
+    var userView = new LinkedHashMap<String, Object>();
+    userView.put("recoverySource", payload.path("recoverySource").asText());
+    userView.put("reasonCode", payload.path("reasonCode").asText());
+    userView.put("reasonSummary", payload.path("reasonSummary").asText());
+    return userView;
+  }
+
+  /** Last-Event-ID 解析（照 ChatSessions.parseStreamCursor 先例）：头优先、缺省同名 query 参数；非法 400。 */
+  private static long parseStreamCursor(String header, String param) {
+    String selected = header != null && !header.isBlank() ? header : param;
+    if (selected == null || selected.isBlank()) return 0;
+    if (!selected.matches("[0-9]{1,19}"))
+      throw new PlatformException(400, "EVENT_CURSOR", "Last-Event-ID 必须为非负整数");
+    return Long.parseLong(selected);
+  }
+
+  /** 单连接泵：批量读 PG（事实源即缓冲）→按连接时角色快照投影出帧。断开只停泵不取消任务。 */
+  final class TaskEventPump implements Runnable {
+    private final long taskId;
+    private final long after;
+    private final boolean privileged;
+    private final org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter;
+    private final java.util.concurrent.atomic.AtomicBoolean open =
+            new java.util.concurrent.atomic.AtomicBoolean(true);
+
+    TaskEventPump(
+            long taskId,
+            long after,
+            boolean privileged,
+            org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter) {
+      this.taskId = taskId;
+      this.after = after;
+      this.privileged = privileged;
+      this.emitter = emitter;
+    }
+
+    @Override
+    public void run() {
+      try {
+        long cursor = after;
+        long lastEmit = System.currentTimeMillis();
+        while (open.get()) {
+          var rows =
+                  store.db()
+                          .queryForList(
+                                  "select seq,type,payload from engine.task_event where task_id=?"
+                                      + " and seq>? order by seq limit 200",
+                                  taskId,
+                                  cursor);
+          if (rows.isEmpty()) {
+            if (System.currentTimeMillis() - lastEmit >= taskHeartbeatMillis) {
+              send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+                      .event()
+                      .comment("ping"));
+              lastEmit = System.currentTimeMillis();
+            }
+            Thread.sleep(200);
+            continue;
+          }
+          for (var row : rows) {
+            long seq = ((Number) row.get("seq")).longValue();
+            cursor = seq;
+            String type = String.valueOf(row.get("type"));
+            var payload = Json.read(String.valueOf(row.get("payload")), JsonNode.class);
+            Object data =
+                    "TASK_RESUMED".equals(type) ? recoveryProjection(payload, privileged) : payload;
+            send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+                    .event()
+                    .id(Long.toString(seq))
+                    .name(type)
+                    .data(Json.write(data), org.springframework.http.MediaType.APPLICATION_JSON));
+            lastEmit = System.currentTimeMillis();
+          }
+          Long watermark =
+                  store.db()
+                          .queryForObject(
+                                  "select coalesce(max(seq),0) from engine.task_event where task_id=?",
+                                  Long.class,
+                                  taskId);
+          if (watermark != null && watermark - cursor > ChatSessions.STREAM_BACKLOG_LIMIT) {
+            close(); // 慢客户端超限断开：重连以 Last-Event-ID 续读（接口稿 §7 心跳行）
+            return;
+          }
+        }
+      } catch (java.io.IOException | IllegalStateException disconnected) {
+        // 客户端断开/容器回收：SSE 只是观察通道，停泵即止，不触碰任务状态。
+      } catch (InterruptedException stopped) {
+        Thread.currentThread().interrupt();
+      } finally {
+        close();
+      }
+    }
+
+    private void send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.SseEventBuilder frame)
+            throws java.io.IOException {
+      if (!open.get()) return;
+      synchronized (emitter) {
+        emitter.send(frame);
+      }
+    }
+
+    void close() {
+      if (!open.compareAndSet(true, false)) return;
+      taskStreams.remove(this);
+      try {
+        emitter.complete();
+      } catch (Exception alreadyGone) {
+        // 客户端已断开或响应已完成：仅收口本泵。
+      }
+    }
   }
 
   /** 取消：运行/等待态→CANCELLED（CAS state_version）；终态幂等返回原状。 */

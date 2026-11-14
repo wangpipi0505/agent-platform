@@ -636,6 +636,18 @@
   "reason": "T2-2 任务事件增量"
  },
  {
+  "method": "GET",
+  "template": "/v1/tasks/{taskId}/events/stream",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.stream",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:54",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "T2-11 任务事件 SSE"
+ },
+ {
   "method": "POST",
   "template": "/v1/tasks/{taskId}/cancel",
   "caller": "gateway",

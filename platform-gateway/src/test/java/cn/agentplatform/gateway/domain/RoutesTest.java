@@ -90,6 +90,17 @@ class RoutesTest {
     }
 
     @Test
+    void routesTaskEventIncrementAndStreamSubpathsToEngine() {
+        // T2-2/T2-11：任务事件增量与 SSE 子路径显式接线；其余未登记任务子路径仍拒绝。
+        assertThat(Routes.service("/v1/tasks/77/events")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks/77/events/stream")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/v1/tasks/77/events/other"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/v1/tasks/77/events/stream/extra"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesMemoryCrudToEngineWithUnknownSubpathsRejected() {
         // A3-4：记忆列表/单条/保存/更新/撤销五条入口指向 engine；未登记子路径仍拒绝。
         assertThat(Routes.service("/v1/apps/ops/memories")).isEqualTo("engine");
