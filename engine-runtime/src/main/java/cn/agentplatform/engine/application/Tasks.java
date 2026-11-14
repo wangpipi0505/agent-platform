@@ -29,6 +29,12 @@ import java.util.*;
  * <p>RESUMABLE 不是状态（红线 4）：恢复资格由事实计算（运行/等待态+租约失效+可续检查点
  * →availableActions 返回 RESUME）；可用动作矩阵照 contracts/task-states.md §3 服务端计算。
  * 恢复事实出口复用 H1-8 RecoveryFact（RunRecoveryCoordinator.recoveryFact）。
+ *
+ * <p>T2-6（台账 §7.3，追加式）：任务创建登记依赖——{@code dependencies:[{upstreamTaskId,
+ * inputBindings}]} 入参→task_dependency 行（同受理事务；库稿 §4.2：创建时校验上游已存在且
+ * 调用方有权引用=同租户同主体）。任一上游未满足→受理后置 WAITING_DEPENDENCIES（只读等待，
+ * availableActions=[VIEW_DEPENDENCIES,CANCEL]）；满足放行见 {@link TaskDispatcher
+ * #dependencySatisfied}（上游 SUCCEEDED 且结果摘要匹配→satisfied_at→全满足后 QUEUED）。
  */
 @Service
 public class Tasks {
@@ -78,6 +84,8 @@ public class Tasks {
 
     String digest =
             Digest.canonicalRequestDigest(mode, goal, inputs, req.path("sessionId"), toolPolicy);
+    // T2-6：依赖登记入参（受理事务内校验与落库——重放分支在上方，依赖只在首次受理登记一次）
+    JsonNode dependencies = req.path("dependencies").isArray() ? req.path("dependencies") : null;
 
     // 幂等：同号同参重放原任务；同号异参 409 REQUEST_REPLAY（UNIQUE 兜底并发）。
     var prior =
@@ -142,6 +150,51 @@ public class Tasks {
                                       "select id from engine.task where public_id=?", Long.class, publicId);
               // 任务事件目录 10 类（contracts/task-states.md §4）：受理落 TASK_ACCEPTED
               appendTaskEvent(taskId, "TASK_ACCEPTED", Json.tree(Map.of("mode", mode, "goal", goal)));
+              // T2-6：依赖登记（库稿 §4.2——上游须已存在且调用方有权引用=同租户同主体；
+              // 任一上游未满足→受理后置 WAITING_DEPENDENCIES，放行由 TaskDispatcher.dependencySatisfied 承接）
+              boolean waiting = false;
+              if (dependencies != null) {
+                for (JsonNode dep : dependencies) {
+                  String upstreamPublicId = dep.path("upstreamTaskId").asText("");
+                  if (upstreamPublicId.isBlank())
+                    throw new PlatformException(
+                            400, "TASK_DEPENDENCY_INVALID", "dependencies[].upstreamTaskId 必填");
+                  var upstream =
+                          store.db()
+                                  .queryForList(
+                                          "select id,tenant_id,principal_id,state from engine.task"
+                                              + " where public_id=?",
+                                          upstreamPublicId);
+                  if (upstream.isEmpty()
+                          || !actor.tenantId()
+                                  .equals(String.valueOf(upstream.getFirst().get("tenant_id"))))
+                    throw new PlatformException(
+                            404, "TASK_NOT_FOUND", "上游任务不存在或无权引用: " + upstreamPublicId);
+                  if (!actor.principalId()
+                          .equals(String.valueOf(upstream.getFirst().get("principal_id"))))
+                    throw new PlatformException(
+                            403, "TASK_DEPENDENCY_FORBIDDEN", "上游任务不属于当前主体，禁止引用");
+                  JsonNode bindings =
+                          dep.path("inputBindings").isObject()
+                                  ? dep.path("inputBindings")
+                                  : Json.object();
+                  store.db()
+                          .update(
+                                  "insert into engine.task_dependency(task_id,upstream_task_id,"
+                                      + "input_bindings) values(?,?,?::jsonb)",
+                                  taskId,
+                                  ((Number) upstream.getFirst().get("id")).longValue(),
+                                  Json.write(bindings));
+                  if (!"SUCCEEDED".equals(String.valueOf(upstream.getFirst().get("state"))))
+                    waiting = true;
+                }
+                if (waiting)
+                  store.db()
+                          .update(
+                                  "update engine.task set state='WAITING_DEPENDENCIES',"
+                                      + "state_version=state_version+1,updated_at=now() where id=?",
+                                  taskId);
+              }
               return null;
             });
     long id =
@@ -185,6 +238,17 @@ public class Tasks {
             store.db()
                     .queryForList(
                             "select step_id,state,attempt_no from engine.task_step where task_id=? order by step_id",
+                            taskId));
+    // T2-6：依赖登记投影（VIEW_DEPENDENCIES 数据源；satisfied=上游成功且结果摘要匹配后写入的事实）
+    view.put(
+            "dependencies",
+            store.db()
+                    .queryForList(
+                            "select u.public_id as upstream_task_id,"
+                                + " (d.satisfied_at is not null) as satisfied"
+                                + " from engine.task_dependency d"
+                                + " join engine.task u on u.id=d.upstream_task_id"
+                                + " where d.task_id=? order by u.public_id",
                             taskId));
     // 事件水位（task_event 最大 seq）
     Long watermark =
