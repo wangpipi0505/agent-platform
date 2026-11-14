@@ -121,4 +121,14 @@ public class TaskController {
   public Object executePlan(@PathVariable("taskId") long taskId, @RequestBody JsonNode req) {
     return ApiResponse.ok(plans.execute(taskId, req, Actor.current()));
   }
+
+  /**
+   * T2-15（台账 §7.3）：GET /v1/tasks/{taskId}/result——任务结果读取（SERVICE 四端点白名单之一）。
+   * 首版形状 {taskId,state,result=null,resultSummary=goal 摘要,artifacts=[]}；T2-13 结果读回
+   * 接线后 result 承载无附件完整输出（口径见 Tasks.result javadoc）。
+   */
+  @GetMapping("/v1/tasks/{taskId}/result")
+  public Object result(@PathVariable("taskId") long taskId) {
+    return ApiResponse.ok(tasks.result(taskId, Actor.current()));
+  }
 }

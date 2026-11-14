@@ -33,10 +33,11 @@ public final class Routes {
         // 归属、读范围与写策略由 engine 按发布快照 memoryPolicy 核验，其余未登记子路径仍拒绝。
         // T2-2：任务域——受理（应用前缀）+ 详情/事件/取消/恢复/步骤调用（任务前缀）；
         // T2-11：任务事件 SSE 子路径（events/stream）显式接线；
+        // T2-15：任务结果读取（/result）显式接线——SERVICE 四端点白名单的读面；
         // 归属、工作区授权与状态机由 engine Tasks 核验，未登记子路径仍拒绝。
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/tasks")) return "engine";
         if (path.matches(
-                "/v1/tasks/[A-Za-z0-9_-]+(?:/events(?:/stream)?|/cancel|/resume|/steps/[A-Za-z0-9_-]+/calls)?"))
+                "/v1/tasks/[A-Za-z0-9_-]+(?:/events(?:/stream)?|/cancel|/resume|/result|/steps/[A-Za-z0-9_-]+/calls)?"))
             return "engine";
         if (path.matches("/v1/apps/[^/]+/tasks(?:/.*)?"))
             throw new IllegalArgumentException("此任务入口不存在");

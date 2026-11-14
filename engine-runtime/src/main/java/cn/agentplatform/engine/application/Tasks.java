@@ -14,12 +14,17 @@ import java.util.*;
 /**
  * T2-2（台账 §7.3）：任务受理/详情/事件/取消/恢复——任务域服务。
  *
- * <p>受理语义（接口稿 §5.2）：mode 必填（省略/空值按 PARAM 拒绝，不做隐式默认——评审十七轮；
- * SERVICE 首期仅 AGENT 由网关票据面约束，本服务不区分 caller）；requestId 幂等
- * UNIQUE(tenant, principal, request_id)——同号同参（规范化请求摘要一致）重放原任务，
+ * <p>受理语义（接口稿 §5.2）：mode 必填（省略/空值按 PARAM 拒绝，不做隐式默认——评审十七轮）；
+ * requestId 幂等 UNIQUE(tenant, principal, request_id)——同号同参（规范化请求摘要一致）重放原任务，
  * 异参 409 REQUEST_REPLAY；toolPolicy 受理即固定（省略=继承发布范围，显式空数组=禁用工具）；
  * mode=PLAN 且显式启用规划子代理且未传 sessionId→受理事务创建 origin=TASK_INTERNAL
  * 规划根会话（主方案 §5.5——重放复用根会话，不另建）。
+ *
+ * <p>T2-15 外部集成 caller 语义（台账 §7.3，接口稿 §3.6/§6 权限矩阵 SERVICE 列）：SERVICE
+ * 票据面（/embed/ticket 出票与直连 ApiKey 两面）首期仅受理 AGENT 任务——外部 caller 提交
+ * mode=PLAN → 403 {@code SERVICE_AGENT_ONLY} 并记一条拒绝审计。落点选择：网关对 POST 体
+ * 是有界流转发（不缓存不解析请求体，{@code GatewayController.proxy}），且两面（出票/直连）
+ * 在引擎侧收敛于同一服务方法，故引擎分支一处承接两面，审计与任务域语义同源。
  *
  * <p>RESUMABLE 不是状态（红线 4）：恢复资格由事实计算（运行/等待态+租约失效+可续检查点
  * →availableActions 返回 RESUME）；可用动作矩阵照 contracts/task-states.md §3 服务端计算。
@@ -50,6 +55,21 @@ public class Tasks {
     String mode = req.path("mode").asText();
     if (!Set.of("PLAN", "AGENT").contains(mode))
       throw new PlatformException(400, "PARAM_MODE_REQUIRED", "mode 必须为 PLAN 或 AGENT");
+    // T2-15：SERVICE 票据面首期仅 AGENT（接口稿 §6 权限矩阵 SERVICE 列——评审十六/十七轮）。
+    if (externalIntegrationCaller(actor) && !"AGENT".equals(mode)) {
+      // 引擎无独立审计表（审计归口 monitor）；照 ChatSessions 先例落结构化拒绝审计日志行。
+      org.slf4j.LoggerFactory.getLogger(Tasks.class)
+              .warn(
+                      "AUDIT TASK_SERVICE_AGENT_ONLY tenant={} principal={} appCode={} bizSystemCode={} requestId={} mode={}",
+                      actor.tenantId(),
+                      actor.principalId(),
+                      code,
+                      actor.attributes().getOrDefault("bizSystemCode", Set.of()).iterator().next(),
+                      requestId,
+                      mode);
+      throw new PlatformException(
+              403, "SERVICE_AGENT_ONLY", "外部集成（SERVICE 票据面）首期仅受理 AGENT 任务");
+    }
     String goal = req.path("goal").asText("");
     if (goal.isBlank()) throw new PlatformException(400, "TASK_GOAL_REQUIRED", "任务必须提供 goal");
     JsonNode inputs = req.path("inputs").isObject() ? req.path("inputs") : Json.object();
@@ -538,6 +558,37 @@ public class Tasks {
             "pageSize", pageSize);
   }
 
+  /**
+   * T2-15（台账 §7.3）：任务结果读取——GET /v1/tasks/{taskId}/result 首版形状（接口稿 §5.2
+   * result 投影）。形状 {@code {taskId,state,result?,resultSummary?,artifacts?}}：
+   *
+   * <ul>
+   *   <li><b>result</b>：任务最终输出读回。<b>T2-13 结果读回接线前的首版恒为 null</b>——T2-13
+   *       验收口径（无附件结果返回完整输出）接通后由此字段承载：无附件任务返回完整输出，
+   *       有附件任务返回 resultSummary + artifacts 引用；本首版如实返回 null，不伪造输出。</li>
+   *   <li><b>resultSummary</b>：goal 摘要——首版取受理 goal（≤200 字截断），无输出时不缺省。</li>
+   *   <li><b>artifacts</b>：产物引用——首版恒为空列表；产物下载复用既有运行级二进制路径
+   *       （GET /v1/runs/{runId}/artifacts/{id}/download，integrationAllowed=true 行），
+   *       产物→运行→任务归属沿同一 principal 口径核验（skill ArtifactStore.download 既有
+   *       tenant/principal/run 复核），不在此端点重复暴露产物详情。</li>
+   * </ul>
+   *
+   * <p>归属：与 detail 同一 {@link #ownedTask} 口径——非凭据绑定主体 404（他人任务不可探测，
+   * 无 403 泄露存在性）。候选预检沿用 1109 §3.4 既有机制（裁剪清单：RunController 现状已满足）。
+   */
+  public Map<String, Object> result(long taskId, Actor actor) {
+    var task = ownedTask(taskId, actor);
+    String goal = String.valueOf(task.get("goal"));
+    var view = new LinkedHashMap<String, Object>();
+    view.put("taskId", task.get("public_id"));
+    view.put("state", String.valueOf(task.get("state")));
+    // T2-13 结果读回接线前恒为 null（见方法 javadoc——首版口径，不伪造输出）。
+    view.put("result", null);
+    view.put("resultSummary", goal.length() <= 200 ? goal : goal.substring(0, 200));
+    view.put("artifacts", List.of());
+    return view;
+  }
+
   private Map<String, Object> ownedTask(long taskId, Actor actor) {
     var rows =
             store.db()
@@ -549,6 +600,16 @@ public class Tasks {
     if (rows.isEmpty())
       throw new PlatformException(404, "TASK_NOT_FOUND", "任务不存在或无权读取");
     return rows.getFirst();
+  }
+
+  /**
+   * 外部集成 caller 判定（T2-15）：网关 {@code IntegrationPolicy.clip} 是
+   * {@code attributes.bizSystemCode} 的唯一写入点（/embed/ticket 出票面与直连 ApiKey 面都必经
+   * clip 后才换发票据转发），门户用户票不含该属性——与 RunStatistics 按
+   * {@code guard_ctx->'attributes'->'bizSystemCode'} 识别外部集成是同一判别式。
+   */
+  static boolean externalIntegrationCaller(Actor actor) {
+    return !actor.attributes().getOrDefault("bizSystemCode", Set.of()).isEmpty();
   }
 
   private void appendTaskEvent(long taskId, String type, JsonNode payload) {

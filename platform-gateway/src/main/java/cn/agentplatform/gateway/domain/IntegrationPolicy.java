@@ -155,6 +155,13 @@ public final class IntegrationPolicy {
         if ("GET".equals(method) && path.equals("/v1/apps/" + app + "/experience")) return true;
         if ("GET".equals(method) && path.equals("/v1/apps/" + app + "/input-schema")) return true;
         if ("POST".equals(method) && path.equals("/v1/apps/" + app + "/runs")) return true;
+        // T2-15（台账 §7.3）：任务域四端点对 SERVICE 票据面开放（首期仅 AGENT——mode=PLAN 由引擎
+        // Tasks.create 外部 caller 分支拒绝并审计，网关请求体是有界流转发、不解析业务负载）。
+        // 其余任务域端点（cancel/resume/事件SSE/对账/计划/execute/步骤调用）一律不进白名单，
+        // 与 agent-service-authority.json 的 integrationAllowed=false 行一一对应。
+        if ("POST".equals(method) && path.equals("/v1/apps/" + app + "/tasks")) return true;
+        if ("GET".equals(method)
+                && path.matches("/v1/tasks/[A-Za-z0-9_-]+(?:/events|/result)?")) return true;
         // 应用名使用相等比较，禁止把凭据绑定值直接拼入正则；session主体仍由engine检查。
         String sessions = "/v1/apps/" + app + "/sessions";
         if ("POST".equals(method) && path.equals(sessions)) return true;

@@ -101,6 +101,14 @@ class RoutesTest {
     }
 
     @Test
+    void routesTaskResultReadbackToEngine() {
+        // T2-15：任务结果读取（SERVICE 四端点白名单读面）显式接线；未登记形状仍拒绝。
+        assertThat(Routes.service("/v1/tasks/77/result")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/v1/tasks/77/results"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesMemoryCrudToEngineWithUnknownSubpathsRejected() {
         // A3-4：记忆列表/单条/保存/更新/撤销五条入口指向 engine；未登记子路径仍拒绝。
         assertThat(Routes.service("/v1/apps/ops/memories")).isEqualTo("engine");
