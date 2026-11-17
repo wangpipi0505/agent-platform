@@ -199,6 +199,33 @@ class RoutesTest {
     }
 
     @Test
+    void routesConfirmationCenterCountsAndTaskListToEngine() {
+        // B4-1：确认中心角标（接口稿 §5.7）与任务列表（confirmableBy=me）显式接线到 engine；
+        // 未登记子路径仍拒绝，不得被相近前缀吞进去。
+        assertThat(Routes.service("/admin/confirmation-center/counts")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/admin/confirmation-center/counts/extra"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/admin/confirmation-center"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/admin/confirmation-centers/counts"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/v1/tasks/"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void routesPlanImportCanvasBridgeToEngineBeforeAppCrudPrefix() {
+        // B4-1：计划导入草稿画布桥提前于 /admin/apps 配置面前缀指向 engine；未登记子路径不因
+        // 新桥接改向（仍按既有 /admin/apps 前缀归 app，由 app 服务按精确模板 404）。
+        assertThat(Routes.service("/admin/apps/weather/draft/plan-import")).isEqualTo("engine");
+        assertThat(Routes.service("/admin/apps/weather/config")).isEqualTo("app");
+        assertThat(Routes.service("/admin/apps/weather/draft/plan-import/extra")).isEqualTo("app");
+        assertThat(Routes.service("/admin/apps/weather/draft/plan-import-x")).isEqualTo("app");
+        assertThat(Routes.service("/admin/apps/weather/draft")).isEqualTo("app");
+    }
+
+    @Test
     void routesOnlyExactCapabilityPackageEndpointsToApplicationService() {
         for (String path : new String[] {
                 "/admin/capability-packages",

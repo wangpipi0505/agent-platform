@@ -255,6 +255,145 @@ public class Plans {
     return view;
   }
 
+  // ------------------------------------------------------------------
+  // B4-1（台账 §7.5）：plan-import 画布桥（接口稿 §6 plan-import 行）——受限映射+如实降级
+  // ------------------------------------------------------------------
+
+  /**
+   * 计划导入草稿画布桥（骨架）：{planId,revision,digest,draftBaselineRev}→
+   * {@code {validation{ok,issues},nodeMapping,draftRev}}。
+   *
+   * <p>受限映射（卡面口径）：plan_step 仅 kind=AGENT|SKILL 可表达为画布 CODE 节点
+   * （一期节点族无 AGENT 类型，契约 graph-definition §1.5 AGENT/ONTOLOGY 预留），
+   * target_ref 随节点标注；其余 kind 返回 stepId+KIND_NOT_EXPORTABLE（BLOCK）如实降级。
+   * 不支持字段（inputBindings/failurePolicy）逐项 FIELD_NOT_EXPRESSIBLE（WARN）留痕，
+   * 依赖边仅在有向无环且两端均可表达时生成（不可表达依赖 DEPENDENCY_DROPPED，WARN）。
+   *
+   * <p>骨架边界（如实说明）：本端点只做引擎侧映射预览，不写草稿图——draftRev 回显
+   * draftBaselineRev（草稿推进由既有 PUT /admin/flows/{code} 独立完成）；工作区编辑权限
+   * 归口 app-management，此处按引擎侧资源范围核验（tenant+提交人本人），角色门 BUILDER/
+   * EDITOR（§6 矩阵：ADMIN 对 plan-import 只读，不放开导入）。
+   */
+  public Map<String, Object> importToCanvas(String appCode, JsonNode req, Actor actor) {
+    if (!appCode.matches("[A-Za-z0-9_-]{1,64}"))
+      throw new PlatformException(400, "INVALID_INPUT", "应用编码形状非法");
+    if (!actor.roles().contains("BUILDER") && !actor.roles().contains("EDITOR"))
+      throw new PlatformException(403, "PLAN_IMPORT_ROLE_REQUIRED", "计划导入需要 BUILDER 角色");
+    String planId = req.path("planId").asText("");
+    if (planId.isBlank() || planId.length() > 128)
+      throw new PlatformException(400, "PLAN_ID_REQUIRED", "planId 必填（≤128 字）");
+    if (!req.path("revision").isInt() || req.path("revision").asInt() < 1)
+      throw new PlatformException(400, "PLAN_REVISION_INVALID", "revision 必须为正整数");
+    if (!req.path("digest").isTextual() || req.path("digest").asText().isBlank())
+      throw new PlatformException(400, "PLAN_DIGEST_REQUIRED", "digest 必填（固化版本摘要）");
+    if (!req.path("draftBaselineRev").isInt() || req.path("draftBaselineRev").asInt() < 0)
+      throw new PlatformException(400, "DRAFT_BASELINE_INVALID", "draftBaselineRev 必须为非负整数");
+    int revision = req.path("revision").asInt();
+    String digest = req.path("digest").asText();
+    // 资源范围=提交人本人（tenant+principal 与 Plans 其他端点同一口径）
+    var rows =
+            store.db()
+                    .queryForList(
+                            "select pr.* from engine.plan_revision pr join engine.task t on t.id=pr.owner_task_id"
+                                + " where t.tenant_id=? and t.principal_id=? and pr.plan_id=? and pr.revision=?",
+                            actor.tenantId(),
+                            actor.principalId(),
+                            planId,
+                            revision);
+    if (rows.isEmpty())
+      throw new PlatformException(404, "PLAN_REVISION_NOT_FOUND", "计划修订不存在或无权读取");
+    var revisionRow = rows.getFirst();
+    if (!digest.equals(String.valueOf(revisionRow.get("digest"))))
+      throw new PlatformException(409, "PLAN_DIGEST_CHANGED", "digest 与固化版本不符");
+    var steps =
+            store.db()
+                    .queryForList(
+                            "select * from engine.plan_step where plan_revision_id=? order by step_id",
+                            TraceStore.number(revisionRow, "id"));
+    var issues = new ArrayList<Map<String, Object>>();
+    if (!"VALID".equals(String.valueOf(revisionRow.get("validation_status"))))
+      issues.add(
+              Map.of(
+                      "code", "PLAN_REVISION_INVALID",
+                      "severity", "BLOCK",
+                      "message", "修订校验状态 " + revisionRow.get("validation_status") + " 不可导入"));
+    var nodes = new ArrayList<Map<String, Object>>();
+    var edges = new ArrayList<Map<String, Object>>();
+    var exported = new HashSet<String>(); // stepId→已表达为节点
+    for (var step : steps) {
+      String stepId = String.valueOf(step.get("step_id"));
+      String kind = String.valueOf(step.get("kind"));
+      if (!Set.of("AGENT", "SKILL").contains(kind)) {
+        issues.add(
+                Map.of(
+                        "stepId", stepId,
+                        "code", "KIND_NOT_EXPORTABLE",
+                        "severity", "BLOCK",
+                        "field", "kind",
+                        "message", "步骤类型 " + kind + " 一期画布节点族不可表达，该步骤未导入"));
+        continue;
+      }
+      exported.add(stepId);
+      var node = new LinkedHashMap<String, Object>();
+      node.put("nodeId", "n_" + stepId);
+      node.put("stepId", stepId);
+      node.put("type", "CODE");
+      node.put("targetRef", step.get("target_ref"));
+      node.put("required", Boolean.TRUE.equals(step.get("required")));
+      node.put("dependsOn", TraceStore.json(step.get("depends_on")));
+      nodes.add(node);
+      // 不支持字段如实降级（节点已生成，字段留痕降级）
+      var inputBindings = TraceStore.json(step.get("input_bindings"));
+      if (inputBindings.isObject() && !inputBindings.isEmpty())
+        issues.add(fieldIssue(stepId, "inputBindings", "步骤输入绑定不进画布节点属性，导入后需人工补齐"));
+      var failurePolicy = TraceStore.json(step.get("failure_policy"));
+      if (failurePolicy.isObject() && !failurePolicy.isEmpty())
+        issues.add(fieldIssue(stepId, "failurePolicy", "步骤失败策略不进画布节点属性，导入后需人工补齐"));
+    }
+    for (var step : steps) {
+      String stepId = String.valueOf(step.get("step_id"));
+      if (!exported.contains(stepId)) continue;
+      for (JsonNode dep : TraceStore.json(step.get("depends_on"))) {
+        String depId = dep.asText();
+        if (exported.contains(depId)) {
+          edges.add(Map.of("from", "n_" + depId, "to", "n_" + stepId));
+        } else {
+          issues.add(
+                  Map.of(
+                          "stepId", stepId,
+                          "code", "DEPENDENCY_DROPPED",
+                          "severity", "WARN",
+                          "field", "dependsOn",
+                          "message", "依赖步骤 " + depId + " 未导入，连线丢弃"));
+        }
+      }
+    }
+    boolean ok = issues.stream().noneMatch(i -> "BLOCK".equals(i.get("severity")));
+    var nodeMapping = new LinkedHashMap<String, Object>();
+    nodeMapping.put("nodes", nodes);
+    nodeMapping.put("edges", edges);
+    var validation = new LinkedHashMap<String, Object>();
+    validation.put("ok", ok);
+    validation.put("issues", issues);
+    var out = new LinkedHashMap<String, Object>();
+    out.put("validation", validation);
+    out.put("nodeMapping", nodeMapping);
+    out.put("draftRev", req.path("draftBaselineRev").asInt());
+    out.put("planId", planId);
+    out.put("revision", revision);
+    out.put("digest", digest);
+    return out;
+  }
+
+  private static Map<String, Object> fieldIssue(String stepId, String field, String message) {
+    return Map.of(
+            "stepId", stepId,
+            "code", "FIELD_NOT_EXPRESSIBLE",
+            "severity", "WARN",
+            "field", field,
+            "message", message);
+  }
+
   private int headRevision(long taskId, String planId) {
     Integer head =
             store.db()

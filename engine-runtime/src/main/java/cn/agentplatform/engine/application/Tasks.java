@@ -202,6 +202,182 @@ public class Tasks {
     return detail(id, actor);
   }
 
+  // ------------------------------------------------------------------
+  // B4-1（台账 §7.5）：GET /v1/tasks 任务列表 + confirmableBy=me 计划确认投影（接口稿 §5.7）
+  // ------------------------------------------------------------------
+
+  private static final Set<String> TASK_STATES =
+          Set.of(
+                  "ACCEPTED", "PLANNING", "PLAN_READY", "NEEDS_INPUT", "WAITING_DEPENDENCIES",
+                  "QUEUED", "RUNNING", "WAITING_APPROVAL", "WAITING_EXTERNAL", "WAITING_RECONCILIATION",
+                  "SUCCEEDED", "FAILED", "CANCELLED");
+
+  /**
+   * 任务列表（接口稿 §5.7）：state/appCode/from/to/principalId 过滤，授权范围过滤先于分页，
+   * 计数=未经分页的未分页总数（与角标一致性契约）。资源范围：ADMIN 限本租户；其余角色
+   * 限提交人本人——引擎侧无工作区成员数据源（工作区授权归口 app-management），OPERATOR/
+   * BUILDER 的"已授权工作区/其工作区"暂按提交人本人口径收窄（不放大），待工作区目录
+   * 接线后替换；APPROVER 无本人提交面，列表恒空——其确认面走 confirmableBy=me 投影。
+   */
+  public Map<String, Object> list(
+          String state,
+          String appCode,
+          String from,
+          String to,
+          String principalId,
+          String page,
+          String pageSize,
+          Actor actor) {
+    if (state != null && !state.isBlank() && !TASK_STATES.contains(state))
+      throw new PlatformException(400, "TASK_STATE_INVALID", "state 不在 13 值任务状态机内");
+    if (from != null && !from.isBlank() && !from.matches("\\d{4}-\\d{2}-\\d{2}([T ].*)?"))
+      throw new PlatformException(400, "INVALID_INPUT", "开始时间格式无效");
+    if (to != null && !to.isBlank() && !to.matches("\\d{4}-\\d{2}-\\d{2}([T ].*)?"))
+      throw new PlatformException(400, "INVALID_INPUT", "结束时间格式无效");
+    boolean admin = actor.roles().contains("ADMIN");
+    // principalId 过滤仅 ADMIN 可用（范围只来自当前身份，照 RunService.page 先例拒绝自报范围）
+    if (principalId != null && !principalId.isBlank()) {
+      if (!admin && !principalId.equals(actor.principalId()))
+        throw new PlatformException(403, "TASK_SCOPE_FORBIDDEN", "任务查询范围仅来自当前身份");
+      if (principalId.length() > 128) throw new PlatformException(400, "INVALID_INPUT", "principalId 过长");
+    }
+    var where =
+            new StringBuilder(" from engine.task t where t.tenant_id=?"
+                    + (admin ? "" : " and t.principal_id=?"));
+    var args = new ArrayList<Object>();
+    args.add(actor.tenantId());
+    if (!admin) args.add(actor.principalId());
+    if (principalId != null && !principalId.isBlank()) {
+      where.append(" and t.principal_id=?");
+      args.add(principalId);
+    }
+    if (state != null && !state.isBlank()) {
+      where.append(" and t.state=?");
+      args.add(state);
+    }
+    if (appCode != null && !appCode.isBlank()) {
+      if (appCode.length() > 128) throw new PlatformException(400, "INVALID_INPUT", "appCode 过长");
+      where.append(" and t.app_code=?");
+      args.add(appCode);
+    }
+    if (from != null && !from.isBlank()) {
+      where.append(" and t.created_at >= ?::timestamptz");
+      args.add(from);
+    }
+    if (to != null && !to.isBlank()) {
+      where.append(" and t.created_at < (?::date + interval '1 day')");
+      args.add(to);
+    }
+    int pageNo = parsePage(page, "page");
+    int size = parsePage(pageSize, "pageSize");
+    if (size > 100) size = 100;
+    Long total = store.db().queryForObject("select count(*)" + where, Long.class, args.toArray());
+    var pageArgs = new ArrayList<Object>(args);
+    pageArgs.add(size);
+    pageArgs.add((pageNo - 1) * size);
+    var rows =
+            store.db()
+                    .queryForList(
+                            "select t.public_id as \"taskId\",t.state,t.mode,t.purpose,"
+                                + "t.app_code as \"appCode\",t.goal,t.principal_id as \"principalId\","
+                                + "t.created_at as \"createdAt\",t.updated_at as \"updatedAt\""
+                                + where
+                                + " order by t.id desc limit ? offset ?",
+                            pageArgs.toArray());
+    var data = new LinkedHashMap<String, Object>();
+    data.put("tasks", rows);
+    data.put("page", pageNo);
+    data.put("pageSize", size);
+    data.put("total", total);
+    return data;
+  }
+
+  /**
+   * confirmableBy=me（评审八轮 P1-1，九轮补状态字段）：确认中心"计划确认"待办来源——以修订为
+   * 单位返回 {@code {taskId,planId,revision,digest,goal 摘要,confirmState,confirmedBy?,expiresAt?}}。
+   * 每任务每计划取头修订；仅返回当前无有效凭据（未确认或最大 confirm_seq 凭据已过期）且
+   * validation_status=VALID 的修订——已确认且在有效期内的修订不出现（刷新不回流）。
+   * 资源范围（§5.9 计划确认可见范围=提交人本人/APPROVER/ADMIN）：ADMIN/APPROVER 覆盖本租户；
+   * 其余角色限提交人本人（同 {@link #list} 口径）。计数与四类列表共用本投影（角标一致性契约）。
+   */
+  public List<Map<String, Object>> confirmableRevisions(String appCode, Actor actor) {
+    boolean tenantWide = actor.roles().contains("ADMIN") || actor.roles().contains("APPROVER");
+    var condition =
+            new StringBuilder(
+                    " join engine.task t on t.id=pr.owner_task_id"
+                            + " where t.tenant_id=? and t.state='PLAN_READY'"
+                            + (tenantWide ? "" : " and t.principal_id=?"));
+    var args = new ArrayList<Object>();
+    args.add(actor.tenantId());
+    if (!tenantWide) args.add(actor.principalId());
+    if (appCode != null && !appCode.isBlank()) {
+      condition.append(" and t.app_code=?");
+      args.add(appCode);
+    }
+    // 头修订（每任务每计划一条）+ VALID + 最大 confirm_seq 凭据过期或不存在
+    var heads =
+            store.db()
+                    .queryForList(
+                            "with head as (select pr.owner_task_id,pr.plan_id,max(pr.revision) as revision"
+                                + " from engine.plan_revision pr"
+                                + condition
+                                + " group by pr.owner_task_id,pr.plan_id)"
+                                + " select pr.id as revision_id,pr.plan_id as \"planId\",pr.revision,"
+                                + "pr.digest,t.public_id as \"taskId\",t.goal"
+                                + " from head h"
+                                + " join engine.plan_revision pr on pr.owner_task_id=h.owner_task_id"
+                                + " and pr.plan_id=h.plan_id and pr.revision=h.revision"
+                                + " join engine.task t on t.id=h.owner_task_id"
+                                + " where pr.validation_status='VALID'"
+                                + " and not exists (select 1 from engine.plan_confirmation pc"
+                                + "   where pc.plan_revision_id=pr.id and pc.confirm_seq="
+                                + "     (select max(confirm_seq) from engine.plan_confirmation"
+                                + "      where plan_revision_id=pr.id)"
+                                + "   and pc.expires_at>now())"
+                                + " order by t.id desc, pr.plan_id",
+                            args.toArray());
+    var items = new ArrayList<Map<String, Object>>();
+    for (var head : heads) {
+      var item = new LinkedHashMap<String, Object>();
+      item.put("taskId", head.get("taskId"));
+      item.put("planId", head.get("planId"));
+      item.put("revision", head.get("revision"));
+      item.put("digest", head.get("digest"));
+      item.put("goal", goalSummary(String.valueOf(head.get("goal"))));
+      // 最新（最大 confirm_seq）凭据存在但过期→CONFIRMED_EXPIRED（附 confirmedBy/expiresAt）；
+      // 无凭据→UNCONFIRMED。有效凭据已在上游 SQL 排除（刷新不回流）。
+      var credentials =
+              store.db()
+                      .queryForList(
+                              "select * from engine.plan_confirmation where plan_revision_id=?"
+                                  + " order by confirm_seq desc limit 1",
+                              head.get("revision_id"));
+      if (credentials.isEmpty()) {
+        item.put("confirmState", "UNCONFIRMED");
+      } else {
+        var credential = credentials.getFirst();
+        item.put("confirmState", "CONFIRMED_EXPIRED");
+        item.put("confirmedBy", credential.get("confirmed_by"));
+        item.put("expiresAt", String.valueOf(credential.get("expires_at")));
+      }
+      items.add(item);
+    }
+    return items;
+  }
+
+  /** goal 摘要（列表项不携带全量目标文本；≤200 字截断）。 */
+  private static String goalSummary(String goal) {
+    if (goal == null) return "";
+    return goal.length() <= 200 ? goal : goal.substring(0, 200);
+  }
+
+  private static int parsePage(String raw, String label) {
+    if (raw == null || raw.isBlank()) return label.equals("pageSize") ? 20 : 1;
+    if (!raw.matches("[0-9]{1,9}") || Integer.parseInt(raw) < 1)
+      throw new PlatformException(400, "TASK_PAGE_INVALID", label + " 必须为正整数");
+    return Integer.parseInt(raw);
+  }
+
   /** 详情：state/stateVersion/mode/availableActions（服务端计算）/recovery 角色投影/steps/eventWatermark。 */
   public Map<String, Object> detail(long taskId, Actor actor) {
     var task = ownedTask(taskId, actor);

@@ -35,6 +35,35 @@ public class TaskController {
     return ApiResponse.ok(tasks.create(code, req, Actor.current()));
   }
 
+  /**
+   * B4-1（台账 §7.5）：GET /v1/tasks 任务列表（接口稿 §5.7）——state/appCode/from/to/principalId
+   * 过滤+分页；confirmableBy=me 时切换为确认中心"计划确认"投影（以修订为单位，仅无有效凭据
+   * 修订，照 §5.7 形状）。角色范围过滤先于分页（Tasks.list/confirmableRevisions javadoc）。
+   */
+  @GetMapping("/v1/tasks")
+  public Object list(
+          @RequestParam(value = "state", required = false) String state,
+          @RequestParam(value = "appCode", required = false) String appCode,
+          @RequestParam(value = "from", required = false) String from,
+          @RequestParam(value = "to", required = false) String to,
+          @RequestParam(value = "principalId", required = false) String principalId,
+          @RequestParam(value = "page", required = false) String page,
+          @RequestParam(value = "pageSize", required = false) String pageSize,
+          @RequestParam(value = "confirmableBy", required = false) String confirmableBy) {
+    Actor actor = Actor.current();
+    if (confirmableBy != null && !confirmableBy.isBlank()) {
+      if (!"me".equals(confirmableBy))
+        throw new cn.agentplatform.common.PlatformException(
+                400, "TASK_CONFIRMABLE_INVALID", "confirmableBy 仅支持 me");
+      return ApiResponse.ok(
+              java.util.Map.of(
+                      "items", tasks.confirmableRevisions(appCode, actor),
+                      "appCode", appCode == null ? "" : appCode));
+    }
+    return ApiResponse.ok(
+            tasks.list(state, appCode, from, to, principalId, page, pageSize, actor));
+  }
+
   /** GET /v1/tasks/{taskId}：详情（服务端计算 availableActions + recovery 角色投影）。 */
   @GetMapping("/v1/tasks/{taskId}")
   public Object detail(@PathVariable("taskId") long taskId) {
@@ -120,6 +149,17 @@ public class TaskController {
   @PostMapping("/v1/tasks/{taskId}/execute")
   public Object executePlan(@PathVariable("taskId") long taskId, @RequestBody JsonNode req) {
     return ApiResponse.ok(plans.execute(taskId, req, Actor.current()));
+  }
+
+  /**
+   * B4-1（台账 §7.5）：POST /admin/apps/{code}/draft/plan-import——计划导入草稿画布桥
+   * （接口稿 §6 权限矩阵 plan-import 行）。{planId,revision,digest,draftBaselineRev}→
+   * {validation{ok,issues},nodeMapping,draftRev}；plan_step→图节点受限映射与不可表达降级
+   * 见 {@link cn.agentplatform.engine.application.Plans#importToCanvas}。
+   */
+  @PostMapping("/admin/apps/{code}/draft/plan-import")
+  public Object planImport(@PathVariable("code") String code, @RequestBody JsonNode req) {
+    return ApiResponse.ok(plans.importToCanvas(code, req, Actor.current()));
   }
 
   /**
