@@ -625,6 +625,18 @@
  },
  {
   "method": "GET",
+  "template": "/v1/deploy/resource-manifest",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.ResourceManifestController.manifest",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ResourceManifestController.java:14",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "A3-8 轻量装载资源清单（BUILDER/OPERATOR/ADMIN）"
+ },
+ {
+  "method": "GET",
   "template": "/v1/tasks/{taskId}/events",
   "caller": "gateway",
   "target": "engine",

@@ -46,6 +46,9 @@ public final class Routes {
             return "engine";
         if (path.matches("/v1/apps/[^/]+/tasks(?:/.*)?"))
             throw new IllegalArgumentException("此任务入口不存在");
+        // A3-8：轻量装载资源清单——按发布版本返回任务级资源引用与装载状态；
+        // 角色门（BUILDER/OPERATOR/ADMIN）与装载核验由 engine 承接。
+        if (path.matches("/v1/deploy/resource-manifest")) return "engine";
         if (path.matches("/v1/tasks/[^/]+(?:/.*)?"))
             throw new IllegalArgumentException("此任务入口不存在");
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/memories(?:/[A-Za-z0-9_-]+)?")) return "engine";
