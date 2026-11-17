@@ -769,6 +769,42 @@
  },
  {
   "method": "GET",
+  "template": "/v1/tasks",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.list",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:43",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "B4-1 任务列表+confirmableBy=me 计划确认投影（接口稿 §5.7；范围过滤先于分页；集成面不放行）"
+ },
+ {
+  "method": "GET",
+  "template": "/admin/confirmation-center/counts",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.ConfirmationCenterController.counts",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/ConfirmationCenterController.java:23",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "B4-1 确认中心待办角标（接口稿 §5.7；读取角色 ADMIN/APPROVER/BUILDER，越权 403 记审计；四类未分页总数 total=Σ）"
+ },
+ {
+  "method": "POST",
+  "template": "/admin/apps/{code}/draft/plan-import",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.post.TaskController.planImport",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:160",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
+  "reason": "B4-1 计划导入草稿画布桥（接口稿 §6 plan-import 行：BUILDER 编辑权限；ADMIN 只读不放开；受限映射+不可表达降级）"
+ },
+ {
+  "method": "GET",
   "template": "/v1/apps/{code}/memories",
   "caller": "gateway",
   "target": "engine",

@@ -49,6 +49,12 @@ public final class Routes {
         // A3-8：轻量装载资源清单——按发布版本返回任务级资源引用与装载状态；
         // 角色门（BUILDER/OPERATOR/ADMIN）与装载核验由 engine 承接。
         if (path.matches("/v1/deploy/resource-manifest")) return "engine";
+        // B4-1：确认中心待办角标（接口稿 §5.7）——读取角色（ADMIN/APPROVER/BUILDER）与四类
+        // 口径由 engine 核验，其余未登记子路径仍拒绝。
+        if (path.equals("/admin/confirmation-center/counts")) return "engine";
+        if (path.matches("/admin/confirmation-center(?:/.*)?"))
+            throw new IllegalArgumentException("此确认中心入口不存在");
+        if (path.matches("/v1/tasks")) return "engine";
         if (path.matches("/v1/tasks/[^/]+(?:/.*)?"))
             throw new IllegalArgumentException("此任务入口不存在");
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/memories(?:/[A-Za-z0-9_-]+)?")) return "engine";
@@ -60,6 +66,9 @@ public final class Routes {
                 || path.matches("/v1/runs/[A-Za-z0-9_-]+/artifacts/[A-Za-z0-9_-]+/download"))
             return "skill";
         if (path.matches("/(?:admin|v1)/apps/[^/]+/runs")) return "engine";
+        // B4-1：计划导入草稿画布桥（接口稿 §6 plan-import 行）——BUILDER 角色门、digest 一致性
+        // 与受限映射由 engine 承接；提前于 /admin/apps 配置面前缀，未登记子路径不入新方向。
+        if (path.matches("/admin/apps/[A-Za-z0-9_-]+/draft/plan-import")) return "engine";
         if (path.startsWith("/admin/apps")
                 || path.startsWith("/admin/flows")
                 || path.startsWith("/admin/prompt-templates")
