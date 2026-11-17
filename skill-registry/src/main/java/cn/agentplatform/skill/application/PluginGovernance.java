@@ -16,12 +16,14 @@ import java.util.*;
 /**
  * A3-2 插件治理数据面（接口稿 §5.6 插件/MCP 表；库稿 §4.8 五表；主方案 §6.2）。
  *
- * <p>本卡只交付数据面与 API 骨架：来源登记/读取、发现受理（202 QUEUED）、发现结果查询、
- * 版本启停与授权/撤权的落库与状态机。发现执行器（QUEUED/租约失效 RUNNING 的原子认领、
- * 接管后代次递增、按来源串行批次发布、仅完整批次更新目录）属 A3-5 消费卡——本类提供的
- * {@code recordDiscoveredVersion}/{@code markRunning}/{@code complete}/{@code fail} 是
- * 执行器将来使用的写入口，DB 约束（claim 成对、终态清空、UNIQUE(source_id,batch_no)、
- * changes 仅随 SUCCEEDED）已把迟到提交与半批次挡在库层。
+ * <p>A3-2 交付数据面与 API 骨架：来源登记/读取、发现受理（202 QUEUED）、发现结果查询、
+ * 版本启停与授权/撤权的落库与状态机；{@code recordDiscoveredVersion}/{@code markRunning}/
+ * {@code complete}/{@code fail} 是数据面写入口，DB 约束（claim 成对、终态清空、
+ * UNIQUE(source_id,batch_no)、changes 仅随 SUCCEEDED）把迟到提交与半批次挡在库层。
+ *
+ * <p>A3-5 接线：发现执行（认领/接管/批次串行发布）由 {@link PluginDiscoveryExecutor} 承担，
+ * 经包内 {@code mergeDiscoveredVersion} 在发布事务内消费目录合并；来源启停（disableSource/
+ * enableSource）拦截后续 discover 触发；enable 增设差异确认门（差异未随成功批次展示不能启用）。
  */
 @Service
 public class PluginGovernance {
@@ -137,6 +139,51 @@ public class PluginGovernance {
         return view;
     }
 
+    /**
+     * 来源停用（A3-5 来源级停用拦截：停用后 triggerDiscovery 拒绝新发现，在途行由执行器
+     * 写可查询终态原因并保留原目录，库稿 §4.8）。plugin_source 表无停用原因列（V321 形状，
+     * 只增不改），原因经操作审计面承载，本卡不扩迁移；接口稿 §5.6 未单列来源启停端点，
+     * 先交付数据面（端点随接口稿增补卡开放）。
+     */
+    public Map<String, Object> disableSource(long id) {
+        admin();
+        tx.executeWithoutResult(
+                status -> {
+                    var rows =
+                            db.queryForList(
+                                    "select id,status from skill.plugin_source"
+                                        + " where tenant_id=? and id=? for update",
+                                    tenant(),
+                                    id);
+                    if (rows.isEmpty()) throw error(404, "PLUGIN_SOURCE_NOT_FOUND", "插件来源不存在");
+                    db.update(
+                            "update skill.plugin_source set status='DISABLED' where tenant_id=? and id=?",
+                            tenant(),
+                            id);
+                });
+        return source(id);
+    }
+
+    /** 来源重新启用：ACTIVE 后恢复 discover 触发。 */
+    public Map<String, Object> enableSource(long id) {
+        admin();
+        tx.executeWithoutResult(
+                status -> {
+                    var rows =
+                            db.queryForList(
+                                    "select id,status from skill.plugin_source"
+                                        + " where tenant_id=? and id=? for update",
+                                    tenant(),
+                                    id);
+                    if (rows.isEmpty()) throw error(404, "PLUGIN_SOURCE_NOT_FOUND", "插件来源不存在");
+                    db.update(
+                            "update skill.plugin_source set status='ACTIVE' where tenant_id=? and id=?",
+                            tenant(),
+                            id);
+                });
+        return source(id);
+    }
+
     // ---------------------------------------------------------------- 发现
 
     /**
@@ -221,6 +268,32 @@ public class PluginGovernance {
             List<Map<String, Object>> capabilities) {
         admin();
         sourceRow(sourceId);
+        return mergeDiscoveredVersion(
+                tenant(),
+                Actor.current().principalId(),
+                sourceId,
+                pluginCode,
+                pluginName,
+                version,
+                manifest,
+                capabilities);
+    }
+
+    /**
+     * 包内合并入口（A3-5 执行器在发布事务内消费）：租户与创建者显式传入、不做 Actor 校验——
+     * 执行器线程不经 HTTP 面，租户取自 plugin_discovery 行，创建者为系统执行者
+     * （SkillOutbox 系统调度器先例）。默认 REQUIRED 传播：执行器发布门调用时加入同一事务，
+     * 满足库稿 §4.8"目录更新、差异和终态在同一事务提交"；独立调用时自开事务。
+     */
+    long mergeDiscoveredVersion(
+            String tenantId,
+            String createdBy,
+            long sourceId,
+            String pluginCode,
+            String pluginName,
+            String version,
+            Map<String, Object> manifest,
+            List<Map<String, Object>> capabilities) {
         if (pluginCode == null || !pluginCode.matches("[A-Za-z][A-Za-z0-9_-]{0,63}"))
             throw error(400, "INVALID_PLUGIN", "插件编码无效");
         if (pluginName == null || pluginName.isBlank() || pluginName.length() > 128)
@@ -240,7 +313,7 @@ public class PluginGovernance {
                     var existing =
                             db.queryForList(
                                     "select id from skill.plugin where tenant_id=? and code=?",
-                                    tenant(),
+                                    tenantId,
                                     pluginCode);
                     if (existing.isEmpty()) {
                         pluginId =
@@ -248,11 +321,11 @@ public class PluginGovernance {
                                         "insert into skill.plugin(tenant_id,code,name,source_id,created_by)"
                                                 + " values(?,?,?,?,?) returning id",
                                         Long.class,
-                                        tenant(),
+                                        tenantId,
                                         pluginCode,
                                         pluginName,
                                         sourceId,
-                                        Actor.current().principalId());
+                                        createdBy);
                     } else {
                         pluginId = ((Number) existing.getFirst().get("id")).longValue();
                         // 换源语义（库稿 §4.8）：插件编码租户内唯一、与来源解耦；发现来源变化即更新
@@ -261,7 +334,7 @@ public class PluginGovernance {
                                 "update skill.plugin set source_id=?,updated_at=now()"
                                         + " where tenant_id=? and id=? and source_id<>?",
                                 sourceId,
-                                tenant(),
+                                tenantId,
                                 pluginId,
                                 sourceId);
                     }
@@ -269,7 +342,7 @@ public class PluginGovernance {
                             db.queryForList(
                                     "select id from skill.plugin_version where tenant_id=? and"
                                         + " plugin_id=? and version=? and manifest_digest=?",
-                                    tenant(),
+                                    tenantId,
                                     pluginId,
                                     version,
                                     manifestDigest);
@@ -282,7 +355,7 @@ public class PluginGovernance {
                                 db.queryForList(
                                         "select id from skill.plugin_version where tenant_id=? and"
                                             + " plugin_id=? and version=?",
-                                        tenant(),
+                                        tenantId,
                                         pluginId,
                                         version);
                         if (!conflicting.isEmpty())
@@ -297,7 +370,7 @@ public class PluginGovernance {
                                                     + "manifest,manifest_digest,capabilities)"
                                                     + " values(?,?,?,?,?::jsonb,?,?::jsonb) returning id",
                                             Long.class,
-                                            tenant(),
+                                            tenantId,
                                             pluginId,
                                             sourceId,
                                             version,
@@ -314,7 +387,7 @@ public class PluginGovernance {
                             "update skill.plugin set latest_version_id=?,updated_at=now()"
                                     + " where tenant_id=? and id=?",
                             versionId,
-                            tenant(),
+                            tenantId,
                             pluginId);
                     return versionId;
                 });
@@ -454,6 +527,7 @@ public class PluginGovernance {
                                             tenant(),
                                             ((Number) row.get("plugin_id")).longValue())))
                                 throw error(409, "PLUGIN_DISABLED", "插件主行已停用，不能启用版本");
+                            requireDiffShown(row);
                             db.update(
                                     "update skill.plugin_version set status='ENABLED',enabled_at=now(),"
                                             + "disabled_reason=null,updated_at=now() where tenant_id=? and id=?",
@@ -667,12 +741,51 @@ public class PluginGovernance {
     private Map<String, Object> versionRow(long versionId) {
         var rows =
                 db.queryForList(
-                        "select id,plugin_id,status,capabilities from skill.plugin_version"
+                        "select id,plugin_id,version,source_id,status,capabilities from skill.plugin_version"
                                 + " where tenant_id=? and id=? for update",
                         tenant(),
                         versionId);
         if (rows.isEmpty()) throw error(404, "PLUGIN_VERSION_NOT_FOUND", "插件版本不存在");
         return rows.getFirst();
+    }
+
+    /**
+     * 差异确认门（A3-5 接线，主方案 §6.2：版本与能力差异展示→管理员校验启用）：来源已有发现
+     * 历史时，版本必须随某次成功批次展示过差异（changes.added/changed 含该 plugin+version）
+     * 才可启用——执行器只在发布事务内写目录，故执行器发现的版本天然满足；骨架数据面直写
+     * （来源尚无任何发现行）无差异确认可追溯，保留 A3-2 数据面语义不设门。
+     */
+    private void requireDiffShown(Map<String, Object> row) {
+        long sourceId = ((Number) row.get("source_id")).longValue();
+        long history =
+                db.queryForObject(
+                        "select count(*) from skill.plugin_discovery where tenant_id=? and source_id=?",
+                        Long.class,
+                        tenant(),
+                        sourceId);
+        if (history == 0) return;
+        String pluginCode =
+                db.queryForObject(
+                        "select code from skill.plugin where tenant_id=? and id=?",
+                        String.class,
+                        tenant(),
+                        ((Number) row.get("plugin_id")).longValue());
+        String version = Objects.toString(row.get("version"), "");
+        // jsonb 包含探测与键序无关：条目 {plugin,version} 是落库条目（多 versionId/capabilities 键）的子集。
+        long shown =
+                db.queryForObject(
+                        "select count(*) from skill.plugin_discovery where tenant_id=? and source_id=?"
+                            + " and status='SUCCEEDED' and (changes @> ?::jsonb or changes @> ?::jsonb)",
+                        Long.class,
+                        tenant(),
+                        sourceId,
+                        Json.write(Map.of("added", List.of(Map.of("plugin", pluginCode, "version", version)))),
+                        Json.write(Map.of("changed", List.of(Map.of("plugin", pluginCode, "version", version)))));
+        if (shown == 0)
+            throw error(
+                    409,
+                    "PLUGIN_DIFF_NOT_SHOWN",
+                    "版本差异未随成功发现批次展示，管理员校验前不能启用（主方案 §6.2）");
     }
 
     private static void requireRunning(Map<String, Object> row) {
