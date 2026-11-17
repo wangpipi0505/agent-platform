@@ -1,0 +1,46 @@
+A3-6(skill): V322 MCP连接档案——空库自建链+闭环+回归验证证据（2026-11-18，worktree wt-a3-06，分支 a3-06-mcp-v322，基线 f5d2f627）
+
+## 1) 专用测试库 drop/create（专用 PG @127.0.0.1:25432，agent_v12 属主；不动共享库与其他 v3xx 库）
+drop database if exists agent_platform_v322_test with (force)
+create database agent_platform_v322_test
+
+## 2) DoD 命令（set -a; source .env; set +a; JAVA_HOME=jdk21；mvn -B -pl skill-registry test -Dtest='McpConnectionTest'）
+[A3-6 fresh] url=jdbc:postgresql://127.0.0.1:25432/agent_platform_v322_test -> migratedTo=322 (migrations applied this run: 23)
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 58.58 s -- in cn.agentplatform.skill.application.McpConnectionTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+7 例覆盖：V322 双路径（空库全链 23 迁移 migratedTo=322 + V321 存量升级两表交付且存量数据不动；
+两表/组合 PK 含 revision/batch_no 五成员快照键/revision 列 DEFAULT 1/枚举 CHECK/256KB/端点二选一/
+审核投影/快照不可变与连接单调禁删触发器/行形状负例）；登记 revision=1+配置变更 revision+1+角色租户
+边界+profile 引用形态诚实 409；测试三分支（OK/AUTH_FAILED/TIMEOUT）+修订变更迟到探针拦截丢弃
+（StubMcpTransport beforeHandshake 钩子确定性模拟在途变更）；发现批次串行（失败/游标断裂整批作废
+保留上一代、签发批次号连续消耗、完整批次才发布、批次 5>3 单调）；旧批次/旧修订/停用三类发布 409
+拦截不覆盖目录（含库层单调触发器负例）；差异 ADDED/CHANGED/REMOVED 三态+review 生成技能草稿
+skillDraftRef（mcp__<连接>__<工具> 前缀、幂等、SUBMIT/REJECT 状态机、同名草稿 409 冲突）。
+
+## 3) 邻接回归（mvn -B -pl skill-registry test -Dtest='SkillV321MigrationPostgresTest,PluginGovernancePostgresTest,SkillGuideDualTrackPostgresTest'）
+[INFO] Tests run: 4, Failures: 0 ... -- in cn.agentplatform.skill.application.SkillV321MigrationPostgresTest
+[A3-2 dual-path fresh] url=jdbc:postgresql://127.0.0.1:25432/agent_platform_v321_test -> migratedTo=321 (migrations applied this run: 22)
+[INFO] Tests run: 9, Failures: 0 ... PluginGovernancePostgresTest / Tests run: 8, Failures: 0 ... SkillGuideDualTrackPostgresTest
+[INFO] BUILD SUCCESS
+（SkillV321MigrationPostgresTest 的 migrateFull 按 .target("321") 钉版——先例
+SkillPublishDigestPostgresTest .target("314")；链尾追加 V322 不回溯改写 V321 卡断言对象。）
+
+## 4) 网关 RoutesTest + 构建期路由目录校验（经网关真实请求以构建期双门代做，先例 A3-3；全栈未起）
+mvn -B -pl platform-gateway test -Dtest='RoutesTest' → Tests run: 17, Failures: 0, Errors: 0（含
+routesMcpConnectionRegistryToSkillService 七路径正向+单数前缀负例）
+node scripts/verify-routes.mjs --service=skill → handler 67 / 目录行 70 / MISSING 0 / STALE 1（springdoc 既有）
+通过：服务票据面没有 MISSING（blocking=false）。
+
+## 5) admin-common 权威目录回归
+mvn -B -pl admin-common test → Tests run: 387, Failures: 2, Errors: 1（与基线 stash 对照逐项一致：
+AuthorityPolicyTest/ServiceTokensDeploymentModeTest 为基线预存在失败，+7 行 MCP 目录行对称不改变失败集）
+
+## 6) skill-registry 全量回归（mvn -B -pl skill-registry test，900 例）
+改动后失败集 106 项 vs 基线 stash 110 项：交集完全一致（差集仅为本卡修复的 V321 钉版 2 项 +
+ArtifactHandoverDeclarationTest 2 项计时抖动本轮通过）——零新增失败；106 项均为基线预存在
+环境类（SECURITY_MODE_REQUIRED/JWT/主体映射未就绪，与 A3-2 报告的失败族相同）。
+
+## 7) 验证库保留
+agent_platform_v322_test 保留（最后状态：skill schema 迁移至 v322，23 迁移全链）。

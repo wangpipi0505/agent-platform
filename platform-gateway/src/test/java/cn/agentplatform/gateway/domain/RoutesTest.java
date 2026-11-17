@@ -178,6 +178,27 @@ class RoutesTest {
     }
 
     @Test
+    void routesMcpConnectionRegistryToSkillService() {
+        // A3-6：MCP 连接档案七条入口指向 skill（登记/配置变更/查询/测试/发现/目录差异/审核）；
+        // 修订绑定与批次串行发布由 skill 服务按 ADMIN 核验；未登记形状不得被新前缀吞进去。
+        for (String path : new String[] {
+                "/admin/mcp-connections",
+                "/admin/mcp-connections/db_conn",
+                "/admin/mcp-connections/db_conn/test",
+                "/admin/mcp-connections/db_conn/discover",
+                "/admin/mcp-connections/db_conn/tools",
+                "/admin/mcp-connections/db_conn/tools?diff=true",
+                "/admin/mcp-connections/db_conn/tools/review"
+        }) assertThat(Routes.service(path)).as(path).isEqualTo("skill");
+        // 拼写相近但未登记的入口不得被新前缀吞进去（/admin/mcp-connection 单数不命中任何前缀）；
+        // 前缀内的未登记子路径（如 /secret）由 skill 服务按精确模板 404，与 A3-2 startsWith 语义一致。
+        assertThatThrownBy(() -> Routes.service("/admin/mcp-connection"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Routes.service("/admin/mcp-connectionX"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesOnlyExactCapabilityPackageEndpointsToApplicationService() {
         for (String path : new String[] {
                 "/admin/capability-packages",

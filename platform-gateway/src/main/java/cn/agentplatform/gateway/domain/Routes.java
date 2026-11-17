@@ -81,6 +81,9 @@ public final class Routes {
         // 只决定转发方向，登记/触发/授权仍由 skill 服务按 ADMIN 角色校验。
         if (path.startsWith("/admin/plugin-sources") || path.startsWith("/admin/plugins"))
             return "skill";
+        // A3-6：MCP 连接档案（登记/配置变更/测试/发现/目录差异/审核）指向 skill；修订绑定与
+        // 批次串行发布由 skill 服务核验，这里只决定转发方向，不放权。
+        if (path.startsWith("/admin/mcp-connections")) return "skill";
         if (path.startsWith("/admin/services")) return "skill";
         if (path.startsWith("/admin/model-providers")
                 || path.startsWith("/admin/model-entries")
