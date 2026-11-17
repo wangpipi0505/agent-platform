@@ -46,12 +46,15 @@ class SkillV321MigrationPostgresTest {
         db.execute("drop schema if exists skill cascade");
     }
 
+    /** 本卡只验 V321 交付：target 钉在 321（先例 SkillPublishDigestPostgresTest .target("314")），
+     * 链尾追加 V322+ 不回溯改写本卡的断言对象。 */
     private static void migrateFull() {
         Flyway.configure()
                 .dataSource(HOST, "agent_v12", System.getenv("AGENT_DB_PASSWORD"))
                 .schemas("skill")
                 .defaultSchema("skill")
                 .locations("classpath:db/migration")
+                .target("321")
                 .load()
                 .migrate();
     }
@@ -122,6 +125,7 @@ class SkillV321MigrationPostgresTest {
                         .schemas("skill")
                         .defaultSchema("skill")
                         .locations("classpath:db/migration")
+                        .target("321")
                         .load()
                         .migrate();
         System.out.println(
