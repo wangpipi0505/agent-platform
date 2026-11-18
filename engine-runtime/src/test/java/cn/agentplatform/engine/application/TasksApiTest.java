@@ -53,12 +53,16 @@ class TasksApiTest {
     @BeforeEach
     @AfterEach
     void clean() {
+        // R-2：受理可派发规划子代理（子会话 sa-%/目录行/子任务）——会话域清理随 FK 反序扩展
+        //（session_event 触发器禁用窗口照 SubagentPlanningTest 先例）。
+        db.execute("ALTER TABLE engine.session_event DISABLE TRIGGER session_event_append_only_guard");
+        db.update("delete from engine.session_event where session_id like 'ti-%' or session_id like 'sa-%'");
+        db.execute("ALTER TABLE engine.session_event ENABLE TRIGGER session_event_append_only_guard");
+        db.update("delete from engine.subagent_catalog where parent_session_id like 'ti-%'");
         db.update("delete from engine.task_event where task_id in(select id from engine.task where tenant_id='engine-test')");
         db.update("delete from engine.task_step where task_id in(select id from engine.task where tenant_id='engine-test')");
-        db.update("delete from engine.task_event where task_id in(select id from engine.task where tenant_id='engine-test')");
         db.update("delete from engine.task where tenant_id='engine-test'");
-        db.update("delete from engine.session_event where session_id like 'ti-%'");
-        db.update("delete from engine.chat_session where public_id like 'ti-%'");
+        db.update("delete from engine.chat_session where public_id like 'ti-%' or public_id like 'sa-%'");
     }
 
     JsonNode req(String requestId, String mode) {
@@ -142,6 +146,37 @@ class TasksApiTest {
                             + " and tenant_id='engine-test'",
                         Integer.class);
         assertEquals(1, internal, "受理事务创建 TASK_INTERNAL 根会话");
+        // R-2：受理事务内派发规划子代理（经 Tasks.create 真实受理路径——startPlannerSubagents
+        // 原无调用点）。子任务详情 subtasks 投影可见 role/state（接口稿 §5.2）。
+        long tid = taskId(t);
+        assertEquals(
+                2,
+                db.queryForObject(
+                        "select count(*) from engine.task where parent_task_id=? and role='PLANNER_ALGO'",
+                        Integer.class,
+                        tid),
+                "受理事务派发 2 个规划子代理（缺省 PLANNER_ALGO×2）");
+        var subtasks = (java.util.List<?>) tasks.detail(tid, actor).get("subtasks");
+        assertEquals(2, subtasks.size(), "详情 subtasks 投影");
+        // 同 requestId 重放：返回原任务，子代理不重复派发（A03 幂等经真实路径）。
+        var replay =
+                tasks.create(
+                        "t2-app",
+                        Json.tree(
+                                Map.of(
+                                        "requestId", "r-4",
+                                        "mode", "PLAN",
+                                        "goal", "规划",
+                                        "subagentPolicy", Map.of("enabled", true))),
+                        actor);
+        assertEquals(t.get("taskId"), replay.get("taskId"));
+        assertEquals(
+                2,
+                db.queryForObject(
+                        "select count(*) from engine.task where parent_task_id=?",
+                        Integer.class,
+                        tid),
+                "重放不重复派发");
     }
 
     private long taskId(Map<String, Object> detail) {

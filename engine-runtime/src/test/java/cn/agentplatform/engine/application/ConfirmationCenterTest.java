@@ -459,6 +459,94 @@ class ConfirmationCenterTest {
                 .andReturn().getResponse().getStatus());
     }
 
+    /**
+     * R-1（返工卡）：真实受理路径落库的 INVALID 修订不入可确认待办——校验器接线后
+     * {@code plans.appendRevision} 对非法计划（环依赖）落 INVALID+diagnostics，confirmableBy=me
+     * 投影与角标计数均不再把该计划列为可确认（此前校验器无调用点、appendRevision 恒 VALID，
+     * SQL 过滤形同虚设——经真实路径复验）。
+     */
+    @Test
+    void realPathInvalidRevisionIsNotConfirmableAndNotCounted() throws Exception {
+        // PLAN_READY 任务夹具（提交人 alice）+ 经 Plans.appendRevision 追加非法修订（环依赖）。
+        String taskPublicId = task("h41-alice", "h41-app1", "PLAN_READY", "h41 R-1 环依赖目标");
+        long taskId = db.queryForObject(
+                "select id from engine.task where public_id=?", Long.class, taskPublicId);
+        var appended = plans.appendRevision(
+                taskId,
+                Json.tree(
+                        Map.of(
+                                "planId",
+                                "h41-plan-real-invalid",
+                                "baseRevision",
+                                0,
+                                "patch",
+                                Map.of(
+                                        "steps",
+                                        java.util.List.of(
+                                                Map.of(
+                                                        "stepId", "a",
+                                                        "kind", "AGENT",
+                                                        "targetRef", "agent:x",
+                                                        "inputBindings", Map.of(),
+                                                        "dependsOn", List.of("b")),
+                                                Map.of(
+                                                        "stepId", "b",
+                                                        "kind", "AGENT",
+                                                        "targetRef", "agent:x",
+                                                        "inputBindings", Map.of(),
+                                                        "dependsOn", List.of("a")))))),
+                ALICE);
+        assertEquals("INVALID", appended.get("validationStatus"), "环依赖经真实受理路径判 INVALID");
+        assertEquals(
+                "INVALID",
+                db.queryForObject(
+                        "select validation_status from engine.plan_revision where tenant_id=? and plan_id=?",
+                        String.class,
+                        TENANT,
+                        "h41-plan-real-invalid"),
+                "库行落 INVALID");
+        // 修订读投影 canConfirm=false（INVALID 与 confirm 409 PLAN_NOT_VALID 同口径）。
+        var detail = plans.revisionDetail(taskId, "h41-plan-real-invalid", 1, ALICE);
+        assertEquals(false, detail.get("canConfirm"), "INVALID 修订投影不可确认");
+        identity(ALICE);
+        var items = call("GET", "/v1/tasks?confirmableBy=me", null, 200).path("data").path("items");
+        for (var item : items)
+            assertNotEquals(
+                    "h41-plan-real-invalid",
+                    item.path("planId").asText(),
+                    "INVALID 头修订不入可确认待办");
+        assertTrue(
+                tasks.confirmableRevisions("h41-app1", ALICE).stream()
+                        .noneMatch(i -> "h41-plan-real-invalid".equals(i.get("planId"))),
+                "计数投影不含 INVALID 修订");
+        // 同计划补一条合法修订（baseRevision=1）→VALID 头修订回流待办。
+        var fixed = plans.appendRevision(
+                taskId,
+                Json.tree(
+                        Map.of(
+                                "planId",
+                                "h41-plan-real-invalid",
+                                "baseRevision",
+                                1,
+                                "patch",
+                                Map.of(
+                                        "steps",
+                                        java.util.List.of(
+                                                Map.of(
+                                                        "stepId", "s1",
+                                                        "kind", "AGENT",
+                                                        "targetRef", "agent:x",
+                                                        "inputBindings", Map.of()))))),
+                ALICE);
+        assertEquals("VALID", fixed.get("validationStatus"), "修正后头修订 VALID");
+        var after = tasks.confirmableRevisions("h41-app1", ALICE);
+        assertTrue(
+                after.stream().anyMatch(i ->
+                        "h41-plan-real-invalid".equals(i.get("planId"))
+                                && Integer.valueOf(2).equals(i.get("revision"))),
+                "VALID 头修订（修订 2）入待办: " + after);
+    }
+
     @Test
     void taskListScopesAndFiltersBeforePaging() throws Exception {
         fourDomainFixtures();

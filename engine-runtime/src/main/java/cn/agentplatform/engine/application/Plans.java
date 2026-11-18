@@ -3,6 +3,7 @@ package cn.agentplatform.engine.application;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.engine.harness.plan.PlanValidator;
 import cn.agentplatform.engine.infra.TraceStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,7 +32,18 @@ public class Plans {
     this.store = store;
   }
 
-  /** 修订追加：baseRevision CAS——过期 409 PLAN_REVISION_CONFLICT；旧凭据不继承（新行无确认）。 */
+  /**
+   * 修订追加：baseRevision CAS——过期 409 PLAN_REVISION_CONFLICT；旧凭据不继承（新行无确认）。
+   *
+   * <p>R-1（返工卡）：固化前接 {@link PlanValidator#validate}（T2-4 校验器原无调用点——
+   * 本卡接线）——校验顺序照 v1 §5.2：DAG（环/自依赖/未知依赖）→必填参数→类型→能力引用→权限。
+   * 校验通过维持既有 VALID 行为不变（plan_step 步骤照列映射落库）；任一失败落
+   * validation_status='INVALID'，逐条诊断（path/code/message）写入 plan_revision.diagnostics
+   * （V230 既有列，NULL=未产生）并随响应返回（键形状不变：validationStatus/diagnostics）——
+   * INVALID 修订 confirm 409 PLAN_NOT_VALID、确认中心 confirmable 投影只计 VALID 头修订。
+   * plan_step 是 VALID 结构的投影：INVALID 修订不落步骤行（goal_spec 与 diagnostics 已在
+   * 不可变修订行留痕，如实登记）。
+   */
   public Map<String, Object> appendRevision(
       long taskId, JsonNode req, Actor actor) {
     var task = ownedTask(taskId, actor);
@@ -63,32 +75,56 @@ public class Plans {
                                     newRevision,
                                     "goalSpec",
                                     goalSpec)));
+    // R-1：结构化校验器（T2-4 交付完整 DAG/参数/能力/权限校验）——能力引用范围=任务
+    // tool_policy.allowedToolRefs 的 skill: 引用（NULL/缺省=继承发布范围，校验器跳过能力检查）
+    var validation = PlanValidator.validate(goalSpec, allowedSkills(task));
+    String status = validation.valid() ? "VALID" : "INVALID";
     store.atomic(
             () -> {
               store.db()
                       .update(
                               "insert into engine.plan_revision(tenant_id,plan_id,revision,owner_task_id,"
-                                  + "base_revision,schema_version,goal_spec,validation_status,digest,created_by)"
-                                  + " values(?,?,?,?,?,'1.0',?::jsonb,'VALID',?,?)",
+                                  + "base_revision,schema_version,goal_spec,validation_status,diagnostics,digest,created_by)"
+                                  + " values(?,?,?,?,?,'1.0',?::jsonb,?,?::jsonb,?,?)",
                               actor.tenantId(),
                               planId,
                               newRevision,
                               taskId,
                               baseRevision,
                               Json.write(goalSpec),
+                              status,
+                              validation.diagnostics().isEmpty()
+                                      ? null
+                                      : Json.write(validation.diagnostics()),
                               digest,
                               actor.principalId());
-              // 结构化校验器（T2-4 交付完整 DAG/参数/能力/权限校验）——本卡校验=goal_spec 形状
-              insertPlanSteps(newRevision, planId, actor.tenantId(), goalSpec);
+              if (validation.valid()) // INVALID 不落 plan_step（见方法 javadoc 如实登记）
+                insertPlanSteps(newRevision, planId, actor.tenantId(), goalSpec);
               return null;
             });
     return Map.of(
             "planId", planId,
             "revision", newRevision,
             "digest", digest,
-            "validationStatus", "VALID",
-            "diagnostics", List.of(),
+            "validationStatus", status,
+            "diagnostics", validation.diagnostics(),
             "pendingInputs", List.of());
+  }
+
+  /**
+   * 计划校验能力范围（R-1）：任务 tool_policy.allowedToolRefs（V230——NULL 继承发布范围）中
+   * {@code skill:code@v#sha…} 形状引用的技能码集合；NULL/空=校验器跳过能力引用检查
+   * （{@link PlanValidator} 契约：allowedSkills 空集不做 CAPABILITY_NOT_ALLOWED 判定）。
+   */
+  private static Set<String> allowedSkills(Map<String, Object> task) {
+    Object policy = task.get("tool_policy");
+    if (policy == null) return Set.of();
+    var codes = new HashSet<String>();
+    for (JsonNode ref : Json.read(String.valueOf(policy), JsonNode.class).path("allowedToolRefs")) {
+      String value = ref.asText("");
+      if (value.startsWith("skill:")) codes.add(value.substring("skill:".length()).split("@")[0]);
+    }
+    return codes;
   }
 
   /** 计划版本级确认：同号同参重放原凭据；同号异参 409 REQUEST_REPLAY；digest 不符 409。 */
@@ -235,7 +271,8 @@ public class Plans {
                             TraceStore.number(row, "id"));
     if (credentials.isEmpty()) {
       view.put("confirmation", Map.of("state", "UNCONFIRMED"));
-      view.put("canConfirm", true);
+      // R-1：INVALID 修订不可确认（confirm 409 PLAN_NOT_VALID——投影与动作同口径）
+      view.put("canConfirm", "VALID".equals(String.valueOf(row.get("validation_status"))));
       view.put("canExecute", false);
     } else {
       var c = credentials.getFirst();
