@@ -44,7 +44,7 @@ schema dump 随机令牌。
 
 | 项 | 结果 |
 |----|------|
-| 升级前状态 | **仅 engine schema**（V200–V231 共 33 行 history 全 success；app/skill 未安装）；`agent.demo_seed_skip`=unset；逐表行数留档（`dev/01-pre-state.log`） |
+| 升级前状态 | **仅 engine schema**（V200–V231 共 33 行 history 全 success；app/skill 未安装）；`agent.demo_seed_skip`=unset；逐表行数留档（`dev/01-pre-state.txt`） |
 | 备份 | 独立 pg_dump（custom，sha256 `618b32bd…b2dc`，122,438 bytes，manifest 在案）→ `.local/g50/dev-backup/`（**不入 Git**）；升级脚本内又自动快照一次（双锚点） |
 | 升级 | **engine applied=1（231→901，即仅 V901 一段）；app applied=25（V100–V123+V901 首装）；skill applied=24（V300–V322+V901 首装）** |
 | 链头验证 | 三模块顶版本 901 ✓、失败迁移 0 ✓、V901 种子 **app 38 / skill 32 / engine 2** ✓、激活指针 **每工作区 1 条 digest 一致（2行/2一致）** ✓ |

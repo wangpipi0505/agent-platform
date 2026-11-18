@@ -47,7 +47,7 @@ $env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot'
 - [ ] 1.2 记录升级前 flyway 版本（升级前库若已存在）：
   `psql ... -d <db> -At -f deploy/upgrade-20261118/sql/history-summary.sql`，逐行留档
 - [ ] 1.3 记录升级前逐表行数：
-  `psql ... -d <db> -At -f deploy/upgrade-20261118/sql/row-counts.sql > pre-rowcounts.log`
+  `psql ... -d <db> -At -f deploy/upgrade-20261118/sql/row-counts.sql > pre-rowcounts.txt`
 - [ ] 1.4 确认演示种子跳过开关未开启（开启会导致 V901 整段 no-op）：
   `psql ... -d <db> -At -c "select coalesce(current_setting('agent.demo_seed_skip', true),'unset');"` → `unset`（或 `off`）
 - [ ] 1.5 pg_dump 备份落盘（升级脚本带 `-BackupDir|--backup-dir` 时自动完成；核对产物）：
@@ -77,7 +77,7 @@ $env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot'
   - V901 种子在案：engine **2** 行 / app **38** 行 / skill **32** 行（`tenant_id='demo'`）
   - 激活指针 active() 口径（与 `ConfigReleaseRepository.active()` 主查询同源）：
     每工作区恰 **1** 条 ACTIVE，`manifest_digest` 与 `workspace_manifest.digest` **一致**（2 行/2 一致）
-- [ ] 3.2 `row-counts.sql` 升级后留档 `post-rowcounts.log`（行数应 ≥ 升级前，新增表出现在清单尾部）
+- [ ] 3.2 `row-counts.sql` 升级后留档 `post-rowcounts.txt`（行数应 ≥ 升级前，新增表出现在清单尾部）
 - [ ] 3.3 （服务侧冒烟，可选）启动三服务确认 flyway 启动校验通过（迁移在库即成功，服务无需再动）
 
 ## 第四段：回退验证（演练必做；dev 库文档化不执行）
@@ -85,7 +85,7 @@ $env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot'
 - [ ] 4.1 回退：`./deploy/upgrade-20261118/rollback.sh --database <db> --backup-file <dump> --force`
   （PowerShell：`.\deploy\upgrade-20261118\rollback.ps1 -Database <db> -BackupFile <dump> -Force`）
 - [ ] 4.2 回退后 history 与升级前逐行一致（`history-summary.sql` 输出 diff 第一段 1.2 留档 = 空）
-- [ ] 4.3 回退后行数与升级前一致：`row-counts.sql` 输出与 1.3 的 `pre-rowcounts.log` diff = 空；
+- [ ] 4.3 回退后行数与升级前一致：`row-counts.sql` 输出与 1.3 的 `pre-rowcounts.txt` diff = 空；
   演练库另与对照库（`drill_g50_base_a|b`）同查询 diff = 空
 - [ ] 4.4 回退后 schema 一致（可选加测）：`pg_dump --schema-only` 升级前库/回退后库各一份，diff = 空
 - [ ] 4.5 （dev 库）**不实际执行**回退；确认 `rollback.ps1|sh` 对 dev 库可用性 = 参数化同一入口

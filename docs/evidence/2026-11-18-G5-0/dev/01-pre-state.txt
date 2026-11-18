@@ -1,0 +1,78 @@
+## dev 01 升级前状态 @ 2026-11-18T07:19:44Z
+== schema 清单（engine/app/skill）==
+engine
+== history-summary（升级前）==
+engine||"engine"|t
+engine|200|V200__engine.sql|t
+engine|201|V201__engine_tool_approval.sql|t
+engine|202|V202__engine_controlled_draft_test.sql|t
+engine|203|V203__engine_frozen_call_contract.sql|t
+engine|204|V204__engine_fact_recovery_schedule.sql|t
+engine|205|V205__engine_model_projection.sql|t
+engine|206|V206__engine_debug_controls.sql|t
+engine|207|V207__engine_model_usage_ledger.sql|t
+engine|208|V208__engine_chat_sessions.sql|t
+engine|209|V209__engine_readonly_retry_budget.sql|t
+engine|210|V210__engine_controlled_reproduction.sql|t
+engine|211|V211__engine_controlled_model_provenance.sql|t
+engine|212|V212__engine_exact_skill_connection.sql|t
+engine|213|V213__engine_model_output_policy.sql|t
+engine|214|V214__named_test_inputs.sql|t
+engine|215|V215__run_scheduler.sql|t
+engine|216|V216__run_authority_initial_materials.sql|t
+engine|217|V217__run_flow_materials.sql|t
+engine|218|V218__initial_model_input_material.sql|t
+engine|219|V219__initial_request_utf8.sql|t
+engine|220|V220__run_error_structured.sql|t
+engine|221|V221__action_plan_execute_key.sql|t
+engine|222|V222__run_context_pack.sql|t
+engine|223|V223__engine_quota_window.sql|t
+engine|224|V224__action_plan_two_principals.sql|t
+engine|225|V225__business_intent_execute_claim.sql|t
+engine|226|V226__tool_call_binding_refs.sql|t
+engine|227|V227__run_config_release.sql|t
+engine|228|V228__goal_outcome.sql|t
+engine|229|V229__harness_session_log.sql|t
+engine|230|V230__task_plan_family.sql|t
+engine|231|V231__memory_spill.sql|t
+psql:G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/wt-g50/deploy/upgrade-20261118/sql/history-summary.sql:7: ERROR:  relation "app.flyway_schema_history" does not exist
+LINE 2:   from app.flyway_schema_history order by installed_rank;
+               ^
+psql:G:/207/��Ŀ/�㷨���鹤��/����/_worktrees/upgrade-20261103/wt-g50/deploy/upgrade-20261118/sql/history-summary.sql:9: ERROR:  relation "skill.flyway_schema_history" does not exist
+LINE 2:   from skill.flyway_schema_history order by installed_rank;
+               ^
+== row-counts（升级前；app/skill 未安装时仅 engine 段有行）==
+engine.action_plan|0
+engine.agent_inbox|0
+engine.attempt|4
+engine.attempt_note|3
+engine.chat_session|0
+engine.chat_turn|0
+engine.debug_input|0
+engine.debug_input_promotion|0
+engine.flyway_schema_history|33
+engine.goal_outcome|0
+engine.material_scope|0
+engine.memory_entry|0
+engine.model_input_snapshot|0
+engine.model_invocation|0
+engine.node_instance|6
+engine.plan_confirmation|0
+engine.plan_revision|0
+engine.plan_step|0
+engine.reproduction|0
+engine.run|6
+engine.run_authority|0
+engine.run_event|4
+engine.session_event|0
+engine.spill_artifact|0
+engine.subagent_catalog|0
+engine.subtask_receipt|0
+engine.task|0
+engine.task_dependency|0
+engine.task_dispatch|0
+engine.task_event|0
+engine.task_step|0
+engine.tool_call|4
+== 演示种子开关（须 unset/off，否则 V901 整段 no-op）==
+unset

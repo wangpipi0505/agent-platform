@@ -1,0 +1,17 @@
+## 演练A 03 基线快照+恢复出对照库 drill_g50_base_a @ 2026-11-18T07:09:07Z
+-- pg_dump --format=custom --no-owner --no-privileges -> /g/207/项目/算法重组工具/代码/_worktrees/upgrade-20261103/wt-g50/.local/g50/drill-a/backup/drill_g50_a-baseline-20261118-070907.dump
+pg_dump OK
+-- sha256:
+5e0a4840403ee79eca9b3a26976fd647871641bc0fed214bf3f8151f3f4f4b2c */g/207/项目/算法重组工具/代码/_worktrees/upgrade-20261103/wt-g50/.local/g50/drill-a/backup/drill_g50_a-baseline-20261118-070907.dump
+-- drop/create 对照库
+NOTICE:  database "drill_g50_base_a" does not exist, skipping
+DROP DATABASE
+CREATE DATABASE
+-- pg_restore --exit-on-error -> drill_g50_base_a
+pg_restore OK
+-- restore 后基线断言（对照库）
+baseline_top_version|app|121|121|t
+baseline_top_version|engine|228|228|t
+baseline_top_version|skill|320|320|t
+failed_migrations|engine+app+skill|0|0|t
+no_v901_at_baseline|engine+app+skill|0|0|t

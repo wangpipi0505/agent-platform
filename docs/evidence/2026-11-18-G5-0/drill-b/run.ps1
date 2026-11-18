@@ -20,7 +20,7 @@ $enc = if ($PSVersionTable.PSVersion.Major -ge 6) { 'utf8NoBOM' } else { 'utf8' 
 function Log([string]$m) { Write-Output "[run] $m" }
 
 function Save-Log([string]$name, [string]$header, [scriptblock]$sb) {
-    $f = Join-Path $ScriptDir ("{0}.log" -f $name)
+    $f = Join-Path $ScriptDir ("{0}.txt" -f $name)
     if ((Test-Path -LiteralPath $f) -and ((Get-Item -LiteralPath $f).Length -gt 0)) {
         Log "跳过（已有日志）: $name"; return
     }
@@ -92,7 +92,7 @@ Save-Log '04-pre-upgrade-state' ($Header -f '04 升级前状态 row-counts') {
     Write-Output '== drill_g50_base_b row-counts（对照库）=='
     & $Psql -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_base_b -At -f (Join-Path $SqlDir 'row-counts.sql')
 }
-(Get-Content -LiteralPath (Join-Path $ScriptDir '04-pre-upgrade-state.log') |
+(Get-Content -LiteralPath (Join-Path $ScriptDir '04-pre-upgrade-state.txt') |
     Where-Object { $_ -match '^(engine|app|skill)\.' } |
     Sort-Object -Unique) | Out-File -LiteralPath (Join-Path $ScriptDir '04-pre-rowcounts.sorted') -Encoding $enc
 
@@ -123,7 +123,7 @@ Save-Log '08-post-rollback-state' ($Header -f '08 回退后状态 history + row-
     Write-Output '== drill_g50_b row-counts（回退后）=='
     & $Psql -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_b -At -f (Join-Path $SqlDir 'row-counts.sql')
 }
-(Get-Content -LiteralPath (Join-Path $ScriptDir '08-post-rollback-state.log') |
+(Get-Content -LiteralPath (Join-Path $ScriptDir '08-post-rollback-state.txt') |
     Where-Object { $_ -match '^(engine|app|skill)\.' } |
     Sort-Object -Unique) | Out-File -LiteralPath (Join-Path $ScriptDir '08-post-rowcounts.sorted') -Encoding $enc
 

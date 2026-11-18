@@ -1,0 +1,14 @@
+﻿## 演练B 03 基线快照+恢复出对照库 drill_g50_base_b @ 2026-11-18T07:17:30Z
+-- pg_dump --format=custom --no-owner --no-privileges -> G:\207\项目\算法重组工具\代码\_worktrees\upgrade-20261103\wt-g50\.local\g50\drill-b\backup\drill_g50_b-baseline-20261118-071730.dump
+pg_dump OK
+-- sha256: cfb2c43112febbe8cc8b9f61601d00b93d8b0dca63c88f5b34bef5c21d0ebf1a
+-- drop/create 对照库 drill_g50_base_b
+CREATE DATABASE
+-- pg_restore --exit-on-error -> drill_g50_base_b
+pg_restore OK
+-- restore 后基线断言（对照库）
+baseline_top_version|app|121|121|t
+baseline_top_version|engine|228|228|t
+baseline_top_version|skill|320|320|t
+failed_migrations|engine+app+skill|0|0|t
+no_v901_at_baseline|engine+app+skill|0|0|t

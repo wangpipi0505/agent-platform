@@ -1,0 +1,184 @@
+﻿## 演练B 01 建库+钉版基线 @ 2026-11-18T07:15:20Z
+[upgrade] 已建库: drill_g50_b
+[upgrade] flyway migrate: module=engine target=228 db=drill_g50_b
+15:15:21.853 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/drill_g50_b (PostgreSQL 16.15)
+15:15:21.900 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "engine" ...
+15:15:21.906 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "engine"."flyway_schema_history" ...
+15:15:22.054 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": null
+15:15:22.068 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "200 - engine"
+15:15:22.075 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: schema "engine" already exists, skipping (SQL State: 42P06 - Error Code: 0)
+15:15:22.677 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "201 - engine tool approval"
+15:15:22.685 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "202 - engine controlled draft test"
+15:15:22.690 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "203 - engine frozen call contract"
+15:15:22.704 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "204 - engine fact recovery schedule"
+15:15:22.708 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "205 - engine model projection"
+15:15:22.800 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "206 - engine debug controls"
+15:15:22.805 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "207 - engine model usage ledger"
+15:15:22.808 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "208 - engine chat sessions"
+15:15:22.990 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "209 - engine readonly retry budget"
+15:15:22.995 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "210 - engine controlled reproduction"
+15:15:23.090 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "211 - engine controlled model provenance"
+15:15:23.095 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "212 - engine exact skill connection"
+15:15:23.103 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "213 - engine model output policy"
+15:15:23.149 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "214 - named test inputs"
+15:15:23.308 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "215 - run scheduler"
+15:15:23.367 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "216 - run authority initial materials"
+15:15:23.538 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "217 - run flow materials"
+15:15:23.871 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "218 - initial model input material"
+15:15:24.026 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "219 - initial request utf8"
+15:15:24.036 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "220 - run error structured"
+15:15:24.051 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "221 - action plan execute key"
+15:15:24.176 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "222 - run context pack"
+15:15:24.182 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "223 - engine quota window"
+15:15:24.236 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "224 - action plan two principals"
+15:15:24.241 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "225 - business intent execute claim"
+15:15:24.392 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "226 - tool call binding refs"
+15:15:24.394 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "tool_call_binding_refs_array" of relation "tool_call" does not exist, skipping
+15:15:24.417 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "227 - run config release"
+15:15:24.425 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "run_config_digest_shape" of relation "run" does not exist, skipping
+15:15:24.425 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "run_config_reference_pair" of relation "run" does not exist, skipping
+15:15:24.427 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "run_environment_binding_revs_array" of relation "run" does not exist, skipping
+15:15:24.463 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "chat_session_config_digest_shape" of relation "chat_session" does not exist, skipping
+15:15:24.466 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "chat_session_config_reference_pair" of relation "chat_session" does not exist, skipping
+15:15:24.468 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "chat_session_environment_binding_revs_array" of relation "chat_session" does not exist, skipping
+15:15:24.511 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "228 - goal outcome"
+15:15:24.587 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "goal_outcome_readback_shape" of relation "goal_outcome" does not exist, skipping
+15:15:24.588 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "goal_outcome_achieved_readback" of relation "goal_outcome" does not exist, skipping
+15:15:24.599 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 29 migrations to schema "engine", now at version v228 (execution time 00:02.356s)
+[g50-drill] module=engine target=228 applied=29 from=null to=228 outcome=228
+[upgrade] flyway migrate: module=app target=121 db=drill_g50_b
+15:15:25.881 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/drill_g50_b (PostgreSQL 16.15)
+15:15:25.924 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "app" ...
+15:15:25.930 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "app"."flyway_schema_history" ...
+15:15:26.056 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": null
+15:15:26.070 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "100 - application"
+15:15:26.075 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: schema "app" already exists, skipping (SQL State: 42P06 - Error Code: 0)
+15:15:26.654 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "101 - integration"
+15:15:26.797 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "102 - separate application draft"
+15:15:27.037 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "103 - freeze candidate models"
+15:15:27.127 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "104 - integration policy revision"
+15:15:27.131 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "105 - publish gate"
+15:15:27.227 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "106 - publish pin"
+15:15:27.327 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "107 - identity mapping"
+15:15:27.544 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "108 - capability package intake"
+15:15:27.660 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "109 - capability package resolution"
+15:15:27.668 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "110 - capability applications"
+15:15:27.754 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "111 - connection profiles and env bindings"
+15:15:27.955 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "112 - connection profile grants"
+15:15:28.076 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "113 - assistant experience and config release"
+15:15:28.542 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "114 - semantic bindings"
+15:15:28.686 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "115 - config release semantic refs"
+15:15:28.820 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "116 - onboarding templates"
+15:15:29.026 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "117 - precise skill connection grantee"
+15:15:29.072 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "118 - onboarding sessions"
+15:15:29.319 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "119 - onboarding cancel reason"
+15:15:29.325 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "120 - onboarding import sources"
+15:15:29.494 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "121 - onboarding import step"
+15:15:29.505 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 22 migrations to schema "app", now at version v121 (execution time 00:03.289s)
+[g50-drill] module=app target=121 applied=22 from=null to=121 outcome=121
+[upgrade] flyway migrate: module=skill target=320 db=drill_g50_b
+15:15:30.774 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/drill_g50_b (PostgreSQL 16.15)
+15:15:30.815 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "skill" ...
+15:15:30.820 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "skill"."flyway_schema_history" ...
+15:15:30.953 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": null
+15:15:30.966 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "300 - skill"
+15:15:30.971 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: schema "skill" already exists, skipping (SQL State: 42P06 - Error Code: 0)
+15:15:31.394 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "301 - reconciliation"
+15:15:31.480 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "302 - skill immutability"
+15:15:31.523 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "303 - execution fact generation"
+15:15:31.584 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "304 - fact delivery lease"
+15:15:31.642 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "305 - controlled contract digest"
+15:15:31.651 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "306 - controlled artifacts"
+15:15:31.819 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "307 - http async binding"
+15:15:31.885 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "308 - async preparation delivery"
+15:15:31.891 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "309 - signed callback receipt"
+15:15:31.985 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "310 - reconciliation proof"
+15:15:32.085 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "311 - algorithm job identity"
+15:15:32.201 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "312 - fixture audit"
+15:15:32.268 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "313 - service lifecycle"
+15:15:32.449 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "314 - external job state"
+15:15:32.501 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "315 - skill semantic digest"
+15:15:32.599 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "316 - evidence rebind receipt"
+15:15:32.606 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "317 - connection resolution receipt"
+15:15:32.703 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "318 - connection resolution call scope"
+15:15:32.751 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "319 - connection execution binding"
+15:15:32.755 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "320 - onboarding skill import receipt"
+15:15:32.895 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 21 migrations to schema "skill", now at version v320 (execution time 00:01.834s)
+[g50-drill] module=skill target=320 applied=21 from=null to=320 outcome=320
+[upgrade] 升级后 flyway_schema_history 摘要：
+engine||"engine"|t
+engine|200|V200__engine.sql|t
+engine|201|V201__engine_tool_approval.sql|t
+engine|202|V202__engine_controlled_draft_test.sql|t
+engine|203|V203__engine_frozen_call_contract.sql|t
+engine|204|V204__engine_fact_recovery_schedule.sql|t
+engine|205|V205__engine_model_projection.sql|t
+engine|206|V206__engine_debug_controls.sql|t
+engine|207|V207__engine_model_usage_ledger.sql|t
+engine|208|V208__engine_chat_sessions.sql|t
+engine|209|V209__engine_readonly_retry_budget.sql|t
+engine|210|V210__engine_controlled_reproduction.sql|t
+engine|211|V211__engine_controlled_model_provenance.sql|t
+engine|212|V212__engine_exact_skill_connection.sql|t
+engine|213|V213__engine_model_output_policy.sql|t
+engine|214|V214__named_test_inputs.sql|t
+engine|215|V215__run_scheduler.sql|t
+engine|216|V216__run_authority_initial_materials.sql|t
+engine|217|V217__run_flow_materials.sql|t
+engine|218|V218__initial_model_input_material.sql|t
+engine|219|V219__initial_request_utf8.sql|t
+engine|220|V220__run_error_structured.sql|t
+engine|221|V221__action_plan_execute_key.sql|t
+engine|222|V222__run_context_pack.sql|t
+engine|223|V223__engine_quota_window.sql|t
+engine|224|V224__action_plan_two_principals.sql|t
+engine|225|V225__business_intent_execute_claim.sql|t
+engine|226|V226__tool_call_binding_refs.sql|t
+engine|227|V227__run_config_release.sql|t
+engine|228|V228__goal_outcome.sql|t
+app||"app"|t
+app|100|V100__application.sql|t
+app|101|V101__integration.sql|t
+app|102|V102__separate_application_draft.sql|t
+app|103|V103__freeze_candidate_models.sql|t
+app|104|V104__integration_policy_revision.sql|t
+app|105|V105__publish_gate.sql|t
+app|106|V106__publish_pin.sql|t
+app|107|V107__identity_mapping.sql|t
+app|108|V108__capability_package_intake.sql|t
+app|109|V109__capability_package_resolution.sql|t
+app|110|V110__capability_applications.sql|t
+app|111|V111__connection_profiles_and_env_bindings.sql|t
+app|112|V112__connection_profile_grants.sql|t
+app|113|V113__assistant_experience_and_config_release.sql|t
+app|114|V114__semantic_bindings.sql|t
+app|115|V115__config_release_semantic_refs.sql|t
+app|116|V116__onboarding_templates.sql|t
+app|117|V117__precise_skill_connection_grantee.sql|t
+app|118|V118__onboarding_sessions.sql|t
+app|119|V119__onboarding_cancel_reason.sql|t
+app|120|V120__onboarding_import_sources.sql|t
+app|121|V121__onboarding_import_step.sql|t
+skill||"skill"|t
+skill|300|V300__skill.sql|t
+skill|301|V301__reconciliation.sql|t
+skill|302|V302__skill_immutability.sql|t
+skill|303|V303__execution_fact_generation.sql|t
+skill|304|V304__fact_delivery_lease.sql|t
+skill|305|V305__controlled_contract_digest.sql|t
+skill|306|V306__controlled_artifacts.sql|t
+skill|307|V307__http_async_binding.sql|t
+skill|308|V308__async_preparation_delivery.sql|t
+skill|309|V309__signed_callback_receipt.sql|t
+skill|310|V310__reconciliation_proof.sql|t
+skill|311|V311__algorithm_job_identity.sql|t
+skill|312|V312__fixture_audit.sql|t
+skill|313|V313__service_lifecycle.sql|t
+skill|314|V314__external_job_state.sql|t
+skill|315|V315__skill_semantic_digest.sql|t
+skill|316|V316__evidence_rebind_receipt.sql|t
+skill|317|V317__connection_resolution_receipt.sql|t
+skill|318|V318__connection_resolution_call_scope.sql|t
+skill|319|V319__connection_execution_binding.sql|t
+skill|320|V320__onboarding_skill_import_receipt.sql|t
+[upgrade] 完成：drill_g50_b

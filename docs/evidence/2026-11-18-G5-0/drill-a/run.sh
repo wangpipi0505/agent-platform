@@ -17,7 +17,7 @@ export PATH="$JAVA_HOME/bin:$PATH"
 
 step() { # $1=log-name  其余=命令
   local name="$1"; shift
-  local f="$EV/$name.log"
+  local f="$EV/$name.txt"
   if [ -s "$f" ]; then echo "[run] 跳过（已有日志）: $name"; return 0; fi
   echo "[run] === $name ==="
   { echo "## 演练A $name @ $(date -u +%FT%TZ)"; echo "\$ $*"; } > "$f"
@@ -36,16 +36,16 @@ export PGCLIENTENCODING=UTF8
 # ---- 01 建库+钉版基线（engine=228, app=121, skill=320） ----
 step 01-baseline-build bash "$DEPLOY/upgrade.sh" --database drill_g50_a --create-database --pin "engine=228,app=121,skill=320"
 # ---- 02 基线断言 ----
-if [ ! -s "$EV/02-verify-baseline.log" ]; then
+if [ ! -s "$EV/02-verify-baseline.txt" ]; then
   { echo "## 演练A 02 基线断言 @ $(date -u +%FT%TZ)"
     echo "\$ psql -d drill_g50_a -At -f sql/verify-baseline.sql"
     "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_a -At -f "$DEPLOY/sql/verify-baseline.sql"
     echo "== 失败断言（行尾f）=="
     "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_a -At -f "$DEPLOY/sql/verify-baseline.sql" | grep -E '\|f$' || echo "(无失败断言)"
-  } > "$EV/02-verify-baseline.log" 2>&1
+  } > "$EV/02-verify-baseline.txt" 2>&1
 fi
 # ---- 03 基线快照→pg_restore→对照库 drill_g50_base_a ----
-if [ ! -s "$EV/03-snapshot-restore-base-a.log" ]; then
+if [ ! -s "$EV/03-snapshot-restore-base-a.txt" ]; then
   DUMP="$ROOT/.local/g50/drill-a/backup/drill_g50_a-baseline-$(date -u +%Y%m%d-%H%M%S).dump"
   PGD="$(dirname "$PSQL")"
   {
@@ -60,19 +60,19 @@ if [ ! -s "$EV/03-snapshot-restore-base-a.log" ]; then
     "$PGD/pg_restore.exe" -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_base_a --no-owner --no-privileges --exit-on-error "$DUMP" && echo "pg_restore OK"
     echo "-- restore 后基线断言（对照库）"
     "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_base_a -At -f "$DEPLOY/sql/verify-baseline.sql"
-  } > "$EV/03-snapshot-restore-base-a.log" 2>&1
+  } > "$EV/03-snapshot-restore-base-a.txt" 2>&1
 fi
 # ---- 04 升级前状态：row-counts（工作库+对照库） ----
-if [ ! -s "$EV/04-pre-upgrade-state.log" ]; then
+if [ ! -s "$EV/04-pre-upgrade-state.txt" ]; then
   {
     echo "## 演练A 04 升级前状态 @ $(date -u +%FT%TZ)"
     echo "== drill_g50_a row-counts（升级前）=="
     "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_a -At -f "$DEPLOY/sql/row-counts.sql"
     echo "== drill_g50_base_a row-counts（对照库）=="
     "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_base_a -At -f "$DEPLOY/sql/row-counts.sql"
-  } > "$EV/04-pre-upgrade-state.log" 2>&1
+  } > "$EV/04-pre-upgrade-state.txt" 2>&1
 fi
-grep -E '^engine\.|^app\.|^skill\.' "$EV/04-pre-upgrade-state.log" | sort | uniq > "$EV/04-pre-rowcounts.sorted"
+grep -E '^engine\.|^app\.|^skill\.' "$EV/04-pre-upgrade-state.txt" | sort | uniq > "$EV/04-pre-rowcounts.sorted"
 # ---- 05 全链升级（自动 pg_dump 快照 + verify-head） ----
 step 05-upgrade bash "$DEPLOY/upgrade.sh" --database drill_g50_a --backup-dir "$ROOT/.local/g50/drill-a/backup" --verify-head
 # ---- 06 升级后状态：verify-head 明细 + row-counts ----
@@ -84,12 +84,12 @@ step 05-upgrade bash "$DEPLOY/upgrade.sh" --database drill_g50_a --backup-dir "$
   "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_a -At -f "$DEPLOY/sql/verify-head.sql" | grep -E '\|f$' || echo "(无失败断言)"
   echo "== drill_g50_a row-counts（升级后）=="
   "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_a -At -f "$DEPLOY/sql/row-counts.sql"
-} > "$EV/06-verify-head.log" 2>&1
+} > "$EV/06-verify-head.txt" 2>&1
 # ---- 07 回退（备份恢复路径） ----
 DUMP_FILE="$(ls -1 "$ROOT/.local/g50/drill-a/backup/"drill_g50_a-pre-upgrade-*.dump | head -1)"
 { echo "## 演练A 07 回退 @ $(date -u +%FT%TZ)"; echo "\$ rollback.sh --database drill_g50_a --backup-file $DUMP_FILE --force"
-  bash "$DEPLOY/rollback.sh" --database drill_g50_a --backup-file "$DUMP_FILE" --force; } > "$EV/07-rollback.log" 2>&1
-tail -3 "$EV/07-rollback.log"
+  bash "$DEPLOY/rollback.sh" --database drill_g50_a --backup-file "$DUMP_FILE" --force; } > "$EV/07-rollback.txt" 2>&1
+tail -3 "$EV/07-rollback.txt"
 # ---- 08 回退后状态 ----
 {
   echo "## 演练A 08 回退后状态 @ $(date -u +%FT%TZ)"
@@ -97,8 +97,8 @@ tail -3 "$EV/07-rollback.log"
   "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_a -At -f "$DEPLOY/sql/history-summary.sql"
   echo "== drill_g50_a row-counts（回退后）=="
   "$PSQL" -X -h 127.0.0.1 -p 25432 -U agent_v12 -d drill_g50_a -At -f "$DEPLOY/sql/row-counts.sql"
-} > "$EV/08-post-rollback-state.log" 2>&1
-grep -E '^engine\.|^app\.|^skill\.' "$EV/08-post-rollback-state.log" | sort > "$EV/08-post-rowcounts.sorted"
+} > "$EV/08-post-rollback-state.txt" 2>&1
+grep -E '^engine\.|^app\.|^skill\.' "$EV/08-post-rollback-state.txt" | sort > "$EV/08-post-rowcounts.sorted"
 # ---- 09 一致性 diff：schema + 行数 ----
 PGD="$(dirname "$PSQL")"
 SCHEMA_A="$ROOT/.local/g50/drill-a/schema-base_a.sql"
@@ -116,5 +116,5 @@ SCHEMA_R="$ROOT/.local/g50/drill-a/schema-rolledback.sql"
   grep -v -e '^\\restrict ' -e '^\\unrestrict ' "$SCHEMA_A" > "$SCHEMA_A.norm"
   grep -v -e '^\\restrict ' -e '^\\unrestrict ' "$SCHEMA_R" > "$SCHEMA_R.norm"
   diff "$SCHEMA_A.norm" "$SCHEMA_R.norm" && echo "(一致)"
-} > "$EV/09-consistency-diff.log" 2>&1
+} > "$EV/09-consistency-diff.txt" 2>&1
 echo "[run] 演练A 完成；日志见 $EV"
