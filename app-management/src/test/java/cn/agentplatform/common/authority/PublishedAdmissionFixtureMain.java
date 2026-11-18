@@ -90,6 +90,39 @@ public final class PublishedAdmissionFixtureMain {
                     "http://127.0.0.1:1");
         }
 
+        /** R-11：AppService @Autowired 出站运输补装配（fixture=iam 权威链口径；手动 new 不走字段注入）。 */
+        @Bean(destroyMethod = "")
+        cn.agentplatform.app.infra.AppAuthorityTransport authorityTransport(
+                org.springframework.beans.factory.ObjectProvider<cn.agentplatform.common.authority.CurrentAuthorityClient>
+                        authority)
+                throws Exception {
+            var transport =
+                    new cn.agentplatform.app.infra.AppAuthorityTransport(
+                            "http://127.0.0.1:1",
+                            "http://127.0.0.1:1",
+                            "http://127.0.0.1:1",
+                            "http://127.0.0.1:1",
+                            authority);
+            var modeField =
+                    cn.agentplatform.app.infra.AppAuthorityTransport.class.getDeclaredField("securityMode");
+            modeField.setAccessible(true);
+            modeField.set(transport, "iam");
+            return transport;
+        }
+
+        /** R-11：AppService @Autowired OnboardingApplicationSources 链补装配（db/事务管理器来自 fixture）。 */
+        @Bean
+        cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingImportSourceRepository() {
+            return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(
+                    db, new DataSourceTransactionManager(ds));
+        }
+
+        @Bean
+        cn.agentplatform.app.application.OnboardingApplicationSources onboardingApplicationSources(
+                cn.agentplatform.app.infra.OnboardingImportSourceRepository repository) {
+            return new cn.agentplatform.app.application.OnboardingApplicationSources(repository);
+        }
+
         @Bean(destroyMethod = "close")
         JwtDecoder decoder() {
             return new TrustedJwtDecoder(trust, clock, true);

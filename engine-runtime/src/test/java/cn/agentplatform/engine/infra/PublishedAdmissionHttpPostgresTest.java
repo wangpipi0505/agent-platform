@@ -321,7 +321,8 @@ class PublishedAdmissionHttpPostgresTest {
                                 iam.clock().instant().toString())));
         control.newLine();
         control.flush();
-        var ready = awaitLine("N3_APP_READY=", 30);
+        // R-11：首跑/冷库时 child 需完成全链 Flyway 迁移（V100→V901）+Spring 启动——30s 不够，放宽 120s。
+        var ready = awaitLine("N3_APP_READY=", 120);
         appPort = Json.read(ready).path("port").asInt();
         assertThat(appPort).isPositive();
         System.out.println("N3_APP_STARTED=" + ready);
