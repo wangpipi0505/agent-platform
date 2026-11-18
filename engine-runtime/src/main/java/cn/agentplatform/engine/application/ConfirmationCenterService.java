@@ -2,6 +2,7 @@ package cn.agentplatform.engine.application;
 
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.Roles;
 import cn.agentplatform.engine.infra.TraceStore;
 
 import org.springframework.stereotype.Service;
@@ -25,10 +26,13 @@ import java.util.*;
  * <ul>
  *   <li><b>publishReview</b>：app.integration_config_release 中未完结发布（status=VALIDATED
  *       待评审 + APPROVED 已批准未激活——卡面"待审 APPROVED 未激活"口径，批准与激活分离，
- *       激活后退出计数）。APPROVER 全部只读可见（审批动作=既有 ConfigReleaseController
- *       ADMIN 门），即"可见但不可办理的待审发布"计入；BUILDER 限提交人本人（created_by）。
- *       同库跨 schema 只读计数（app 服务持有该表，engine 侧聚合计数不做逐行核验——与
- *       ResourceManifestService "无 app schema 直查"的逐行语义核验边界不同，如实登记）。
+ *       激活后退出计数）。<b>计数按业务号 release_id 去重</b>（R-17：同号重复提交不重复计数；
+ *       主键 (tenant_id, release_id) 一行业务号一行，validate/approve 为同行 CAS 迁移，
+ *       count(distinct) 为口径显式化与防御性收口）。APPROVER 全部只读可见（审批动作=既有
+ *       ConfigReleaseController ADMIN 门），即"可见但不可办理的待审发布"计入；BUILDER 限
+ *       提交人本人（created_by）。同库跨 schema 只读计数（app 服务持有该表，engine 侧聚合
+ *       计数不做逐行核验——与 ResourceManifestService "无 app schema 直查"的逐行语义核验
+ *       边界不同，如实登记）。
  *   <li><b>highRisk</b>：InlineApproval 待审（engine.node_instance WAITING_APPROVAL），与
  *       {@link ApprovalService#list} 四类列表<b>共用同一待办条件</b>（节点/调用级确认角色
  *       过滤=被确认人+APPROVER，§5.9）。
@@ -55,7 +59,7 @@ public class ConfirmationCenterService {
   public Map<String, Object> counts(String appCode, Actor actor) {
     requireEntry(actor, appCode);
     String code = normalizedWorkspace(appCode);
-    boolean admin = actor.roles().contains("ADMIN");
+    boolean admin = Roles.has(actor, Roles.ADMIN);
     int publishReview = countPublishReview(code, actor, admin);
     int highRisk = countHighRisk(code, actor);
     int planConfirmation = tasks.confirmableRevisions(code, actor).size();
@@ -69,13 +73,9 @@ public class ConfirmationCenterService {
     return out;
   }
 
-  /** 管理台确认中心入口门：ADMIN/APPROVER/BUILDER(EDITOR) 可读；越权 403+审计。 */
+  /** 管理台确认中心入口门：ADMIN/APPROVER/BUILDER(EDITOR) 可读（R-17：判定引 §3.1 授权目录常量）；越权 403+审计。 */
   private void requireEntry(Actor actor, String appCode) {
-    if (actor.roles().contains("ADMIN")
-            || actor.roles().contains("APPROVER")
-            || actor.roles().contains("BUILDER")
-            || actor.roles().contains("EDITOR"))
-      return;
+    if (Roles.hasAny(actor, Roles.ADMIN, Roles.APPROVER, Roles.BUILDER, Roles.EDITOR)) return;
     org.slf4j.LoggerFactory.getLogger(ConfirmationCenterService.class)
             .warn(
                     "AUDIT CONFIRMATION_CENTER_FORBIDDEN tenant={} principal={} roles={} appCode={}",
@@ -100,7 +100,10 @@ public class ConfirmationCenterService {
    * 角色（BUILDER）限提交人本人（created_by 收窄）。
    */
   private int countPublishReview(String code, Actor actor, boolean admin) {
-    boolean tenantWide = admin || actor.roles().contains("APPROVER");
+    boolean tenantWide = Roles.hasAny(actor, Roles.ADMIN, Roles.APPROVER);
+    // R-17 计数口径：按业务号 release_id 去重（count(distinct)）——同号重复提交不重复计数。
+    // 现状核实：app.integration_config_release 主键 (tenant_id, release_id) 一行业务号一行，
+    // validate/approve 为同行 CAS 状态迁移不新增行，此去重为口径显式化与防御性收口。
     var where = new StringBuilder(" from app.integration_config_release r where r.tenant_id=?"
             + " and r.status in ('VALIDATED','APPROVED')");
     var args = new ArrayList<Object>();
@@ -113,7 +116,12 @@ public class ConfirmationCenterService {
       where.append(" and r.app_code=?");
       args.add(code);
     }
-    Integer count = store.db().queryForObject("select count(*)" + where, Integer.class, args.toArray());
+    Integer count =
+            store.db()
+                    .queryForObject(
+                            "select count(distinct r.release_id)" + where,
+                            Integer.class,
+                            args.toArray());
     return count == null ? 0 : count;
   }
 

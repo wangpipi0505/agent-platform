@@ -41,6 +41,15 @@ agent:
   stream:
     max-subscriptions: ${AGENT_STREAM_MAX_SUBSCRIPTIONS:256}
     buffer-bytes: ${AGENT_STREAM_BUFFER_BYTES:16777216}
+  sse:
+    # R-16（台账 §7.6b）：会话/任务事件 SSE 限流与背压（ChatSessions/Tasks 共用同一键）。
+    # max-buffered-events：单连接未读积压上限——PG（事实源）即缓冲，进程内每批 ≤200 事件；
+    #   超限判慢消费者主动断开并记审计行（SESSION_SSE/TASK_SSE_SLOW_CONSUMER_DISCONNECT），
+    #   客户端以 Last-Event-ID 重连续读（seq 幂等去重，不重不漏）。
+    # max-connections-per-principal：单主体（tenant+principal）会话 SSE 连接上限，超限拒绝
+    #   新连接（429 SESSION_SSE_CONNECTION_LIMIT）并记审计行；既有连接不受影响。
+    max-buffered-events: ${AGENT_SSE_MAX_BUFFERED_EVENTS:2000}
+    max-connections-per-principal: ${AGENT_SSE_MAX_CONNECTIONS_PER_PRINCIPAL:50}
   tool:
     # PLAT-14 T14.2：工具输出注入模型上下文的字节上限（UTF-8 序列化字节数）。超限不静默
     # 截断、不整块塞给模型：替换为 OUTPUT_TOO_LARGE 可读错误（含实际大小与上限）；

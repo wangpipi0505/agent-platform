@@ -23,8 +23,23 @@ public class ChatSessions {
     /** :ping 心跳间隔（接口稿 §7：15s）；独立部署可调，测试经反射改短。 */
     @org.springframework.beans.factory.annotation.Value("${agent.session.sse.heartbeat-millis:15000}")
     long heartbeatMillis = 15000;
-    /** 慢客户端积压上限（接口稿 §7：有界输出、超限断开，重连走 Last-Event-ID 恢复）。 */
-    static final int STREAM_BACKLOG_LIMIT = 2000;
+    /**
+     * R-16（台账 §7.6b）：会话 SSE 背压配置——单连接未读积压上限。有界输出口径：PG（事实源）
+     * 即缓冲，进程内不设无界队列（每批 ≤200 事件）；未读积压超限判慢消费者<b>主动断开并记
+     * 审计行</b>（AUDIT SESSION_SSE_SLOW_CONSUMER_DISCONNECT），客户端以 Last-Event-ID 重连
+     * 续读（seq 幂等去重，不重不漏）。默认 2000（T2-11 任务 SSE 同构先例原值），配置键
+     * {@code agent.sse.max-buffered-events}（application.yml 默认值在案）。
+     */
+    @org.springframework.beans.factory.annotation.Value("${agent.sse.max-buffered-events:2000}")
+    int maxBufferedEvents = 2000;
+    /**
+     * R-16：单主体（tenant+principal）会话 SSE 连接上限——已达上限时拒绝新连接（429
+     * {@code SESSION_SSE_CONNECTION_LIMIT}）并记审计行，防止单主体无界占用观察流（连接数
+     * 是独立于单连接缓冲的第二道限流面）。默认 50，配置键
+     * {@code agent.sse.max-connections-per-principal}（application.yml 默认值在案）。
+     */
+    @org.springframework.beans.factory.annotation.Value("${agent.sse.max-connections-per-principal:50}")
+    int maxConnectionsPerPrincipal = 50;
 
     public ChatSessions(TraceStore store, RuntimeClients clients, RunService runs) {
         this.store = store;
@@ -521,16 +536,39 @@ public class ChatSessions {
      * data=<json>}。Last-Event-ID（头优先、缺省取同名 query 参数）排他续读（{@code seq > id}，
      * 与 §5.1 游标同一语义）；普通视图投影（{@link #SURFACE_HIDDEN}）；15s 无事件补 {@code :ping}
      * 注释帧。生命周期（接口稿 §7）：SSE 只是观察通道——客户端断开（send 失败）只停泵，
-     * <b>不取消 turn</b>（取消必须显式 control）。有界输出：PG（事实源）即缓冲，进程内不设无界
-     * 队列——每批 ≤200 事件、未读积压超 {@link #STREAM_BACKLOG_LIMIT} 判慢客户端直接断开
-     * （客户端以 Last-Event-ID 重连续读）。
+     * <b>不取消 turn</b>（取消必须显式 control）。有界输出（T2-11 任务 SSE 同构）：PG（事实源）
+     * 即缓冲，进程内不设无界队列——每批 ≤200 事件、未读积压超 {@link #maxBufferedEvents}
+     * 判慢消费者主动断开并记审计行（客户端以 Last-Event-ID 重连续读）。
+     *
+     * <p>R-16 连接面限流：单主体（tenant+principal）活动会话 SSE 连接达
+     * {@link #maxConnectionsPerPrincipal} 时拒绝新连接（429 SESSION_SSE_CONNECTION_LIMIT）
+     * 并记审计行——限流在归属校验之后执行，超限不占用泵线程；既有连接不受影响。
      */
     public org.springframework.web.servlet.mvc.method.annotation.SseEmitter eventStream(
             String code, String id, String headerLastEventId, String paramLastEventId, Actor actor) {
         owned(code, id, actor, false);
+        int connectionLimit = Math.max(1, maxConnectionsPerPrincipal);
+        int active = 0;
+        for (var pump : streams)
+            if (pump.tenantId.equals(actor.tenantId()) && pump.principalId.equals(actor.principalId()))
+                active++;
+        if (active >= connectionLimit) {
+            org.slf4j.LoggerFactory.getLogger(ChatSessions.class)
+                    .warn(
+                            "AUDIT SESSION_SSE_CONNECTION_LIMIT tenant={} principal={} appCode={} sessionId={} active={} limit={}",
+                            actor.tenantId(),
+                            actor.principalId(),
+                            code,
+                            id,
+                            active,
+                            connectionLimit);
+            throw new PlatformException(
+                    429, "SESSION_SSE_CONNECTION_LIMIT",
+                    "会话事件流连接数已达单主体上限（" + connectionLimit + "），请关闭空闲连接后重试");
+        }
         long after = parseStreamCursor(headerLastEventId, paramLastEventId);
         var emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(0L);
-        var pump = new StreamPump(id, after, emitter);
+        var pump = new StreamPump(code, id, after, emitter, actor.tenantId(), actor.principalId());
         streams.add(pump);
         emitter.onCompletion(pump::close);
         emitter.onTimeout(pump::close);
@@ -568,9 +606,9 @@ public class ChatSessions {
                     cn.agentplatform.engine.harness.session.SessionEvents.REQUEST_CONTEXT,
                     cn.agentplatform.engine.harness.session.SessionEvents.ASSISTANT_ATTEMPT);
 
-    /** 诊断视图角色门：仅 OPERATOR/ADMIN；无权 403 并记一条拒绝审计（拒绝原因入日志）。 */
+    /** 诊断视图角色门：仅 OPERATOR/ADMIN（R-17：角色判定引 §3.1 授权目录常量）；无权 403 并记一条拒绝审计（拒绝原因入日志）。 */
     private void requireDiagnosticRole(String code, String id, Actor actor) {
-        if (actor.roles().contains("OPERATOR") || actor.roles().contains("ADMIN")) return;
+        if (Roles.hasAny(actor, Roles.OPERATOR, Roles.ADMIN)) return;
         // 引擎无独立审计表（审计归口 monitor，§5.7 卡接线）；先落结构化审计日志行保证可追溯。
         org.slf4j.LoggerFactory.getLogger(ChatSessions.class)
                 .warn(
@@ -702,21 +740,35 @@ public class ChatSessions {
                 : Map.of("accepted", true);
     }
 
-    /** 单连接泵：批量读 PG→同步发送。断开（send 失败）只停泵不取消 turn；积压超限断开走重连恢复。 */
+    /**
+     * 单连接泵：批量读 PG→同步发送。断开（send 失败）只停泵不取消 turn；积压超限断开走重连
+     * 恢复。R-16：连接时固化调用者身份快照（泵线程无请求上下文）供积压断开审计与连接数上限
+     * 统计；未读积压超 {@code maxBufferedEvents} 主动断开并记审计行（AUDIT
+     * SESSION_SSE_SLOW_CONSUMER_DISCONNECT）。
+     */
     final class StreamPump implements Runnable {
+        private final String appCode;
         private final String sessionId;
         private final long after;
         private final org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter;
+        private final String tenantId;
+        private final String principalId;
         private final java.util.concurrent.atomic.AtomicBoolean open =
                 new java.util.concurrent.atomic.AtomicBoolean(true);
 
         StreamPump(
+                String appCode,
                 String sessionId,
                 long after,
-                org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter) {
+                org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter,
+                String tenantId,
+                String principalId) {
+            this.appCode = appCode;
             this.sessionId = sessionId;
             this.after = after;
             this.emitter = emitter;
+            this.tenantId = tenantId;
+            this.principalId = principalId;
         }
 
         @Override
@@ -748,8 +800,19 @@ public class ChatSessions {
                                         org.springframework.http.MediaType.APPLICATION_JSON));
                         lastEmit = System.currentTimeMillis();
                     }
-                    if (turnEvents.watermark(sessionId) - cursor > STREAM_BACKLOG_LIMIT) {
-                        close(); // 慢客户端超限断开：重连以 Last-Event-ID 续读（接口稿 §7 心跳行）
+                    if (turnEvents.watermark(sessionId) - cursor > Math.max(1, maxBufferedEvents)) {
+                        // R-16：慢消费者超限断开——记审计行（未读积压与上限可追溯），重连以
+                        // Last-Event-ID 续读（seq 幂等去重，不重不漏）；停泵不触碰 run/turn。
+                        org.slf4j.LoggerFactory.getLogger(ChatSessions.class)
+                                .warn(
+                                        "AUDIT SESSION_SSE_SLOW_CONSUMER_DISCONNECT tenant={} principal={} appCode={} sessionId={} unreadBacklog={} limit={} resume=Last-Event-ID",
+                                        tenantId,
+                                        principalId,
+                                        appCode,
+                                        sessionId,
+                                        turnEvents.watermark(sessionId) - cursor,
+                                        Math.max(1, maxBufferedEvents));
+                        close();
                         return;
                     }
                 }
