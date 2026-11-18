@@ -1,0 +1,14 @@
+## æ¼”ç»ƒA æ­¥éª¤03ï¼šåŸºçº¿å¿«ç…§+æ¢å¤å‡ºå¯¹ç…§åº“ drill_g50_base_aï¼ˆéªŒè¯pg_restoreè·¯å¾„ï¼‰ 2026-11-18T07:06:10Z
+-- pg_dump drill_g50_a -> .local/g50/drill-a/backup/drill_g50_a-baseline-20261118-070610.dump
+G:\207\ÏîÄ¿\Ëã·¨ÖØ×é¹¤¾ß\´úÂë\_worktrees\upgrade-20261103\agent-platform\.tools\postgresql-16.15\pgsql\bin\pg_dump.exe: illegal option -- X
+pg_dump: hint: Try "pg_dump --help" for more information.
+-- sha256/bytes
+sha256sum: .local/g50/drill-a/backup/drill_g50_a-baseline-20261118-070610.dump: No such file or directory
+stat: cannot stat '.local/g50/drill-a/backup/drill_g50_a-baseline-20261118-070610.dump': No such file or directory
+-- å»ºå¯¹ç…§åº“ drill_g50_base_a
+ERROR:  DROP DATABASE cannot run inside a transaction block
+-- pg_restore -> drill_g50_base_a (--exit-on-error)
+G:\207\ÏîÄ¿\Ëã·¨ÖØ×é¹¤¾ß\´úÂë\_worktrees\upgrade-20261103\agent-platform\.tools\postgresql-16.15\pgsql\bin\pg_restore.exe: illegal option -- X
+pg_restore: hint: Try "pg_restore --help" for more information.
+-- restore ååŸºçº¿æ–­è¨€
+psql: error: connection to server at "127.0.0.1", port 25432 failed: FATAL:  database "drill_g50_base_a" does not exist

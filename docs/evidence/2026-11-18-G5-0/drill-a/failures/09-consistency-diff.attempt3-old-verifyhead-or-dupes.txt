@@ -1,0 +1,135 @@
+## 演练A 09 回退一致性 diff @ 2026-11-18T07:09:42Z
+== [1] 行数：回退后 vs 升级前（应为空）==
+2d1
+< app.app_draft|0
+4,5d2
+< app.app_version|0
+< app.application|0
+8d4
+< app.assistant_experience_revision|0
+10,11d5
+< app.assistant_experience|0
+< app.candidate_model_snapshot|0
+14,15d7
+< app.capability_app_binding|0
+< app.capability_package_version|0
+18d9
+< app.classification|0
+20,21d10
+< app.config_write_request|0
+< app.connection_profile_grant|0
+24,25d12
+< app.connection_profile_version|0
+< app.connection_profile|0
+28d14
+< app.environment_binding_revision|0
+30,31d15
+< app.environment_binding|0
+< app.flyway_schema_history|23
+34,35d17
+< app.identity_mapping|0
+< app.integration_config_release_activation|0
+38,39d19
+< app.integration_config_release_semantic_ref|0
+< app.integration_config_release|0
+42,43d21
+< app.integration_credential|0
+< app.integration_profile_revision|0
+46d23
+< app.integration_profile|0
+48,49d24
+< app.lifecycle_log|0
+< app.onboarding_import_source|0
+52,53d26
+< app.onboarding_session_request|0
+< app.onboarding_session_step|0
+56d28
+< app.onboarding_session|0
+58,59d29
+< app.onboarding_template_version|0
+< app.onboarding_template|0
+62,63d31
+< app.prompt_template_version|0
+< app.prompt_template|0
+66d33
+< app.publish_commit|0
+68,69d34
+< app.publish_pin|0
+< app.publish_report|0
+72,73d36
+< app.publish_waiver|0
+< app.semantic_binding_revision|0
+76,77d38
+< app.semantic_binding|0
+< app.skill_reference|0
+80,81d40
+< engine.action_plan|0
+< engine.attempt_note|0
+84d42
+< engine.attempt|0
+86,87d43
+< engine.chat_session|0
+< engine.chat_turn|0
+90,91d45
+< engine.debug_input_promotion|0
+< engine.debug_input|0
+94d47
+< engine.flyway_schema_history|30
+96,97d48
+< engine.goal_outcome|0
+< engine.material_scope|0
+100,101d50
+< engine.model_input_snapshot|0
+< engine.model_invocation|0
+104d52
+< engine.node_instance|0
+106,107d53
+< engine.reproduction|0
+< engine.run_authority|0
+110,111d55
+< engine.run_event|0
+< engine.run|0
+114,115d57
+< engine.tool_call|0
+< skill.acceptance|0
+118,119d59
+< skill.artifact|0
+< skill.callback_receipt|0
+122d61
+< skill.connection_resolution|0
+124,125d62
+< skill.connection_test|0
+< skill.evidence_rebind|0
+128,129d64
+< skill.execution_fact_history|0
+< skill.execution_fact|0
+132,133d66
+< skill.external_job_binding_history|0
+< skill.external_job_binding|0
+136,137d68
+< skill.fixture_audit|0
+< skill.flyway_schema_history|22
+140d70
+< skill.onboarding_skill_import_receipt|0
+142,143d71
+< skill.reconciliation_note|0
+< skill.reconciliation_proof|0
+146,147d73
+< skill.service_audit|0
+< skill.service_manifest|0
+150,151d75
+< skill.service_runtime|0
+< skill.skill_version|0
+153d76
+< skill.skill|0
+== [2] 行数：回退后 vs 对照库 base_a（应为空）==
+(一致)
+== [3] schema-only dump：对照库 vs 回退后（应为空）==
+5c5
+< \restrict wk0ZfygN6L297hnGVPFl3fnm9t1G8ls8eCTTGcAGN4Jz5ohFQQFtEbaajpQ9KT8
+---
+> \restrict pfOXPdBJM5qaBaTstWOCtKCYU1j3xQJcs1nGQwnFneRuCDVm6feqFGqFsz0jxHt
+4230c4230
+< \unrestrict wk0ZfygN6L297hnGVPFl3fnm9t1G8ls8eCTTGcAGN4Jz5ohFQQFtEbaajpQ9KT8
+---
+> \unrestrict pfOXPdBJM5qaBaTstWOCtKCYU1j3xQJcs1nGQwnFneRuCDVm6feqFGqFsz0jxHt

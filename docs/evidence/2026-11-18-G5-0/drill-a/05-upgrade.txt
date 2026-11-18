@@ -1,0 +1,135 @@
+## 演练A 05-upgrade @ 2026-11-18T07:12:54Z
+$ bash /g/207/项目/算法重组工具/代码/_worktrees/upgrade-20261103/wt-g50/deploy/upgrade-20261118/upgrade.sh --database drill_g50_a --backup-dir /g/207/项目/算法重组工具/代码/_worktrees/upgrade-20261103/wt-g50/.local/g50/drill-a/backup --verify-head
+[upgrade] pg_dump 一致性快照 -> /g/207/项目/算法重组工具/代码/_worktrees/upgrade-20261103/wt-g50/.local/g50/drill-a/backup/drill_g50_a-pre-upgrade-20261118-071255.dump
+[upgrade] 备份 manifest 已写（sha256=166a262c1aeb29ca7e5051ba7653d6b8bb5b1ec53bb5ebc5d53fefb0bc33618b）
+[upgrade] flyway migrate: module=engine target=HEAD db=drill_g50_a
+15:12:56.552 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/drill_g50_a (PostgreSQL 16.15)
+15:12:56.614 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 34 migrations (execution time 00:00.037s)
+15:12:56.645 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": 228
+15:12:56.670 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "229 - harness session log"
+15:12:56.801 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: trigger "session_event_append_only_guard" for relation "engine.session_event" does not exist, skipping
+15:12:56.940 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "230 - task plan family"
+15:12:57.235 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: trigger "plan_revision_immutable_guard" for relation "engine.plan_revision" does not exist, skipping
+15:12:57.280 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: trigger "plan_step_immutable_guard" for relation "engine.plan_step" does not exist, skipping
+15:12:57.742 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "231 - memory spill"
+15:12:57.964 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "901 - demo seed"
+15:12:57.964 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 4 migrations to schema "engine", now at version v901 (execution time 00:01.268s)
+[g50-drill] module=engine target=HEAD applied=4 from=228 to=901 outcome=901
+[upgrade] flyway migrate: module=app target=HEAD db=drill_g50_a
+15:12:59.263 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/drill_g50_a (PostgreSQL 16.15)
+15:12:59.321 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 26 migrations (execution time 00:00.035s)
+15:12:59.373 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "app": 121
+15:12:59.399 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "122 - workspace manifest"
+15:12:59.525 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "123 - rule assets"
+15:12:59.691 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "app" to version "901 - demo seed"
+15:12:59.716 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 3 migrations to schema "app", now at version v901 (execution time 00:00.284s)
+[g50-drill] module=app target=HEAD applied=3 from=121 to=901 outcome=901
+[upgrade] flyway migrate: module=skill target=HEAD db=drill_g50_a
+15:13:00.975 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:25432/drill_g50_a (PostgreSQL 16.15)
+15:13:01.028 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 25 migrations (execution time 00:00.031s)
+15:13:01.065 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "skill": 320
+15:13:01.094 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "321 - skill dual track plugins"
+15:13:01.627 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "322 - mcp connections"
+15:13:01.855 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "skill" to version "901 - demo seed"
+15:13:01.865 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 3 migrations to schema "skill", now at version v901 (execution time 00:00.755s)
+[g50-drill] module=skill target=HEAD applied=3 from=320 to=901 outcome=901
+[upgrade] 升级后 flyway_schema_history 摘要：
+engine||"engine"|t
+engine|200|V200__engine.sql|t
+engine|201|V201__engine_tool_approval.sql|t
+engine|202|V202__engine_controlled_draft_test.sql|t
+engine|203|V203__engine_frozen_call_contract.sql|t
+engine|204|V204__engine_fact_recovery_schedule.sql|t
+engine|205|V205__engine_model_projection.sql|t
+engine|206|V206__engine_debug_controls.sql|t
+engine|207|V207__engine_model_usage_ledger.sql|t
+engine|208|V208__engine_chat_sessions.sql|t
+engine|209|V209__engine_readonly_retry_budget.sql|t
+engine|210|V210__engine_controlled_reproduction.sql|t
+engine|211|V211__engine_controlled_model_provenance.sql|t
+engine|212|V212__engine_exact_skill_connection.sql|t
+engine|213|V213__engine_model_output_policy.sql|t
+engine|214|V214__named_test_inputs.sql|t
+engine|215|V215__run_scheduler.sql|t
+engine|216|V216__run_authority_initial_materials.sql|t
+engine|217|V217__run_flow_materials.sql|t
+engine|218|V218__initial_model_input_material.sql|t
+engine|219|V219__initial_request_utf8.sql|t
+engine|220|V220__run_error_structured.sql|t
+engine|221|V221__action_plan_execute_key.sql|t
+engine|222|V222__run_context_pack.sql|t
+engine|223|V223__engine_quota_window.sql|t
+engine|224|V224__action_plan_two_principals.sql|t
+engine|225|V225__business_intent_execute_claim.sql|t
+engine|226|V226__tool_call_binding_refs.sql|t
+engine|227|V227__run_config_release.sql|t
+engine|228|V228__goal_outcome.sql|t
+engine|229|V229__harness_session_log.sql|t
+engine|230|V230__task_plan_family.sql|t
+engine|231|V231__memory_spill.sql|t
+engine|901|V901__demo_seed.sql|t
+app||"app"|t
+app|100|V100__application.sql|t
+app|101|V101__integration.sql|t
+app|102|V102__separate_application_draft.sql|t
+app|103|V103__freeze_candidate_models.sql|t
+app|104|V104__integration_policy_revision.sql|t
+app|105|V105__publish_gate.sql|t
+app|106|V106__publish_pin.sql|t
+app|107|V107__identity_mapping.sql|t
+app|108|V108__capability_package_intake.sql|t
+app|109|V109__capability_package_resolution.sql|t
+app|110|V110__capability_applications.sql|t
+app|111|V111__connection_profiles_and_env_bindings.sql|t
+app|112|V112__connection_profile_grants.sql|t
+app|113|V113__assistant_experience_and_config_release.sql|t
+app|114|V114__semantic_bindings.sql|t
+app|115|V115__config_release_semantic_refs.sql|t
+app|116|V116__onboarding_templates.sql|t
+app|117|V117__precise_skill_connection_grantee.sql|t
+app|118|V118__onboarding_sessions.sql|t
+app|119|V119__onboarding_cancel_reason.sql|t
+app|120|V120__onboarding_import_sources.sql|t
+app|121|V121__onboarding_import_step.sql|t
+app|122|V122__workspace_manifest.sql|t
+app|123|V123__rule_assets.sql|t
+app|901|V901__demo_seed.sql|t
+skill||"skill"|t
+skill|300|V300__skill.sql|t
+skill|301|V301__reconciliation.sql|t
+skill|302|V302__skill_immutability.sql|t
+skill|303|V303__execution_fact_generation.sql|t
+skill|304|V304__fact_delivery_lease.sql|t
+skill|305|V305__controlled_contract_digest.sql|t
+skill|306|V306__controlled_artifacts.sql|t
+skill|307|V307__http_async_binding.sql|t
+skill|308|V308__async_preparation_delivery.sql|t
+skill|309|V309__signed_callback_receipt.sql|t
+skill|310|V310__reconciliation_proof.sql|t
+skill|311|V311__algorithm_job_identity.sql|t
+skill|312|V312__fixture_audit.sql|t
+skill|313|V313__service_lifecycle.sql|t
+skill|314|V314__external_job_state.sql|t
+skill|315|V315__skill_semantic_digest.sql|t
+skill|316|V316__evidence_rebind_receipt.sql|t
+skill|317|V317__connection_resolution_receipt.sql|t
+skill|318|V318__connection_resolution_call_scope.sql|t
+skill|319|V319__connection_execution_binding.sql|t
+skill|320|V320__onboarding_skill_import_receipt.sql|t
+skill|321|V321__skill_dual_track_plugins.sql|t
+skill|322|V322__mcp_connections.sql|t
+skill|901|V901__demo_seed.sql|t
+[upgrade] verify-head 断言：
+head_top_version|app|901|901|t
+head_top_version|engine|901|901|t
+head_top_version|skill|901|901|t
+failed_migrations|engine+app+skill|0|0|t
+seed_engine_rows|engine.memory_entry(tenant=demo)|2|2|t
+seed_app_rows|app 13 表 tenant=demo 求和|38|38|t
+seed_skill_rows|skill 6 表 tenant=demo 求和|32|32|t
+satellite-planning-assistant|demo|demo-release-satellite-planning-001|ACTIVE|a436fd333b3faf1239313a2ebefa41519f1160fc45a1c206b224f96a288fa7ec|e68aa654066fbe3200d88094aa6317214aedc995bd3540b606ce768220d5a726|e68aa654066fbe3200d88094aa6317214aedc995bd3540b606ce768220d5a726|t
+user-governance-assistant|demo|demo-release-user-governance-001|ACTIVE|b3bae251d9a0c4a14860da351335beb3a27b33d52c2131d25b779b2154f9af80|ef15732cd5003a4a1eb8e556c0da116df1f328763edb60bb6870b44327e7a39d|ef15732cd5003a4a1eb8e556c0da116df1f328763edb60bb6870b44327e7a39d|t
+activation_pointer|ACTIVE rows / digest一致|2行/2一致|2行/2一致|t
+[upgrade] verify-head 全部通过
+[upgrade] 完成：drill_g50_a
+## exit=0
