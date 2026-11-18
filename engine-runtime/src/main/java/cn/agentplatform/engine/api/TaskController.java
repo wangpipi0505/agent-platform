@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.*;
 /**
  * T2-2（台账 §7.3）：任务域 HTTP 端点（接口稿 §5.2）。
  * 网关/authority 登记照 S2-1 目录行方式（admin-common agent-service-authority.json）。
+ *
+ * <p>R-9⑤（M5-2 缺陷登记②收口）：{taskId} 路径变量为对外业务号（public_id/taskId 形态，
+ * contracts/error-codes.md §1 + 接口稿 §5.2）——受理/列表回业务号、后续端点同形状回传；
+ * {@link cn.agentplatform.engine.application.Tasks#resolveTaskId} 解析到内部 id
+ * （纯数字形态保持兼容）。网关路由形状 [A-Za-z0-9_-]+ 两种形态均可入（R-9② 已接线）。
  */
 @RestController
 public class TaskController {
@@ -26,6 +31,11 @@ public class TaskController {
     this.tasks = tasks;
     this.plans = plans;
     this.reconciliation = reconciliation;
+  }
+
+  /** {taskId} 业务号→内部 id 解析（R-9⑤；形状解析归 Tasks，归属核验仍在 ownedTask）。 */
+  private long resolve(String taskId, Actor actor) {
+    return tasks.resolveTaskId(taskId, actor);
   }
 
   /** POST /v1/apps/{code}/tasks：受理（mode 必填；requestId 幂等；TASK_INTERNAL 根会话）。 */
@@ -66,89 +76,100 @@ public class TaskController {
 
   /** GET /v1/tasks/{taskId}：详情（服务端计算 availableActions + recovery 角色投影）。 */
   @GetMapping("/v1/tasks/{taskId}")
-  public Object detail(@PathVariable("taskId") long taskId) {
-    return ApiResponse.ok(tasks.detail(taskId, Actor.current()));
+  public Object detail(@PathVariable("taskId") String taskId) {
+    Actor actor = Actor.current();
+    return ApiResponse.ok(tasks.detail(resolve(taskId, actor), actor));
   }
 
   /** GET /v1/tasks/{taskId}/events?afterSeq=：事件增量（排他游标，不 +1）。 */
   @GetMapping("/v1/tasks/{taskId}/events")
   public Object events(
-          @PathVariable("taskId") long taskId,
+          @PathVariable("taskId") String taskId,
           @RequestParam(value = "afterSeq", defaultValue = "0") long afterSeq,
           @RequestParam(value = "limit", defaultValue = "200") int limit) {
-    return ApiResponse.ok(tasks.events(taskId, afterSeq, limit, Actor.current()));
+    Actor actor = Actor.current();
+    return ApiResponse.ok(tasks.events(resolve(taskId, actor), afterSeq, limit, actor));
   }
 
   /** T2-11（接口稿 §7）：任务事件 SSE——Last-Event-ID 排他续读，15s :ping，断开不取消任务。 */
   @GetMapping("/v1/tasks/{taskId}/events/stream")
   public org.springframework.web.servlet.mvc.method.annotation.SseEmitter stream(
-          @PathVariable("taskId") long taskId,
+          @PathVariable("taskId") String taskId,
           @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,
           @RequestParam(value = "Last-Event-ID", required = false) String lastEventIdParam) {
-    return tasks.eventStream(taskId, lastEventId, lastEventIdParam, Actor.current());
+    Actor actor = Actor.current();
+    return tasks.eventStream(resolve(taskId, actor), lastEventId, lastEventIdParam, actor);
   }
 
   /** POST /v1/tasks/{taskId}/cancel：取消（终态幂等）。 */
   @PostMapping("/v1/tasks/{taskId}/cancel")
-  public Object cancel(@PathVariable("taskId") long taskId, @RequestBody(required = false) JsonNode req) {
-    return ApiResponse.ok(tasks.cancel(taskId, req, Actor.current()));
+  public Object cancel(@PathVariable("taskId") String taskId, @RequestBody(required = false) JsonNode req) {
+    Actor actor = Actor.current();
+    return ApiResponse.ok(tasks.cancel(resolve(taskId, actor), req, actor));
   }
 
   /** POST /v1/tasks/{taskId}/resume：恢复（写 TASK_RESUMED；终态无恢复）。 */
   @PostMapping("/v1/tasks/{taskId}/resume")
-  public Object resume(@PathVariable("taskId") long taskId, @RequestBody(required = false) JsonNode req) {
-    return ApiResponse.ok(tasks.resume(taskId, req, Actor.current()));
+  public Object resume(@PathVariable("taskId") String taskId, @RequestBody(required = false) JsonNode req) {
+    Actor actor = Actor.current();
+    return ApiResponse.ok(tasks.resume(resolve(taskId, actor), req, actor));
   }
   /** POST /v1/tasks/{taskId}/steps/{stepId}/calls/{callId}/reconcile：对账处置提交（T2-12）。 */
   @PostMapping("/v1/tasks/{taskId}/steps/{stepId}/calls/{callId}/reconcile")
   public Object reconcile(
-          @PathVariable("taskId") long taskId,
+          @PathVariable("taskId") String taskId,
           @PathVariable("stepId") String stepId,
           @PathVariable("callId") String callId,
           @RequestBody JsonNode req) {
-    return ApiResponse.ok(reconciliation.reconcile(taskId, stepId, callId, req, Actor.current()));
+    Actor actor = Actor.current();
+    return ApiResponse.ok(reconciliation.reconcile(resolve(taskId, actor), stepId, callId, req, actor));
   }
 
   /** GET /v1/tasks/{taskId}/steps/{stepId}/calls：步骤调用列表（锚点定位，接口稿 §5.7）。 */
   @GetMapping("/v1/tasks/{taskId}/steps/{stepId}/calls")
   public Object stepCalls(
-          @PathVariable("taskId") long taskId,
+          @PathVariable("taskId") String taskId,
           @PathVariable("stepId") String stepId,
           @RequestParam(value = "page", defaultValue = "1") int page,
           @RequestParam(value = "pageSize", defaultValue = "20") int pageSize) {
-    return ApiResponse.ok(tasks.stepCalls(taskId, stepId, page, pageSize, Actor.current()));
+    Actor actor = Actor.current();
+    return ApiResponse.ok(tasks.stepCalls(resolve(taskId, actor), stepId, page, pageSize, actor));
   }
 
   // T2-3：计划 API——修订追加/确认/execute/修订读（主方案 §5.6 三要素；Plans 服务）。
   /** POST /v1/tasks/{taskId}/plans：追加计划修订（baseRevision CAS）。 */
   @PostMapping("/v1/tasks/{taskId}/plans")
-  public Object appendPlan(@PathVariable("taskId") long taskId, @RequestBody JsonNode req) {
-    return ApiResponse.ok(plans.appendRevision(taskId, req, Actor.current()));
+  public Object appendPlan(@PathVariable("taskId") String taskId, @RequestBody JsonNode req) {
+    Actor actor = Actor.current();
+    return ApiResponse.ok(plans.appendRevision(resolve(taskId, actor), req, actor));
   }
 
   /** GET /v1/tasks/{taskId}/plans/{planId}/revisions/{revision}：修订读（含确认状态投影）。 */
   @GetMapping("/v1/tasks/{taskId}/plans/{planId}/revisions/{revision}")
   public Object planRevision(
-          @PathVariable("taskId") long taskId,
+          @PathVariable("taskId") String taskId,
           @PathVariable("planId") String planId,
           @PathVariable("revision") int revision) {
-    return ApiResponse.ok(plans.revisionDetail(taskId, planId, revision, Actor.current()));
+    Actor actor = Actor.current();
+    return ApiResponse.ok(plans.revisionDetail(resolve(taskId, actor), planId, revision, actor));
   }
 
   /** POST .../plans/{planId}/revisions/{revision}/confirm：计划版本级确认。 */
   @PostMapping("/v1/tasks/{taskId}/plans/{planId}/revisions/{revision}/confirm")
   public Object confirmPlan(
-          @PathVariable("taskId") long taskId,
+          @PathVariable("taskId") String taskId,
           @PathVariable("planId") String planId,
           @PathVariable("revision") int revision,
           @RequestBody JsonNode req) {
-    return ApiResponse.ok(plans.confirm(taskId, planId, revision, req, Actor.current()));
+    Actor actor = Actor.current();
+    return ApiResponse.ok(plans.confirm(resolve(taskId, actor), planId, revision, req, actor));
   }
 
   /** POST /v1/tasks/{taskId}/execute：选定计划执行（五项受理校验）。 */
   @PostMapping("/v1/tasks/{taskId}/execute")
-  public Object executePlan(@PathVariable("taskId") long taskId, @RequestBody JsonNode req) {
-    return ApiResponse.ok(plans.execute(taskId, req, Actor.current()));
+  public Object executePlan(@PathVariable("taskId") String taskId, @RequestBody JsonNode req) {
+    Actor actor = Actor.current();
+    return ApiResponse.ok(plans.execute(resolve(taskId, actor), req, actor));
   }
 
   /**
@@ -168,7 +189,8 @@ public class TaskController {
    * 接线后 result 承载无附件完整输出（口径见 Tasks.result javadoc）。
    */
   @GetMapping("/v1/tasks/{taskId}/result")
-  public Object result(@PathVariable("taskId") long taskId) {
-    return ApiResponse.ok(tasks.result(taskId, Actor.current()));
+  public Object result(@PathVariable("taskId") String taskId) {
+    Actor actor = Actor.current();
+    return ApiResponse.ok(tasks.result(resolve(taskId, actor), actor));
   }
 }
