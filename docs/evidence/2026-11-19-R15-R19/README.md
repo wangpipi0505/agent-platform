@@ -120,3 +120,16 @@
 2. **降级口径如实登记**：发布不可得（未发布/停用/409 APP_UNAVAILABLE/服务不可达）、无来源组装（`new Tasks(store)` 测试构造，10 个既有测试类零改动依赖此路径）、越形响应（缺 appVersionId）三种情况均回退 T2-2 占位降级口径（`unpinned-*`+`release-pin:*` 摘要）——占位字面量仅存于该降级分支（grep 留痕），受理不因发布面不可达阻塞。
 3. **"事务内钉住"实现口径**：钉住值（releaseId/digest）随受理事务写入 task 行；发布快照的跨服务只读读取在事务外完成（避免事务内持锁等跨服务往返）——重放分支在读取之前先行返回，重放不产生第二次快照读取（用例断言）。
 4. **跨类清理污染修复（回归纪律）**：合并回归暴露 ToolOutputLargeResponsePostgresTest（既有）与 ToolOutputSpillPostgresTest（R-15 新增）清理为 BeforeEach-only，类尾残留 engine-test 租户 run/model_invocation 行，导致后续共享库夹具（StepExecutionMappingTest/TaskReconciliationTest）清理 FK 违例——两类清理补齐 @AfterEach 双向后 61/61 全绿；修复属测试基建，不触生产代码。
+
+---
+
+## 合并回归（三卡完成后，2026-11-19）
+
+命令（两批，同一离线仓+PG 25432 `agent_platform_engine_test` 库）：
+- 批一（AgentDriver 消费面，drive 循环被 R-15 改动）：`mvn -pl engine-runtime test -o -Dtest='AgentLoopBudgetPostgresTest,AgentD2RequestPersistTest,ChatTurnEventLinkageTest,TracePostgresTest,ControlledReplayTest,DebugControlsTest,EngineErrorSurfacePostgresTest,AgentEngineShadowTest,AgentReceiptLostRecoveryGateTest,ControlledDraftSkillTest,ApprovalPolicyEnforcementTest,BusinessIntentMissingValueTest'` → **Tests run: 56, Failures: 0, Errors: 0**。
+- 批二（三卡新类+台账点名回归类）：`-Dtest='ToolOutputPolicyTest,ToolOutputSpillPostgresTest,ToolOutputLargeResponsePostgresTest,SpillPromptTest,GuideDirectoryTest,MemoryManifestPolicyTest,MemoryApiTest,ResourceManifestTest,TaskConfigReleasePinTest,TasksApiTest,PlansApiTest,CompactionStoreTest,ChatSessionConfigPinTest,RunConfigReferenceTest,ConfirmationCenterTest,TaskDispatchTest,TaskReconciliationTest,StepExecutionMappingTest,SubagentPlanningTest,TaskEventsSseTest,ExternalIntegrationTest'` → **Tests run: 150, Failures: 0, Errors: 5**——5 个错误全部来自 `ChatSessionConfigPinTest`（构造期 NPE：`new ChatSessions(null,null,null)` 早于 H1-2 的 SessionStore(trace) 空指针），**基线既有失败已证**：同一用例在基线 worktree（wt-r14@5bde1c30）同样 5/5 报错，非本批引入（零新增失败）。其余 145/145 全绿。
+- 合计：**201 用例，196 绿，5 错（全部=基线既有 ChatSessionConfigPinTest 构造 NPE）**，三卡改动零新增失败。
+
+合并回归中修复的两处共享库夹具卫生问题（测试基建，不触生产代码，均已入库）：
+1. `ToolOutputLargeResponsePostgresTest`（既有）与 `ToolOutputSpillPostgresTest`（R-15）清理由 BeforeEach-only 补齐为 @BeforeEach+@AfterEach 双向——类尾残留 engine-test 租户 run/model_invocation 行会以 FK 违例阻断后续共享库夹具（StepExecutionMappingTest/TaskReconciliationTest 实测暴露）。
+2. `BusinessIdempotencyAcrossCallsTest`（既有）补 action_plan 双向清理（ex25-* 租户行带 call_id FK，阻断 ChatTurnEventLinkageTest 的无界 tool_call 清理，实测暴露）。

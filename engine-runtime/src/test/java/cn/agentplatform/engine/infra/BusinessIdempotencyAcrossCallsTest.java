@@ -48,8 +48,19 @@ class BusinessIdempotencyAcrossCallsTest {
             try (var out = exchange.getResponseBody()) { out.write(bytes); } finally { exchange.close(); }
         });
         business.start();
+        purgeActionPlans();
     }
-    @AfterEach void close() { if (business != null) business.stop(0); }
+    @AfterEach void close() { if (business != null) business.stop(0); purgeActionPlans(); }
+
+    /**
+     * 共享库卫生（R-19 合并回归补齐，照双向清理纪律）：本类 action_plan 行带 call_id FK
+     * 且租户为 ex25-随机——不清理会以 FK 违例阻断 ChatTurnEventLinkageTest 等对 tool_call
+     * 做无界清理的共享库夹具（BeforeEach+AfterEach 双向，含 heal 既有残留）。
+     */
+    private void purgeActionPlans() {
+        db.update("delete from engine.action_plan where run_id in"
+                + " (select id from engine.run where tenant_id like 'ex25-%')");
+    }
 
     Prepared prepare(String scopedTenant, String intent, long version, Map<String, Object> args, boolean enabled) {
         var owner = new Actor(scopedTenant, "alice", Set.of("EDITOR"), Map.of());
