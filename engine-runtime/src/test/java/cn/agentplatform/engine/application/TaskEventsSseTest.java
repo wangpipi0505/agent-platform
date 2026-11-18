@@ -146,9 +146,13 @@ class TaskEventsSseTest {
                 + "\"blockedReasons\":[]}";
 
     /**
-     * SSE 帧形状断言专用 ASCII 负载：MockMvc 的 SseEmitter 字符串数据经 StringHttpMessageConverter
-     * 落帧（H1-9 先例同口径），非 ASCII 值在该路径被响应默认编码替换为 '?'——帧结构/投影裁剪断言
-     * 用 ASCII 负载做精确比对；中文负载的投影口径由事件增量/详情 JSON 路径断言（taskResumedIs...）。
+     * SSE 帧形状断言专用 ASCII 负载（R-5 更正口径）：<b>standalone MockMvc</b> 的 SseEmitter
+     * 字符串数据按 MVC 默认转换器落帧（本测试类不装配生产 UTF-8 转换器），非 ASCII 值在该
+     * 路径的写出/读取行为不构成字节级保证——帧结构/投影裁剪断言用 ASCII 负载做精确比对；
+     * 中文负载的投影口径由事件增量/详情 JSON 路径断言（taskResumedIs...）。生产 UTF-8 字节级
+     * 行为已由 {@link TaskEventsSseRealPortTest}（真实 Tomcat 端口+原始字节比对，含四字节
+     * emoji，经生产 {@code Utf8StringMessageConvertersConfiguration}）另测覆盖——非 ASCII
+     * 在真实路径落 '?' 的台账问题彼处闭环，本类保留 MockMvc 帧形状断言不重复背字节口径。
      */
     static final String RESUMED_PAYLOAD_ASCII =
             "{\"recoverySource\":\"AUTO\",\"reasonCode\":\"LEASE_EXPIRED\","
