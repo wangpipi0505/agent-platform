@@ -54,6 +54,29 @@ public class AgentDriver {
         this.outputPolicy = policy;
     }
 
+    /**
+     * R-15（spill 接入工具环）：大结果外溢落盘组件与对象存储接收侧工厂，可选装配。
+     * 手工构造（测试夹具）未注入时保持 T14.2 既有口径（超限=OUTPUT_TOO_LARGE 错误信封，
+     * 不落盘）；Spring 装配 SpillStore Bean（SpillWiringConfiguration）。生产 sink 为
+     * MinIO ArtifactStore——引擎暂无对象存储 SDK 依赖，工厂 Bean 未提供时同样降级
+     * （如实登记：接线点已就绪，sink 到位即激活，无需再改本类）。
+     */
+    private cn.agentplatform.engine.harness.context.SpillStore spills;
+    private java.util.function.Supplier<cn.agentplatform.engine.harness.context.SpillStore.StorageSink>
+            spillSinkFactory;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void spills(cn.agentplatform.engine.harness.context.SpillStore store) {
+        this.spills = store;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void spillSinkFactory(
+            java.util.function.Supplier<cn.agentplatform.engine.harness.context.SpillStore.StorageSink>
+                    factory) {
+        this.spillSinkFactory = factory;
+    }
+
     public JsonNode drive(
             Map<String, Object> run,
             Map<String, Object> node,
@@ -350,6 +373,52 @@ public class AgentDriver {
                 // 模型、不静默截断）：无分页声明替换为 OUTPUT_TOO_LARGE 可读错误；声明了
                 // 分页（contract.pagination）附分页元信息供模型带页参续拉。阈值内零变化。
                 // 仅作用于模型可见面；调用事实（tool_call/技能侧 trace）保留原始完整结果。
+                // R-15（spill 接入工具环）：会话关联运行且外溢组件已装配时，超限先经
+                // SpillStore 流式落盘（spill_artifact 行+对象存储 locator），模型可见信封
+                // 并入外溢引用（locator/preview/bytes/sha256）——响应给模型的是引用而非
+                // 全量，后续轮次 PromptAssembler 按引用回填原文。外溢未装配/无会话关联/
+                // 落盘失败保持既有报错口径降级（不阻塞运行；落盘失败时调用事实仍保留
+                // 完整结果，可审计）。
+                JsonNode spillReference = null;
+                if (spills != null && spillSinkFactory != null && linkedSession.has("sessionId")) {
+                    try {
+                        // sink 工厂懒触发：SpillStore 阈值内短路（零变化锚点）时不触碰
+                        // 接收侧（生产=MinIO 连接不白白建立）；超限才真正创建并转存。
+                        var lazySink =
+                                new cn.agentplatform.engine.harness.context.SpillStore.StorageSink() {
+                                    cn.agentplatform.engine.harness.context.SpillStore.StorageSink delegate;
+
+                                    @Override
+                                    public long write(byte[] chunk, int len) {
+                                        return delegate().write(chunk, len);
+                                    }
+
+                                    @Override
+                                    public String finish() {
+                                        return delegate().finish();
+                                    }
+
+                                    private cn.agentplatform.engine.harness.context.SpillStore.StorageSink
+                                            delegate() {
+                                        return delegate == null
+                                                ? (delegate = spillSinkFactory.get())
+                                                : delegate;
+                                    }
+                                };
+                        JsonNode backfill =
+                                spills.spill(
+                                        linkedSession.path("sessionId").asText(),
+                                        null,
+                                        result,
+                                        outputPolicy.maxBytes(),
+                                        lazySink);
+                        // spill 阈值内返回原 result 同一实例（零变化锚点）——仅把真正的
+                        // 外溢回填节点并入信封（引用比较，不受结果自身形状干扰）。
+                        spillReference = backfill == result ? null : backfill;
+                    } catch (RuntimeException degraded) {
+                        spillReference = null;
+                    }
+                }
                 result =
                         outputPolicy.enforce(
                                 tool,
@@ -360,7 +429,8 @@ public class AgentDriver {
                                         + ":round"
                                         + round
                                         + ":"
-                                        + call.path("id").asText());
+                                        + call.path("id").asText(),
+                                spillReference);
                 history.add(
                         Map.of(
                                 "role",

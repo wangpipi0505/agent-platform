@@ -75,6 +75,16 @@ public final class SpillStore {
   }
 
   /**
+   * 对象存储读取侧接口（R-15 取回链）。生产实现为 MinIO ArtifactStore 按 storage_ref GET；
+   * 测试为内存映射。与 {@link StorageSink} 对偶：写侧 finish 返回的 locator 即读侧入参。
+   */
+  public interface StorageSource {
+
+    /** 按对象存储引用读回全文；引用不可达时抛出异常（由调用方结构化转换）。 */
+    byte[] read(String locator);
+  }
+
+  /**
    * 测试/开发适配器：内存累积 sink，记录每块长度供分块断言。<b>无真实 MinIO 依赖</b>；
    * 生产实现为 MinIO ArtifactStore（storage_ref=受控路径），接口契约与本适配器一致：
    * {@code write} 返回累计字节、{@code finish} 返回引用。
@@ -204,6 +214,39 @@ public final class SpillStore {
     backfill.put("bytes", stream.total);
     backfill.put("sha256", sha256);
     return backfill;
+  }
+
+  /**
+   * R-15（spill 接入工具环）：按引用取回原文——后续轮次 PromptAssembler 回填的消费入口。
+   *
+   * <p>归属核验：spill_id+session_id 联合定位（引用不属于本会话=引用不存在，防跨会话
+   * 取回，404 口径不区分泄露存在性）。全文经读取侧读回后 sha256 复核（与落库摘要不符
+   * 即拒绝，不静默返回近似内容）；原文按 UTF-8 返回。
+   *
+   * @param sessionId 会话 public_id（引用归属；必须与落盘时一致）
+   * @param spillId   外溢引用（回填节点 spillId / spill_artifact.spill_id）
+   * @param source    对象存储读取侧（生产=MinIO GET；测试=内存映射）
+   */
+  public String read(String sessionId, String spillId, StorageSource source) {
+    if (sessionId == null || sessionId.isBlank() || spillId == null || spillId.isBlank())
+      throw new PlatformException(400, "SPILL_REF_INVALID", "取回必须给出会话与外溢引用");
+    var rows =
+            db.queryForList(
+                    "select storage_ref, sha256 from engine.spill_artifact"
+                            + " where spill_id=? and session_id=?",
+                    spillId,
+                    sessionId);
+    if (rows.isEmpty())
+      throw new PlatformException(404, "SPILL_REF_NOT_FOUND", "外溢引用不存在或不属于本会话");
+    if (source == null)
+      throw new PlatformException(500, "SPILL_SOURCE_REQUIRED", "外溢引用读取侧未装配，无法取回原文");
+    var row = rows.getFirst();
+    byte[] content = source.read(String.valueOf(row.get("storage_ref")));
+    String digest = HexFormat.of().formatHex(sha256().digest(content));
+    if (!digest.equals(String.valueOf(row.get("sha256"))))
+      throw new PlatformException(
+              500, "SPILL_DIGEST_MISMATCH", "外溢正文摘要与索引不符，拒绝回填疑似损坏内容");
+    return new String(content, StandardCharsets.UTF_8);
   }
 
   /** 用与 Json.write 相同的 mapper 配置流式序列化（保证两遍字节一致、摘要可复核）。 */
