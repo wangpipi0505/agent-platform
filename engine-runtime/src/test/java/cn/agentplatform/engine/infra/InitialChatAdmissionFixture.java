@@ -18,6 +18,7 @@ import java.util.concurrent.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -112,7 +113,7 @@ public final class InitialChatAdmissionFixture implements AutoCloseable {
         context=(ServletWebServerApplicationContext)appContext.run();
     }
 
-    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+    @TestConfiguration @EnableAutoConfiguration @EnableWebSecurity
     static class Receiver {
         @Bean(destroyMethod="") javax.sql.DataSource dataSource(){return current.producer.ds;}
         @Bean RunController runs(){var c=new RunController(current.service,current.trace,current.chunks,null);c.portalEvents(current.events);return c;}

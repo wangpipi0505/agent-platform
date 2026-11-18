@@ -14,6 +14,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.datasource.*;
@@ -74,7 +75,7 @@ class PublishedAdmissionHttpPostgresTest {
     static final List<Sql> statements = new CopyOnWriteArrayList<>();
     static final AtomicReference<String> sqlState = new AtomicReference<>();
 
-    @Configuration(proxyBeanMethods = false)
+    @TestConfiguration
     @EnableAutoConfiguration
     @EnableWebSecurity
     @Import({RunController.class, PlatformErrors.class})

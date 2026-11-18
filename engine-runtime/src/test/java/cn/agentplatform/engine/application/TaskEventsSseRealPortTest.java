@@ -25,7 +25,7 @@ import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -116,7 +116,7 @@ class TaskEventsSseRealPortTest {
      * 最小真实启动配置（证据口径见类 javadoc）：真实 Tomcat 回环随机端口 + 身份过滤器 + 真实
      * Controller/服务/库 + 生产 UTF-8 转换器配置（@Import 生产类——验证对象就是它）。
      */
-    @Configuration
+    @TestConfiguration
     @EnableWebMvc
     @Import(Utf8StringMessageConvertersConfiguration.class)
     static class SseUtf8Fixture implements WebMvcConfigurer {

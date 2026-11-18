@@ -20,6 +20,7 @@ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationC
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.*;
@@ -36,7 +37,7 @@ public final class PortalRunEventsJoinedEngine {
     static HttpCurrentAuthorityClient current;static AuthorityProperties properties;
     static PortalEventsJoinedAuthorityFixture.TestClock clock;static Path run;static RunAuthorityStore.Binding binding;
     static final List<Map<String,Object>> packets=new CopyOnWriteArrayList<>();
-    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+    @TestConfiguration @EnableAutoConfiguration @EnableWebSecurity
     @Import(cn.agentplatform.engine.EnginePortalEventsAssembly.class)
     static class Receiver {
         @Bean DataSource source(){return source;}

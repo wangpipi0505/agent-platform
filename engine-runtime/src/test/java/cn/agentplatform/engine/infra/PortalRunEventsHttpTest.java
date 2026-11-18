@@ -19,6 +19,7 @@ import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.boot.web.servlet.*;
 import org.springframework.boot.web.servlet.context.*;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -42,7 +43,7 @@ class PortalRunEventsHttpTest {
         Hooks(){this(1);}Hooks(int count){entered=new CountDownLatch(count);}
         void at(String stage){if(stage.equals(block)){var gate=blockCalls.incrementAndGet()>1&&secondRelease!=null?secondRelease:release;entered.countDown();boolean done=false;while(!done)try{done=gate.await(100,TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}}}
     }
-    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+    @TestConfiguration @EnableAutoConfiguration @EnableWebSecurity
     @Import(cn.agentplatform.engine.EnginePortalEventsAssembly.class)
     static class Receiver {
         @Bean javax.sql.DataSource source(){return fixture.source;}

@@ -13,6 +13,7 @@ import jakarta.servlet.http.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 class RunEventsHttpTest {
-    @Configuration
+    @TestConfiguration
     @EnableWebMvc
     static class HttpFixture implements WebMvcConfigurer {
         static final ChunkBus bus = new ChunkBus(1, 8192);

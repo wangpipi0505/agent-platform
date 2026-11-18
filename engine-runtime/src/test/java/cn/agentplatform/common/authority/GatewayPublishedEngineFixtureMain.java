@@ -9,6 +9,7 @@ import org.flywaydb.core.Flyway;
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.*;
@@ -56,7 +57,7 @@ public final class GatewayPublishedEngineFixtureMain {
                 }
             };
 
-    @Configuration(proxyBeanMethods = false)
+    @TestConfiguration
     @EnableAutoConfiguration
     @EnableWebSecurity
     @Import({RunController.class, PlatformErrors.class})

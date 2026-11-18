@@ -26,6 +26,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.*;
@@ -75,7 +76,7 @@ class RunObservationStatusHttpPostgresTest {
     static final AtomicBoolean partialClosed=new AtomicBoolean();
     static final List<String> rawQueries=new CopyOnWriteArrayList<>();
 
-    @Configuration(proxyBeanMethods=false)
+    @TestConfiguration
     @EnableAutoConfiguration
     @EnableWebSecurity
     @Import(PlatformErrors.class)

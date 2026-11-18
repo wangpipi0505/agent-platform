@@ -10,6 +10,7 @@ import org.flywaydb.core.Flyway;
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.*;
@@ -50,7 +51,7 @@ public final class GatewayRunStatusEngineFixtureMain {
     static volatile String faultPath="";static volatile int faultStatus;static volatile byte[] faultBody=new byte[0],lastStatus=new byte[0];
     static volatile boolean expireAtActualStream;
     static final List<Map<String,Object>> wire=new CopyOnWriteArrayList<>();
-    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+    @TestConfiguration @EnableAutoConfiguration @EnableWebSecurity
     @Import({RunObservationMetadataController.class,PlatformErrors.class})
     static class Receiver {
         @Bean org.springframework.boot.web.servlet.FilterRegistrationBean<jakarta.servlet.Filter> wire(){

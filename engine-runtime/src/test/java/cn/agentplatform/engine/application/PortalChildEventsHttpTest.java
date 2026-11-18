@@ -19,6 +19,7 @@ import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.boot.web.servlet.context.*;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -36,7 +37,7 @@ class PortalChildEventsHttpTest {
         Hooks(String stage){this(stage,2);}Hooks(String stage,int connections){this.stage=stage;entered=new CountDownLatch(connections);}
         void block(String point){if(!stage.equals(point))return;entered.countDown();boolean done=false;while(!done)try{done=release.await(100,TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}}
     }
-    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+    @TestConfiguration @EnableAutoConfiguration @EnableWebSecurity
     @Import(cn.agentplatform.engine.EnginePortalEventsAssembly.class)
     static class Receiver {
         @Bean javax.sql.DataSource source(){return fixture.source;}
@@ -110,7 +111,7 @@ class PortalChildEventsHttpTest {
             }
         }}
     }
-    @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
+    @TestConfiguration @EnableAutoConfiguration @EnableWebSecurity
     static class LegacyReceiver extends Receiver {
         @Override @Bean RunService service(RuntimeClients c,RunScheduler s){return new RunService(fixture.trace,null,null,null,s);}
     }

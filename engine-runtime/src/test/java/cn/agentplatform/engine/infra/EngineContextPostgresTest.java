@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EnabledIfEnvironmentVariable(named = "ENGINE_PG_TEST", matches = "true")
+@ActiveProfiles("test") // R-8：mode=test 要求 test profile（AuthorityProperties.validateDeployment）
 @Import(EngineContextPostgresTest.AsyncProbeConfiguration.class)
 class EngineContextPostgresTest {
     @DynamicPropertySource
@@ -33,6 +35,10 @@ class EngineContextPostgresTest {
         properties.add("spring.datasource.url", EngineTestDatabase::url);
         properties.add("spring.datasource.username", EngineTestDatabase::user);
         properties.add("spring.datasource.password", EngineTestDatabase::password);
+        // R-8：夹具碰撞消除后暴露的部署校验缺口——全上下文需显式安全模式（AuthorityProperties
+        // validate：mode∈{dev-hmac,test,iam}；test+authority 缺省走早退分支，不要求 IAM 配置）。
+        properties.add("agent.security.mode", () -> "test");
+        properties.add("agent.security.service-id", () -> "engine");
     }
 
     @Autowired TraceStore store;
