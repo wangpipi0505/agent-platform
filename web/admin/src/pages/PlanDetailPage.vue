@@ -4,22 +4,35 @@ import { useRoute } from "vue-router";
 import PageHeader from "../PageHeader.vue";
 import EmptyState from "../../../shared/components/EmptyState.vue";
 import {
-  demoPlanDetail,
   diffPlanSteps,
+  fetchPlanDetail,
+  type PlanDemoDetail,
   type PlanDemoStep,
-} from "../../../shared/mock-plan";
+} from "../../../shared/api-plan";
 
 // F3-2（台账 §7.5 / 方案 §5.3）：管理台计划详情——步骤/依赖/绑定/修订对比【只读】，
 // 供运维查看对应计划与执行链路。红线：本页不含确认/执行操作入口——用户确认与
 // 选定版本执行由助手端计划卡（F4-3）验收；确认状态仅以只读徽章呈现
 // （UNCONFIRMED/CONFIRMED_VALID/CONFIRMED_EXPIRED，前端不自判权限，展示即事实投影）。
-// 数据源：mock 契约 demo 种子（mock-plan.ts F3-2 追加导出，形状=task-states §5 +
-// mock-task.ts plan 投影）；接口稿 §5.2 修订读端点就绪后整块替换。
+// 数据源（M5-2 切真实 API）：修订读端点 GET /v1/tasks/{taskId}/plans/{planId}/revisions/{revision}
+// （shared/api-plan）。诚实边界：plan→steps 固化清单与 plan 列表端点缺位——深链需携带
+// ?taskId=&revision= 上下文（步骤/绑定表如实为空）；已确认且凭据有效修订不可经
+// confirmableBy=me 回流，无独立 plan 读取路径。
 const route = useRoute();
 const planId = computed(() => String(route.params.planId || ""));
-const detail = computed(() => demoPlanDetail(planId.value));
+const detail = ref<PlanDemoDetail | null>(null);
 const revisions = computed(() => detail.value?.revisions ?? []);
 const currentRevision = computed(() => revisions.value.at(-1));
+
+async function load() {
+  detail.value = await fetchPlanDetail(planId.value, {
+    taskId: typeof route.query.taskId === "string" ? route.query.taskId : "",
+    revision: Number(route.query.revision ?? 0),
+    appCode: typeof route.query.appCode === "string" ? route.query.appCode : "",
+    goal: typeof route.query.goal === "string" ? route.query.goal : "",
+  });
+}
+watch([planId, () => route.query.taskId, () => route.query.revision], () => void load(), { immediate: true });
 
 // —— 只读徽章（三态枚举一一映射；未知值如实回显原文，不伪造状态）——
 type TagType = "primary" | "success" | "info" | "warning" | "danger";
@@ -52,11 +65,12 @@ const stepStateBadgeOf = (state: string): BadgeSpec =>
   } as Record<string, BadgeSpec>)[state] ?? { label: state, type: "info" };
 
 // —— 查看修订（只读切换）：默认当前（末位）修订；切换仅改变展示，无任何写语义 ——
+// 监听 planId 与 detail（异步装载完成后重置默认视图/对比选择）。
 const viewRevision = ref<number>();
 const compareBase = ref<number>();
 const compareTarget = ref<number>();
 watch(
-  planId,
+  [planId, detail],
   () => {
     viewRevision.value = currentRevision.value?.revision;
     // 对比默认：上一修订 → 当前修订（上一修订不存在时与当前重合）
@@ -132,7 +146,7 @@ const bindingRows = computed(() =>
     <EmptyState
       v-if="!detail"
       variant="filtered"
-      :description="`未找到计划 ${planId || '—'}（demo 种子仅含 plan-9）`"
+      :description="`未定位到计划 ${planId || '—'}（深链需携带 ?taskId= 与 ?revision= 修订上下文）`"
       action-text=""
     />
     <template v-else>

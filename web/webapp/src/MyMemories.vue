@@ -14,10 +14,10 @@ import {
   updateMemory,
   type MemoryKind,
   type MockMemoryRow,
-} from "../../shared/mock-memories";
+} from "../../shared/api-memories";
 import { confirmDanger } from "../../shared/components/DangerConfirm";
 
-type MemoryListItem = Omit<MockMemoryRow, "demo">;
+type MemoryListItem = MockMemoryRow;
 type MemoryDetail = { memoryId: string; content: string; kind: MemoryKind; scope: string; tags: string[]; version: number; status: string };
 
 const props = defineProps<{ sessionId: string }>();
@@ -28,15 +28,15 @@ const error = ref("");
 const notice = ref("");
 const query = ref("");
 
-const refresh = () => {
-  const page = listMemories({ q: query.value });
+const refresh = async () => {
+  const page = await listMemories({ q: query.value });
   rows.value = page.memories;
   if (selected.value) {
-    const fresh = getMemory(selected.value.memoryId);
+    const fresh = await getMemory(selected.value.memoryId);
     selected.value = "error" in fresh ? null : fresh;
   }
 };
-refresh();
+void refresh();
 
 /* 保存表单（从会话消息「保存为记忆」回填正文，提交当前会话 ID）。 */
 const saveOpen = ref(false);
@@ -56,7 +56,7 @@ const tagsOf = (text: string) =>
 async function submitSave() {
   error.value = "";
   notice.value = "";
-  const res = createMemory({
+  const res = await createMemory({
     requestId: crypto.randomUUID(),
     content: saveForm.value.content,
     kind: saveForm.value.kind,
@@ -70,7 +70,7 @@ async function submitSave() {
   }
   saveOpen.value = false;
   notice.value = `已保存 ${res.memoryId}`;
-  refresh();
+  void refresh();
 }
 
 /* 查看/修改/删除。 */
@@ -78,7 +78,7 @@ const editing = ref(false);
 const editForm = ref({ content: "", tags: "" });
 const showDetail = async (row: MemoryListItem) => {
   error.value = "";
-  const res = getMemory(row.memoryId);
+  const res = await getMemory(row.memoryId);
   if ("error" in res) {
     error.value = "正文读取失败：该条目不可见或已撤销";
     return;
@@ -91,10 +91,10 @@ const startEdit = () => {
   editForm.value = { content: selected.value.content, tags: selected.value.tags.join(", ") };
   editing.value = true;
 };
-const submitEdit = () => {
+const submitEdit = async () => {
   if (!selected.value) return;
   error.value = "";
-  const res = updateMemory(selected.value.memoryId, {
+  const res = await updateMemory(selected.value.memoryId, {
     content: editForm.value.content,
     tags: tagsOf(editForm.value.tags),
     expectedVersion: selected.value.version,
@@ -103,13 +103,13 @@ const submitEdit = () => {
     error.value = res.error === "MEMORY_VERSION_CONFLICT"
       ? "记忆已被其他修改更新（版本冲突），已重新加载，请基于最新内容再改。"
       : "修改失败";
-    refresh();
+    void refresh();
     return;
   }
   selected.value = res;
   editing.value = false;
   notice.value = "已修改";
-  refresh();
+  void refresh();
 };
 const remove = async (row: MemoryListItem) => {
   if (
@@ -121,14 +121,14 @@ const remove = async (row: MemoryListItem) => {
   )
     return;
   error.value = "";
-  const res = deleteMemory(row.memoryId, { requestId: crypto.randomUUID() });
+  const res = await deleteMemory(row.memoryId, { requestId: crypto.randomUUID() });
   if ("error" in res) {
     error.value = "删除失败";
     return;
   }
   if (selected.value?.memoryId === row.memoryId) selected.value = null;
   notice.value = `已删除 ${row.memoryId}`;
-  refresh();
+  void refresh();
 };
 
 const kindLabel = (kind: string) => (kind === "PREFERENCE" ? "偏好" : "经验");

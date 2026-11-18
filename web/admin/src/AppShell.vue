@@ -7,10 +7,10 @@ import { navMenus } from "./router";
 import { MENU_GROUP_ORDER, type MenuGroup } from "./page-access";
 import { canReadCapabilityPackages } from "../../shared/capability-package";
 import {
-  fetchMockConfirmationCounts,
+  fetchConfirmationCounts,
   onConfirmationCountsChanged,
-  type MockConfirmationCounts,
-} from "../../shared/mock-confirmation-counts";
+  type ServerConfirmationCounts,
+} from "../../shared/api-confirmation";
 import CommandPalette from "./CommandPalette.vue";
 import { useTheme } from "../../shared/theme";
 
@@ -111,12 +111,12 @@ function onMobileChange(e: MediaQueryListEvent) {
   if (!e.matches) drawerOpen.value = false;
 }
 
-// —— 待办角标：15s 轮询 mock 数据源（接口稿 GET /admin/confirmation-center/counts 形状；
-// B4-1 真实端点就绪后切换客户端），角标渲染在确认中心菜单项上显示 total。 ——
-const counts = ref<MockConfirmationCounts | null>(null);
+// —— 待办角标：15s 轮询真实端点 GET /admin/confirmation-center/counts（B4-1，M5-2 切真实 API），
+// 角标渲染在确认中心菜单项上显示 total。 ——
+const counts = ref<ServerConfirmationCounts | null>(null);
 let pollTimer: number | undefined;
 function loadCounts() {
-  fetchMockConfirmationCounts()
+  fetchConfirmationCounts()
     .then((data) => {
       counts.value = data;
     })

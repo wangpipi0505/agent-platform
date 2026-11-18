@@ -1,0 +1,85 @@
+#!/bin/bash
+# M5-2 真实链路演示起栈脚本：四服务起在 182xx 段（与并行工作隔离），专用库 m52_demo。
+# - 密钥只从仓库根 .env 读取，不进命令行参数或输出。
+# - engine 因 Memories 双构造器装配阻塞（wt-m53 同款平台缺陷登记①，归口服务卡）以
+#   PropertiesLauncher 外挂 docs/evidence/2026-11-18-M5-2/shim 补装配——不改服务源码。
+# - Redis/MinIO 未起：engine 健康探针 503/DOWN 属预期，不影响页面数据面链路。
+# - model-gateway/monitor 未起：任务执行派发停受理态（wt-m53 缺陷⑧同款），如实登记。
+# 重复执行安全：已监听的端口跳过（幂等）。
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+LOGDIR="$ROOT/.local/m52-demo-logs"
+mkdir -p "$LOGDIR" "$ROOT/.local/secrets-m52"
+
+if [ ! -x "/c/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin/java.exe" ]; then
+  echo "需要 JDK21：C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot" >&2; exit 2
+fi
+export JAVA_HOME="C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot"
+export PATH="/c/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot/bin:$PATH"
+
+set -a; source "$ROOT/.env"; set +a
+export AGENT_SECRET_DIR="$ROOT/.local/secrets-m52"
+export AGENT_BIND_ADDRESS=127.0.0.1
+export AGENT_SECURITY_MODE=dev-hmac
+export AGENT_DEV_AUTH=true
+export AGENT_APP_URL=http://127.0.0.1:18201
+export AGENT_ENGINE_URL=http://127.0.0.1:18202
+export AGENT_SKILL_URL=http://127.0.0.1:18203
+export AGENT_MODEL_URL=http://127.0.0.1:18204
+DB="jdbc:postgresql://127.0.0.1:25432/m52_demo"
+
+for name in platform-gateway app-management engine-runtime skill-registry; do
+  JAR="$ROOT/$name/target/$name-0.1.0-SNAPSHOT.jar"
+  if [ ! -f "$JAR" ]; then
+    echo "缺少构建产物 $JAR —— 先构建：mvn -B -ntp -pl platform-gateway,app-management,engine-runtime,skill-registry -am -DskipTests package"
+    exit 2
+  fi
+done
+
+# shim 编译（源在本卡 evidence shim/src；classpath 取自 engine jar 内嵌 Spring 组件）
+SHIM_OUT="$ROOT/.local/m52-shim"
+SHIM_JAR="$ROOT/.local/m52-shim.jar"
+rm -rf "$SHIM_OUT" "$ROOT/.local/m52-shim-extract"
+mkdir -p "$SHIM_OUT" "$ROOT/.local/m52-shim-extract"
+BEANS=$(unzip -l "$ROOT/engine-runtime/target/engine-runtime-0.1.0-SNAPSHOT.jar" | grep -oE 'BOOT-INF/lib/spring-beans-[0-9.]+\.jar' | head -1)
+CORE=$(unzip -l "$ROOT/engine-runtime/target/engine-runtime-0.1.0-SNAPSHOT.jar" | grep -oE 'BOOT-INF/lib/spring-core-[0-9.]+\.jar' | head -1)
+CTX=$(unzip -l "$ROOT/engine-runtime/target/engine-runtime-0.1.0-SNAPSHOT.jar" | grep -oE 'BOOT-INF/lib/spring-context-[0-9.]+\.jar' | head -1)
+unzip -o -q "$ROOT/engine-runtime/target/engine-runtime-0.1.0-SNAPSHOT.jar" "$BEANS" "$CORE" "$CTX" -d "$ROOT/.local/m52-shim-extract"
+CP=".local/m52-shim-extract/$BEANS;.local/m52-shim-extract/$CORE;.local/m52-shim-extract/$CTX;engine-runtime/target/classes"
+(cd "$ROOT" && javac -encoding UTF-8 -cp "$CP" -d "$SHIM_OUT" "docs/evidence/2026-11-18-M5-2/shim/src/cn/agentplatform/engine/m52shim/MemoriesInstanceSupplierShim.java")
+(cd "$SHIM_OUT" && jar cf "$SHIM_JAR" cn)
+
+listening() { netstat -ano 2>/dev/null | grep "127.0.0.1:$1" | grep -q LISTENING; }
+
+start() { # name jar port schema serviceid [shim]
+  local name="$1" jar="$2" port="$3" schema="$4" sid="$5" shim="${6:-}"
+  if listening "$port"; then echo "$name: port $port already listening, skip"; return 0; fi
+  export AGENT_DB_URL="$DB?currentSchema=$schema"
+  export SERVER_PORT="$port"
+  export AGENT_SECURITY_SERVICEID="$sid"
+  if [ "$shim" = "shim" ]; then
+    java -Dloader.path="$SHIM_JAR" -cp "$jar" org.springframework.boot.loader.launch.PropertiesLauncher \
+      > "$LOGDIR/$name.out.log" 2> "$LOGDIR/$name.err.log" &
+  else
+    java -Xms64m -Xmx512m -jar "$jar" > "$LOGDIR/$name.out.log" 2> "$LOGDIR/$name.err.log" &
+  fi
+  echo "$name: started pid=$! port=$port schema=$schema"
+  unset AGENT_SECURITY_SERVICEID
+}
+
+start gateway         "$ROOT/platform-gateway/target/platform-gateway-0.1.0-SNAPSHOT.jar" 18200 gateway gateway
+start app-management  "$ROOT/app-management/target/app-management-0.1.0-SNAPSHOT.jar"    18201 app     app
+start engine-runtime  "$ROOT/engine-runtime/target/engine-runtime-0.1.0-SNAPSHOT.jar"    18202 engine  engine shim
+start skill-registry  "$ROOT/skill-registry/target/skill-registry-0.1.0-SNAPSHOT.jar"    18203 skill  skill
+
+echo "等待监听就绪（engine 健康探针 503 属预期）..."
+for i in $(seq 1 60); do
+  ok=0
+  for p in 18200 18201 18202 18203; do
+    if listening "$p"; then ok=$((ok+1)); fi
+  done
+  if [ "$ok" -eq 4 ]; then echo "四服务全部监听就绪。"; exit 0; fi
+  sleep 2
+done
+echo "部分服务未在 120 秒内监听，请查看 $LOGDIR/*.err.log" >&2
+exit 1

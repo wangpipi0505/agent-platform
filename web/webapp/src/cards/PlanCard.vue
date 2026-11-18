@@ -2,15 +2,17 @@
 /**
  * F4-3 计划卡：步骤+依赖+确认状态徽章；确认/执行按钮按服务端字段 canConfirm/canExecute
  * 渲染（前端不自判，红线8；前端稿 §5.4 按钮状态机矩阵由 plan-buttons 纯函数承载）。
- * 确认→confirmPlan、执行→executePlan（mock-plan T2-14 契约）；PLAN_NOT_CONFIRMED
- * 引导=重新确认所选版本（评审八轮 P1-1）。历史修订切换待修订读接口（§5.2）联调接入。
+ * 确认→POST .../confirm、执行→POST /v1/tasks/{id}/execute（M5-2 切真实 API，shared/api-plan）；
+ * PLAN_NOT_CONFIRMED 引导=重新确认所选版本（评审八轮 P1-1）。
+ * 诚实边界：task→plan 全量读取端点缺位——计划投影经 confirmableBy=me 桥解析（仅无有效凭据
+ * 修订回流），已确认且凭据有效任务刷新后无计划投影可读（plan=null，卡片如实隐藏）。
  */
 import { computed, onMounted, ref } from "vue";
-import { confirmPlan, executePlan } from "../../../shared/mock-plan";
-import { taskDetail } from "../../../shared/mock-task";
+import { confirmPlan, executePlan, taskPlanDetail } from "../../../shared/api-plan";
+import { guard, type ApiFailure } from "../../../shared/api-task";
 import { planButtons } from "../plan-buttons";
 
-type PlanDetail = NonNullable<ReturnType<typeof taskDetail>>;
+type PlanDetail = Awaited<ReturnType<typeof taskPlanDetail>>;
 
 const props = defineProps<{ taskId: string }>();
 const emit = defineEmits<{ executed: [executionTaskId: string, sourceTaskId: string] }>();
@@ -20,10 +22,10 @@ const error = ref("");
 const notice = ref("");
 const busy = ref(false);
 
-const load = () => {
-  detail.value = taskDetail(props.taskId);
+const load = async () => {
+  detail.value = await taskPlanDetail(props.taskId);
 };
-onMounted(load);
+onMounted(() => void load());
 
 const plan = computed(() => detail.value?.plan);
 const buttons = computed(() => {
@@ -59,7 +61,7 @@ const validationLabel = computed(
 );
 
 const stateTone = (state: string) =>
-  state === "SUCCEEDED" ? "st-ok" : state === "FAILED" ? "st-fail" : "st-run";
+  state === "SUCCEEDED" ? "st-ok" : state === "FAILED" ? "st-fail" : "state-run";
 
 async function confirmSelected() {
   const p = plan.value;
@@ -68,16 +70,21 @@ async function confirmSelected() {
   error.value = "";
   notice.value = "";
   try {
-    const res = confirmPlan(props.taskId, {
-      requestId: crypto.randomUUID(),
-      digest: p.digest,
-      confirmedBy: "u-demo",
-    });
-    if ("error" in res) error.value = `确认失败：${res.error}`;
+    const res = await guard(() =>
+      confirmPlan(props.taskId, {
+        requestId: crypto.randomUUID(),
+        digest: p.digest,
+        planId: p.planId,
+        revision: p.revision,
+      }),
+    );
+    if ("error" in res) error.value = `确认失败：${(res as ApiFailure).userMessage || res.error}`;
     else notice.value = `已确认（凭据 #${res.confirmSeq}，有效期至 ${res.expiresAt}）`;
+  } catch (e: any) {
+    error.value = `确认失败：${e?.message ?? "请求失败"}`;
   } finally {
     busy.value = false;
-    load();
+    void load();
   }
 }
 
@@ -89,12 +96,14 @@ async function execute() {
   error.value = "";
   notice.value = "";
   try {
-    const res = executePlan(props.taskId, {
-      requestId: crypto.randomUUID(),
-      planId: p.planId,
-      revision: p.revision,
-      digest: p.digest,
-    });
+    const res = await guard(() =>
+      executePlan(props.taskId, {
+        requestId: crypto.randomUUID(),
+        planId: p.planId,
+        revision: p.revision,
+        digest: p.digest,
+      }),
+    );
     if ("error" in res) {
       // PLAN_NOT_CONFIRMED 引导（评审八轮 P1-1）：有确认权→重新确认所选版本；无→等待确认提示。
       error.value =
@@ -107,7 +116,7 @@ async function execute() {
     emit("executed", res.executionTaskId, props.taskId);
   } finally {
     busy.value = false;
-    load();
+    void load();
   }
 }
 </script>

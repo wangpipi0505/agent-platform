@@ -19,6 +19,8 @@ import { withRunFailureSummaries, withRunNodeInputs } from './mock-run-failures'
 import { materializeResponseArtifacts } from './mock-response-artifacts'
 import { validateMockSkillCalls } from './mock-skill-access'
 import { planningSeed, planningAppCodes, planningOntologyConfig, planningTool, planningState, restorePlanningState, planningTurn, decidePlanningRun, cancelPlanningRun, planningRunNodes, planningRunEvents, type PlanningResponse } from './satellite-planning'
+// M5-2：页面数据面切真实 API 后，新端点 URL 的演示路由（委托保留的 mock 域模块）。
+import { mockRealApiRequest } from './mock-api-m52'
 
 // ── 通用信封 ──
 function envelope(data: unknown) {
@@ -1897,6 +1899,10 @@ export async function mockTransport(
     ?? mockRuntimeRequest(path, method, body, parsed.searchParams, context)
     ?? mockOnboardingRequest(path, method, body, parsed.searchParams, context)
   if (extension) return extension
+  // M5-2：真实端点形状的演示路由（/v1/tasks、/v1/apps/{code}/sessions|memories、
+  // /admin/rules、/admin/plugins、/admin/mcp-connections、confirmation-center 等）。
+  const realShaped = mockRealApiRequest(path, method, body, parsed.searchParams)
+  if (realShaped) return realShaped
   // handler 已返回封装好的 Response，直接透传；不得再包一层信封。
   for (const [pattern, handler] of routes) {
     const match = path.match(pattern)

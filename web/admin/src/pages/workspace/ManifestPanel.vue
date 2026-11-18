@@ -18,14 +18,13 @@
  * validation-change 上抛，AppWorkspacePage 据此联动智能体头 [提交发布]。
  */
 import { computed, ref, watch } from "vue";
-import { useApi } from "../../../../shared/api";
 import {
-  mockManifestGet,
-  mockManifestPut,
+  fetchManifest,
+  putManifest,
   validateManifest,
   type ManifestIssue,
   type ManifestObject,
-} from "../../../../shared/mock-manifest";
+} from "../../../../shared/api-manifest";
 import type { PublishPrecheck } from "../../publish-gate";
 
 const props = defineProps<{
@@ -49,23 +48,9 @@ const emit = defineEmits<{
   (e: "check"): void;
 }>();
 
-const api = useApi();
-
-// ── 传输层（联调期一行切换）：mock 期（VITE_MOCK=true）走 shared/mock-manifest 演示端点；
-// 接真实后端（A3-1 已交付 app-management WorkspaceManifestController）时，把这两个函数的
-// demoMode 分支删去、仅保留 api(...) 调用即可，面板其余逻辑（CAS/409/issues 同屏）零改动。
-const demoMode = import.meta.env.VITE_MOCK === "true";
-async function fetchManifest(code: string) {
-  if (demoMode) return mockManifestGet(code);
-  return api<any>(`/admin/apps/${encodeURIComponent(code)}/manifest`);
-}
-async function putManifest(
-  code: string,
-  body: { requestId: string; manifest: ManifestObject; baseRevision: number },
-) {
-  if (demoMode) return mockManifestPut(code, body);
-  return api<any>(`/admin/apps/${encodeURIComponent(code)}/manifest`, "PUT", body);
-}
+// ── 传输层（M5-2 切真实 API）：shared/api-manifest——真实端点
+// GET/PUT /admin/apps/{code}/manifest（A3-1 WorkspaceManifestController，经网关）；
+// VITE_MOCK 演示模式在 api-manifest 内部切 mock 演示端点，面板逻辑（CAS/409/issues 同屏）零改动。
 
 // ── 草稿归一化：深克隆 + 只补 UI 需要绑定的分支骨架（原值 null 才补，非法形状留给校验）──
 

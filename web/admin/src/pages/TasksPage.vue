@@ -11,23 +11,22 @@ import { useLiveList } from "../../../shared/hooks/useLiveList";
 import { reasonCodeText } from "../../../shared/reason-code-text";
 import {
   callActions, cancelTask, listTaskDetail, listTasks, reconcileTaskCall, resumeTask,
-  type DemoPendingCall, type DemoTaskListRow, type DemoTaskRecovery,
-} from "../../../shared/mock-task";
+  type DemoPendingCall, type ApiFailure, type TaskRow, type DemoTaskRecovery,
+} from "../../../shared/api-task";
 
 // F3-1（台账 §7.5 / 方案 §5.3 管理台侧=监控与运维）：任务工作台——
-// 任务卡列表（useLiveList 轮询 mock-task demo 数据）+ 状态管道 chips 筛选（13 态管道，
-// 替代下拉）+ 任务树内嵌展开（步骤/子任务，不跳页看进度）+ 状态×操作矩阵（按钮可用性
+// 任务卡列表（useLiveList 轮询真实任务列表 GET /v1/tasks，行内补详情投影）+ 状态管道 chips 筛选
+//（13 态管道，替代下拉）+ 任务树内嵌展开（步骤/子任务，不跳页看进度）+ 状态×操作矩阵（按钮可用性
 // 只读服务端 availableActions 字段，前端不自判——红线8）+ 恢复面板（recovery 角色投影：
 // USER 三字段口径=来源/原因码/摘要；管理台 OPERATOR 另见 checkpoint/reusedSteps/blockedReasons，有则显示）。
 // 处置入口：取消/恢复/对账处置（TRACK_EXTERNAL/ADOPT_EXTERNAL/RETRY/DISCLOSE，绑定 callId）
-// 走 confirmDanger 确认后调用 mock-task 对应 demo 函数，全部如实标注 mock。
+// 走 confirmDanger 确认后调用真实端点（cancel/resume/reconcile）。数据面=shared/api-task（M5-2 切真实 API）。
 // 任务发起入口在助手端（F4-2），本页不含——只做监控与处置。
 usePageTitle(() => "任务工作台");
 
-type TaskRow = DemoTaskListRow;
-type TaskDetail = NonNullable<ReturnType<typeof listTaskDetail>>;
+type TaskDetail = Awaited<ReturnType<typeof listTaskDetail>>;
 
-// 数据面：mock-task 的 list 形状函数供 fetcher 闭包调用（demo:true 语义内置）；
+// 数据面：api-task 真实列表（GET /v1/tasks，行内补详情投影）供 fetcher 闭包调用；
 // useLiveList 负责创建即拉取 + 固定间隔轮询 + 出错保留上次数据（F2-3 交付的 hook 原样复用）。
 const { rows, loading: busy, error, refresh: reload } = useLiveList<TaskRow>(async () => listTasks());
 
@@ -116,44 +115,44 @@ function recoveryView(detail: { recovery?: DemoTaskRecovery | null } | null) {
 // resume 返回 pending:true 时显示"恢复中"，等待事件或重新读取详情（方案 §5.3）。
 const resumePending = reactive(new Set<string>());
 
-// —— 处置动作：危险动作（取消/恢复/对账处置）confirmDanger 确认后调 mock demo 函数；
-// 只读/导航类动作联调期接真实跳转，mock 期如实提示。
+// —— 处置动作：危险动作（取消/恢复/对账处置）confirmDanger 确认后调真实端点（api-task）；
+// 只读/导航类动作联调期接真实跳转，暂以提示说明。
 async function onAction(task: TaskRow, action: string, call?: DemoPendingCall) {
   const callId = call?.callId ?? "";
   if (action === "CANCEL") {
     if (!(await confirmDanger({
       title: "取消任务",
-      message: `取消任务 ${task.taskId}？运行/等待中的任务取消后进入终态，不可恢复（mock 演示数据）。`,
+      message: `取消任务 ${task.taskId}？运行/等待中的任务取消后进入终态，不可恢复。`,
       confirmText: "取消任务",
     })))
       return;
-    const done = cancelTask({ taskId: task.taskId });
+    const done = await cancelTask({ taskId: task.taskId });
     if ("error" in done) {
-      ElMessage.error(done.userMessage);
+      ElMessage.error((done as ApiFailure).userMessage);
       return;
     }
-    ElMessage.success(`任务已取消（mock 演示）`);
+    ElMessage.success(`任务已取消`);
     void reload();
     return;
   }
   if (action === "RESUME") {
     if (!(await confirmDanger({
       title: "恢复任务",
-      message: `从最近检查点恢复任务 ${task.taskId}？与自动恢复共用同一入口、先到先得（mock 演示数据）。`,
+      message: `从最近检查点恢复任务 ${task.taskId}？与自动恢复共用同一入口、先到先得。`,
       confirmText: "恢复",
     })))
       return;
-    const done = resumeTask({ taskId: task.taskId });
+    const done = await resumeTask({ taskId: task.taskId });
     if ("error" in done) {
-      ElMessage.error(done.userMessage);
+      ElMessage.error((done as ApiFailure).userMessage);
       return;
     }
     if ("pending" in done) {
       resumePending.add(task.taskId);
-      ElMessage.info(`${done.userMessage}（mock 演示）`);
+      ElMessage.info(done.userMessage);
       return;
     }
-    ElMessage.success("任务已从检查点恢复运行，恢复投影见展开详情（mock 演示）");
+    ElMessage.success("任务已从检查点恢复运行，恢复投影见展开详情");
     void reload();
     return;
   }
@@ -166,41 +165,41 @@ async function onAction(task: TaskRow, action: string, call?: DemoPendingCall) {
     };
     if (!(await confirmDanger({
       title: "对账处置",
-      message: `对未决调用 ${callId} 执行「${ACTION_LABELS[action]}」：${purposes[action]}？提交走对账端点并按当时证据复核，证据不符将 409（mock 演示数据）。`,
+      message: `对未决调用 ${callId} 执行「${ACTION_LABELS[action]}」：${purposes[action]}？提交走对账端点并按当时证据复核，证据不符将 409。`,
       confirmText: ACTION_LABELS[action],
     })))
       return;
-    const done = reconcileTaskCall({
+    const done = await reconcileTaskCall({
       taskId: task.taskId,
       stepId: call?.stepId ?? "",
       callId,
       action,
     });
     if ("error" in done) {
-      ElMessage.error(done.userMessage);
+      ElMessage.error((done as ApiFailure).userMessage);
       return;
     }
-    ElMessage.success(`对账处置已提交：${ACTION_LABELS[action]}（callId ${callId}，mock 演示）`);
+    ElMessage.success(`对账处置已提交：${ACTION_LABELS[action]}（callId ${callId}）`);
     void reload();
     return;
   }
-  // 只读/导航类（查看依赖链/去确认/查看外部引用/重新发起/导出结果）：mock 期不伪造结果。
-  ElMessage.info(`${ACTION_LABELS[action] ?? action}：联调期接入真实入口，当前为 mock 演示`);
+  // 只读/导航类（查看依赖链/去确认/查看外部引用/重新发起/导出结果）：不伪造结果。
+  ElMessage.info(`${ACTION_LABELS[action] ?? action}：真实入口随部署环境联调接入`);
 }
 // 计划确认直达（canConfirm 驱动，task-states §3）：管理台不处理确认本体，指回助手端计划卡/确认中心。
 function gotoConfirm(task: TaskRow) {
-  ElMessage.info(`计划确认入口在助手端计划卡或确认中心（${task.plan?.planId ?? ""}，mock 演示）`);
+  ElMessage.info(`计划确认入口在助手端计划卡或确认中心（${task.plan?.planId ?? ""}）`);
 }
 </script>
 
 <template>
   <!-- F3-1 样板页（方案 §7.1 四段高度模型）：页头/错误条/状态管道筛选/卡片列表滚动体；
-       无分页行（监控页实时列表，mock 全量 ≤ 十余条）。 -->
+       无分页行（监控页实时列表，取首页大页）。 -->
   <DataPage>
     <template #header>
       <PageHeader
         title="任务工作台"
-        subtitle="运行时已受理任务：状态管道、任务树、对账处置与恢复投影（mock 演示数据，联调期换真实端点）。"
+        subtitle="运行时已受理任务：状态管道、任务树、对账处置与恢复投影（真实端点 /v1/tasks）。"
         :busy="busy"
         @refresh="reload"
       />
@@ -261,9 +260,9 @@ function gotoConfirm(task: TaskRow) {
               <span class="muted">{{ step.state }}</span>
               <span v-if="step.resultDigest" class="muted mono">digest {{ step.resultDigest }}</span>
             </div>
-            <div v-for="sub in task.subtasks" :key="sub.subTaskId" class="tree-row is-sub">
+            <div v-for="sub in task.subtasks" :key="sub.taskId" class="tree-row is-sub">
               <span class="tree-glyph" aria-hidden="true">└─</span>
-              <span class="mono">{{ sub.subTaskId }}</span>
+              <span class="mono">{{ sub.taskId }}</span>
               <span class="glyph" aria-hidden="true">{{ stepGlyph(sub.state) }}</span>
               <span>{{ sub.goal }}</span>
               <span class="muted">{{ sub.state }}</span>
@@ -338,7 +337,7 @@ function gotoConfirm(task: TaskRow) {
             </section>
             <p v-else class="muted">无恢复事实（recovery 为空如实呈现）</p>
           </template>
-          <p v-else class="muted">详情加载中（mock）…</p>
+          <p v-else class="muted">详情加载中…</p>
         </div>
 
         <!-- 状态×操作矩阵：卡内动作行 = 服务端 availableActions 的逐项映射（不自判） -->

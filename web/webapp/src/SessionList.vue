@@ -1,11 +1,11 @@
 <script setup lang="ts">
 /**
- * F4-1 会话列表（消费 S2-1 mock 契约 shared/mock-session）：本人会话（mine=true 固定）
+ * F4-1 会话列表（M5-2 切真实 API，消费 shared/api-session）：本人会话（mine=true 固定）
  * 只读+切换+新建；重命名/删除占位 disabled+tooltip「后续批次」（接口稿 §5.1 无该契约，
  * 待删除保留策略契约补齐后交付——前端稿 §5.4 收敛口径）。lastActiveAt 倒序+before 游标分页。
  */
 import { computed, onMounted, ref } from "vue";
-import { listMySessions } from "../../shared/mock-session";
+import { listMySessions } from "../../shared/api-session";
 import type { SessionView } from "./demo-flow";
 
 const emit = defineEmits<{ select: [row: SessionView]; create: [] }>();
@@ -27,9 +27,9 @@ async function loadMore() {
   loading.value = true;
   error.value = "";
   try {
-    const page = listMySessions({ mine: true, before: nextBefore.value });
+    const page = await listMySessions({ mine: true, before: nextBefore.value });
     rows.value.push(...page.sessions);
-    nextBefore.value = page.nextBefore;
+    nextBefore.value = page.nextBefore ?? undefined;
     // 首次装载且未选中会话时自动选中最近会话（前端稿 §5.4 消息流示意默认有内容）。
     if (!bootstrapped && !props.activeId && rows.value.length) {
       bootstrapped = true;
