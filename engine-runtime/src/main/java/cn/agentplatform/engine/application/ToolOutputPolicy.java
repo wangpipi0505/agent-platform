@@ -39,6 +39,11 @@ import java.util.Set;
  *
  * <p>调参：application.yml `agent.tool.output-max-bytes`（环境变量
  * AGENT_TOOL_OUTPUT_MAX_BYTES），默认 262144（256KiB），低于 P2-11 的 550KB 场景。
+ *
+ * <p>R-15（spill 接入工具环）：会话关联运行且外溢组件已装配时，超限分支先经
+ * {@code SpillStore} 流式落盘（spill_artifact 行+locator），模型可见信封并入外溢引用
+ * （locator/preview/长度/sha256 摘要）——响应给模型的是引用而非全量；后续轮次
+ * PromptAssembler 按引用回填原文。外溢未装配/无会话关联/落盘失败保持既有报错口径降级。
  */
 @Component
 public final class ToolOutputPolicy {
@@ -70,18 +75,39 @@ public final class ToolOutputPolicy {
      * @param traceId 调用定位串（run/node/round/call），错误信封可追溯性必需
      */
     public JsonNode enforce(JsonNode tool, JsonNode result, String traceId) {
+        return enforce(tool, result, traceId, null);
+    }
+
+    /**
+     * R-15（spill 接入工具环）：带外溢引用的替换。{@code spillReference} 非空=超限全文
+     * 已由 AgentDriver 经 SpillStore 流式落盘（spill_artifact 索引+对象存储 locator）——
+     * 模型可见信封并入 {@code spill} 引用节点（spilled/spillId/locator/preview/bytes/sha256），
+     * 响应给模型的是引用而非全量，后续轮次 PromptAssembler 按引用回填原文；userMessage
+     * 相应改述"全文已外溢保留、可按引用取回"。引用为空时与既有 {@link #enforce} 完全同口径。
+     */
+    public JsonNode enforce(JsonNode tool, JsonNode result, String traceId, JsonNode spillReference) {
         long actual = Json.write(result).getBytes(StandardCharsets.UTF_8).length;
         if (actual <= maxBytes) return result;
         JsonNode declaration = declaredPagination(tool);
         var replacement = Json.object();
-        replacement.set("error", Json.tree(envelope(tool, actual, traceId, declaration != null)));
+        replacement.set(
+                "error",
+                Json.tree(
+                        envelope(
+                                tool,
+                                actual,
+                                traceId,
+                                declaration != null,
+                                spillReference != null && spillReference.isObject())));
         if (declaration != null) replacement.set("pagination", paginationHint(declaration, result));
+        if (spillReference != null && spillReference.isObject())
+            replacement.set("spill", spillReference.deepCopy());
         return replacement;
     }
 
     /** 七字段统一错误信封（+reason 兼容键），与 contracts/skill-invocation.md §11.1 同构。 */
     private Map<String, Object> envelope(
-            JsonNode tool, long actual, String traceId, boolean paginated) {
+            JsonNode tool, long actual, String traceId, boolean paginated, boolean spilled) {
         var error = new LinkedHashMap<String, Object>();
         error.put("semantic", CODE);
         error.put("code", CODE);
@@ -91,7 +117,8 @@ public final class ToolOutputPolicy {
                 "userMessage",
                 "工具输出 " + actual + " 字节超过引擎上限 " + maxBytes
                         + " 字节，已保留在调用事实中、未注入模型上下文；请缩小查询范围"
-                        + (paginated ? "或使用工具声明的分页参数分批获取" : "") + "后重试");
+                        + (paginated ? "或使用工具声明的分页参数分批获取" : "") + "后重试"
+                        + (spilled ? "；全文已外溢落盘（见 spill 引用，可按引用取回）" : ""));
         error.put(
                 "detail",
                 Map.of(

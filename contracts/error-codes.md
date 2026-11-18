@@ -40,6 +40,7 @@ C0-2 契约冻结（台账#C0-2），2026-11-13。
 | `TASK_STEP_STALE` | 409 | BUSINESS | 步骤结果按事务内当前 state_version 条件更新未命中——晚到更新不覆盖（task 级 CAS 场景沿用 `STATE_VERSION_CONFLICT`；T2-6；R-3 登记 2026-11-18） |
 | `COMPACTION_PAIRING_BROKEN` | 409 | BUSINESS | 压缩区间将未闭合的工具调用/结果配对拆开（区间内存在有 call 无 result 的 callId）——硬性约束禁止本次压缩（T2-9；R-3 登记 2026-11-18） |
 | `INTEGRATION_PATH_FORBIDDEN` | —（审计事件码） | SECURITY | SERVICE/AGENT 集成票据访问白名单外路径：审计行 `AUDIT INTEGRATION_PATH_FORBIDDEN`（凭据标识+主体+路径+traceId，无密钥本体），对外响应恒为 403 `APP_BINDING_DENIED`"出票仅可访问绑定应用的已登记接口"（T2-15；R-3 登记 2026-11-18） |
+| `OUTPUT_TOO_LARGE` | —（工具结果信封内语义码，非 HTTP 响应码） | BUSINESS | 工具输出 UTF-8 序列化字节超引擎阈值（`agent.tool.output-max-bytes`，默认 262144=256KiB）：模型可见面替换为可读错误信封（semantic/code/category/retryable/userMessage/detail{tool,actualBytes,maxBytes}/traceId + reason 兼容键），不静默截断、不整块塞给模型、运行不失败；契约声明分页（contract.pagination）时附分页元信息供模型带页参续拉。R-15 起会话关联运行超限同时经 SpillStore 流式落盘外溢（spill_artifact 索引+locator），模型可见信封并入 spill 引用节点（spilled/spillId/locator/preview/bytes/sha256），后续轮次 PromptAssembler 按引用回填原文；无会话关联/外溢组件未装配/落盘失败保持信封口径降级。调用事实（tool_call/技能侧 trace）始终保留完整原文 | PLAT-14 T14.2 引入在用；R-15 补登记（2026-11-19） |
 
 > **外部集成方说明（R-3）**：路径越权的对外响应码恒为 403 `APP_BINDING_DENIED`；`INTEGRATION_PATH_FORBIDDEN` 仅用于平台审计行，不随响应信封暴露。集成方按 `APP_BINDING_DENIED` 处理：核对出票 policy 白名单与所调路径/方法后重新出票，勿对同票据重试同路径。前端对 `TASK_DISPATCH_STALE`/`TASK_STEP_STALE`/`COMPACTION_PAIRING_BROKEN` 的兜底文案见 `web/shared/reason-code-text.ts`（恢复面板/对账列/失败摘要按码附文案）。
 

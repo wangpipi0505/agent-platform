@@ -40,6 +40,12 @@ import java.util.regex.Pattern;
  * 照 SessionStoreContractTest.deriveMessages 用例）；sha256 未变更时不重复落（同一产物
  * 不产生第二条 system 消息）。落库数据形状 {@code {content, kind:"prompt_render",
  * sha256}}——kind/sha256 标记用于定位上一渲染产物，content 为模型可见正文。
+ *
+ * <p><b>R-15 外溢引用回填（spill 接入工具环）</b>：带会话归属的
+ * {@link #render(String, Map, Map, JsonNode)} 在 {{var}} 插值后，把段正文中的
+ * {@code {{spill:&lt;spillId&gt;}}} 引用经 {@link SpillStore#read} 还原为外溢原文原位
+ * 拼入（会话内归属核验+sha256 复核）——工具环超限外溢（AgentDriver→SpillStore）的读侧，
+ * 后续轮次可取回大结果原文。
  */
 public final class PromptAssembler {
 
@@ -73,11 +79,32 @@ public final class PromptAssembler {
   /** 渲染产物：content=模型可见正文；sections=实际参与拼装的有序段；overridden=被 contextPolicy 覆盖的段。 */
   public record Render(String content, String sha256, List<Section> sections, Set<Section> overridden) {}
 
+  /**
+   * R-15（spill 接入工具环）：外溢引用回填 token——段正文中的 {@code {{ spill:&lt;spillId&gt; }}}
+   * 在组装时还原为外溢原文（后续轮次取回）。与 {@link #VAR} 插值互不干扰（冒号不在
+   * 变量名字符集内，插值器放过该 token）；回填产物不再二次插值。
+   */
+  public static final Pattern SPILL_REF =
+          Pattern.compile("\\{\\{\\s*spill:(s_[a-f0-9]{32})\\s*}}");
+
   private final SessionStore sessions;
+  /** 外溢读取协作端（可选装配）：未装配时按引用回填结构化拒绝，不伪造原文。 */
+  private final SpillStore spills;
+  private final SpillStore.StorageSource spillSource;
 
   /** sessions 为空时仅纯渲染（preview/无会话关联的独立运行），publish 为空操作。 */
   public PromptAssembler(SessionStore sessions) {
+    this(sessions, null, null);
+  }
+
+  /**
+   * R-15：带外溢读取协作端的装配器。spillSource 生产为 MinIO GET、测试为内存映射；
+   * 归属核验与摘要复核在 SpillStore.read 内完成。
+   */
+  public PromptAssembler(SessionStore sessions, SpillStore spills, SpillStore.StorageSource spillSource) {
     this.sessions = sessions;
+    this.spills = spills;
+    this.spillSource = spillSource;
   }
 
   /**
@@ -89,6 +116,17 @@ public final class PromptAssembler {
    * @param contextPolicy manifest.contextPolicy（null/无 sections 子对象=无覆盖）
    */
   public Render render(Map<Section, String> sections, Map<String, Object> vars, JsonNode contextPolicy) {
+    return render(null, sections, vars, contextPolicy);
+  }
+
+  /**
+   * R-15：带会话归属的组装——在既有插值/覆盖/拼装之外按引用回填外溢原文。段正文经
+   * {{var}} 插值后，其中的 {@code {{spill:&lt;spillId&gt;}}} token 还原为外溢全文（会话
+   * 内归属核验+摘要复核，见 {@link #backfill}）；回填产物不再二次插值。sessionId 为
+   * null 时与三参 {@link #render} 完全同口径（零变化锚点）。
+   */
+  public Render render(
+          String sessionId, Map<Section, String> sections, Map<String, Object> vars, JsonNode contextPolicy) {
     Objects.requireNonNull(sections, "段来源 Map 不可为空");
     var overrides = readOverrides(contextPolicy);
     var overridden = new LinkedHashSet<Section>();
@@ -102,11 +140,39 @@ public final class PromptAssembler {
       }
       if (text == null || text.isBlank()) continue;
       if (!body.isEmpty()) body.append("\n\n");
-      body.append(interpolate(text, vars));
+      String rendered = interpolate(text, vars);
+      if (sessionId != null) rendered = backfill(sessionId, rendered);
+      body.append(rendered);
       applied.add(section);
     }
     String content = body.toString();
     return new Render(content, Digest.sha256(content), List.copyOf(applied), Set.copyOf(overridden));
+  }
+
+  /**
+   * R-15：按引用取回外溢原文（后续轮次取回入口）。委托 {@link SpillStore#read}（会话
+   * 归属核验+sha256 复核）；读取协作端未装配时结构化拒绝（SPILL_RETRIEVAL_UNAVAILABLE），
+   * 不静默返回空串或近似内容。
+   */
+  public String retrieveSpill(String sessionId, String spillId) {
+    if (spills == null)
+      throw new PlatformException(
+              500, "SPILL_RETRIEVAL_UNAVAILABLE", "外溢读取协作端未装配，无法按引用取回原文");
+    return spills.read(sessionId, spillId, spillSource);
+  }
+
+  /**
+   * R-15：组装时按引用回填——文本中的 {@code {{spill:&lt;spillId&gt;}}} token 还原为外溢
+   * 原文后原位拼入。引用无效/跨会话/摘要不符经 SpillStore.read 结构化拒绝（400/404/500）。
+   */
+  public String backfill(String sessionId, String text) {
+    if (text == null || !text.contains("{{")) return text;
+    Matcher matcher = SPILL_REF.matcher(text);
+    var result = new StringBuffer();
+    while (matcher.find())
+      matcher.appendReplacement(result, Matcher.quoteReplacement(retrieveSpill(sessionId, matcher.group(1))));
+    matcher.appendTail(result);
+    return result.toString();
   }
 
   /**

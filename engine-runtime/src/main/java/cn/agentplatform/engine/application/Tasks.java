@@ -47,6 +47,12 @@ public class Tasks {
    * 仅测试内成立——本卡接通真实受理入口后经 {@link #create} 受理事务派发）。
    */
   private final SubagentPlanning planning;
+  /**
+   * R-19（T2-2 收尾）：发布快照只读来源（app-management 发布链，{@code /internal/apps/{code}
+   * /published}）——受理钉住真实 config_release 快照 id 与摘要。测试/降级组装可为 null
+   * （受理回退占位降级口径，与 T2-2 交付说明一致）。
+   */
+  private final cn.agentplatform.engine.infra.RuntimeClients clients;
 
   // T2-11：活动任务事件 SSE 观察流（每连接一个泵；closeTaskStreams/@PreDestroy 收口）。
   private final Set<TaskEventPump> taskStreams = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -54,9 +60,20 @@ public class Tasks {
   @org.springframework.beans.factory.annotation.Value("${agent.task.sse.heartbeat-millis:15000}")
   long taskHeartbeatMillis = 15000;
 
-  public Tasks(TraceStore store) {
+  /** 全上下文组装主构造器：@Autowired 指定唯一候选（照 Memories 双构造器先例，R-9 缺陷①）。 */
+  @org.springframework.beans.factory.annotation.Autowired
+  public Tasks(
+      TraceStore store,
+      SubagentPlanning planning,
+      cn.agentplatform.engine.infra.RuntimeClients clients) {
     this.store = store;
-    this.planning = new SubagentPlanning(store);
+    this.planning = planning;
+    this.clients = clients;
+  }
+
+  /** 测试/降级组装：无发布快照来源时受理按占位降级口径钉住（R-19 如实登记）。 */
+  public Tasks(TraceStore store) {
+    this(store, new SubagentPlanning(store), null);
   }
 
   /** 受理：返回任务详情（首版 state=ACCEPTED；AGENT 直接受理入 QUEUED 由 T2-5 步骤映射接续）。 */
@@ -123,11 +140,27 @@ public class Tasks {
                     : req.path("sessionId").asText("").isBlank() ? null : req.path("sessionId").asText();
 
     String publicId = "task-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
-    // 受理钉住（接口稿 §3.1）：发布快照经 app-management 只读接口取得——本首版先以应用维度
-    // 占位摘要落库（满足 char(64) 形状 CHECK），真实 configReleaseId/digest 钉住随发布快照
-    // 只读接口接线接通（javadoc 如实标注，台账 T2-2 交付说明）。
-    String pinnedDigest =
-            Digest.sha256("release-pin:" + actor.tenantId() + ":" + code + ":v1");
+    // R-19（T2-2 收尾）：受理钉住（接口稿 §3.1）——发布快照经 app-management 只读接口取得，
+    // 任务创建事务内钉住当次 config_release 真实快照：releaseId=appver-<app_version 行 id>
+    // （发布链返回的真实快照行身份），digest=发布时内容摘要 candidateSha256（缺形状时按
+    // 发布快照规范 JSON 现算，同版本确定一致）。发布不可得（未发布/停用/服务不可达/测试
+    // 无来源组装）保持 T2-2 占位降级口径落库（unpinned-…/release-pin:…，如实登记）；
+    // 钉住值随受理事务写入 task 行（重放分支在上方先行返回，不重复取快照）。
+    String pinnedReleaseId;
+    String pinnedDigest;
+    var pin = pinRelease(code, actor);
+    if (pin != null) {
+      pinnedReleaseId = pin.releaseId();
+      pinnedDigest = pin.digest();
+    } else {
+      pinnedReleaseId =
+              "unpinned-"
+                      + Integer.toHexString(
+                              Digest.sha256("release-pin:" + actor.tenantId() + ":" + code + ":v1")
+                                      .substring(0, 8)
+                                      .hashCode());
+      pinnedDigest = Digest.sha256("release-pin:" + actor.tenantId() + ":" + code + ":v1");
+    }
     store.atomic(
             () -> {
               store.db()
@@ -140,7 +173,7 @@ public class Tasks {
                               actor.tenantId(),
                               actor.principalId(),
                               code,
-                              "unpinned-" + Integer.toHexString(pinnedDigest.substring(0, 8).hashCode()),
+                              pinnedReleaseId,
                               pinnedDigest,
                               mode,
                               "PLAN".equals(mode) ? "PLAN" : "EXECUTE",
@@ -397,6 +430,36 @@ public class Tasks {
   private static String goalSummary(String goal) {
     if (goal == null) return "";
     return goal.length() <= 200 ? goal : goal.substring(0, 200);
+  }
+
+  /**
+   * R-19：受理钉住的发布快照身份（app-management 发布链）。releaseId=真实快照行 id
+   * （{@code appver-<app_version.id>}，varchar(64) 内）；digest 优先发布时内容摘要
+   * candidateSha256（64-hex 形状校验），缺失/越形按发布快照规范 JSON 现算（同版本确定
+   * 一致、跨版本必然不同）。来源缺失或发布不可得返回 null（受理回退占位降级口径，
+   * 不阻塞受理——发布状态由运行面依赖的既有链路另行核验）。
+   */
+  record ReleasePin(String releaseId, String digest) {}
+
+  private ReleasePin pinRelease(String code, Actor actor) {
+    if (clients == null) return null;
+    JsonNode published;
+    try {
+      published = clients.get("app", "/internal/apps/" + code + "/published", actor);
+    } catch (RuntimeException unavailable) {
+      // 未发布/停用/版本切换竞态/服务不可达：占位降级口径（T2-2 交付说明），不阻塞受理。
+      return null;
+    }
+    long versionId =
+            published.path("appVersionId").asLong(published.path("versionId").asLong(0));
+    if (versionId <= 0) return null;
+    String releaseId = "appver-" + versionId;
+    String candidate = published.path("candidateSha256").asText("");
+    String digest =
+            candidate.matches("^[0-9a-f]{64}$")
+                    ? candidate
+                    : Digest.sha256(Json.canonical(published));
+    return new ReleasePin(releaseId, digest);
   }
 
   private static int parsePage(String raw, String label) {

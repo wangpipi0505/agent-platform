@@ -35,9 +35,16 @@ import java.util.*;
 public class ResourceManifestService {
 
   private final TraceStore store;
+  /** R-18：engine 侧 GUIDE 目录缓存（可选装配；手工构造/测试未注入时保持 N/A 留痕口径）。 */
+  private GuideDirectory guides;
 
   public ResourceManifestService(TraceStore store) {
     this.store = store;
+  }
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  public void guideDirectory(GuideDirectory directory) {
+    this.guides = directory;
   }
 
   /** 单项资源装载状态：ref/name/kind/status(OK|MISSING|DISABLED|NO_AUTH|CONNECTION_FAILED|N/A)/detail。 */
@@ -124,8 +131,27 @@ public class ResourceManifestService {
   }
 
   private void collectSkills(List<ResourceEntry> entries, JsonNode manifest) {
-    for (JsonNode g : manifest.path("skills").path("guideRefs"))
-      entries.add(new ResourceEntry("SKILL", g.asText(), "OK", "受理", "GUIDE 引用（存在性核验经 skill-registry——N/A 留痕）"));
+    // R-18：GUIDE 引用存在性核验升级——engine 侧 GUIDE 目录缓存可用时实核（命中=OK、
+    // 未命中=MISSING 且阻断装载）；缓存 N/A（skill 服务不可达/未注入）保持既有 N/A 留痕
+    // 口径，不放大装载判定。
+    for (JsonNode g : manifest.path("skills").path("guideRefs")) {
+      String ref = g.asText();
+      if (guides != null && guides.available()) {
+        boolean known = guides.entry(ref) != null;
+        entries.add(
+                new ResourceEntry(
+                        "SKILL",
+                        ref,
+                        known ? "OK" : "MISSING",
+                        "受理",
+                        known
+                                ? "GUIDE 引用（engine 侧目录注册缓存命中）"
+                                : "GUIDE 引用在 engine 侧目录注册中不存在（MISSING）"));
+      } else
+        entries.add(
+                new ResourceEntry(
+                        "SKILL", ref, "OK", "受理", "GUIDE 引用（存在性核验经 skill-registry——N/A 留痕）"));
+    }
     for (JsonNode t : manifest.path("skills").path("toolGrants"))
       entries.add(
               new ResourceEntry(
