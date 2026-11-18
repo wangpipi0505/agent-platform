@@ -45,3 +45,42 @@
 2. **生产 sink 未到位**：主方案 §5.4"沿用 MinIO"——引擎模块暂无对象存储 SDK 依赖，`StorageSink/StorageSource` 生产实现（MinIO ArtifactStore）尚未提供。Spring 已装配 SpillStore Bean 与两个注入点（AgentDriver.spillSinkFactory、PromptAssembler 构造），MinIO 实现到位即激活，无需再改工具环；当前生产运行口径=既有报错信封（降级如实登记）。测试以 BufferedMemorySink/内存映射按接口契约等价验证。
 3. **独立运行（无会话关联）不落盘**：spill_artifact.session_id 为 NOT NULL FK（V231），独立运行无会话归属可挂——保持既有报错信封口径（零落盘、信封无 spill 引用），已用例定死（unlinkedRunKeepsLegacyEnvelopeWithoutSpillRow）。
 4. **call_id 未关联**：外溢落盘时 spill_artifact.call_id 暂传 null（callId 在 skill() 登记内部，未上抛到工具环调用点；tool_call 行自身保留完整结果事实，可经 trace 对账）；列为后续顺手项。
+
+---
+
+## R-18 engine 侧 GUIDE 目录注册 + memoryPolicy 接 manifest
+
+### 改动文件（文件:行）
+
+| 文件 | 改动 |
+| --- | --- |
+| `engine-runtime/src/main/java/cn/agentplatform/engine/application/GuideDirectory.java`（新增） | GUIDE 目录注册：启动（ApplicationReadyEvent）/按需经 RuntimeClients 拉 skill 服务 `GET /admin/skills?kind=GUIDE`（V321 双轨 kind 过滤）本地缓存（保序只读）；不可达=N/A 留痕（异常码入 detail）保留最后已知缓存、绝不阻塞启动；`catalogSection()` 五字段摘要投影（提示装配 SKILL_CATALOG 段正文来源，N/A/空目录=空串不伪造） |
+| `engine-runtime/src/main/java/cn/agentplatform/engine/api/GuideDirectoryController.java`（新增） | `GET /v1/skills?kind=GUIDE` 读本地缓存（engine 侧有数据可查）；kind 白名单收口（TOOL 走工具环 400 GUIDE_KIND_ONLY） |
+| `engine-runtime/src/main/java/cn/agentplatform/engine/application/ResourceManifestService.java:37-51,139-163` | guideRefs 消费路径升级：目录缓存可用=实核（命中 OK/未命中 MISSING 阻断装载），N/A（未注入/不可达）保持既有 N/A 留痕口径零漂移 |
+| `engine-runtime/src/main/java/cn/agentplatform/engine/application/Memories.java:53-77` | memoryPolicy 接 manifest：`MemoryPolicy.from` 三级回退补第三级 `config.memoryPolicy`（chat_session 钉住发布快照与 /internal/apps/{code}/published 均把 manifest 放 config 下——此前 manifest memoryPolicy 不进策略链的缺口接通，与 collectMemory 的 MEMORY_POLICY 条目同源） |
+| `engine-runtime/src/test/java/cn/agentplatform/engine/application/GuideDirectoryTest.java`（新增 4 用例） | 见下 |
+| `engine-runtime/src/test/java/cn/agentplatform/engine/infra/MemoryManifestPolicyTest.java`（新增 1 用例） | 见下 |
+
+### DoD 命令与结果
+
+1. **engine 侧 GUIDE 目录可查有数据**（`GuideDirectoryTest.refreshCachesGuideDirectoryAndEngineSideEndpointServesIt`）：refresh 经 RuntimeClients 出站（stub 断言拉取路径带 kind=GUIDE）→ `GET /v1/skills?kind=GUIDE` 返回缓存 2 条（code/definition.description 在位）；kind=TOOL 400。
+2. **不可达 N/A 留痕不阻塞**（`unreachableSkillServiceLeavesNaTrailAndKeepsLastKnownCache`）：refresh 吞 502 为 N/A（detail 含 SKILL_UNAVAILABLE）、不抛异常；先 OK 后故障保留最后已知缓存（2 条）且 available()=false（消费路径回落留痕口径）。
+3. **guideRefs 消费路径实核**（`manifestGuideRefsResolvedAgainstEngineSideDirectory`）：缓存可用→已注册引用 OK、未注册 ghost-guide@1 MISSING（loadable=false 定位对象在位）；目录 N/A→既有 N/A 留痕口径不变（ResourceManifestTest 6/6 零改动全绿）。
+4. **memoryPolicy 变化用例在案**（`MemoryManifestPolicyTest.manifestMemoryPolicyChangeFlipsWriteAndReadPathBehavior`）：chat_session 钉住发布形状快照（config.memoryPolicy）——writeScopes [PRIVATE]→ADMIN 写 SHARED 403 SCOPE_WRITE_DENIED，改 manifest 放开 [PRIVATE,SHARED]→200；readScopes 同链 USER 读共享 403→200；USER 写 SHARED 恒 403（角色红线不受策略放行影响）。
+5. **定向回归**：`mvn -pl engine-runtime test -o -Dtest='GuideDirectoryTest,MemoryManifestPolicyTest,MemoryApiTest,ResourceManifestTest'` → **Tests run: 20, Failures: 0, Errors: 0**（GuideDirectoryTest 4/4、MemoryManifestPolicyTest 1/1 新增；MemoryApiTest 9/9、ResourceManifestTest 6/6 零改动全绿）。
+
+### 测试统计
+
+| 类 | 用例 | 结果 |
+| --- | --- | --- |
+| GuideDirectoryTest（新） | 4/4 | 拉取+端点可查 / N-A 留痕+缓存保留 / manifest 实核+留痕口径 / catalogSection 投影 |
+| MemoryManifestPolicyTest（新） | 1/1 | manifest memoryPolicy 变化翻转读写路径（含角色红线） |
+| MemoryApiTest（既有） | 9/9 | 零改动全绿（顶层 memoryPolicy 形状口径不受影响） |
+| ResourceManifestTest（既有） | 6/6 | 零改动全绿（无目录注入=N/A 留痕口径锚点） |
+
+### 诚实登记项
+
+1. **`GET /v1/skills?kind=GUIDE` 实现口径（等价口径）**：网关未登记 /v1/skills 前缀（且本卡约束不动网关），engine 侧端点为 engine 直连只读面（:18082，standalone MockMvc 用例覆盖）；经网关的技能目录面仍是 skill 服务 `GET /admin/skills?kind=GUIDE`（已可达、kind 过滤现成）——与卡面"若网关把 skills 面指到 skill 服务已可达，则 engine 侧注册=本地缓存+装配到 guideRefs 消费路径"的分支一致，engine 侧注册=本地缓存（GuideDirectory）+两条消费路径（ResourceManifestService 实核 / catalogSection 提示装配段正文）。
+2. **拉取通道与鉴权形态**：照既有跨服务预检口径走 RuntimeClients（ServiceTicket 面）；skill 服务 `/admin/**` 在 legacy（dev-hmac/test）模式接受服务票，IAM（trusted）模式下 /admin/** 要求门户域票据——服务票拉取会被拒→N/A 留痕（目录缓存为尽力而为注册面，不影响运行）；生产 IAM 部署形态如需目录实核，后续由 skill 服务开 `/internal` 目录端点或网关面承接（本卡不动他服务的约束下如实登记）。
+3. **memoryPolicy 读取链核验结论**：A3-4 现状=MemoryPolicy.from 只读顶层/manifest 两形状，发布快照形状（config 下 manifest）的 memoryPolicy 实际不进策略链——本卡补第三级回退接通（新增链自查断言）；顶层/manifest 两既有形状行为零变化（MemoryApiTest 9/9 零改动全绿）。ResourceManifestService.collectMemory 的 MEMORY_POLICY 条目（读 manifest.memoryPolicy）与策略链自此同源。
+4. **"USER 写 SHARED 不再 403"卡面括注与现状契约不符**：requireWriteScope 的角色红线（USER 恒不写 SHARED，403）为接口稿明文不变量，策略放行不越角色门——用例按"writeScopes 变化→ADMIN 写 SHARED 403↔200 + readScopes 变化→USER 读共享 403↔200"覆盖写入路径行为变化，并显式断言 USER 写 SHARED 恒 403（红线保持）。

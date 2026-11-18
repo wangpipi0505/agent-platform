@@ -49,29 +49,34 @@ public class Memories {
     // 策略（memoryPolicy：readScopes/writeScopes/kinds/topK）
     // ------------------------------------------------------------------
 
-    /**
-     * memoryPolicy 语义（接口稿 §5.4 memoryPolicy 段）：readScopes/writeScopes 分别控制任务
-     * 检索与写入范围，未配置时仅含 PRIVATE；请求读写权限=工作区策略∩当前主体授权。kinds
-     * 限制可写种类（空=不限）。快照形状容错：memoryPolicy 在顶层或 manifest.memoryPolicy。
-     */
-    public record MemoryPolicy(Set<String> readScopes, Set<String> writeScopes, Set<String> kinds, int topK) {
+        /**
+         * memoryPolicy 语义（接口稿 §5.4 memoryPolicy 段）：readScopes/writeScopes 分别控制任务
+         * 检索与写入范围，未配置时仅含 PRIVATE；请求读写权限=工作区策略∩当前主体授权。kinds
+         * 限制可写种类（空=不限）。快照形状容错（三级回退）：memoryPolicy 在顶层、
+         * manifest.memoryPolicy，或发布快照的 config.memoryPolicy（A3-8 manifest 形状——
+         * chat_session 钉住的发布快照与 /internal/apps/{code}/published 均把 manifest 放在
+         * config 下，与 ResourceManifestService.collectMemory 读 manifest.memoryPolicy 同源；
+         * R-18 接通该链，manifest 改 memoryPolicy 后策略随之变化）。
+         */
+        public record MemoryPolicy(Set<String> readScopes, Set<String> writeScopes, Set<String> kinds, int topK) {
 
-        public static MemoryPolicy restricted() {
-            return new MemoryPolicy(Set.of("PRIVATE"), Set.of("PRIVATE"), Set.of(), 5);
-        }
+            public static MemoryPolicy restricted() {
+                return new MemoryPolicy(Set.of("PRIVATE"), Set.of("PRIVATE"), Set.of(), 5);
+            }
 
-        public static MemoryPolicy from(JsonNode snapshot) {
-            JsonNode absent = Json.read("{}");
-            JsonNode policy = snapshot == null ? absent : snapshot.path("memoryPolicy");
-            if (!policy.isObject())
-                policy = snapshot == null ? absent : snapshot.path("manifest").path("memoryPolicy");
-            if (!policy.isObject()) return restricted();
-            return new MemoryPolicy(
-                    scopes(policy.path("readScopes")),
-                    scopes(policy.path("writeScopes")),
-                    kinds(policy.path("kinds")),
-                    topK(policy.path("topK")));
-        }
+            public static MemoryPolicy from(JsonNode snapshot) {
+                JsonNode absent = Json.read("{}");
+                JsonNode body = snapshot == null ? absent : snapshot;
+                JsonNode policy = body.path("memoryPolicy");
+                if (!policy.isObject()) policy = body.path("manifest").path("memoryPolicy");
+                if (!policy.isObject()) policy = body.path("config").path("memoryPolicy");
+                if (!policy.isObject()) return restricted();
+                return new MemoryPolicy(
+                        scopes(policy.path("readScopes")),
+                        scopes(policy.path("writeScopes")),
+                        kinds(policy.path("kinds")),
+                        topK(policy.path("topK")));
+            }
 
         /** 未配置/空集/越界值收窄为仅 PRIVATE；越界项丢弃。 */
         private static Set<String> scopes(JsonNode raw) {
