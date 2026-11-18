@@ -10,7 +10,7 @@ import planningSeedText from '../../../../shared/satellite-planning.seed.json?ra
 import {safeMarkdown} from '../../../../shared/content'
 import {useAuth} from '../../../../shared/api'
 import {uploadArtifact} from '../../../../shared/artifact-upload'
-import {mockArtifactRequest,registerMockArtifact,mockArtifactsEnabled} from '../../../../shared/mock-artifacts'
+import {downloadStoredArtifact,registerArtifact} from '../../../../shared/api-artifacts'
 import Artifacts from '../../../../shared/Artifacts.vue'
 import SchemaInputs from '../../../../shared/SchemaInputs.vue'
 import { inputFields } from '../../../../shared/input-schema'
@@ -211,7 +211,8 @@ async function uploadToolFile(file: File) {
 async function templateFile(kind:string){
  const seed=JSON.parse(planningSeedText);const satellite=seed.assets.satellites.find((item:any)=>item.id===3150);
  const templates:Record<string,{name:string,mediaType:string,content:string}>={csv:{name:'观测目标模板.csv',mediaType:'text/csv;charset=utf-8',content:'targetId,targetType,planningDate\nGT-QH-01,GROUND,2026-11-06\n'},json:{name:'观测约束模板.json',mediaType:'application/json',content:JSON.stringify({maxCloudPercent:30,onlySatelliteId:3150},null,2)},txt:{name:'星历参数模板.txt',mediaType:'text/plain;charset=utf-8',content:JSON.stringify({planningDate:seed.planningDate,satelliteId:satellite.id,epochAgeDays:seed.windows.find((item:any)=>item.satelliteId===satellite.id)?.epochAgeDays,...satellite},null,2)}};
- const file=templates[kind];if(!file)return;const ref=mockArtifactsEnabled()?await registerMockArtifact(file):undefined;const response=ref?await mockArtifactRequest(ref.downloadUrl):undefined;const blob=response?await response.blob():new Blob([file.content],{type:file.mediaType});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=file.name;link.click();URL.revokeObjectURL(url);
+ const file=templates[kind];if(!file)return;// M5-2：模板附件注册/下载走 shared/api-artifacts（真实 /admin/artifacts；VITE_MOCK 演示经 mock 存储）。
+ const artifactRef=await registerArtifact(file);const blob=(artifactRef?await downloadStoredArtifact(artifactRef):undefined)??new Blob([file.content],{type:file.mediaType});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=file.name;link.click();URL.revokeObjectURL(url);
 }
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Enter' && !event.shiftKey) {

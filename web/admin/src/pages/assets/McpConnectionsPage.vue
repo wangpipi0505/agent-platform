@@ -1,23 +1,25 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
-import DataPage from "../../../shared/components/DataPage.vue";
-import EmptyState from "../../../shared/components/EmptyState.vue";
-import ErrorBanner from "../../../shared/components/ErrorBanner.vue";
-import { confirmDanger } from "../../../shared/components/DangerConfirm";
-import PageHeader from "../PageHeader.vue";
-import { usePageTitle } from "../usePageOperation";
-import { useLiveList } from "../../../shared/hooks/useLiveList";
+import DataPage from "../../../../shared/components/DataPage.vue";
+import EmptyState from "../../../../shared/components/EmptyState.vue";
+import ErrorBanner from "../../../../shared/components/ErrorBanner.vue";
+import { confirmDanger } from "../../../../shared/components/DangerConfirm";
+import PageHeader from "../../PageHeader.vue";
+import { usePageTitle } from "../../usePageOperation";
+import { useLiveList } from "../../../../shared/hooks/useLiveList";
 import {
   createMcpConnection, discoverMcpTools, getMcpConnection, listMcpConnections, listMcpTools,
   reviewMcpTools, testMcpConnection, updateMcpConnection,
-  type McpFailureCategory, type McpTool, type McpTransport, type MockMcpConnection,
-} from "../../../shared/mock-mcp";
+  type ApiFailure, type McpFailureCategory, type McpTool, type McpTransport, type MockMcpConnection,
+} from "../../../../shared/api-mcp";
 
 // F3-3（台账 §7.5 / 前端稿 §3.1 集成与治理·MCP 连接）：资产管理页——MCP 连接。
 // 连接列表 + 连通测试（返回具体失败类别）+ 发现（批次串行 batch_no）+
 // 快照差异（ADDED/CHANGED/REMOVED）+ 审核生成技能草稿（skillDraftRef）。
-// test/discover 绑定当前连接修订号：配置变更 revision+1（评审 12）。数据源 mock-mcp（demo:true）。
+// test/discover 绑定当前连接修订号：配置变更 revision+1（评审 12）。
+// 数据面（M5-2 切真实 API）：shared/api-mcp——/admin/mcp-connections 七条路径（经网关）。
+// 诚实边界：服务端无 GET 列表端点——列表以本地已知 id 索引逐条 GET 聚合（均为服务端真实行）。
 usePageTitle(() => "MCP 连接");
 
 const { rows, loading: busy, error, refresh: reload } = useLiveList<MockMcpConnection>(async () => listMcpConnections());
@@ -35,7 +37,7 @@ function rowOf(id: string): MockMcpConnection | undefined {
 const testing = reactive(new Set<string>());
 async function testConnection(row: MockMcpConnection) {
   testing.add(row.id);
-  const done = testMcpConnection(row.id);
+  const done = await testMcpConnection(row.id);
   testing.delete(row.id);
   if ("error" in done) {
     ElMessage.error("连接不存在，请刷新");
@@ -43,40 +45,42 @@ async function testConnection(row: MockMcpConnection) {
     return;
   }
   if (done.result === "OK") {
-    ElMessage.success(`连通正常（revision ${done.revision}，mock 演示）`);
+    ElMessage.success(`连通正常（revision ${done.revision}）`);
   } else {
-    ElMessage.error(`连通失败：${FAILURE_LABEL[done.failureCategory]}（${done.failureCategory}，mock 演示）`);
+    ElMessage.error(`连通失败：${FAILURE_LABEL[done.failureCategory as McpFailureCategory] ?? done.failureCategory}（${done.failureCategory}）`);
   }
   void reload();
 }
 const lastTestText = (row: MockMcpConnection) => {
   if (!row.lastTest) return "未测试";
   if (row.lastTest.result === "OK") return `通过（r${row.lastTest.revision}）`;
-  return `失败：${FAILURE_LABEL[row.lastTest.failureCategory]}`;
+  return `失败：${FAILURE_LABEL[row.lastTest.failureCategory as McpFailureCategory] ?? row.lastTest.failureCategory}`;
 };
 
 // —— 发现（批次串行，batch_no）：发现按钮置忙，完成后提示目录版本 ——
 const discovering = reactive(new Set<string>());
 async function discover(row: MockMcpConnection) {
   discovering.add(row.id);
-  const accepted = discoverMcpTools(row.id);
+  const accepted = await discoverMcpTools(row.id);
   if ("error" in accepted) {
     discovering.delete(row.id);
-    ElMessage.error(accepted.userMessage ?? "触发发现失败");
+    ElMessage.error((accepted as ApiFailure).userMessage ?? "触发发现失败");
     return;
   }
-  ElMessage.info(`发现批次 ${accepted.batchNo} 已受理（串行执行，mock 演示）`);
-  // 完成批次并读取差异（demo：poll 快照差异即批次完成点）。
-  const result = listMcpTools(row.id, { diff: true });
+  ElMessage.info(`发现批次 ${accepted.batchNo ?? ""} 已受理（串行执行）`.trim());
+  // 读取快照差异（服务端批次串行；diff 视图即当前目录差异）。
+  const result = await listMcpTools(row.id, { diff: true });
   discovering.delete(row.id);
   if ("error" in result) {
     ElMessage.error("目录读取失败，请刷新");
     void reload();
     return;
   }
-  const diff = result.diff!;
+  const diff = (result.diff ?? { added: [], changed: [], removed: [] }) as {
+    added: McpTool[]; changed: McpTool[]; removed: McpTool[];
+  };
   ElMessage.success(
-    `批次 ${result.batchNo} 完成：新增 ${diff.added.length}、变更 ${diff.changed.length}、移除 ${diff.removed.length}；目录版本 batch_no=${result.batchNo}`,
+    `批次 ${result.batchNo ?? ""} 完成：新增 ${diff.added.length}、变更 ${diff.changed.length}、移除 ${diff.removed.length}；目录版本 batch_no=${result.batchNo ?? "-"}`,
   );
   void reload();
 }
@@ -87,21 +91,21 @@ const diffConnection = ref<MockMcpConnection | null>(null);
 const diffTools = ref<McpTool[]>([]);
 const diffResult = ref<{ added: McpTool[]; changed: McpTool[]; removed: McpTool[] } | null>(null);
 const CHANGE_LABEL: Record<string, string> = { ADDED: "新增", CHANGED: "变更", REMOVED: "移除" };
-function openDiff(row: MockMcpConnection) {
-  const detail = getMcpConnection(row.id);
+async function openDiff(row: MockMcpConnection) {
+  const detail = await getMcpConnection(row.id);
   if ("error" in detail) {
     ElMessage.error("连接不存在，请刷新");
     void reload();
     return;
   }
-  const result = listMcpTools(row.id, { diff: true });
+  const result = await listMcpTools(row.id, { diff: true });
   if ("error" in result) {
     ElMessage.error("目录读取失败，请刷新");
     return;
   }
   diffConnection.value = detail;
-  diffTools.value = result.tools;
-  diffResult.value = result.diff ?? null;
+  diffTools.value = (result.tools ?? []) as McpTool[];
+  diffResult.value = (result.diff ?? null) as { added: McpTool[]; changed: McpTool[]; removed: McpTool[] } | null;
   diffOpen.value = true;
 }
 const changeTypeOf = (tool: McpTool) => tool.changeType ?? "";
@@ -110,13 +114,14 @@ const changeTypeOf = (tool: McpTool) => tool.changeType ?? "";
 const draftRefs = reactive(new Map<string, { draftId: string; code: string; name: string }>());
 async function reviewTool(tool: McpTool) {
   if (!diffConnection.value) return;
-  const done = reviewMcpTools(diffConnection.value.id, { toolName: tool.toolName });
+  const done = await reviewMcpTools(diffConnection.value.id, { toolName: tool.toolName });
   if ("error" in done) {
-    ElMessage.error(done.userMessage ?? "审核失败");
+    ElMessage.error((done as ApiFailure).userMessage ?? "审核失败");
     return;
   }
-  draftRefs.set(tool.toolName, done.skillDraftRef);
-  ElMessage.success(`技能草稿已生成：${done.skillDraftRef.code}（mock 演示）`);
+  const ref = (done as { skillDraftRef?: { draftId: string; code: string; name: string } }).skillDraftRef;
+  if (ref) draftRefs.set(tool.toolName, ref);
+  ElMessage.success(`技能草稿已生成：${ref?.code ?? tool.toolName}`);
 }
 const draftRefOf = (toolName: string) => draftRefs.get(toolName) ?? null;
 
@@ -134,7 +139,7 @@ async function saveEdit() {
     return;
   }
   editSaving.value = true;
-  const done = updateMcpConnection(editForm.value.id, {
+  const done = await updateMcpConnection(editForm.value.id, {
     name: editForm.value.name, endpoint: editForm.value.endpoint, transport: editForm.value.transport,
   });
   editSaving.value = false;
@@ -143,7 +148,7 @@ async function saveEdit() {
     void reload();
     return;
   }
-  ElMessage.success(`配置已更新：revision 升至 ${done.revision}（旧修订测试/发现结果不入目录，mock 演示）`);
+  ElMessage.success(`配置已更新：revision 升至 ${done.revision ?? ""}（旧修订测试/发现结果不入目录）`.trim());
   editOpen.value = false;
   void reload();
 }
@@ -158,13 +163,13 @@ async function saveCreate() {
     return;
   }
   createSaving.value = true;
-  const done = createMcpConnection(createForm.value);
+  const done = await createMcpConnection(createForm.value);
   createSaving.value = false;
   if ("error" in done) {
     ElMessage.error(done.userMessage ?? "登记失败");
     return;
   }
-  ElMessage.success("连接档案已登记（mock 演示）");
+  ElMessage.success("连接档案已登记");
   createOpen.value = false;
   void reload();
 }
@@ -175,7 +180,7 @@ async function saveCreate() {
     <template #header>
       <PageHeader
         title="MCP 连接"
-        subtitle="连接档案登记、连通测试（具体失败类别）、工具发现（批次串行）与快照差异审核（mock 演示数据，联调期换真实端点）。"
+        subtitle="连接档案登记、连通测试（具体失败类别）、工具发现（批次串行）与快照差异审核（真实端点 /admin/mcp-connections）。"
         :busy="busy"
         @refresh="reload"
       >

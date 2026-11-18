@@ -211,11 +211,15 @@ it("预检同屏：manifestChecks（规则 PASS/BLOCKED、技能/插件 N/A）+ 
   // 只取 manifest 引用核验条目（A3-1 checks 结构：group 以 manifest 开头）
   expect(panel).toContain('startsWith("manifest")');
   expect(panel).toContain(':data="manifestChecks"');
-  // demo 切换点：mock 期走 mock-manifest，联调期一行换 api（真实端点路径在源码可见）
-  expect(panel).toContain('import.meta.env.VITE_MOCK === "true"');
-  expect(panel).toContain("mockManifestGet");
-  expect(panel).toContain("mockManifestPut");
-  expect(panel).toContain("/manifest`, \"PUT\"");
+  // M5-2 切真实 API：面板经 shared/api-manifest（真实端点 GET/PUT /admin/apps/{code}/manifest）；
+  // VITE_MOCK 演示分支收口进 api-manifest（页面不再 import mock-*）。
+  expect(panel).toContain("api-manifest");
+  expect(panel).toContain("fetchManifest");
+  expect(panel).toContain("putManifest");
+  const transport = read("shared/api-manifest.ts");
+  expect(transport).toContain("import.meta.env?.VITE_MOCK");
+  expect(transport).toContain("mock-manifest");
+  expect(transport).toContain("/manifest`, \"PUT\"");
 });
 
 it("checklist 联动：校验不过 → 智能体头提交发布 disabled+tooltip；过/无 manifest → 不禁（存量口径）", () => {

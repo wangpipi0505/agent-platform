@@ -16,16 +16,17 @@ import {
   type CompactionRange,
   type DemoCallRow,
   type DemoReject,
+  type DemoRecoveryProjection,
   type DemoRole,
   type DemoSessionEvent,
   type DemoSnapshot,
   type DemoSubagentRow,
-} from "../../../shared/mock-session-detail";
+} from "../../../shared/api-session";
 import { reasonCodeText } from "../../../shared/reason-code-text";
 
 // F3-6（台账 §7.5 / 前端稿 §5.4）：会话详情与步骤调用下钻——管理台侧参数页（深链
 // /sessions/:sessionId；管理台入口=/tasks 或 /runs 下钻，USER 助手端入口属 F4 域）。
-// 双视角切换（mock 期演示两个真实角色的投影差异）：
+// 双视角切换（投影差异）：
 //   USER 视角  = 普通视图（接口稿 §5.1 surfaceOnly=true 白名单）：消息流、压缩标记
 //               （区间+token 计数，无 summary 正文与模型调用细节）、本人恢复三字段、
 //               子代理停因展示摘要；被压缩覆盖的锚点隐藏跳转。
@@ -35,6 +36,10 @@ import { reasonCodeText } from "../../../shared/reason-code-text";
 // 锚点定位（§5.7）：调用行 eventSeq → 跳到消息流对应 seq；无锚点（appCode/sessionId 空
 // 或 eventSeq=null）→ 保留错误摘要、隐藏跳转。刷新重新查锚点：refresh 按
 // taskId/stepId/callId 重新读取列表项并校验当前锚点（同输入同输出）。
+// 数据面（M5-2 切真实 API）：shared/api-session——GET /v1/apps/{code}/sessions/{id}
+// 与 /events（surfaceOnly 视图门服务端裁决）、GET /v1/sessions/{id}/subagents、
+// GET /v1/tasks/{taskId}（recovery 服务端角色投影）。诚实边界：会话→调用链无端点级桥、
+// 会话→关联任务不可解析时调用列表/恢复卡如实为空；appCode 空深链按演示应用编码解析。
 usePageTitle(() => "会话详情");
 
 const route = useRoute();
@@ -71,25 +76,26 @@ async function refresh() {
     snap.value = null;
     return;
   }
-  const snapshot = sessionSnapshot("", id, perspective.value);
+  const snapshot = await sessionSnapshot("", id, perspective.value);
   if ("httpStatus" in snapshot) {
     reject.value = snapshot;
     snap.value = null;
     return;
   }
   snap.value = snapshot;
-  linkedTaskId.value = snapshot.linkedTaskId;
+  linkedTaskId.value = snapshot.linkedTaskId ?? "";
   const appCode = snapshot.appCode;
-  // 事件流：恢复顺序=先快照后增量（接口稿 §5.1）；mock 全量一次取齐（watermark 内全部）。
-  const page = sessionEvents(appCode, id, { surfaceOnly: surfaceOnly.value }, perspective.value);
+  // 事件流：恢复顺序=先快照后增量（接口稿 §5.1）；增量按 afterSeq=0 起全量读取（watermark 内全部）。
+  const page = await sessionEvents(appCode, id, { surfaceOnly: surfaceOnly.value, afterSeq: 0 }, perspective.value);
   if (!("nextAfterSeq" in page)) {
     reject.value = page;
     return;
   }
   stream.value = page.events;
-  const callPage = sessionCalls(id, perspective.value);
+  const callPage = await sessionCalls(id, perspective.value);
   calls.value = callPage.calls;
-  children.value = sessionSubagents(id, perspective.value).children;
+  children.value = (await sessionSubagents(id, perspective.value)).children;
+  recoveryProjection.value = linkedTaskId.value ? await taskRecovery(linkedTaskId.value, perspective.value) : null;
   // 刷新重查锚点（§5.7）：按 callId 重新读取列表项并校验当前锚点——同输入同输出。
   revalidateAnchor();
 }
@@ -278,9 +284,11 @@ const compactionSummaries = computed(() =>
     .map((event) => String(event.data.summary ?? "")),
 );
 
-// —— 恢复事实卡（contracts §3 角色投影）：USER 三字段；OPERATOR 另见附加分区（有则显示，缺省空集不伪造）。 ——
+// —— 恢复事实卡（contracts §3 角色投影，refresh 按 linkedTaskId 从任务详情端点装载）：
+// USER 三字段；OPERATOR 另见附加分区（有则显示，缺省空集不伪造）。
+const recoveryProjection = ref<DemoRecoveryProjection | null>(null);
 const recovery = computed(() => {
-  const projection = taskRecovery(linkedTaskId.value, perspective.value);
+  const projection = recoveryProjection.value;
   if (!projection) return null;
   return {
     recoverySource: projection.recoverySource,
@@ -346,9 +354,9 @@ void refresh();
       </header>
       <p>{{ reject.userMessage }}</p>
       <p class="muted">
-        已记录拒绝审计：principal <code class="mono">{{ reject.audit.principal }}</code> 对
-        <code class="mono">{{ reject.audit.appCode || "—" }}/{{ reject.audit.sessionId }}</code>
-        的访问（原因：{{ reject.audit.reason }}）。
+        已记录拒绝审计：principal <code class="mono">{{ reject.audit?.principal ?? "—" }}</code> 对
+        <code class="mono">{{ reject.audit?.appCode || "—" }}/{{ reject.audit?.sessionId ?? "—" }}</code>
+        的访问（原因：{{ reject.audit?.reason ?? reject.error }}）。
       </p>
     </section>
 

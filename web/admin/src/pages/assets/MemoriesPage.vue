@@ -1,26 +1,27 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { ElMessage } from "element-plus";
-import DataPage from "../../../shared/components/DataPage.vue";
-import EmptyState from "../../../shared/components/EmptyState.vue";
-import ErrorBanner from "../../../shared/components/ErrorBanner.vue";
-import { confirmDanger } from "../../../shared/components/DangerConfirm";
-import PageHeader from "../PageHeader.vue";
-import { usePageTitle } from "../usePageOperation";
-import { useLiveList } from "../../../shared/hooks/useLiveList";
+import DataPage from "../../../../shared/components/DataPage.vue";
+import EmptyState from "../../../../shared/components/EmptyState.vue";
+import ErrorBanner from "../../../../shared/components/ErrorBanner.vue";
+import { confirmDanger } from "../../../../shared/components/DangerConfirm";
+import PageHeader from "../../PageHeader.vue";
+import { usePageTitle } from "../../usePageOperation";
+import { useLiveList } from "../../../../shared/hooks/useLiveList";
 import {
   demoApproveMemory, demoGetDraftMemory, getMemory, listMemories, updateMemory,
   type MockMemoryDetail, type MockMemoryRow, type MemoryScope, type MemoryStatus,
-} from "../../../shared/mock-memories";
+} from "../../../../shared/api-memories";
 
 // F3-3（台账 §7.5 / 前端稿 §5.9 记忆管理·共享层）：资产管理页——记忆。
 // scope 私有/共享 chips + status 过滤（ACTIVE/DRAFT/REVOKED，含 DRAFT 提取草稿）；
 // DRAFT 审批动作（通过→ACTIVE / 拒绝→REVOKED，接口稿 §5.4 PATCH status 字段语义，
 // 确认中心同源待办）；单条正文查看/编辑走版本 CAS（409 MEMORY_VERSION_CONFLICT
-// 提示冲突并就地重载）。数据源 mock-memories（F4 已交付形状 + F3-3 DRAFT 增补）。
+// 提示冲突并就地重载）。数据面（M5-2 切真实 API）：shared/api-memories——
+// GET/PATCH /v1/apps/{code}/memories（经网关；跨工作区聚合无端点，按演示应用编码读取）。
 usePageTitle(() => "记忆管理");
 
-type MemoryListRow = Omit<MockMemoryRow, "demo">;
+type MemoryListRow = MockMemoryRow;
 
 // —— scope / status chips 过滤（chips 即筛选，先例=任务工作台状态管道）——
 const SCOPE_CHIPS: { value: MemoryScope | ""; label: string }[] = [
@@ -38,10 +39,16 @@ const activeScope = ref<MemoryScope | "">("");
 const activeStatus = ref<MemoryStatus | "">("");
 
 // 列表不含正文（接口稿 §5.4）；「全部」按三状态合并检索（REVOKED 不参与默认检索，
-// 显式选择时可见——先权限过滤再检索语义由 mock 保持）。
+// 显式选择时可见——先权限过滤再检索语义由服务端保持）。
 const { rows, loading: busy, error, refresh: reload } = useLiveList<MemoryListRow>(async () => {
   const wanted = activeStatus.value ? [activeStatus.value] : (["ACTIVE", "DRAFT", "REVOKED"] as MemoryStatus[]);
-  const merged = wanted.flatMap((status) => listMemories({ status, scope: activeScope.value || undefined }).memories);
+  const merged = (
+    await Promise.all(
+      wanted.map((status) =>
+        listMemories({ status, scope: activeScope.value || undefined }).then((page) => page.memories),
+      ),
+    )
+  ).flat();
   return merged.sort((a, b) => a.memoryId.localeCompare(b.memoryId));
 });
 const scopeLabel = (scope: string) => (scope === "SHARED" ? "共享" : "私有");
@@ -52,7 +59,7 @@ const statusLabel = (status: string) =>
 const viewing = ref<MockMemoryDetail | null>(null);
 async function view(row: MemoryListRow) {
   if (row.status === "DRAFT") {
-    const detail = demoGetDraftMemory(row.memoryId);
+    const detail = await demoGetDraftMemory(row.memoryId);
     if ("error" in detail) {
       ElMessage.error("草稿已处理或不存在，请刷新列表");
       void reload();
@@ -61,7 +68,7 @@ async function view(row: MemoryListRow) {
     viewing.value = detail;
     return;
   }
-  const detail = getMemory(row.memoryId);
+  const detail = await getMemory(row.memoryId);
   if ("error" in detail) {
     ElMessage.error("该条目已撤销或不可见（REVOKED 立即退出检索）");
     return;
@@ -87,7 +94,7 @@ function startEdit(detail: MockMemoryDetail) {
 }
 /** 409 MEMORY_VERSION_CONFLICT：冲突提示 + 就地重载正文（重读最新版本再编辑）。 */
 async function reloadEditContent() {
-  const detail = getMemory(editForm.value.memoryId);
+  const detail = await getMemory(editForm.value.memoryId);
   if ("error" in detail) {
     ElMessage.error("条目已不可见，请刷新列表");
     editOpen.value = false;
@@ -109,7 +116,7 @@ async function saveEdit() {
     return;
   }
   editSaving.value = true;
-  const done = updateMemory(editForm.value.memoryId, {
+  const done = await updateMemory(editForm.value.memoryId, {
     content: editForm.value.content,
     tags: editForm.value.tags.split(/、|,/).map((t) => t.trim()).filter(Boolean),
     expectedVersion: editForm.value.expectedVersion,
@@ -124,7 +131,7 @@ async function saveEdit() {
     ElMessage.error("保存失败，请刷新后重试");
     return;
   }
-  ElMessage.success("已保存（mock 演示，version CAS 提交）");
+  ElMessage.success("已保存（version CAS 提交）");
   editOpen.value = false;
   void reload();
 }
@@ -140,7 +147,7 @@ async function decideDraft(row: MemoryListRow, action: "ACTIVE" | "REVOKED") {
     confirmText: action === "ACTIVE" ? "确认生效" : "拒绝并撤销",
   })))
     return;
-  const done = demoApproveMemory(row.memoryId, action, row.version);
+  const done = await demoApproveMemory(row.memoryId, action, row.version);
   if ("error" in done) {
     if (done.error === "MEMORY_VERSION_CONFLICT") {
       ElMessage.error("版本冲突（409）：草稿已被处理，列表已刷新");
@@ -151,7 +158,7 @@ async function decideDraft(row: MemoryListRow, action: "ACTIVE" | "REVOKED") {
     void reload();
     return;
   }
-  ElMessage.success(action === "ACTIVE" ? "草稿已生效（ACTIVE，mock 演示）" : "草稿已拒绝并撤销（REVOKED，mock 演示）");
+  ElMessage.success(action === "ACTIVE" ? "草稿已生效（ACTIVE）" : "草稿已拒绝并撤销（REVOKED）");
   void reload();
 }
 </script>
@@ -161,7 +168,7 @@ async function decideDraft(row: MemoryListRow, action: "ACTIVE" | "REVOKED") {
     <template #header>
       <PageHeader
         title="记忆管理"
-        subtitle="私有/共享记忆与 DRAFT 提取草稿审批（共享层 ADMIN / 私有层来源用户；mock 演示数据，联调期换真实端点）。"
+        subtitle="私有/共享记忆与 DRAFT 提取草稿审批（共享层 ADMIN / 私有层来源用户；真实端点 /v1/apps/{code}/memories）。"
         :busy="busy"
         @refresh="reload"
       />

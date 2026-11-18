@@ -1,28 +1,31 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { ElMessage } from "element-plus";
-import DataPage from "../../../shared/components/DataPage.vue";
-import EmptyState from "../../../shared/components/EmptyState.vue";
-import ErrorBanner from "../../../shared/components/ErrorBanner.vue";
-import { confirmDanger } from "../../../shared/components/DangerConfirm";
-import PageHeader from "../PageHeader.vue";
-import { usePageTitle } from "../usePageOperation";
-import { useLiveList } from "../../../shared/hooks/useLiveList";
+import DataPage from "../../../../shared/components/DataPage.vue";
+import EmptyState from "../../../../shared/components/EmptyState.vue";
+import ErrorBanner from "../../../../shared/components/ErrorBanner.vue";
+import { confirmDanger } from "../../../../shared/components/DangerConfirm";
+import PageHeader from "../../PageHeader.vue";
+import { usePageTitle } from "../../usePageOperation";
+import { useLiveList } from "../../../../shared/hooks/useLiveList";
 import {
   createRule, listRuleVersions, listRules, publishRule, setRuleEnabled, updateRuleDraft,
   type MockRule, type RuleContent, type RuleNature, type RuleScope, type RuleVersion,
-} from "../../../shared/mock-rules";
+} from "../../../../shared/api-rules";
 
 // F3-3（台账 §7.5 / 前端稿 §3.1 构建资产·规则管理）：资产管理页——规则。
 // 列表（nature GUIDANCE/ENFORCED 徽章 + status PUBLISHED/DRAFT）+ 草稿编辑
 // （content{trigger,action,requirement}——SchemaForm 简化为三字段受控表单）+
 // 发布（预检同 scope 互斥冲突 409 RULE_MUTEX_BLOCKED，展示规则对）+ 启停。
-// 数据源 mock-rules（接口稿 §5.5 六条 CRUD 路径形状，demo:true）。
+// 数据面（M5-2 切真实 API）：shared/api-rules——/admin/apps/{code}/rules 与
+// /admin/rules/{code}/draft|publish|versions|enable|disable（经网关，跨应用逐目录聚合）。
 usePageTitle(() => "规则管理");
 
 type RuleRow = MockRule;
 
-const { rows, loading: busy, error, refresh: reload } = useLiveList<RuleRow>(async () => listRules().rules);
+const { rows, loading: busy, error, refresh: reload } = useLiveList<RuleRow>(
+  async () => (await listRules()).rules,
+);
 
 // —— chips 过滤：nature / status ——
 const NATURE_CHIPS: { value: RuleNature | ""; label: string }[] = [
@@ -62,13 +65,13 @@ async function saveDraft() {
     return;
   }
   draftSaving.value = true;
-  const done = updateRuleDraft(draftForm.value.code, { content: draftForm.value.content });
+  const done = await updateRuleDraft(draftForm.value.code, { content: draftForm.value.content });
   draftSaving.value = false;
   if ("error" in done) {
     ElMessage.error(done.userMessage ?? "草稿保存失败");
     return;
   }
-  ElMessage.success("草稿已保存（mock 演示）；发布需另行提交预检");
+  ElMessage.success("草稿已保存；发布需另行提交预检");
   draftOpen.value = false;
   void reload();
 }
@@ -77,10 +80,11 @@ async function saveDraft() {
 const mutexBlock = ref<{ codes: string[]; scope: string }[]>([]);
 const mutexOpen = ref(false);
 async function publish(row: RuleRow) {
-  const done = publishRule(row.code, row.draftVersion);
+  const done = await publishRule(row.code, row.draftVersion);
   if ("error" in done) {
-    if (done.error === "RULE_MUTEX_BLOCKED" && done.conflicts?.length) {
-      mutexBlock.value = done.conflicts;
+    const conflicts = (done as { conflicts?: { codes: string[]; scope: string }[] }).conflicts;
+    if (done.error === "RULE_MUTEX_BLOCKED" && conflicts?.length) {
+      mutexBlock.value = conflicts;
       mutexOpen.value = true;
       return;
     }
@@ -88,7 +92,8 @@ async function publish(row: RuleRow) {
     void reload();
     return;
   }
-  ElMessage.success(`已发布 v${done.published.version}（预检通过，mock 演示）`);
+  const publishedVersion = (done as { published?: { version?: number } }).published?.version;
+  ElMessage.success(`已发布${publishedVersion ? ` v${publishedVersion}` : ""}（预检通过）`);
   void reload();
 }
 
@@ -101,20 +106,20 @@ async function toggleEnabled(row: RuleRow) {
     confirmText: "停用",
   })))
     return;
-  const done = setRuleEnabled(row.code, enable, enable ? undefined : "页面停用（mock 演示）");
+  const done = await setRuleEnabled(row.code, enable, enable ? undefined : "页面停用");
   if ("error" in done) {
     ElMessage.error(done.userMessage ?? "操作失败");
     return;
   }
-  ElMessage.success(enable ? "已启用（mock 演示）" : "已停用（mock 演示）");
+  ElMessage.success(enable ? "已启用" : "已停用");
   void reload();
 }
 
 // —— 版本历史 ——
 const versionsOpen = ref(false);
 const versions = ref<{ code: string; versions: RuleVersion[] } | null>(null);
-function openVersions(row: RuleRow) {
-  const done = listRuleVersions(row.code);
+async function openVersions(row: RuleRow) {
+  const done = await listRuleVersions(row.code);
   if ("error" in done) {
     ElMessage.error("规则不存在，请刷新");
     void reload();
@@ -141,8 +146,8 @@ async function saveCreate() {
     return;
   }
   createSaving.value = true;
-  const done = createRule({
-    appCode: "recon-assistant", code: createForm.value.code.trim(), name: createForm.value.name.trim(),
+  const done = await createRule({
+    appCode: "satellite-planning-assistant", code: createForm.value.code.trim(), name: createForm.value.name.trim(),
     nature: createForm.value.nature, scope: createForm.value.scope,
     mutexKey: createForm.value.mutexKey.trim() || undefined, content: createForm.value.content,
   });
@@ -151,7 +156,7 @@ async function saveCreate() {
     ElMessage.error(done.userMessage ?? "创建失败");
     return;
   }
-  ElMessage.success("规则已登记（初始仅草稿，mock 演示）");
+  ElMessage.success("规则已登记（初始仅草稿）");
   createOpen.value = false;
   void reload();
 }
@@ -162,7 +167,7 @@ async function saveCreate() {
     <template #header>
       <PageHeader
         title="规则管理"
-        subtitle="GUIDANCE/ENFORCED 规则：草稿编辑、发布预检（同 scope 互斥阻断）与启停（mock 演示数据，联调期换真实端点）。"
+        subtitle="GUIDANCE/ENFORCED 规则：草稿编辑、发布预检（同 scope 互斥阻断）与启停（真实端点 /admin/rules）。"
         :busy="busy"
         @refresh="reload"
       >

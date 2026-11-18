@@ -175,9 +175,9 @@ describe("列表与详情页结构锚（源码级）", () => {
     expect(page).toContain("skillKindOf(detail.value)");
   });
 
-  it("SkillDetailPage：checklist 由服务端预检结果驱动（mock demo），前端不自算", () => {
+  it("SkillDetailPage：checklist 由预检投影驱动（M5-2：shared/skill-precheck 自真实技能行推导），前端不自算", () => {
     const page = read("pages/SkillDetailPage.vue");
-    expect(page).toContain("fetchMockSkillPrecheck");
+    expect(page).toContain("fetchSkillPrecheck");
     expect(page).toContain("precheck.value?.passed");
     expect(page).toContain(":disabled=\"!canPublish || busy\"");
     expect(page).toContain("publishBlockedReason");

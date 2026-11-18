@@ -7,18 +7,18 @@ import SkillStatistics from "../SkillStatistics.vue";
 import { usePageOperation, usePageTitle } from "../usePageOperation";
 import { confirmDanger } from "../../../shared/components/DangerConfirm";
 import {
-  fetchMockSkillPrecheck,
+  fetchSkillPrecheck,
   skillKindOf,
   type SkillPrecheck,
   type SkillPrecheckItem,
-} from "../../../shared/mock-skill-precheck";
+} from "../../../shared/skill-precheck";
 import { displayTime, statusLabel } from "./resources/resource-format";
 
 // F2-2（台账 §7.5 / 方案 §5.5）：技能详情 5 Tab → 单页分区 + 发布 checklist 卡。
 // - 分区：契约摘要 /（TOOL）连接调试、选型验收 / 版本与发布时间线；GUIDE 无执行契约，
 //   不渲染连接调试与选型验收分区。分区用锚点滚动导航（无二级 Tab、无第三级滚动容器）。
 // - 发布 checklist 分型（TOOL 四项 / GUIDE 两项），各项展示服务端预检结果
-//   （demo 由 mock-skill-precheck 提供，真实端点就绪后整行换 api 客户端），
+//   （预检投影由 shared/skill-precheck 从真实技能行确定性推导——独立预检端点未交付，如实标注），
 //   前端不自算通过/阻断；全绿才激活发布按钮，未全绿 disabled+tooltip 列出未过项。
 // - 副作用 TOOL 的意图字段阻断项点击直达契约编辑器 businessIntentInput 字段（锚点滚动）。
 const route = useRoute();
@@ -45,7 +45,7 @@ async function load() {
   });
 }
 
-// —— 发布 checklist 卡：服务端预检结果驱动（demo mock）——
+// —— 发布 checklist 卡：预检投影驱动（shared/skill-precheck，从真实技能行推导）——
 const precheck = ref<SkillPrecheck | null>(null);
 const precheckBusy = ref(false);
 async function runPrecheck() {
@@ -55,8 +55,8 @@ async function runPrecheck() {
   }
   precheckBusy.value = true;
   try {
-    // 形状=未来 GET /admin/skills/{code}/prechecks?version={n}；demo 由按域 mock 推导。
-    precheck.value = await fetchMockSkillPrecheck(detail.value, selected.value);
+    // 形状=未来 GET /admin/skills/{code}/prechecks?version={n}；当前从真实技能行推导（derived 标注）。
+    precheck.value = await fetchSkillPrecheck(detail.value, selected.value);
   } finally {
     precheckBusy.value = false;
   }

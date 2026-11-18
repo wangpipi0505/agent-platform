@@ -9,26 +9,27 @@ import { confirmDanger } from "../../../shared/components/DangerConfirm";
 import PageHeader from "../PageHeader.vue";
 import ActionPlanPanel from "./ActionPlanPanel.vue";
 import { usePageTitle } from "../usePageOperation";
-import { notifyConfirmationCountsChanged } from "../../../shared/mock-confirmation-counts";
+import { notifyConfirmationCountsChanged } from "../../../shared/api-confirmation";
 import {
   decideDraftMemory, decideHighRiskApproval, decidePublishRequest, listDraftMemoryTodos,
   listPendingHighRiskApprovals, listPendingPublishRequests, listPlanConfirmationTodos,
   type DemoHighRiskApproval, type DemoPlanConfirmationTodo, type DemoPublishRequest,
-} from "../../../shared/mock-confirmation-matrix";
-import type { MockMemoryDetail } from "../../../shared/mock-memories";
+} from "../../../shared/api-confirmation";
+import type { MockMemoryDetail } from "../../../shared/api-memories";
+import type { ApiFailure } from "../../../shared/api-task";
 
 // F3-3（前端稿 §5.9 确认中心：四类待办矩阵）——按确认类型分组 Tab：
-// ① 发布评审：GET /admin/apps/{code}/publish-requests?status=PENDING 形状；处理角色口径=
-//    ADMIN 提交审批（ConfigRelease 现有动作），APPROVER 只读可见（authority 扩展前不放开）。
-// ② 高危操作：现有 InlineApproval 待审（runId+nodeId 决策入口，双主体确认链 V224，
-//    不经计划确认）→ 行内展开行动计划凭据摘要，批准/拒绝走 confirmDanger。
-// ③ 计划确认：GET /v1/tasks?state=PLAN_READY&confirmableBy=me 以修订为单位（仅无有效凭据
-//    的修订回流）；处理=跳计划详情（确认/执行本体在助手端计划卡，管理台指路）。
+// ① 发布评审：各应用 /admin/config-releases 聚合取 DRAFT（待批准）；批准=POST approve。
+//    （诚实边界：发布"拒绝"无独立端点，REJECT 如实返回错误提示。）
+// ② 高危操作：InlineApproval 待审按 runId 查询（GET /v1/runs/{id}/approvals）——
+//    无全局待审列表端点，本 Tab 如实留空（M5-2 诚实登记）。
+// ③ 计划确认：GET /v1/tasks?confirmableBy=me 以修订为单位（仅无有效凭据的修订回流）；
+//    处理=跳计划详情（确认/执行本体在助手端计划卡，管理台指路）。
 // ④ DRAFT 记忆：GET /v1/apps/{code}/memories?status=DRAFT；ADMIN（共享层）/来源用户（私有层）
 //    经 PATCH {status: ACTIVE|REVOKED, expectedVersion} 审批。
 // 角标与四类列表同源（GET /admin/confirmation-center/counts 口径：total=四类未分页总数之和），
 // 处置后同刷：列表 reload + notifyConfirmationCountsChanged()（AppShell 立即重读角标）。
-// mock 期数据源 mock-confirmation-matrix（demo:true），联调期按 §5.9 表格端点切换。
+// 数据面（M5-2 切真实 API）：shared/api-confirmation。
 usePageTitle(() => "确认中心");
 
 type TabKey = "publish" | "highRisk" | "plan" | "draftMemory";
@@ -62,10 +63,10 @@ async function load() {
   busy.value = true;
   error.value = "";
   try {
-    publishRows.value = listPendingPublishRequests();
-    highRiskRows.value = listPendingHighRiskApprovals();
-    planRows.value = listPlanConfirmationTodos();
-    draftRows.value = listDraftMemoryTodos();
+    publishRows.value = await listPendingPublishRequests();
+    highRiskRows.value = await listPendingHighRiskApprovals();
+    planRows.value = await listPlanConfirmationTodos();
+    draftRows.value = await listDraftMemoryTodos();
   } catch (e: unknown) {
     error.value = e instanceof Error && e.message ? e.message : "待办矩阵读取失败，请刷新重试";
   } finally {
@@ -85,20 +86,20 @@ async function decidePublish(row: DemoPublishRequest, decision: "APPROVE" | "REJ
     title: decision === "APPROVE" ? "批准发布" : "拒绝发布",
     message: decision === "APPROVE"
       ? `批准 ${row.appCode} ${row.targetVersion}（manifest r${row.manifestRevision}，digest ${row.digest}）？批准后沿现有语义激活。`
-      : `拒绝 ${row.appCode} ${row.targetVersion} 的发布申请？`,
+      : `拒绝 ${row.appCode} ${row.targetVersion} 的发布申请？（暂无独立拒绝端点）`,
     confirmText: decision === "APPROVE" ? "批准发布" : "拒绝",
   })))
     return;
-  const done = decidePublishRequest(row.publishId, decision);
+  const done = await decidePublishRequest(row.publishId, decision);
   if ("error" in done) {
-    ElMessage.error(done.userMessage ?? "处置失败");
+    ElMessage.error((done as ApiFailure).userMessage ?? "处置失败");
     return;
   }
-  ElMessage.success(decision === "APPROVE" ? "已批准，激活沿现有语义执行（mock 演示）" : "已拒绝该发布申请（mock 演示）");
+  ElMessage.success(decision === "APPROVE" ? "已批准，激活沿现有语义执行" : "已拒绝该发布申请");
   await refreshAll();
 }
 
-// —— ② 高危操作：InlineApproval 双主体链，批准/拒绝走 confirmDanger ——
+// —— ② 高危操作：InlineApproval 双主体链（无全局待审端点，本 Tab 如实留空）——
 async function decideHighRisk(row: DemoHighRiskApproval, decision: "APPROVE" | "REJECT") {
   if (!(await confirmDanger({
     title: decision === "APPROVE" ? "批准执行" : "拒绝执行",
@@ -108,12 +109,12 @@ async function decideHighRisk(row: DemoHighRiskApproval, decision: "APPROVE" | "
     confirmText: decision === "APPROVE" ? "允许执行" : "拒绝",
   })))
     return;
-  const done = decideHighRiskApproval(row.runId, row.nodeId, decision);
+  const done = await decideHighRiskApproval(row.runId, row.nodeId, decision);
   if ("error" in done) {
-    ElMessage.error(done.userMessage ?? "处置失败");
+    ElMessage.error((done as ApiFailure).userMessage ?? "处置失败");
     return;
   }
-  ElMessage.success(decision === "APPROVE" ? "已记录批准，服务端确认进度见运行详情（mock 演示）" : "已拒绝执行（mock 演示）");
+  ElMessage.success(decision === "APPROVE" ? "已记录批准，服务端确认进度见运行详情" : "已拒绝执行");
   await refreshAll();
 }
 
@@ -136,7 +137,7 @@ async function decideDraft(row: MockMemoryDetail, action: "ACTIVE" | "REVOKED") 
     confirmText: action === "ACTIVE" ? "确认生效" : "拒绝并撤销",
   })))
     return;
-  const done = decideDraftMemory(row.memoryId, action, row.version);
+  const done = await decideDraftMemory(row.memoryId, action, row.version);
   if ("error" in done) {
     if (done.error === "MEMORY_VERSION_CONFLICT") {
       ElMessage.error("版本冲突（409）：草稿已被处理，列表已刷新");
@@ -147,7 +148,7 @@ async function decideDraft(row: MockMemoryDetail, action: "ACTIVE" | "REVOKED") 
     notifyConfirmationCountsChanged();
     return;
   }
-  ElMessage.success(action === "ACTIVE" ? "草稿已生效（ACTIVE，mock 演示）" : "草稿已拒绝并撤销（REVOKED，mock 演示）");
+  ElMessage.success(action === "ACTIVE" ? "草稿已生效（ACTIVE）" : "草稿已拒绝并撤销（REVOKED）");
   await refreshAll();
 }
 </script>
@@ -157,7 +158,7 @@ async function decideDraft(row: MockMemoryDetail, action: "ACTIVE" | "REVOKED") 
     <template #header>
       <PageHeader
         title="确认中心"
-        subtitle="四类待办矩阵：发布评审 / 高危操作 / 计划确认 / DRAFT 记忆；角标与列表同源，处置后同刷（mock 演示数据）。"
+        subtitle="四类待办矩阵：发布评审 / 高危操作 / 计划确认 / DRAFT 记忆；角标与列表同源，处置后同刷（真实端点 confirmation-center）。"
         :busy="busy"
         @refresh="refreshAll"
       />

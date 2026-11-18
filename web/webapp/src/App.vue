@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useAuth, login } from "../../shared/api";
-import { truncateTitle } from "../../shared/mock-session";
+import { truncateTitle } from "../../shared/api-session";
 import { connectHostChannel, type HostChannelHandle } from "./host-channel";
 import { useTheme } from "../../shared/theme";
 import SessionList from "./SessionList.vue";

@@ -17,7 +17,7 @@ import {
   skillKindOf,
   SKILL_KIND_FILTERS,
   type SkillKind,
-} from "../../../shared/mock-skill-precheck";
+} from "../../../shared/skill-precheck";
 
 const router = useRouter();
 usePageTitle(() => "技能库");
@@ -40,7 +40,7 @@ pageSize.value = 20;
 
 const businessCategory = ref("");
 // F2-2（方案 §5.5）：kind（TOOL/GUIDE）chips 筛选——客户端过滤既有列表数据，
-// 分型判定与过滤语义统一走 mock-skill-precheck 助手（GUIDE=kind==='GUIDE'，其余皆 TOOL）。
+// 分型判定与过滤语义统一走 shared/skill-precheck 助手（GUIDE=kind==='GUIDE'，其余皆 TOOL；M5-2 自 mock 迁出为纯投影模块）。
 const kindFilter = ref<SkillKind | "">("");
 const filtered = computed(
   () =>

@@ -1,32 +1,33 @@
 <script setup lang="ts">
 import { computed, onUnmounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
-import DataPage from "../../../shared/components/DataPage.vue";
-import EmptyState from "../../../shared/components/EmptyState.vue";
-import ErrorBanner from "../../../shared/components/ErrorBanner.vue";
-import { confirmDanger } from "../../../shared/components/DangerConfirm";
-import PageHeader from "../PageHeader.vue";
-import { usePageTitle } from "../usePageOperation";
-import { useLiveList } from "../../../shared/hooks/useLiveList";
+import DataPage from "../../../../shared/components/DataPage.vue";
+import EmptyState from "../../../../shared/components/EmptyState.vue";
+import ErrorBanner from "../../../../shared/components/ErrorBanner.vue";
+import { confirmDanger } from "../../../../shared/components/DangerConfirm";
+import PageHeader from "../../PageHeader.vue";
+import { usePageTitle } from "../../usePageOperation";
+import { useLiveList } from "../../../../shared/hooks/useLiveList";
 import {
   addPluginGrant, createPluginSource, listPluginSources, listPlugins, pollDiscovery,
   removePluginGrant, setPluginEnabled, triggerDiscovery,
   type DiscoveryStatus, type MockDiscovery, type MockPlugin, type MockPluginSource, type PluginGrant,
-} from "../../../shared/mock-plugins";
+} from "../../../../shared/api-plugins";
 
 // F3-3（台账 §7.5 / 前端稿 §3.1 集成与治理·插件与来源）：资产管理页——插件。
 // 来源/插件/版本/授权列表 + 启用停用（disable 必填 reason，停用拦截后续调用）+
 // 发现触发（202 {discoveryId,status:'QUEUED'} → 轮询 QUEUED/RUNNING/SUCCEEDED/FAILED；
 // 失败返回可展示 error 且保留上一次成功目录，成功合入 changes:{added,changed,removed}）。
-// 数据源 mock-plugins（接口稿 §5.6 形状，demo:true）。
+// 数据面（M5-2 切真实 API）：shared/api-plugins——/admin/plugin-sources 与
+// /admin/plugins（经网关，发现触发/轮询/授权真实端点）。
 usePageTitle(() => "插件管理");
 
 const { rows, loading: busy, error, refresh: reload } = useLiveList<MockPlugin>(async () => listPlugins());
 const sources = ref<MockPluginSource[]>([]);
 async function loadSources() {
-  sources.value = listPluginSources();
+  sources.value = await listPluginSources();
 }
-loadSources();
+void loadSources();
 const sourceName = (sourceId: string) =>
   sources.value.find((s) => s.id === sourceId)?.name ?? sourceId;
 const statusCount = (status: MockPlugin["status"]) =>
@@ -50,7 +51,7 @@ function stopPolling(sourceId: string) {
 function startPolling(sourceId: string, discoveryId: string) {
   stopPolling(sourceId);
   const timer = setInterval(async () => {
-    const done = pollDiscovery(sourceId, discoveryId);
+    const done = await pollDiscovery(sourceId, discoveryId);
     if ("error" in done) {
       stopPolling(sourceId);
       ElMessage.error("发现任务查询失败，请刷新");
@@ -61,7 +62,7 @@ function startPolling(sourceId: string, discoveryId: string) {
       stopPolling(sourceId);
       const changes = done.changes!;
       ElMessage.success(
-        `发现完成：新增 ${changes.added.length}、变更 ${changes.changed.length}、移除 ${changes.removed.length}（mock 演示）`,
+        `发现完成：新增 ${changes.added.length}、变更 ${changes.changed.length}、移除 ${changes.removed.length}`,
       );
       await Promise.all([reload(), loadSources()]);
     } else if (done.status === "FAILED") {
@@ -74,7 +75,7 @@ function startPolling(sourceId: string, discoveryId: string) {
   pollingTimers.set(sourceId, timer);
 }
 async function discover(source: MockPluginSource) {
-  const accepted = triggerDiscovery(source.id);
+  const accepted = await triggerDiscovery(source.id);
   if ("error" in accepted) {
     ElMessage.error(accepted.userMessage ?? "触发发现失败");
     return;
@@ -89,16 +90,9 @@ async function discover(source: MockPluginSource) {
 const discoveryOfSource = (sourceId: string) =>
   [...discoveries.values()].filter((d) => d.sourceId === sourceId).at(-1) ?? null;
 
-// —— 演示开关：制造下一次发现失败（失败分支走查用；目录保持不变）——
+// —— 发现失败分支走查说明：失败注入为演示期能力；真实端点按服务端结果如实呈现 ——
 async function failNext(source: MockPluginSource) {
-  if (!(await confirmDanger({
-    title: "演示：下一次发现失败",
-    message: `将来源「${source.name}」的下一次发现置为失败演示？失败保留上一次成功目录。`,
-    confirmText: "制造失败",
-  })))
-    return;
-  source.failNextDiscovery = true;
-  ElMessage.info("已设置：下一次发现将走失败分支（mock 演示）");
+  ElMessage.info("失败注入为演示期能力；真实端点按服务端执行结果如实呈现（失败保留上一次成功目录）");
   await discover(source);
 }
 
@@ -116,23 +110,23 @@ async function confirmDisable() {
     return;
   }
   disableSaving.value = true;
-  const done = setPluginEnabled(disableForm.value.versionId, false, disableForm.value.reason);
+  const done = await setPluginEnabled(disableForm.value.versionId, false, disableForm.value.reason);
   disableSaving.value = false;
   if ("error" in done) {
     ElMessage.error(done.userMessage ?? "停用失败");
     return;
   }
-  ElMessage.success("已停用：拦截后续调用（mock 演示）");
+  ElMessage.success("已停用：拦截后续调用");
   disableOpen.value = false;
   void reload();
 }
 async function enable(row: MockPlugin) {
-  const done = setPluginEnabled(row.versionId, true);
+  const done = await setPluginEnabled(row.versionId, true);
   if ("error" in done) {
     ElMessage.error(done.userMessage ?? "启用失败");
     return;
   }
-  ElMessage.success("已启用（mock 演示）");
+  ElMessage.success("已启用");
   void reload();
 }
 
@@ -152,16 +146,16 @@ async function addGrant() {
     ElMessage.error("被授权对象与能力清单必填");
     return;
   }
-  const done = addPluginGrant(grantsPlugin.value.versionId, {
+  const done = await addPluginGrant(grantsPlugin.value.versionId, {
     granteeType: grantForm.value.granteeType, granteeCode: grantForm.value.granteeCode, capabilities,
   });
   if ("error" in done) {
     ElMessage.error(done.userMessage ?? "授权失败");
     return;
   }
-  grantsPlugin.value = done;
+  grantsPlugin.value = "versionId" in done ? (done as MockPlugin) : grantsPlugin.value;
   grantForm.value = { granteeType: grantForm.value.granteeType, granteeCode: "", capabilities: "" };
-  ElMessage.success("已授权（撤权下次解析生效，mock 演示）");
+  ElMessage.success("已授权（撤权下次解析生效）");
   void reload();
 }
 async function revokeGrant(grantId: string) {
@@ -171,16 +165,16 @@ async function revokeGrant(grantId: string) {
     confirmText: "撤销授权",
   })))
     return;
-  const done = removePluginGrant(grantId);
+  const done = await removePluginGrant(grantId);
   if ("error" in done) {
     ElMessage.error("授权不存在，请刷新");
     return;
   }
   if (grantsPlugin.value) {
-    const fresh = listPlugins().find((p) => p.versionId === grantsPlugin.value!.versionId);
+    const fresh = (await listPlugins()).find((p) => p.versionId === grantsPlugin.value!.versionId);
     grantsPlugin.value = fresh ?? null;
   }
-  ElMessage.success("已撤销授权（mock 演示）");
+  ElMessage.success("已撤销授权");
   void reload();
 }
 
@@ -194,13 +188,13 @@ async function saveSource() {
     return;
   }
   sourceSaving.value = true;
-  const done = createPluginSource(sourceForm.value);
+  const done = await createPluginSource(sourceForm.value);
   sourceSaving.value = false;
   if ("error" in done) {
     ElMessage.error(done.userMessage ?? "登记失败");
     return;
   }
-  ElMessage.success("来源已登记（mock 演示）");
+  ElMessage.success("来源已登记");
   sourceOpen.value = false;
   await loadSources();
 }
@@ -218,7 +212,7 @@ const filteredCount = computed(() => rows.value.length);
     <template #header>
       <PageHeader
         title="插件管理"
-        subtitle="来源登记、发现（QUEUED/RUNNING/SUCCEEDED/FAILED）与版本/授权管理；失败保留上一次目录（mock 演示数据）。"
+        subtitle="来源登记、发现（QUEUED/RUNNING/SUCCEEDED/FAILED）与版本/授权管理；失败保留上一次目录（真实端点 /admin/plugins）。"
         :busy="busy"
         @refresh="reload"
       >

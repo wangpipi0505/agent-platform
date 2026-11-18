@@ -1,4 +1,6 @@
-// F3-3（台账 §7.5）：资产管理四页（记忆/规则/插件/MCP）+ 确认中心四类待办矩阵——mock 驱动。
+// F3-3（台账 §7.5）：资产管理四页（记忆/规则/插件/MCP）+ 确认中心四类待办矩阵。
+// M5-2：页面数据面已切真实 API（shared/api-*，经网关）；页面装载桩=api 模块异步委托
+// 保留的 mock 模块（mock 文件仅剩测试/演示消费，断言语义与基底一致）。
 // 锁定：①四页形状（mock-rules/mock-plugins/mock-mcp demo:true，接口稿 §5.5/§5.6 六路径与端点形状；
 // mock-memories 消费 F4 已交付形状+F3-3 DRAFT 增补）；②记忆版本 CAS 409 MEMORY_VERSION_CONFLICT
 // （编辑与 DRAFT 审批同码）；③规则发布预检互斥 409 RULE_MUTEX_BLOCKED 展示规则对；④插件发现
@@ -11,12 +13,81 @@ import ts from 'typescript';
 import * as Vue from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mockMemories from '../shared/mock-memories';
-import * as mockRules from '../shared/mock-rules';
-import * as mockPlugins from '../shared/mock-plugins';
-import * as mockMcp from '../shared/mock-mcp';
+import * as mockRulesNS from '../shared/mock-rules';
+import * as mockPluginsNS from '../shared/mock-plugins';
+import * as mockMcpNS from '../shared/mock-mcp';
 import * as counts from '../shared/mock-confirmation-counts';
 import * as matrix from '../shared/mock-confirmation-matrix';
 import { useLiveList } from '../shared/hooks/useLiveList';
+
+// 直测保留的 mock 模块：any 视图消除既有联合类型 narrowing 噪声（运行时对象不变）。
+const mockRules = mockRulesNS as unknown as Record<string, any>;
+const mockPlugins = mockPluginsNS as unknown as Record<string, any>;
+const mockMcp = mockMcpNS as unknown as Record<string, any>;
+
+// ── 页面数据面桩：api 模块异步形状，事实源=保留的 mock 模块（同源断言）──
+const apiMemoriesStub = {
+  demoApproveMemory: async (...args: Parameters<typeof mockMemories.demoApproveMemory>) =>
+    mockMemories.demoApproveMemory(...args),
+  demoGetDraftMemory: async (memoryId: string) => mockMemories.demoGetDraftMemory(memoryId),
+  getMemory: async (memoryId: string) => mockMemories.getMemory(memoryId),
+  listMemories: async (query: Record<string, unknown>) => mockMemories.listMemories(query),
+  updateMemory: async (...args: Parameters<typeof mockMemories.updateMemory>) =>
+    mockMemories.updateMemory(...args),
+};
+const apiRulesStub = {
+  createRule: async (req: Record<string, unknown>) => mockRules.createRule(req),
+  listRuleVersions: async (code: string) => mockRules.listRuleVersions(code),
+  listRules: async () => mockRules.listRules(),
+  publishRule: async (code: string, version: number) => mockRules.publishRule(code, version),
+  setRuleEnabled: async (code: string, enabled: boolean, reason?: string) =>
+    mockRules.setRuleEnabled(code, enabled, reason),
+  updateRuleDraft: async (code: string, req: Record<string, unknown>) =>
+    mockRules.updateRuleDraft(code, req),
+};
+const apiPluginsStub = {
+  addPluginGrant: async (versionId: string, req: Record<string, unknown>) =>
+    mockPlugins.addPluginGrant(versionId, req),
+  createPluginSource: async (req: Record<string, unknown>) => mockPlugins.createPluginSource(req),
+  listPluginSources: async () => mockPlugins.listPluginSources(),
+  listPlugins: async (query?: Record<string, unknown>) => mockPlugins.listPlugins(query ?? {}),
+  pollDiscovery: async (sourceId: string, discoveryId: string) =>
+    mockPlugins.pollDiscovery(sourceId, discoveryId),
+  removePluginGrant: async (grantId: string) => mockPlugins.removePluginGrant(grantId),
+  setPluginEnabled: async (versionId: string, enabled: boolean, reason?: string) =>
+    mockPlugins.setPluginEnabled(versionId, enabled, reason),
+  triggerDiscovery: async (sourceId: string) => mockPlugins.triggerDiscovery(sourceId),
+};
+const apiMcpStub = {
+  createMcpConnection: async (req: Record<string, unknown>) => mockMcp.createMcpConnection(req),
+  discoverMcpTools: async (id: string) => mockMcp.discoverMcpTools(id),
+  getMcpConnection: async (id: string) => mockMcp.getMcpConnection(id),
+  listMcpConnections: async () => mockMcp.listMcpConnections(),
+  listMcpTools: async (id: string, query?: Record<string, unknown>) =>
+    mockMcp.listMcpTools(id, query ?? {}),
+  reviewMcpTools: async (id: string, req: Record<string, unknown>) =>
+    mockMcp.reviewMcpTools(id, req),
+  testMcpConnection: async (id: string) => mockMcp.testMcpConnection(id),
+  updateMcpConnection: async (id: string, req: Record<string, unknown>) =>
+    mockMcp.updateMcpConnection(id, req),
+};
+const apiConfirmationStub = {
+  notifyConfirmationCountsChanged: counts.notifyConfirmationCountsChanged,
+  onConfirmationCountsChanged: counts.onConfirmationCountsChanged,
+  decideDraftMemory: async (
+    memoryId: string,
+    action: 'ACTIVE' | 'REVOKED',
+    expectedVersion: number,
+  ) => matrix.decideDraftMemory(memoryId, action, expectedVersion),
+  decideHighRiskApproval: async (runId: string, nodeId: string, decision: 'APPROVE' | 'REJECT') =>
+    matrix.decideHighRiskApproval(runId, nodeId, decision),
+  decidePublishRequest: async (publishId: string, decision: 'APPROVE' | 'REJECT') =>
+    matrix.decidePublishRequest(publishId, decision),
+  listDraftMemoryTodos: async () => matrix.listDraftMemoryTodos(),
+  listPendingHighRiskApprovals: async () => matrix.listPendingHighRiskApprovals(),
+  listPendingPublishRequests: async () => matrix.listPendingPublishRequests(),
+  listPlanConfirmationTodos: async () => matrix.listPlanConfirmationTodos(),
+};
 
 const read = (path: string) =>
   readFileSync(new URL('../' + path, import.meta.url), 'utf8');
@@ -51,10 +122,7 @@ function mountPage(path: string, extraStubs: Record<string, unknown> = {}) {
   const toast = { success: vi.fn(), info: vi.fn(), error: vi.fn() };
   const confirmDanger = vi.fn(async () => true);
   const routerPush = vi.fn();
-  const { descriptor, errors } = parse(
-    read(path),
-    'utf8',
-  );
+  const { descriptor, errors } = parse(read(path));
   expect(errors, path).toEqual([]);
   const code = ts.transpileModule(
     compileScript(descriptor, { id: 'AssetPageTest' }).content,
@@ -94,24 +162,21 @@ function mountPage(path: string, extraStubs: Record<string, unknown> = {}) {
   return { state: instance.subTree.component!.setupState as any, toast, confirmDanger, routerPush };
 }
 
-// 各页依赖：mock 模块按真实模块注入（页面消费与测试同源）。
+// 各页依赖：api 模块按真实模块注入（页面消费与测试同源；api 桩委托保留的 mock 事实源）。
 function mountMemories() {
-  return mountPage('admin/src/pages/assets/MemoriesPage.vue', { 'mock-memories': mockMemories });
+  return mountPage('admin/src/pages/assets/MemoriesPage.vue', { 'api-memories': apiMemoriesStub });
 }
 function mountRules() {
-  return mountPage('admin/src/pages/assets/RulesPage.vue', { 'mock-rules': mockRules });
+  return mountPage('admin/src/pages/assets/RulesPage.vue', { 'api-rules': apiRulesStub });
 }
 function mountPlugins() {
-  return mountPage('admin/src/pages/assets/PluginsPage.vue', { 'mock-plugins': mockPlugins });
+  return mountPage('admin/src/pages/assets/PluginsPage.vue', { 'api-plugins': apiPluginsStub });
 }
 function mountMcp() {
-  return mountPage('admin/src/pages/assets/McpConnectionsPage.vue', { 'mock-mcp': mockMcp });
+  return mountPage('admin/src/pages/assets/McpConnectionsPage.vue', { 'api-mcp': apiMcpStub });
 }
 function mountApprovals() {
-  return mountPage('admin/src/pages/ApprovalsPage.vue', {
-    'mock-confirmation-counts': counts,
-    'mock-confirmation-matrix': matrix,
-  });
+  return mountPage('admin/src/pages/ApprovalsPage.vue', { 'api-confirmation': apiConfirmationStub });
 }
 
 describe('资产管理四页 mock 形状（接口稿 §5.4-5.6，demo:true）', () => {
@@ -166,8 +231,8 @@ describe('资产管理四页 mock 形状（接口稿 §5.4-5.6，demo:true）', 
 
   it('规则六路径：登记→草稿（三字段受控）→发布→版本→启停；发布预检互斥 409 RULE_MUTEX_BLOCKED 展示规则对', () => {
     const rules = mockRules.listRules().rules;
-    expect(rules.every((r) => (r as any).demo === true)).toBe(true);
-    expect(rules.map((r) => r.nature).sort()).toEqual(['ENFORCED', 'ENFORCED', 'GUIDANCE']);
+    expect(rules.every((r: any) => r.demo === true)).toBe(true);
+    expect(rules.map((r: any) => r.nature).sort()).toEqual(['ENFORCED', 'ENFORCED', 'GUIDANCE']);
     // 登记初始仅草稿
     const created = ok(mockRules.createRule({
       appCode: 'recon-assistant', code: 'rate-limit', name: '限流护栏', nature: 'ENFORCED',
@@ -194,7 +259,7 @@ describe('资产管理四页 mock 形状（接口稿 §5.4-5.6，demo:true）', 
     const versions = ok(mockRules.listRuleVersions('batch-delete-guard'));
     expect(versions.versions[0]!.version).toBe(1);
     ok(mockRules.setRuleEnabled('batch-delete-guard', false, '窗口期'));
-    expect(mockRules.listRules().rules.find((r) => r.code === 'batch-delete-guard')!.enabled).toBe(false);
+    expect(mockRules.listRules().rules.find((r: any) => r.code === 'batch-delete-guard')!.enabled).toBe(false);
     // GUIDANCE 不参与互斥阻断
     expect(mockRules.publishRule('report-tone', 3)).toHaveProperty('published');
   });
@@ -203,10 +268,10 @@ describe('资产管理四页 mock 形状（接口稿 §5.4-5.6，demo:true）', 
     // 来源与目录形状
     const sources = mockPlugins.listPluginSources();
     expect(sources).toHaveLength(2);
-    expect(sources.every((s) => s.demo === true)).toBe(true);
+    expect(sources.every((s: any) => s.demo === true)).toBe(true);
     const plugins = mockPlugins.listPlugins();
-    expect(plugins.every((p) => p.demo === true)).toBe(true);
-    expect(mockPlugins.listPlugins({ status: 'DISABLED' }).every((p) => p.status === 'DISABLED')).toBe(true);
+    expect(plugins.every((p: any) => p.demo === true)).toBe(true);
+    expect(mockPlugins.listPlugins({ status: 'DISABLED' }).every((p: any) => p.status === 'DISABLED')).toBe(true);
     // 启停：disable 必填 reason
     expect(mockPlugins.setPluginEnabled('pv-1', false)).toMatchObject({ error: 'PARAM_REASON_REQUIRED', httpStatus: 400 });
     const disabled = ok(mockPlugins.setPluginEnabled('pv-1', false, '升级窗口'));
@@ -226,10 +291,10 @@ describe('资产管理四页 mock 形状（接口稿 §5.4-5.6，demo:true）', 
     const succeeded = ok(mockPlugins.pollDiscovery('src-1', accepted.discoveryId));
     expect(succeeded.status).toBe('SUCCEEDED');
     expect(succeeded.changes!.added[0]!.pluginCode).toBe('geo-annotate');
-    expect(mockPlugins.listPlugins().some((p) => p.pluginCode === 'geo-annotate')).toBe(true);
-    expect(mockPlugins.listPlugins().find((p) => p.pluginCode === 'ocr-enhance')!.version).toBe('1.5.0');
+    expect(mockPlugins.listPlugins().some((p: any) => p.pluginCode === 'geo-annotate')).toBe(true);
+    expect(mockPlugins.listPlugins().find((p: any) => p.pluginCode === 'ocr-enhance')!.version).toBe('1.5.0');
     // 失败分支：error 可展示且目录保持上一次成功状态（geo-annotate 仍在）
-    const source = mockPlugins.listPluginSources().find((s) => s.id === 'src-2')!;
+    const source = mockPlugins.listPluginSources().find((s: any) => s.id === 'src-2')!;
     (source as any).failNextDiscovery = true;
     const failedAccept = ok(mockPlugins.triggerDiscovery('src-2'));
     mockPlugins.pollDiscovery('src-2', failedAccept.discoveryId);
@@ -237,16 +302,16 @@ describe('资产管理四页 mock 形状（接口稿 §5.4-5.6，demo:true）', 
     expect(failed.status).toBe('FAILED');
     expect(failed.error).toMatchObject({ code: 'SOURCE_UNREACHABLE' });
     expect(failed.changes).toBeUndefined();
-    expect(mockPlugins.listPlugins().some((p) => p.pluginCode === 'geo-annotate')).toBe(true);
+    expect(mockPlugins.listPlugins().some((p: any) => p.pluginCode === 'geo-annotate')).toBe(true);
   });
 
   it('MCP：连接档案/连通测试失败类别/发现批次串行/快照差异/审核技能草稿/修订绑定', () => {
     const connections = mockMcp.listMcpConnections();
-    expect(connections.every((c) => c.demo === true)).toBe(true);
-    expect(connections.find((c) => c.id === 'mcp-1')).toMatchObject({ revision: 3, catalogBatchNo: 4, status: 'CONNECTED' });
+    expect(connections.every((c: any) => c.demo === true)).toBe(true);
+    expect(connections.find((c: any) => c.id === 'mcp-1')).toMatchObject({ revision: 3, catalogBatchNo: 4, status: 'CONNECTED' });
     // 连通测试：OK 与具体失败类别
     expect(ok(mockMcp.testMcpConnection('mcp-1'))).toMatchObject({ result: 'OK', revision: 3 });
-    const target = mockMcp.listMcpConnections().find((c) => c.id === 'mcp-1')! as any;
+    const target = mockMcp.listMcpConnections().find((c: any) => c.id === 'mcp-1')! as any;
     target.failNextTest = 'TIMEOUT';
     expect(mockMcp.testMcpConnection('mcp-1')).toMatchObject({ result: 'FAILED', failureCategory: 'TIMEOUT' });
     // 登记连接（revision=1）+ 配置变更 revision+1（旧修订结果不入目录）
@@ -264,7 +329,7 @@ describe('资产管理四页 mock 形状（接口稿 §5.4-5.6，demo:true）', 
     const diff = ok(mockMcp.listMcpTools('mcp-1', { diff: true }));
     const changeTypes = [...diff.diff!.added, ...diff.diff!.changed, ...diff.diff!.removed].map((t) => t.changeType);
     expect(changeTypes).toEqual(['ADDED', 'CHANGED', 'REMOVED']);
-    expect(mockMcp.listMcpConnections().find((c) => c.id === 'mcp-1')!.catalogBatchNo).toBe(5);
+    expect(mockMcp.listMcpConnections().find((c: any) => c.id === 'mcp-1')!.catalogBatchNo).toBe(5);
     // 审核生成技能草稿（skillDraftRef）
     const reviewed = ok(mockMcp.reviewMcpTools('mcp-1', { toolName: diff.diff!.added[0]!.toolName }));
     expect(reviewed.skillDraftRef).toMatchObject({ draftId: expect.any(String), code: `mcp_${diff.diff!.added[0]!.toolName}` });
@@ -316,11 +381,13 @@ describe('资产管理四页 setup（真实 SFC，渲染桩）', () => {
     // DRAFT 审批：confirmDanger 确认后迁移，列表与 DRAFT 计数同刷
     const draft = page.state.rows.find((r: any) => r.status === 'DRAFT');
     await page.state.decideDraft(draft, 'ACTIVE');
+    await flush();
     expect(page.confirmDanger).toHaveBeenCalledWith(expect.objectContaining({ title: '确认草稿生效' }));
     expect(page.state.draftCount).toBe(1);
     // 拒绝分支
     const rest = page.state.rows.find((r: any) => r.status === 'DRAFT');
     await page.state.decideDraft(rest, 'REVOKED');
+    await flush();
     expect(page.state.draftCount).toBe(0);
     expect(page.confirmDanger).toHaveBeenLastCalledWith(expect.objectContaining({ title: '拒绝并撤销草稿' }));
   });
@@ -335,7 +402,7 @@ describe('资产管理四页 setup（真实 SFC，渲染桩）', () => {
     await page.state.discover(row);
     expect(page.toast.info).toHaveBeenCalledWith(expect.stringContaining('发现批次'));
     expect(page.toast.success).toHaveBeenCalledWith(expect.stringContaining('目录版本 batch_no='));
-    page.state.openDiff(row);
+    await page.state.openDiff(row);
     expect(page.state.diffTools.length).toBeGreaterThan(0);
     expect(page.state.diffResult!.added.length).toBeGreaterThan(0);
     // 审核生成技能草稿

@@ -1,18 +1,18 @@
 <script setup lang="ts">
 /**
- * F4-3 任务进度卡：与 F3-1 任务工作台同源（shared/mock-task T2-14 契约）——
+ * F4-3 任务进度卡：与 F3-1 任务工作台同源（M5-2 切真实 API，shared/api-task）——
  * 状态徽章+目标+步骤/子任务树+事件游标增量（taskEvents nextAfterSeq，不 +1）；
- * 终态出「带回会话草稿重新提交」（F4-2，前端稿 §5.3 终态行）。轮询仅 demo 期驱动，
- * 阶段二切 SSE/事件增量接口。
+ * 终态出「带回会话草稿重新提交」（F4-2，前端稿 §5.3 终态行）。轮询拉真实端点
+ * GET /v1/tasks/{id}/events 与 /v1/tasks/{id}（阶段二可切 SSE 事件流接口）。
  */
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import { taskDetail, taskEvents, type TaskState } from "../../../shared/mock-task";
+import { taskDetail, taskEvents, type TaskRow, type TaskState } from "../../../shared/api-task";
 
-type TaskDetail = NonNullable<ReturnType<typeof taskDetail>>;
-/** 接口稿 §5.2 详情含 subtasks；T2-14 mock 种子暂无该字段——有则渲染子任务树，占位"无子任务"。 */
+type TaskDetail = TaskRow;
+/** 接口稿 §5.2 详情含 subtasks——有则渲染子任务树，占位"无子任务"。 */
 type Subtask = { taskId: string; state: string; role?: string };
 const subtasksOf = (task: TaskDetail | null): Subtask[] =>
-  (task as (TaskDetail & { subtasks?: Subtask[] }) | null)?.subtasks ?? [];
+  ((task as (TaskDetail & { subtasks?: Subtask[] }) | null)?.subtasks ?? []) as Subtask[];
 
 const props = defineProps<{ taskId: string }>();
 const emit = defineEmits<{ reissue: [task: TaskDetail] }>();
@@ -38,19 +38,28 @@ const stateTone = (state: TaskState) =>
 const terminal = (state: TaskState) =>
   state === "SUCCEEDED" || state === "FAILED" || state === "CANCELLED";
 
-const refresh = () => {
-  const page = taskEvents(props.taskId, cursor.value);
-  cursor.value = page.nextAfterSeq;
-  if (page.events.length) {
-    received.value += page.events.length;
-    latestEvent.value = page.events.at(-1)?.type ?? latestEvent.value;
+const refreshing = ref(false);
+const refresh = async () => {
+  if (refreshing.value) return;
+  refreshing.value = true;
+  try {
+    const page = await taskEvents(props.taskId, cursor.value);
+    cursor.value = page.nextAfterSeq;
+    if (page.events.length) {
+      received.value += page.events.length;
+      latestEvent.value = page.events.at(-1)?.type ?? latestEvent.value;
+    }
+    detail.value = await taskDetail(props.taskId);
+    if (detail.value && terminal(detail.value.state)) stopPolling();
+  } catch {
+    /* 单次轮询失败如实忽略（下一轮重试；错误不伪造终态）。 */
+  } finally {
+    refreshing.value = false;
   }
-  detail.value = taskDetail(props.taskId);
-  if (detail.value && terminal(detail.value.state)) stopPolling();
 };
 const startPolling = () => {
   stopPolling();
-  timer = setInterval(refresh, 800);
+  timer = setInterval(() => void refresh(), 1500);
 };
 const stopPolling = () => {
   if (timer) {
@@ -58,8 +67,8 @@ const stopPolling = () => {
     timer = null;
   }
 };
-onMounted(() => {
-  refresh();
+onMounted(async () => {
+  await refresh();
   if (detail.value && !terminal(detail.value.state)) startPolling();
 });
 onBeforeUnmount(stopPolling);

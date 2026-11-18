@@ -1,20 +1,19 @@
 <script setup lang="ts">
 /**
- * F4-2 执行请求（用户发起唯一入口，mock 期驱动）：输入区[本次任务模式 Plan 规划|Agent 执行]
- * （默认 AGENT）→submitTask(requestId/mode/goal/inputs/sessionId/sessionCursor)→消息流任务卡
- * （TaskCard 消费 taskEvents 游标增量）→终态「带回会话草稿重新提交」回填输入区。
- * PLAN 路径：demoAdvance 推进到 PLAN_READY→PlanCard 确认→执行（mock-plan 闭环）。
- * 消息流示意（三类卡片）见 demo-flow.ts；阶段二换真实 turns/事件流。
+ * F4-2 执行请求（用户发起唯一入口；M5-2 切真实 API）：输入区[本次任务模式 Plan 规划|Agent 执行]
+ * （默认 AGENT）→POST /v1/apps/{code}/tasks(requestId/mode/goal/inputs/sessionId/sessionCursor)
+ * →消息流任务卡（TaskCard 轮询 GET /v1/tasks/{id}/events 游标增量）→终态「带回会话草稿重新提交」
+ * 回填输入区。PLAN 路径：任务到 PLAN_READY 出计划卡→PlanCard 确认→执行（shared/api-plan 真实端点）。
+ * 真实模式下任务推进由服务端事件驱动（前端轮询详情/事件增量；阶段二可切 SSE）。
  */
 import { ref, watch } from "vue";
-import { submitTask, taskDetail, demoAdvanceTask, demoCreateExecTask } from "../../shared/mock-task";
-import { seedPlanTask } from "../../shared/mock-plan";
+import { guard, submitTask, taskDetail, type TaskRow } from "../../shared/api-task";
 import { demoFlowFor, nextKey, type FlowMessage, type SessionView } from "./demo-flow";
 import ToolCallCard from "./cards/ToolCallCard.vue";
 import PlanCard from "./cards/PlanCard.vue";
 import TaskCard from "./cards/TaskCard.vue";
 
-type TaskDetail = NonNullable<ReturnType<typeof taskDetail>>;
+type TaskDetail = TaskRow;
 
 const props = defineProps<{ session: SessionView | null }>();
 const emit = defineEmits<{
@@ -27,10 +26,10 @@ const draft = ref("");
 const busy = ref(false);
 const error = ref("");
 const messages = ref<FlowMessage[]>([]);
-/** sessionCursor：本次会话已提交轮次位置（demo 计数；真实=会话事件水位，随请求提交）。 */
+/** sessionCursor：本次会话已提交轮次位置（本地计数；随请求提交给受理端点）。 */
 const cursor = ref(0);
 
-const loadSession = (next: SessionView | null, prevId: string) => {
+const loadSession = async (next: SessionView | null, prevId: string) => {
   const nextId = next?.sessionId ?? "";
   if (nextId === prevId) return;
   if (!prevId && nextId) {
@@ -40,58 +39,71 @@ const loadSession = (next: SessionView | null, prevId: string) => {
   }
   messages.value = demoFlowFor(nextId);
   cursor.value = 0;
-  // 演示驱动：RUNNING 任务推进到终态（任务卡经 taskEvents 游标拾取增量）；
-  // PLAN_READY 任务登记计划（PlanCard 确认/执行走 mock-plan 契约）。
+  // 真实数据面：恢复会话消息流中的任务卡——读任务详情决定是否出计划卡/继续观察推进。
   for (const m of messages.value) {
     if (m.kind !== "task" && m.kind !== "plan") continue;
-    const detail = taskDetail(m.taskId);
-    if (!detail) continue;
-    if (detail.plan) seedPlanTask(structuredClone(taskDetail(m.taskId)!) as never);
-    if (detail.state !== "PLAN_READY" && !terminalOf(detail.state)) startDemoAdvance(m.taskId);
+    try {
+      const detail = await taskDetail(m.taskId);
+      if (!detail) continue;
+      if (detail.plan) {
+        if (!messages.value.some((msg) => msg.kind === "plan" && msg.taskId === m.taskId))
+          messages.value.push({ key: nextKey("p"), kind: "plan", taskId: m.taskId });
+      } else if (detail.state !== "PLAN_READY" && !terminalOf(detail.state)) {
+        startTaskWatch(m.taskId);
+      }
+    } catch {
+      /* 会话示意消息里的历史任务不可达时如实保留任务卡（详情空态）。 */
+    }
   }
 };
-watch(() => props.session, (next, prev) => loadSession(next, prev?.sessionId ?? ""), { flush: "post" });
-loadSession(props.session, "__init__");
+watch(() => props.session, (next, prev) => void loadSession(next, prev?.sessionId ?? ""), { flush: "post" });
+void loadSession(props.session, "__init__");
 
 const terminalOf = (state: TaskDetail["state"]) =>
   state === "SUCCEEDED" || state === "FAILED" || state === "CANCELLED";
 
-/** demo 驱动：定时推进演示任务一批事件（真实增量由服务端事件流/SSE 驱动，阶段二接线）。 */
+/** 观察任务推进（真实端点轮询）：PLAN_READY 出计划卡（确认/执行入口）；终态停止。 */
 const advancing = new Set<string>();
-function startDemoAdvance(taskId: string) {
+function startTaskWatch(taskId: string) {
   if (advancing.has(taskId)) return;
   advancing.add(taskId);
-  const timer = setInterval(() => {
-    const before = taskDetail(taskId)?.state;
-    const after = demoAdvanceTask(taskId);
-    if (after?.plan && before !== "PLAN_READY")
-      seedPlanTask(structuredClone(taskDetail(taskId)!) as never);
-    const state = taskDetail(taskId)?.state;
-    if (!state || state === "PLAN_READY" || terminalOf(state)) {
-      // PLAN 路径（前端稿 §5.4）：计划就绪即在消息流出计划卡（确认/执行入口）。
-      if (state === "PLAN_READY" && !messages.value.some((m) => m.kind === "plan" && m.taskId === taskId))
+  const timer = setInterval(async () => {
+    let state: string | undefined;
+    try {
+      const detail = await taskDetail(taskId);
+      state = detail?.state;
+      if (state === "PLAN_READY" && detail?.plan &&
+        !messages.value.some((m) => m.kind === "plan" && m.taskId === taskId)) {
+        // PLAN 路径（前端稿 §5.4）：计划就绪即在消息流出计划卡（确认/执行入口）。
         messages.value.push({ key: nextKey("p"), kind: "plan", taskId });
+      }
+    } catch {
+      state = undefined;
+    }
+    if (!state || state === "PLAN_READY" || terminalOf(state as TaskDetail["state"])) {
       clearInterval(timer);
       advancing.delete(taskId);
     }
-  }, 1200);
+  }, 1500);
 }
 
-function send() {
+async function send() {
   const goal = draft.value.trim();
   if (!goal || busy.value) return;
   busy.value = true;
   error.value = "";
   const sessionId = props.session?.sessionId || "";
   try {
-    const res = submitTask({
-      requestId: crypto.randomUUID(),
-      mode: mode.value,
-      goal,
-      inputs: { message: goal },
-      sessionId: sessionId || undefined,
-      sessionCursor: cursor.value,
-    });
+    const res = await guard(() =>
+      submitTask({
+        requestId: crypto.randomUUID(),
+        mode: mode.value,
+        goal,
+        inputs: { message: goal },
+        sessionId: sessionId || undefined,
+        sessionCursor: cursor.value,
+      }),
+    );
     if ("error" in res) {
       error.value = `${res.userMessage}（${res.error}）`;
       return;
@@ -101,18 +113,19 @@ function send() {
     draft.value = "";
     cursor.value += 1;
     if (!sessionId)
-      emit("session-created", `sess-demo-local-${Date.now()}`, goal);
-    startDemoAdvance(res.taskId);
+      emit("session-created", `sess-${Date.now()}`, goal);
+    startTaskWatch(res.taskId);
+  } catch (e: any) {
+    error.value = e?.message ?? "提交失败，请稍后重试";
   } finally {
     busy.value = false;
   }
 }
 
-/** PLAN 执行受理：注册关联执行任务并追加任务卡（确认→执行闭环，同源 mock-task）。 */
-function onExecuted(executionTaskId: string, sourceTaskId: string) {
-  demoCreateExecTask(executionTaskId, sourceTaskId);
+/** PLAN 执行受理：执行任务由服务端 execute 创建——直接追加任务卡并观察推进。 */
+function onExecuted(executionTaskId: string, _sourceTaskId: string) {
   messages.value.push({ key: nextKey("k"), kind: "task", taskId: executionTaskId });
-  startDemoAdvance(executionTaskId);
+  startTaskWatch(executionTaskId);
 }
 
 /** 终态「带回会话草稿重新提交」：原目标回填输入区，模式随原任务。 */

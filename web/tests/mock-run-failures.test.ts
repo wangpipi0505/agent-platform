@@ -35,7 +35,7 @@ describe('mock-run-failures（F2-3 演示形状）', () => {
     expect(plain.demo).toBeUndefined();
     expect(plain.input).toBeUndefined();
     // 非演示域节点不臆造输入。
-    expect(withRunNodeInputs('other-app', [nodes[0]])[0].input).toBeUndefined();
+    expect((withRunNodeInputs('other-app', [nodes[0]]) as Array<Record<string, any>>)[0].input).toBeUndefined();
   });
 
   it('非数组输入原样返回空数组，不抛错', () => {

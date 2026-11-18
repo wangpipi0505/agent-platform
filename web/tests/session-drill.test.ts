@@ -1,4 +1,4 @@
-// F3-6（台账 §7.5 / 前端稿 §5.4）：会话详情与步骤调用下钻——mock 驱动。
+// F3-6（台账 §7.5 / 前端稿 §5.4）：会话详情与步骤调用下钻——数据面=M5-2 切真实 API（shared/api-session）。
 // 锁定五项验收（卡面）：①压缩标记无正文（USER 普通视图响应不含 summary 正文/原始材料，
 // 仅"此处已压缩"标记=区间+token 计数）；②调用锚点定位与无锚点隐藏（eventSeq→消息流 seq；
 // appCode/sessionId/eventSeq 空或锚点被压缩遮蔽→保留错误摘要、隐藏跳转）；
@@ -13,6 +13,23 @@ import * as Vue from 'vue';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as mock from '../shared/mock-session-detail';
 import * as reasonCodeText from '../shared/reason-code-text';
+
+/** 页面数据面桩：api-session 异步形状，事实源=mock-session-detail 演示投影（断言语义与基底一致）。 */
+const apiSessionStub = {
+  callAnchor: mock.callAnchor,
+  compactionRanges: mock.compactionRanges,
+  sessionSnapshot: async (appCode: string, id: string, role: 'USER' | 'OPERATOR') =>
+    mock.sessionSnapshot(appCode, id, role),
+  sessionEvents: async (
+    appCode: string,
+    id: string,
+    query: { afterSeq?: number; limit?: number; surfaceOnly?: boolean } | undefined,
+    role: 'USER' | 'OPERATOR',
+  ) => mock.sessionEvents(appCode, id, query ?? {}, role),
+  sessionCalls: async (id: string, role: 'USER' | 'OPERATOR') => mock.sessionCalls(id, role),
+  sessionSubagents: async (id: string, role: 'USER' | 'OPERATOR') => mock.sessionSubagents(id, role),
+  taskRecovery: async (id: string, role: 'USER' | 'OPERATOR') => mock.taskRecovery(id, role),
+};
 
 const cleanup: (() => void)[] = [];
 afterEach(() => {
@@ -48,7 +65,7 @@ function mountSession(sessionId: string) {
     // 子组件（PageHeader/EmptyState/ErrorBanner）：本组测 setup 逻辑，渲染桩。
     if (id.endsWith('.vue')) return { default: { render: () => null } };
     if (id.includes('usePageOperation')) return { usePageTitle: () => {} };
-    if (id.includes('mock-session-detail')) return mock;
+    if (id.includes('api-session')) return apiSessionStub;
     // R-3：纯函数模块用真实实现（无外部依赖）。
     if (id.includes('reason-code-text')) return reasonCodeText;
     throw new Error(`unexpected require: ${id}`);

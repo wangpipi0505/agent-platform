@@ -1,4 +1,4 @@
-// F3-2：管理台只读计划详情页——锁定四件事：
+// F3-2：管理台只读计划详情页——锁定四件事（页面数据面=M5-2 切真实 API，shared/api-plan 桩委托演示种子）：
 // ① demo 种子（mock-plan.ts F3-2 追加导出）的修订对比数据形状（对齐 task-states §5 与
 //    mock-task.ts plan 投影，plan-9 当前修订两处一致）；② diffPlanSteps 简单 diff 语义；
 // ③ 页面只读徽章三态（validationStatus / confirmation）与依赖分层（depends_on）；
@@ -26,8 +26,8 @@ afterEach(() => {
   cleanup.splice(0).forEach((close) => close());
 });
 
-/** 真实 SFC setup + 桩依赖（vue-router / .vue 组件），返回页面 setupState（ref 已解包）。 */
-function mountPlan(planId: string) {
+/** 真实 SFC setup + 桩依赖（vue-router / api-plan / .vue 组件），返回页面 setupState（ref 已解包）。 */
+async function mountPlan(planId: string) {
   const { descriptor, errors } = parse(pageSource, { filename: "PlanDetailPage.vue" });
   expect(errors).toEqual([]);
   const code = ts.transpileModule(
@@ -36,15 +36,20 @@ function mountPlan(planId: string) {
   ).outputText;
   const exports = {} as { default: Vue.Component & { render: () => null } };
   const require = createRequire(import.meta.url);
-  const route = Vue.reactive({ params: { planId } });
+  const route = Vue.reactive({ params: { planId }, query: {} as Record<string, unknown> });
+  // api-plan 桩：fetchPlanDetail 异步委托演示种子（页面加载路径与真实端点一致，数据面受控）。
+  const apiPlanStub = {
+    diffPlanSteps: mockPlan.diffPlanSteps,
+    fetchPlanDetail: async (planIdArg: string) => mockPlan.demoPlanDetail(planIdArg),
+  };
   new Function("require", "exports", code)(
     (id: string) =>
       id === "vue"
         ? Vue
         : id.endsWith("vue-router")
           ? { useRoute: () => route }
-          : id.endsWith("/shared/mock-plan")
-            ? mockPlan
+          : id.endsWith("/shared/api-plan")
+            ? apiPlanStub
             : id.endsWith(".vue")
               ? { default: { render: () => null } }
               : require(id),
@@ -68,6 +73,11 @@ function mountPlan(planId: string) {
     subTree: { component: { setupState: any } };
   };
   cleanup.push(() => app.unmount());
+  // 详情装载为异步（watch immediate→fetchPlanDetail）：就绪后再断言。
+  for (let index = 0; index < 10; index++) {
+    await Promise.resolve();
+    await Vue.nextTick();
+  }
   return { state: instance.subTree.component!.setupState as any, route };
 }
 
@@ -137,8 +147,8 @@ describe("demo 种子：修订对比数据形状（task-states §5 / mock-task p
 });
 
 describe("页面行为（真实 setup）：徽章三态 / 依赖分层 / 修订对比", () => {
-  it("validationStatus 徽章三态与 confirmation 徽章三态一一映射；未知值如实回显", () => {
-    const { state } = mountPlan("plan-9");
+  it("validationStatus 徽章三态与 confirmation 徽章三态一一映射；未知值如实回显", async () => {
+    const { state } = await mountPlan("plan-9");
     const validation = ["VALID", "PENDING", "INVALID"].map((s) => state.validationBadgeOf(s));
     expect(new Set(validation.map((b) => b.label)).size).toBe(3);
     expect(state.validationBadgeOf("VALID")).toMatchObject({ label: "校验通过", type: "success" });
@@ -155,8 +165,8 @@ describe("页面行为（真实 setup）：徽章三态 / 依赖分层 / 修订�
     expect(state.validationBadgeOf("WHATEVER")).toEqual({ label: "WHATEVER", type: "info" });
   });
 
-  it("依赖展示含 depends_on：默认查看当前修订，分层覆盖全部步骤且上游恒在更浅层", () => {
-    const { state } = mountPlan("plan-9");
+  it("依赖展示含 depends_on：默认查看当前修订，分层覆盖全部步骤且上游恒在更浅层", async () => {
+    const { state } = await mountPlan("plan-9");
     // 默认查看修订=当前（末位）修订
     expect(state.viewed.revision).toBe(state.currentRevision.revision);
     const steps = state.viewed.steps as { stepId: string; dependsOn: string[] }[];
@@ -182,8 +192,8 @@ describe("页面行为（真实 setup）：徽章三态 / 依赖分层 / 修订�
     expect(state.viewed.steps).toHaveLength(4);
   });
 
-  it("修订对比：默认基准=上一修订→目标=当前修订；切换基准后步骤差异跟随", () => {
-    const { state } = mountPlan("plan-9");
+  it("修订对比：默认基准=上一修订→目标=当前修订；切换基准后步骤差异跟随", async () => {
+    const { state } = await mountPlan("plan-9");
     const revisions = state.revisions as { revision: number }[];
     expect(state.compareBaseRevision.revision).toBe(revisions.at(-2)!.revision);
     expect(state.compareTargetRevision.revision).toBe(revisions.at(-1)!.revision);

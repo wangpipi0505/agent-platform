@@ -227,10 +227,12 @@ export function listTaskDetail(taskId: string): DemoTaskDetail | null {
   const base = taskDetail(taskId)
   if (base) return { ...base, subtasks: extra?.subtasks ?? [], pendingCalls: extra?.pendingCalls ?? [] }
   if (!extra) return null
-  return { ...extra, canConfirm: extra.plan?.confirmation.state !== "CONFIRMED_VALID",
+  // demo 种子分支：seed 形状与冻结 taskDetail 返回体字段一致（TS 结构差异在此显式投影）。
+  const projected = taskDetail(extra.taskId) ?? { ...extra, demo: true as const }
+  return ({ ...projected, canConfirm: extra.plan?.confirmation.state !== "CONFIRMED_VALID",
     canExecute: extra.plan?.confirmation.state === "CONFIRMED_VALID" && extra.plan.validationStatus === "VALID",
     availableActions: demoProjectedActions(extra), eventWatermark: extra.events.at(-1)?.seq ?? 0,
-    subtasks: extra.subtasks ?? [], pendingCalls: extra.pendingCalls ?? [] }
+    subtasks: extra.subtasks ?? [], pendingCalls: extra.pendingCalls ?? [] } as DemoTaskDetail)
 }
 
 /** 取消（demo）：非终态→CANCELLED + TASK_FINISHED 事件；联调期由服务端 CAS 语义承接。 */

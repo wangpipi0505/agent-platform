@@ -1,8 +1,9 @@
-// F3-1（台账 §7.5 / 方案 §5.3 管理台侧）：任务工作台——mock 驱动。
+// F3-1（台账 §7.5 / 方案 §5.3 管理台侧）：任务工作台——数据面=M5-2 切真实 API（shared/api-task）。
 // 锁定：①状态×操作矩阵渲染（每状态按钮集=服务端 availableActions 逐项映射，不自判）；
 // ②状态管道 chips 过滤（13 态）；③恢复面板 recovery 角色投影（USER 三字段口径+OPERATOR 附加分区有则显示）；
-// ④页面无新建任务入口（任务发起在助手端 F4-2）；⑤取消/恢复/对账处置入口走 confirmDanger→mock demo 函数。
-// 与现有页面测试相同：真实 SFC setup（compileScript+transpile），按依赖替换为受控桩，setupState 断言。
+// ④页面无新建任务入口（任务发起在助手端 F4-2）；⑤取消/恢复/对账处置入口走 confirmDanger→api-task 端点函数。
+// 页面装载：真实 SFC setup（compileScript+transpile），按依赖替换为受控桩，setupState 断言。
+// api-task 桩异步委托 mock-task demo 注册表（mock-task 文件保留为演示/测试引擎，断言语义与基底一致）。
 import { readFileSync } from 'node:fs';
 import { compileScript, parse } from '@vue/compiler-sfc';
 import ts from 'typescript';
@@ -11,6 +12,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mockTask from '../shared/mock-task';
 import * as reasonCodeText from '../shared/reason-code-text';
 import { useLiveList } from '../shared/hooks/useLiveList';
+
+/** 页面数据面桩：api-task 异步形状，事实源=mock-task demo 注册表（断言语义与基底一致）。 */
+const apiTaskStub = {
+  callActions: mockTask.callActions,
+  listTasks: async () => mockTask.listTasks(),
+  listTaskDetail: async (taskId: string) => mockTask.listTaskDetail(taskId),
+  cancelTask: async (req: { taskId: string }) => mockTask.cancelTask(req),
+  resumeTask: async (req: { taskId: string }) => mockTask.resumeTask(req),
+  reconcileTaskCall: async (req: { taskId: string; stepId: string; callId: string; action: string }) =>
+    mockTask.reconcileTaskCall({ ...req, action: req.action as never }),
+};
 
 const cleanup: (() => void)[] = [];
 afterEach(() => {
@@ -56,7 +68,7 @@ function mountTasks(options: { confirmResult?: boolean } = {}) {
     if (id.includes('DangerConfirm')) return { confirmDanger };
     if (id.includes('usePageOperation')) return { usePageTitle: () => {} };
     if (id.includes('useLiveList')) return { useLiveList };
-    if (id.includes('mock-task')) return mockTask;
+    if (id.includes('api-task')) return apiTaskStub;
     // R-3：纯函数模块用真实实现（无外部依赖）。
     if (id.includes('reason-code-text')) return reasonCodeText;
     throw new Error(`unexpected require: ${id}`);
