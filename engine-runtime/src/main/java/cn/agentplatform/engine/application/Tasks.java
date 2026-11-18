@@ -53,6 +53,13 @@ public class Tasks {
   /** :ping 心跳间隔（接口稿 §7：15s）；独立部署可调，测试经反射改短（照 ChatSessions 先例）。 */
   @org.springframework.beans.factory.annotation.Value("${agent.task.sse.heartbeat-millis:15000}")
   long taskHeartbeatMillis = 15000;
+  /**
+   * R-16（台账 §7.6b）：任务 SSE 慢消费者未读积压上限——与会话 SSE 共用同一配置键
+   * {@code agent.sse.max-buffered-events}（T2-11 积压 2000 先例原值，R-16 配置化+审计化）。
+   * 超限主动断开并记审计行（客户端以 Last-Event-ID 重连续读，断开不取消任务）。
+   */
+  @org.springframework.beans.factory.annotation.Value("${agent.sse.max-buffered-events:2000}")
+  int maxBufferedEvents = 2000;
 
   public Tasks(TraceStore store) {
     this.store = store;
@@ -657,8 +664,16 @@ public class Tasks {
                                   "select coalesce(max(seq),0) from engine.task_event where task_id=?",
                                   Long.class,
                                   taskId);
-          if (watermark != null && watermark - cursor > ChatSessions.STREAM_BACKLOG_LIMIT) {
-            close(); // 慢客户端超限断开：重连以 Last-Event-ID 续读（接口稿 §7 心跳行）
+          if (watermark != null && watermark - cursor > Math.max(1, maxBufferedEvents)) {
+            // R-16：慢消费者超限断开记审计行（未读积压与上限可追溯）；重连以 Last-Event-ID
+            // 续读（接口稿 §7 心跳行），SSE 只是观察通道——断开不取消任务。
+            org.slf4j.LoggerFactory.getLogger(Tasks.class)
+                    .warn(
+                            "AUDIT TASK_SSE_SLOW_CONSUMER_DISCONNECT taskId={} unreadBacklog={} limit={} resume=Last-Event-ID",
+                            taskId,
+                            watermark - cursor,
+                            Math.max(1, maxBufferedEvents));
+            close();
             return;
           }
         }
