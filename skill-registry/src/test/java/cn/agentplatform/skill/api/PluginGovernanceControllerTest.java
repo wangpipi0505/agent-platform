@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.skill.application.PluginDiscoveryExecutor;
 import cn.agentplatform.skill.application.PluginGovernance;
 
 import org.junit.jupiter.api.Test;
@@ -19,14 +20,16 @@ import java.util.Map;
 /** 插件治理 API 骨架的 HTTP 面：统一回包、发现受理 202、错误码透传（接口稿 §5.6）。 */
 class PluginGovernanceControllerTest {
     PluginGovernance governance = mock(PluginGovernance.class);
+    PluginDiscoveryExecutor discoveryExecutor = mock(PluginDiscoveryExecutor.class);
     MockMvc mvc =
-            MockMvcBuilders.standaloneSetup(new PluginGovernanceController(governance))
+            MockMvcBuilders.standaloneSetup(new PluginGovernanceController(governance, discoveryExecutor))
                     .setControllerAdvice(new cn.agentplatform.common.PlatformErrors())
                     .build();
 
     @Test
     void discoveryTriggerReturnsAcceptedWithQueuedProjection() throws Exception {
-        when(governance.triggerDiscovery(7L))
+        // R-6 接线：触发改走执行器 trigger（受理+派发），202 契约不变。
+        when(discoveryExecutor.trigger(7L))
                 .thenReturn(Map.of("discoveryId", "disc_" + "0".repeat(32), "status", "QUEUED", "batchNo", 3L));
         mvc.perform(post("/admin/plugin-sources/7/discover"))
                 .andExpect(status().isAccepted())
@@ -70,7 +73,7 @@ class PluginGovernanceControllerTest {
 
     @Test
     void domainErrorsMapThroughPlatformAdvice() throws Exception {
-        when(governance.triggerDiscovery(404L))
+        when(discoveryExecutor.trigger(404L))
                 .thenThrow(new PlatformException(404, "PLUGIN_SOURCE_NOT_FOUND", "插件来源不存在"));
         when(governance.enableVersion(9L))
                 .thenThrow(new PlatformException(409, "PLUGIN_STATE", "REVOKED 为终态，不能启用"));

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -43,8 +44,8 @@ import java.util.stream.Collectors;
  * （同一批次终态只提交一次）。
  *
  * <p><b>异步与调度</b>：trigger 受理（202 QUEUED）后由实例内独立工作线程异步执行，不依赖
- * Spring 调度；生产部署接 {@code @Scheduled} 调用 {@link #pulse()} 兜底——接管崩溃实例遗弃行
- * 并为自有临期租约续租（照 SkillOutbox 先例，装配层补一个 @Scheduled 方法即可，本卡不装配）；
+ * Spring 调度；本服务再以 {@code @Scheduled} 调用 {@link #pulse()} 兜底（R-6 装配，照
+ * SkillOutbox 先例）——接管崩溃实例遗弃行并为自有临期租约续租；
  * 测试用同步直调 {@link #execute(String)}。
  *
  * <p>扫描经 {@link PluginSourceScanner}（首版演示桩 {@link DemoPluginSourceScanner}，demo:true；
@@ -336,12 +337,12 @@ public class PluginDiscoveryExecutor {
     }
 
     /**
-     * 生产兜底入口（照 SkillOutbox 先例；本卡不装配 @Scheduled，部署接线时补
-     * {@code @Scheduled(fixedDelayString="${agent.discovery.pulse-ms:5000}")}）：
+     * 生产兜底入口（照 SkillOutbox 先例，R-6 起随本服务装配 @Scheduled）：
      * 先为本实例持有且临期的 RUNNING 续租，再认领并执行可执行行（QUEUED 或租约失效 RUNNING，
      * 含实例崩溃遗弃行的接管）。跨租户扫描只取 discovery_id（系统调度器例外），逐行
      * execute 按行租户隔离。返回认领执行的行数。
      */
+    @Scheduled(fixedDelayString = "${agent.discovery.pulse-ms:5000}")
     public int pulse() {
         renewOwnExpiringLeases();
         var claimable =

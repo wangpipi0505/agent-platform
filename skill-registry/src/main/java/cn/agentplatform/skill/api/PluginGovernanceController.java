@@ -1,6 +1,7 @@
 package cn.agentplatform.skill.api;
 
 import cn.agentplatform.common.ApiResponse;
+import cn.agentplatform.skill.application.PluginDiscoveryExecutor;
 import cn.agentplatform.skill.application.PluginGovernance;
 
 import org.springframework.http.ResponseEntity;
@@ -11,14 +12,21 @@ import java.util.Map;
 /**
  * 插件治理基础 API（接口稿 §5.6；主方案 §6.2）。ADMIN 面：来源登记/列表、发现触发（202 QUEUED）
  * 与结果查询、版本启停（disable 带 reason）与授权/撤权。GUIDE 双轨走既有 /admin/skills 链路，
- * 不在本控制器。发现执行器（认领/接管/批次串行发布）属 A3-5，本控制器只暴露数据面骨架。
+ * 不在本控制器。
+ *
+ * <p>R-6 接线：发现触发改走 {@link PluginDiscoveryExecutor#trigger(long)}——受理复用
+ * {@link PluginGovernance#triggerDiscovery(long)}（ADMIN 校验、停用来源 409、批次号单调均不变），
+ * 受理后派发实例内工作线程异步执行；遗弃行由执行器 {@code @Scheduled} pulse 兜底接管。
+ * HTTP 契约不变：202 承载 {discoveryId,status:'QUEUED',batchNo}。
  */
 @RestController
 public class PluginGovernanceController {
     private final PluginGovernance governance;
+    private final PluginDiscoveryExecutor discoveryExecutor;
 
-    public PluginGovernanceController(PluginGovernance governance) {
+    public PluginGovernanceController(PluginGovernance governance, PluginDiscoveryExecutor discoveryExecutor) {
         this.governance = governance;
+        this.discoveryExecutor = discoveryExecutor;
     }
 
     @PostMapping("/admin/plugin-sources")
@@ -31,10 +39,10 @@ public class PluginGovernanceController {
         return ApiResponse.ok(governance.listSources());
     }
 
-    /** 发现受理（异步）：202 承载 {discoveryId,status:'QUEUED'}，执行与状态推进属 A3-5。 */
+    /** 发现受理（异步）：202 承载 {discoveryId,status:'QUEUED'}，受理即派发执行器异步执行。 */
     @PostMapping("/admin/plugin-sources/{id}/discover")
     public ResponseEntity<Object> discover(@PathVariable long id) {
-        return ResponseEntity.accepted().body(ApiResponse.ok(governance.triggerDiscovery(id)));
+        return ResponseEntity.accepted().body(ApiResponse.ok(discoveryExecutor.trigger(id)));
     }
 
     @GetMapping("/admin/plugin-sources/{id}/discoveries/{discoveryId}")
