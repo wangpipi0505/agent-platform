@@ -1,0 +1,46 @@
+# M5-3 E2E 环境快照（2026-11-18）
+
+## 主机与工具链
+OS:            Windows 10.0.26200 x64 (win32, Git Bash)
+JDK:           Temurin 21.0.12+8-LTS  (C:/Program Files/Eclipse Adoptium/jdk-21.0.12.8-hotspot)
+Maven:         Apache Maven 3.9.16
+Node:          v24.16.0
+psql:          PostgreSQL 16.15 tools (agent-platform/.tools/postgresql-16.15/pgsql/bin/psql.exe)
+
+## 数据库
+实例:          127.0.0.1:25432（本机 PG16.15）
+专用库:        m53_e2e（owner=agent_v12）——本卡唯一新建/使用库
+隔离声明:      未触碰 agent_platform_dev_v12 / agent_platform_v12 / 任何 *_test 库
+迁移与种子:    五服务启动 Flyway 自举（classpath:db/migration）
+               gateway: 无迁移目录（无 gateway.flyway_schema_history 属预期）
+               app/skill/engine/model: 全链迁移 + V901__demo_seed（幂等 ON CONFLICT DO NOTHING）
+               V901 行数: app 38 / skill 32 / engine 2（tenant='demo'）
+
+## 服务端口（AGENT_BIND_ADDRESS=127.0.0.1, AGENT_SECURITY_MODE=dev-hmac, AGENT_DEV_AUTH=true）
+18480  platform-gateway
+18481  app-management
+18482  engine-runtime   （PropertiesLauncher + -Dloader.path=.local/m53-shim.jar，见 scripts/e2e/README.md 缺陷登记①）
+18483  skill-registry
+18484  model-gateway
+18485  model-stub（scripts/e2e/fixtures/model-stub.mjs，run-all 自起自停，OpenAI 兼容本地桩）
+
+## 服务间指向（start-stack.sh 注入）
+AGENT_APP_URL=http://127.0.0.1:18481
+AGENT_ENGINE_URL=http://127.0.0.1:18482
+AGENT_SKILL_URL=http://127.0.0.1:18483
+AGENT_MODEL_URL=http://127.0.0.1:18484
+AGENT_SECRET_DIR=.local/secrets-m53（本卡独立密文目录）
+
+## 依赖降级声明
+Redis(26379)/MinIO 未启动：engine/model /actuator/health 返回 503 {"status":"DOWN"} 属预期
+（ChunkBus 单副本本地降级、观察流 Redis PubSub 缺席不阻塞业务链）；五服务 TCP 监听即算就绪。
+
+## 模型路由（run-all.mjs 幂等注册）
+model.provider: demo-provider → http://127.0.0.1:18485（trustLabels=["E2E_LOCAL_STUB"]，secretRef=vault: 本地桩密钥）
+model.entry:    demo-model（chat, contextWindow=8192, maxOutputTokens=2048, ENABLED）
+供应商连通测试：/v1/models 清单 + 单 token chat/completions（真实 HTTP，出话=确定性本地桩）
+
+## 运行记录
+第一轮（修绿）：8/8 场景 PASS，断言 208/208
+第二轮（停栈→起栈→复跑，可复现证明）：8/8 场景 PASS，断言 208/208
+留痕：m5-3-e2e-run.log（第二轮完整控制台）、m5-3-e2e-report.json（逐断言 JSON，两轮覆盖写）
