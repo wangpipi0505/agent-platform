@@ -215,7 +215,10 @@ class McpConnectionTest {
                         + " (migrations applied this run: "
                         + result.migrationsExecuted
                         + ")");
-        assertEquals("322", schemaVersion(), "skill schema 必须迁移到 V322");
+        // 链尾随 M5-1 V901 种子演进（在 V322 之后）；断言锁下限=V322 已交付，表级在位断言在下方。
+        assertTrue(
+                Integer.parseInt(schemaVersion()) >= 322,
+                "skill schema 必须迁移到 V322 或更高（现链尾含 V901 种子）");
 
         // 两表在位（库稿 §4.9）。
         var tables =
@@ -472,7 +475,9 @@ class McpConnectionTest {
                 "insert into skill.plugin_source(tenant_id,code,name,source_type,location,created_by)"
                         + " values('v322_legacy','legacy_src','来源','DIRECTORY','dir://x','tester')");
         migrateFull();
-        assertEquals("322", schemaVersion(), "存量升级必须到达 V322");
+        assertTrue(
+                Integer.parseInt(schemaVersion()) >= 322,
+                "存量升级必须到达 V322 或更高（现链尾含 V901 种子）");
         var tables =
                 db.queryForList(
                         "select tablename from pg_tables where schemaname='skill' and tablename in"
