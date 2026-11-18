@@ -11,6 +11,8 @@ import * as Vue from 'vue';
 import { afterEach, expect, it, vi } from 'vitest';
 import * as runProtocol from '../shared/run-protocol';
 import * as content from '../shared/content';
+// RunDetail 现引用 reason-code-text（失败原因文案收敛），夹具按真实 shared 模块解析。
+import * as reasonCodeText from '../shared/reason-code-text';
 
 const cleanup: (() => void)[] = [];
 afterEach(() => {
@@ -45,7 +47,10 @@ function mountRun(routeQuery: Record<string, string>, props: Record<string, unkn
   const code = ts.transpileModule(
     compileScript(descriptor, { id: 'RunDetailNav' }).content,
     { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
-  ).outputText;
+  ).outputText
+    // M5-2：RunDetail.connect 读取 import.meta.env.VITE_MOCK 决定演示模式直连；CJS new Function
+    // 不支持 import.meta，以空 env 桩替换（测试环境非 mock，保持真实 SSE 分支语义）。
+    .replace(/\bimport\.meta\b/g, 'importMetaShim');
   const exports = {} as { default: Vue.Component & { render: () => null } };
   const require = createRequire(import.meta.url);
   const auth = {
@@ -55,7 +60,7 @@ function mountRun(routeQuery: Record<string, string>, props: Record<string, unkn
   };
   const route = Vue.reactive({ query: { ...routeQuery }, params: { runId: 'r1' } });
   const streamEvents = vi.fn(async () => {});
-  new Function('require', 'exports', code)((id: string) =>
+  new Function('require', 'exports', 'importMetaShim', code)((id: string) =>
     id === 'vue'
       ? Vue
       : id.endsWith('vue-router')
@@ -76,6 +81,7 @@ function mountRun(routeQuery: Record<string, string>, props: Record<string, unkn
               : id.endsWith('/shared/content')
                 ? content
                 : id.endsWith('/shared/server-authority') ? authority
+                : id.endsWith('/shared/reason-code-text') ? reasonCodeText
                 // MNT-03：RunDetail 引用 resource-types 稳定外壳；本组测导航深链，
                 // 沙箱给行为等价浅实现（相对导入在 tests/ 下解析错位，不能 require）。
                 : id.includes('/shared/resource-types')
@@ -93,7 +99,8 @@ function mountRun(routeQuery: Record<string, string>, props: Record<string, unkn
                   : id.endsWith('.vue')
                   ? { default: { render: () => null } }
                   : require(id),
-    exports);
+    exports,
+    { env: {} });
   exports.default.render = () => null;
   const renderer = Vue.createRenderer<object, object>({
     createComment: () => ({}),

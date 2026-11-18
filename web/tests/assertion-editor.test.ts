@@ -5,6 +5,8 @@ import ts from 'typescript';
 import * as Vue from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import * as assertion from '../shared/assertion';
+// NamedInputs.vue 现已直接引用 shared/json-input（JSON 输入解析收敛），夹具同步解析该模块。
+import * as jsonInput from '../shared/json-input';
 
 /**
  * 断言编辑器的行为测试。挂载真实 SFC（setup/watchers），只替换 api 与 Element Plus 组件；
@@ -21,6 +23,7 @@ function mount(relative: string, name: string, props: any, api: any = vi.fn(asyn
   new Function('require', 'exports', code)((id: string) => id === 'vue' ? Vue
     : id.endsWith('/api') ? { useApi: () => api, useAuth: () => auth }
     : id.endsWith('/assertion') ? assertion
+    : id.endsWith('/json-input') ? jsonInput
     : id.endsWith('.vue') ? { default: Stub }
     : require(id), exports);
   exports.default.render = () => null;
