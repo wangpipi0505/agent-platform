@@ -32,7 +32,9 @@ class ToolOutputLargeResponsePostgresTest {
         TracePostgresTest.connect();
     }
 
+    /** 双向清理（R-19 回归补齐）：类内残留 run/model_invocation 链不得阻断共享库其他 engine-test 夹具清理。 */
     @BeforeEach
+    @AfterEach
     void clean() {
         fixture.clean();
     }

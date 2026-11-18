@@ -56,7 +56,9 @@ class ToolOutputSpillPostgresTest {
         sessions = new SessionStore(db, new DataSourceTransactionManager(ds));
     }
 
+    /** 双向清理（照 SpillPromptTest 口径）：类内残留行（含 model_invocation/run 链）不得阻断共享库其他 engine-test 夹具的清理。 */
     @BeforeEach
+    @AfterEach
     void clean() {
         fixture.clean();
         db.update("delete from engine.spill_artifact where session_id like ?", SESSION_PREFIX + "%");

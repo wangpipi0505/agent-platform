@@ -84,3 +84,39 @@
 2. **拉取通道与鉴权形态**：照既有跨服务预检口径走 RuntimeClients（ServiceTicket 面）；skill 服务 `/admin/**` 在 legacy（dev-hmac/test）模式接受服务票，IAM（trusted）模式下 /admin/** 要求门户域票据——服务票拉取会被拒→N/A 留痕（目录缓存为尽力而为注册面，不影响运行）；生产 IAM 部署形态如需目录实核，后续由 skill 服务开 `/internal` 目录端点或网关面承接（本卡不动他服务的约束下如实登记）。
 3. **memoryPolicy 读取链核验结论**：A3-4 现状=MemoryPolicy.from 只读顶层/manifest 两形状，发布快照形状（config 下 manifest）的 memoryPolicy 实际不进策略链——本卡补第三级回退接通（新增链自查断言）；顶层/manifest 两既有形状行为零变化（MemoryApiTest 9/9 零改动全绿）。ResourceManifestService.collectMemory 的 MEMORY_POLICY 条目（读 manifest.memoryPolicy）与策略链自此同源。
 4. **"USER 写 SHARED 不再 403"卡面括注与现状契约不符**：requireWriteScope 的角色红线（USER 恒不写 SHARED，403）为接口稿明文不变量，策略放行不越角色门——用例按"writeScopes 变化→ADMIN 写 SHARED 403↔200 + readScopes 变化→USER 读共享 403↔200"覆盖写入路径行为变化，并显式断言 USER 写 SHARED 恒 403（红线保持）。
+
+---
+
+## R-19 T2-2 config_release 诚实占位改真实快照
+
+### 改动文件（文件:行）
+
+| 文件 | 改动 |
+| --- | --- |
+| `engine-runtime/src/main/java/cn/agentplatform/engine/application/Tasks.java:43-77` | 新增 `RuntimeClients clients` 依赖（@Autowired 三参主构造器 + `Tasks(store)` 测试/降级构造器，照 Memories 双构造器先例） |
+| `engine-runtime/src/main/java/cn/agentplatform/engine/application/Tasks.java:145-171` | `create` 受理钉住改真实快照：`pinRelease` 非空时 `config_release_id=appver-<app_version 行 id>`（发布链返回的真实快照行身份）、`config_digest=candidateSha256`（发布时内容摘要，64-hex 形状校验）；钉住值随受理事务写入 task 行 |
+| `engine-runtime/src/main/java/cn/agentplatform/engine/application/Tasks.java:437-462` | `ReleasePin` record + `pinRelease`：经 RuntimeClients `get("app","/internal/apps/{code}/published")` 取发布快照（卡面指定来源）；candidateSha256 缺失/越形按发布快照规范 JSON 现算（同版本确定一致）；发布不可得/无来源/越形响应返回 null → 回退 T2-2 占位降级口径 |
+| `engine-runtime/src/test/java/cn/agentplatform/engine/application/TaskConfigReleasePinTest.java`（新增 3 用例） | 见下 |
+| `engine-runtime/src/test/java/cn/agentplatform/engine/infra/ToolOutputSpillPostgresTest.java:70` 与 `ToolOutputLargeResponsePostgresTest.java:35` | 回归纪律修复：清理改为 @BeforeEach+@AfterEach 双向（照 SpillPromptTest 口径）——此前 BeforeEach-only 的类尾残留 run/model_invocation 行会以 FK 违例阻断共享库其他 engine-test 夹具清理（本次合并回归中实测暴露并修复） |
+
+### DoD 命令与结果
+
+1. **同一任务 requestId 重放读取到同一快照**（`replayReadsSameSnapshotAndNewReleasePinsNewSnapshot`）：首受理钉住 `appver-101`+`sha256(release-1-body)`；发布推进到 v2 后同 requestId 重放→原任务、行内快照仍 `appver-101`/原摘要（重放分支先行返回，不重复取快照、不被新发布翻新——受理即钉住时点语义）。
+2. **发布新版本后新任务拿到新快照**：同用例第二段——新任务钉住 `appver-102`+`sha256(release-2-body)`，与 v1 摘要不同。
+3. **占位字面量清零（主路径）**：`grep -rn "unpinned-\|release-pin" engine-runtime/src/main` 仅命中 `Tasks.java` 降级分支（发布不可得/无来源组装时按 T2-2 占位降级口径落库，卡面"发布不可达时保持降级口径"）与注释留痕——真实受理主路径零占位。
+4. **定向回归**：`mvn -pl engine-runtime test -o -Dtest='TaskConfigReleasePinTest,TasksApiTest,PlansApiTest,TaskDispatchTest,TaskReconciliationTest,ConfirmationCenterTest,StepExecutionMappingTest,SubagentPlanningTest,TaskEventsSseTest,ExternalIntegrationTest'` → **Tests run: 61, Failures: 0, Errors: 0**（TaskConfigReleasePinTest 3/3 新增；TasksApiTest 7/7、PlansApiTest 6/6 等既有类零改动全绿）。
+
+### 测试统计
+
+| 类 | 用例 | 结果 |
+| --- | --- | --- |
+| TaskConfigReleasePinTest（新） | 3/3 | 重放同快照+新发布新快照 / 不可得与无来源降级 / candidateSha 缺失现算摘要 |
+| TasksApiTest（既有） | 7/7 | 零改动全绿（无来源构造=占位降级口径锚点） |
+| PlansApiTest / TaskDispatchTest / TaskReconciliationTest / ConfirmationCenterTest / StepExecutionMappingTest / SubagentPlanningTest / TaskEventsSseTest / ExternalIntegrationTest（既有） | 6+7+5+9+5+9+5+5=51/51 | 零改动全绿 |
+
+### 诚实登记项
+
+1. **真实快照 id 的来源与形状**：卡面指定两条来源路径，取 RuntimeClients `get("app","/internal/apps/{code}/published")`（发布链只读接口）；该响应的真实快照行身份=数值 `appVersionId`（app.app_version 行 id，version() 读回时覆写为数值），releaseId 落库形状 `appver-<id>`（varchar(64) 内、跨版本唯一）。摘要优先发布时内容摘要 `candidateSha256`（发布固化的 64-hex），缺失/越形按响应规范 JSON 现算（同版本确定一致，跨版本必然不同——已用例覆盖两种形状）。
+2. **降级口径如实登记**：发布不可得（未发布/停用/409 APP_UNAVAILABLE/服务不可达）、无来源组装（`new Tasks(store)` 测试构造，10 个既有测试类零改动依赖此路径）、越形响应（缺 appVersionId）三种情况均回退 T2-2 占位降级口径（`unpinned-*`+`release-pin:*` 摘要）——占位字面量仅存于该降级分支（grep 留痕），受理不因发布面不可达阻塞。
+3. **"事务内钉住"实现口径**：钉住值（releaseId/digest）随受理事务写入 task 行；发布快照的跨服务只读读取在事务外完成（避免事务内持锁等跨服务往返）——重放分支在读取之前先行返回，重放不产生第二次快照读取（用例断言）。
+4. **跨类清理污染修复（回归纪律）**：合并回归暴露 ToolOutputLargeResponsePostgresTest（既有）与 ToolOutputSpillPostgresTest（R-15 新增）清理为 BeforeEach-only，类尾残留 engine-test 租户 run/model_invocation 行，导致后续共享库夹具（StepExecutionMappingTest/TaskReconciliationTest）清理 FK 违例——两类清理补齐 @AfterEach 双向后 61/61 全绿；修复属测试基建，不触生产代码。
