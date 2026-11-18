@@ -1,0 +1,1599 @@
+{
+  "tool": "M5-3 场景转 E2E（API 级，经网关）",
+  "startedAt": "2026-11-18T07:45:56.172Z",
+  "finishedAt": "2026-11-18T07:45:58.985Z",
+  "stack": {
+    "gateway": "http://127.0.0.1:18480",
+    "engine": "http://127.0.0.1:18482",
+    "database": "m53_e2e@127.0.0.1:25432"
+  },
+  "totals": {
+    "scenarios": 8,
+    "passed": 8,
+    "failed": 0,
+    "assertions": 208,
+    "assertionFailures": 0
+  },
+  "scenarios": [
+    {
+      "id": "S1",
+      "name": "直接任务全链（受理/幂等/事件游标/取消恢复）",
+      "status": "PASS",
+      "assertions": {
+        "total": 28,
+        "failed": 0
+      },
+      "error": null
+    },
+    {
+      "id": "S2",
+      "name": "计划任务全链（CAS 修订/确认凭据/执行/步骤调用）",
+      "status": "PASS",
+      "assertions": {
+        "total": 29,
+        "failed": 0
+      },
+      "error": null
+    },
+    {
+      "id": "S3",
+      "name": "记忆域（私有CRUD/CAS/可见性/删除退出）",
+      "status": "PASS",
+      "assertions": {
+        "total": 31,
+        "failed": 0
+      },
+      "error": null
+    },
+    {
+      "id": "S4",
+      "name": "插件发现闭环（发现/差异确认门/授权撤权/停用拦截）",
+      "status": "PASS",
+      "assertions": {
+        "total": 19,
+        "failed": 0
+      },
+      "error": null
+    },
+    {
+      "id": "S5",
+      "name": "MCP 连接档案（登记/test/discover/目录/审核）",
+      "status": "PASS",
+      "assertions": {
+        "total": 19,
+        "failed": 0
+      },
+      "error": null
+    },
+    {
+      "id": "S6",
+      "name": "确认中心（四类计数/confirmableBy=me/确认闭环）",
+      "status": "PASS",
+      "assertions": {
+        "total": 17,
+        "failed": 0
+      },
+      "error": null
+    },
+    {
+      "id": "S7",
+      "name": "外部集成（出票/白名单/绑定/过期语义）",
+      "status": "PASS",
+      "assertions": {
+        "total": 34,
+        "failed": 0
+      },
+      "error": null
+    },
+    {
+      "id": "S8",
+      "name": "角色门矩阵（五身份×敏感端点）",
+      "status": "PASS",
+      "assertions": {
+        "total": 31,
+        "failed": 0
+      },
+      "error": null
+    }
+  ],
+  "records": [
+    {
+      "scene": "S1",
+      "label": "受理 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S1",
+      "label": "受理态 ACCEPTED",
+      "ok": true,
+      "expected": "ACCEPTED",
+      "actual": "ACCEPTED"
+    },
+    {
+      "scene": "S1",
+      "label": "受理即含 CANCEL 动作",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S1",
+      "label": "同号同参重放 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S1",
+      "label": "同号同参重放返回原任务（幂等）",
+      "ok": true,
+      "expected": "task-f169bfde23824446a831",
+      "actual": "task-f169bfde23824446a831"
+    },
+    {
+      "scene": "S1",
+      "label": "同号异参 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S1",
+      "label": "409 语义 REQUEST_REPLAY",
+      "ok": true,
+      "expected": "REQUEST_REPLAY",
+      "actual": "REQUEST_REPLAY"
+    },
+    {
+      "scene": "S1",
+      "label": "详情 200（数字 id 路径）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S1",
+      "label": "详情含 eventWatermark",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S1",
+      "label": "事件增量 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S1",
+      "label": "nextAfterSeq=排他游标（最后扫描 seq，不 +1）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "nextAfterSeq=1"
+    },
+    {
+      "scene": "S1",
+      "label": "末页 truncated=false",
+      "ok": true,
+      "expected": "false",
+      "actual": "false"
+    },
+    {
+      "scene": "S1",
+      "label": "含 TASK_ACCEPTED 事件",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S1",
+      "label": "afterSeq=next 增量为空（排他语义）",
+      "ok": true,
+      "expected": "0",
+      "actual": "0"
+    },
+    {
+      "scene": "S1",
+      "label": "取消 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S1",
+      "label": "取消态 CANCELLED",
+      "ok": true,
+      "expected": "CANCELLED",
+      "actual": "CANCELLED"
+    },
+    {
+      "scene": "S1",
+      "label": "重复取消幂等（原终态）",
+      "ok": true,
+      "expected": "CANCELLED",
+      "actual": "CANCELLED"
+    },
+    {
+      "scene": "S1",
+      "label": "重复取消不推进 stateVersion",
+      "ok": true,
+      "expected": "2",
+      "actual": "2"
+    },
+    {
+      "scene": "S1",
+      "label": "终态无恢复（resume 保持 CANCELLED）",
+      "ok": true,
+      "expected": "CANCELLED",
+      "actual": "CANCELLED"
+    },
+    {
+      "scene": "S1",
+      "label": "USER 受理等待态任务 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S1",
+      "label": "等待态 resume 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S1",
+      "label": "恢复态 RUNNING",
+      "ok": true,
+      "expected": "RUNNING",
+      "actual": "RUNNING"
+    },
+    {
+      "scene": "S1",
+      "label": "恢复后含 RESUME 资格（事实计算）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S1",
+      "label": "USER 恢复投影三字段齐全",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S1",
+      "label": "USER 不见 checkpoint（非特权投影）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S1",
+      "label": "OPERATOR 恢复自有等待任务 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S1",
+      "label": "OPERATOR 见特权恢复投影（含检查点/内部字段）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "keys=checkpoint,reasonCode,reusedSteps,reasonSummary,blockedReasons,recoverySource"
+    },
+    {
+      "scene": "S1",
+      "label": "跨主体恢复 404（所有权先于角色）",
+      "ok": true,
+      "expected": "404",
+      "actual": "404"
+    },
+    {
+      "scene": "S2",
+      "label": "PLAN 任务受理 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S2",
+      "label": "purpose=PLAN",
+      "ok": true,
+      "expected": "PLAN",
+      "actual": "PLAN"
+    },
+    {
+      "scene": "S2",
+      "label": "追加修订1 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S2",
+      "label": "修订号=1",
+      "ok": true,
+      "expected": "1",
+      "actual": "1"
+    },
+    {
+      "scene": "S2",
+      "label": "结构校验 VALID",
+      "ok": true,
+      "expected": "VALID",
+      "actual": "VALID"
+    },
+    {
+      "scene": "S2",
+      "label": "过期基线 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S2",
+      "label": "CAS 语义 PLAN_REVISION_CONFLICT",
+      "ok": true,
+      "expected": "PLAN_REVISION_CONFLICT",
+      "actual": "PLAN_REVISION_CONFLICT"
+    },
+    {
+      "scene": "S2",
+      "label": "基线1追加→修订号=2",
+      "ok": true,
+      "expected": "2",
+      "actual": "2"
+    },
+    {
+      "scene": "S2",
+      "label": "digest 不符确认 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S2",
+      "label": "确认 digest 语义 PLAN_DIGEST_CHANGED",
+      "ok": true,
+      "expected": "PLAN_DIGEST_CHANGED",
+      "actual": "PLAN_DIGEST_CHANGED"
+    },
+    {
+      "scene": "S2",
+      "label": "确认 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S2",
+      "label": "确认凭据带有效期",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S2",
+      "label": "同号同参确认重放原凭据（不追加 confirm_seq）",
+      "ok": true,
+      "expected": "1",
+      "actual": "1"
+    },
+    {
+      "scene": "S2",
+      "label": "修订读 200（含确认状态投影）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S2",
+      "label": "修订读确认状态 CONFIRMED_VALID",
+      "ok": true,
+      "expected": "CONFIRMED_VALID",
+      "actual": "CONFIRMED_VALID"
+    },
+    {
+      "scene": "S2",
+      "label": "修订读 canExecute=true",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S2",
+      "label": "execute digest 不符 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S2",
+      "label": "execute 200（五项受理校验通过）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S2",
+      "label": "执行钉住修订=2",
+      "ok": true,
+      "expected": "2",
+      "actual": "2"
+    },
+    {
+      "scene": "S2",
+      "label": "执行钉住 digest 与确认一致",
+      "ok": true,
+      "expected": "6a85df367513fde37ca5e7eb643181f79de6bb5bdce6186413505437a4c592de",
+      "actual": "6a85df367513fde37ca5e7eb643181f79de6bb5bdce6186413505437a4c592de"
+    },
+    {
+      "scene": "S2",
+      "label": "返回执行任务 public_id",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S2",
+      "label": "执行任务 purpose=EXECUTE",
+      "ok": true,
+      "expected": "EXECUTE",
+      "actual": "EXECUTE"
+    },
+    {
+      "scene": "S2",
+      "label": "执行任务 role=PLANNED_EXEC",
+      "ok": true,
+      "expected": "PLANNED_EXEC",
+      "actual": "PLANNED_EXEC"
+    },
+    {
+      "scene": "S2",
+      "label": "执行任务回指父任务",
+      "ok": true,
+      "expected": "task-734ba13f1e2447f88937",
+      "actual": "task-734ba13f1e2447f88937"
+    },
+    {
+      "scene": "S2",
+      "label": "计划任务 execute 后进入 RUNNING",
+      "ok": true,
+      "expected": "RUNNING",
+      "actual": "RUNNING"
+    },
+    {
+      "scene": "S2",
+      "label": "步骤锚点存在性校验（未派发任务无 task_step 行→404）",
+      "ok": true,
+      "expected": "404",
+      "actual": "404"
+    },
+    {
+      "scene": "S2",
+      "label": "步骤锚点语义 TASK_STEP_NOT_FOUND（登记：ACCEPTED→QUEUED 派发属 T2-5 接续，本栈任务停受理态）",
+      "ok": true,
+      "expected": "TASK_STEP_NOT_FOUND",
+      "actual": "TASK_STEP_NOT_FOUND"
+    },
+    {
+      "scene": "S2",
+      "label": "执行任务事件增量 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S2",
+      "label": "执行任务事件游标契约成立（登记：execute 直插任务行不写 TASK_ACCEPTED——受理事件属 Tasks.create 路径）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S3",
+      "label": "USER 私有保存 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S3",
+      "label": "保存即 ACTIVE",
+      "ok": true,
+      "expected": "ACTIVE",
+      "actual": "ACTIVE"
+    },
+    {
+      "scene": "S3",
+      "label": "同号同参保存幂等（同 memoryId）",
+      "ok": true,
+      "expected": "m_fe071ae56c56983d6295528a14aada2a",
+      "actual": "m_fe071ae56c56983d6295528a14aada2a"
+    },
+    {
+      "scene": "S3",
+      "label": "同号异参保存 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S3",
+      "label": "保存重放语义 REQUEST_REPLAY",
+      "ok": true,
+      "expected": "REQUEST_REPLAY",
+      "actual": "REQUEST_REPLAY"
+    },
+    {
+      "scene": "S3",
+      "label": "USER 写共享 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S3",
+      "label": "共享写语义 SCOPE_WRITE_DENIED",
+      "ok": true,
+      "expected": "SCOPE_WRITE_DENIED",
+      "actual": "SCOPE_WRITE_DENIED"
+    },
+    {
+      "scene": "S3",
+      "label": "策略收窄下 ADMIN 写共享同样 403（当前策略 writeScopes 不含 SHARED）",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S3",
+      "label": "策略收窄语义一致 SCOPE_WRITE_DENIED",
+      "ok": true,
+      "expected": "SCOPE_WRITE_DENIED",
+      "actual": "SCOPE_WRITE_DENIED"
+    },
+    {
+      "scene": "S3",
+      "label": "本人列表可见",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S3",
+      "label": "列表项不含正文（单条读正文）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S3",
+      "label": "他人 PRIVATE 条目对 ADMIN 列表不可见",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S3",
+      "label": "q 检索命中",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S3",
+      "label": "单条读取含正文",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S3",
+      "label": "单条接口返回正文",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S3",
+      "label": "过期 CAS 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S3",
+      "label": "CAS 语义 MEMORY_VERSION_CONFLICT",
+      "ok": true,
+      "expected": "MEMORY_VERSION_CONFLICT",
+      "actual": "MEMORY_VERSION_CONFLICT"
+    },
+    {
+      "scene": "S3",
+      "label": "CAS 命中更新 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S3",
+      "label": "版本推进到 2",
+      "ok": true,
+      "expected": "2",
+      "actual": "2"
+    },
+    {
+      "scene": "S3",
+      "label": "策略收窄下共享条目读 403（含种子 SHARED 条目）",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S3",
+      "label": "共享读收窄语义 MEMORY_FORBIDDEN",
+      "ok": true,
+      "expected": "MEMORY_FORBIDDEN",
+      "actual": "MEMORY_FORBIDDEN"
+    },
+    {
+      "scene": "S3",
+      "label": "非所有人删私有条目 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S3",
+      "label": "删除权语义 MEMORY_DELETE_FORBIDDEN",
+      "ok": true,
+      "expected": "MEMORY_DELETE_FORBIDDEN",
+      "actual": "MEMORY_DELETE_FORBIDDEN"
+    },
+    {
+      "scene": "S3",
+      "label": "所有者撤销 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S3",
+      "label": "状态 REVOKED",
+      "ok": true,
+      "expected": "REVOKED",
+      "actual": "REVOKED"
+    },
+    {
+      "scene": "S3",
+      "label": "REVOKED 退出检索",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S3",
+      "label": "REVOKED 单条读取 404（先撤销检索资格）",
+      "ok": true,
+      "expected": "404",
+      "actual": "404"
+    },
+    {
+      "scene": "S3",
+      "label": "删除必须 requestId（参数校验）",
+      "ok": true,
+      "expected": "400",
+      "actual": "400"
+    },
+    {
+      "scene": "S3",
+      "label": "删除参数语义 MEMORY_DELETE_REQUEST_INVALID",
+      "ok": true,
+      "expected": "MEMORY_DELETE_REQUEST_INVALID",
+      "actual": "MEMORY_DELETE_REQUEST_INVALID"
+    },
+    {
+      "scene": "S3",
+      "label": "删除即撤销（所有人撤销权）",
+      "ok": true,
+      "expected": "REVOKED",
+      "actual": "REVOKED"
+    },
+    {
+      "scene": "S3",
+      "label": "重复删除幂等",
+      "ok": true,
+      "expected": "REVOKED",
+      "actual": "REVOKED"
+    },
+    {
+      "scene": "S4",
+      "label": "ADMIN 登记来源 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S4",
+      "label": "来源初始 ACTIVE",
+      "ok": true,
+      "expected": "ACTIVE",
+      "actual": "ACTIVE"
+    },
+    {
+      "scene": "S4",
+      "label": "USER 登记来源 403（ADMIN 门）",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S4",
+      "label": "discover 受理 202 QUEUED",
+      "ok": true,
+      "expected": "202",
+      "actual": "202",
+      "detail": ""
+    },
+    {
+      "scene": "S4",
+      "label": "受理态 QUEUED",
+      "ok": true,
+      "expected": "QUEUED",
+      "actual": "QUEUED"
+    },
+    {
+      "scene": "S4",
+      "label": "批次号单调起点 1",
+      "ok": true,
+      "expected": "1",
+      "actual": "1"
+    },
+    {
+      "scene": "S4",
+      "label": "轮询 discovery 至 SUCCEEDED",
+      "ok": true,
+      "expected": "SUCCEEDED",
+      "actual": "SUCCEEDED"
+    },
+    {
+      "scene": "S4",
+      "label": "差异确认门材料：changes.added 含 plugin/version/versionId",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "[{\"plugin\":\"demo-8\",\"version\":\"1.0.0\",\"versionId\":8,\"capabilities\":[{\"ref\":\"demo-skill-8\",\"type\":\"SKILL\",\"digest\":\"bee2a"
+    },
+    {
+      "scene": "S4",
+      "label": "目录版本初始 DISCOVERED",
+      "ok": true,
+      "expected": "DISCOVERED",
+      "actual": "DISCOVERED"
+    },
+    {
+      "scene": "S4",
+      "label": "enable 200（执行器发布版本随成功批次展示过差异→过门）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S4",
+      "label": "版本 ENABLED",
+      "ok": true,
+      "expected": "ENABLED",
+      "actual": "ENABLED"
+    },
+    {
+      "scene": "S4",
+      "label": "grant 200（能力子集=版本能力）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S4",
+      "label": "授权态 GRANTED",
+      "ok": true,
+      "expected": "GRANTED",
+      "actual": "GRANTED"
+    },
+    {
+      "scene": "S4",
+      "label": "重复授权 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S4",
+      "label": "重复授权语义 PLUGIN_GRANT_EXISTS",
+      "ok": true,
+      "expected": "PLUGIN_GRANT_EXISTS",
+      "actual": "PLUGIN_GRANT_EXISTS"
+    },
+    {
+      "scene": "S4",
+      "label": "revoke 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S4",
+      "label": "撤权态 REVOKED（记录保留不删除）",
+      "ok": true,
+      "expected": "REVOKED",
+      "actual": "REVOKED"
+    },
+    {
+      "scene": "S4",
+      "label": "来源列表投影 200（末态留档）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S4",
+      "label": "登记来源在列表可见",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S5",
+      "label": "登记 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S5",
+      "label": "回执含连接编码",
+      "ok": true,
+      "expected": "e2emcp8da6b746eaf84cd5",
+      "actual": "e2emcp8da6b746eaf84cd5"
+    },
+    {
+      "scene": "S5",
+      "label": "初始修订 1",
+      "ok": true,
+      "expected": "1",
+      "actual": "1"
+    },
+    {
+      "scene": "S5",
+      "label": "同码重复登记 409",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S5",
+      "label": "冲突语义 MCP_CONNECTION_CONFLICT",
+      "ok": true,
+      "expected": "MCP_CONNECTION_CONFLICT",
+      "actual": "MCP_CONNECTION_CONFLICT"
+    },
+    {
+      "scene": "S5",
+      "label": "USER 登记连接 403（ADMIN 门）",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S5",
+      "label": "配置变更 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S5",
+      "label": "端点变更 revision+1（修订绑定纪律）",
+      "ok": true,
+      "expected": "2",
+      "actual": "2"
+    },
+    {
+      "scene": "S5",
+      "label": "按次建连 test 200（结果投影）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S5",
+      "label": "未登记传输场景：test FAILED",
+      "ok": true,
+      "expected": "FAILED",
+      "actual": "FAILED"
+    },
+    {
+      "scene": "S5",
+      "label": "失败携带具体类别 UNREACHABLE（桩不静默成功）",
+      "ok": true,
+      "expected": "UNREACHABLE",
+      "actual": "UNREACHABLE"
+    },
+    {
+      "scene": "S5",
+      "label": "discover 按次语义同步返回",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S5",
+      "label": "发现整批作废（FAILED）",
+      "ok": true,
+      "expected": "FAILED",
+      "actual": "FAILED"
+    },
+    {
+      "scene": "S5",
+      "label": "上一代目录原样保留（catalogPreserved）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S5",
+      "label": "目录查询 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S5",
+      "label": "目录差异查询 200（diff 面）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S5",
+      "label": "差异投影可读",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "{\"code\":\"e2emcp8da6b746eaf84cd5\",\"revision\":2,\"batchNo\":0,\"catalogBatchNo\":null,\"tools\":[],\"diff\":{\""
+    },
+    {
+      "scene": "S5",
+      "label": "无已发布目录时审核 409（先完成一次发现的前置）",
+      "ok": true,
+      "expected": "409",
+      "actual": "409"
+    },
+    {
+      "scene": "S5",
+      "label": "审核前置语义 MCP_CONNECTION_STATE（catalogBatch=0）",
+      "ok": true,
+      "expected": "MCP_CONNECTION_STATE",
+      "actual": "MCP_CONNECTION_STATE"
+    },
+    {
+      "scene": "S6",
+      "label": "total=四类之和",
+      "ok": true,
+      "expected": "0",
+      "actual": "0",
+      "detail": "{\"publishReview\":0,\"highRisk\":0,\"planConfirmation\":0,\"draftMemory\":0,\"total\":0}"
+    },
+    {
+      "scene": "S6",
+      "label": "USER 读确认中心 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S6",
+      "label": "越权语义 CONFIRMATION_CENTER_FORBIDDEN",
+      "ok": true,
+      "expected": "CONFIRMATION_CENTER_FORBIDDEN",
+      "actual": "CONFIRMATION_CENTER_FORBIDDEN"
+    },
+    {
+      "scene": "S6",
+      "label": "BUILDER 可读确认中心（管理台入口门）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S6",
+      "label": "USER PLAN 任务受理 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S6",
+      "label": "无凭据 VALID 修订就绪",
+      "ok": true,
+      "expected": "VALID",
+      "actual": "VALID"
+    },
+    {
+      "scene": "S6",
+      "label": "confirmableBy=me 投影 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S6",
+      "label": "USER confirmable 投影含待确认修订（PLAN_READY+VALID 头修订+无有效凭据）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "[{\"taskId\":\"task-982987cf20424b098bf8\",\"planId\":\"p-s6-d1c5b5ee49204e35\",\"revision\":1,\"digest\":\"157c02440b6105134b0620629f36da425dbd69b04eb7702c11012a3455c27a0a\""
+    },
+    {
+      "scene": "S6",
+      "label": "投影携带 planId",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "planId=p-s6-d1c5b5ee49204e35"
+    },
+    {
+      "scene": "S6",
+      "label": "投影携带修订号",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S6",
+      "label": "投影携带 digest",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S6",
+      "label": "无凭据 VALID 头修订计入 planConfirmation 计数（ADMIN 租户全域）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "0→1"
+    },
+    {
+      "scene": "S6",
+      "label": "USER 确认自己的待办 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S6",
+      "label": "确认后退出 confirmable 投影",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S6",
+      "label": "确认凭据落地后 planConfirmation 计数-1",
+      "ok": true,
+      "expected": "0",
+      "actual": "0",
+      "detail": "1→0"
+    },
+    {
+      "scene": "S6",
+      "label": "confirmableBy 仅支持 me（400）",
+      "ok": true,
+      "expected": "400",
+      "actual": "400"
+    },
+    {
+      "scene": "S6",
+      "label": "参数语义 TASK_CONFIRMABLE_INVALID",
+      "ok": true,
+      "expected": "TASK_CONFIRMABLE_INVALID",
+      "actual": "TASK_CONFIRMABLE_INVALID"
+    },
+    {
+      "scene": "S7",
+      "label": "凭据签发端点绑定 IAM 权威链（本地 dev-hmac 无复核入口）403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S7",
+      "label": "登记语义 AUTHORITY_CONTEXT_MISSING（数据面置备替代，见 README）",
+      "ok": true,
+      "expected": "AUTHORITY_CONTEXT_MISSING",
+      "actual": "AUTHORITY_CONTEXT_MISSING"
+    },
+    {
+      "scene": "S7",
+      "label": "数据面凭据置备成功（id=9）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S7",
+      "label": "无 Origin（服务端后端出票）受理 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S7",
+      "label": "带未登记 Origin 出票 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S7",
+      "label": "未登记 Origin 被 CORS 层拒（Invalid CORS request，非业务信封）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true",
+      "detail": "Invalid CORS request"
+    },
+    {
+      "scene": "S7",
+      "label": "错误密钥出票 401",
+      "ok": true,
+      "expected": "401",
+      "actual": "401"
+    },
+    {
+      "scene": "S7",
+      "label": "密钥核验语义 INVALID_CREDENTIAL",
+      "ok": true,
+      "expected": "INVALID_CREDENTIAL",
+      "actual": "INVALID_CREDENTIAL"
+    },
+    {
+      "scene": "S7",
+      "label": "出票 200（票据本体不入日志/证据）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S7",
+      "label": "出票信封 OK",
+      "ok": true,
+      "expected": "OK",
+      "actual": "OK"
+    },
+    {
+      "scene": "S7",
+      "label": "短票有效期 300s 上限",
+      "ok": true,
+      "expected": "300",
+      "actual": "300"
+    },
+    {
+      "scene": "S7",
+      "label": "返回短票",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S7",
+      "label": "白名单①受理：SERVICE 票据 create task 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S7",
+      "label": "白名单②detail 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S7",
+      "label": "白名单③events 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S7",
+      "label": "白名单④result 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": "OK"
+    },
+    {
+      "scene": "S7",
+      "label": "白名单外 cancel 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S7",
+      "label": "白名单外语义 APP_BINDING_DENIED",
+      "ok": true,
+      "expected": "APP_BINDING_DENIED",
+      "actual": "APP_BINDING_DENIED"
+    },
+    {
+      "scene": "S7",
+      "label": "resume 同样不在白名单",
+      "ok": true,
+      "expected": "APP_BINDING_DENIED",
+      "actual": "APP_BINDING_DENIED"
+    },
+    {
+      "scene": "S7",
+      "label": "SERVICE 面 mode=PLAN 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S7",
+      "label": "AGENT-only 语义 SERVICE_AGENT_ONLY（首期仅受理 AGENT）",
+      "ok": true,
+      "expected": "SERVICE_AGENT_ONLY",
+      "actual": "SERVICE_AGENT_ONLY"
+    },
+    {
+      "scene": "S7",
+      "label": "白名单外路径落审计行 AUDIT INTEGRATION_PATH_FORBIDDEN",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S7",
+      "label": "审计与日志不落密钥本体",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S7",
+      "label": "跨应用入口 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S7",
+      "label": "应用绑定语义 APP_BINDING_DENIED",
+      "ok": true,
+      "expected": "APP_BINDING_DENIED",
+      "actual": "APP_BINDING_DENIED"
+    },
+    {
+      "scene": "S7",
+      "label": "伪造 policy_digest 旧票 401",
+      "ok": true,
+      "expected": "401",
+      "actual": "401"
+    },
+    {
+      "scene": "S7",
+      "label": "旧票失效语义 INTEGRATION_TICKET_EXPIRED",
+      "ok": true,
+      "expected": "INTEGRATION_TICKET_EXPIRED",
+      "actual": "INTEGRATION_TICKET_EXPIRED"
+    },
+    {
+      "scene": "S7",
+      "label": "撤销后带 Origin 请求 401（凭据复核先于 origin 校验：bound 前置）",
+      "ok": true,
+      "expected": "401",
+      "actual": "401"
+    },
+    {
+      "scene": "S7",
+      "label": "撤销语义 INTEGRATION_TICKET_EXPIRED",
+      "ok": true,
+      "expected": "INTEGRATION_TICKET_EXPIRED",
+      "actual": "INTEGRATION_TICKET_EXPIRED"
+    },
+    {
+      "scene": "S7",
+      "label": "撤销后旧票（无 Origin）同样 401——每次请求实时读权威状态",
+      "ok": true,
+      "expected": "401",
+      "actual": "401"
+    },
+    {
+      "scene": "S7",
+      "label": "撤销语义一致（与 Origin 无关）",
+      "ok": true,
+      "expected": "INTEGRATION_TICKET_EXPIRED",
+      "actual": "INTEGRATION_TICKET_EXPIRED"
+    },
+    {
+      "scene": "S7",
+      "label": "直连 ApiKey 面 200（白名单 input-schema，X-User-Id 派生身份）",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": "OK"
+    },
+    {
+      "scene": "S7",
+      "label": "客户端自报 tenant 403",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S7",
+      "label": "自报身份拒绝语义 INTEGRATION_CLIENT_IDENTITY_REJECTED",
+      "ok": true,
+      "expected": "INTEGRATION_CLIENT_IDENTITY_REJECTED",
+      "actual": "INTEGRATION_CLIENT_IDENTITY_REJECTED"
+    },
+    {
+      "scene": "S8",
+      "label": "resource-manifest → ADMIN",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S8",
+      "label": "resource-manifest → BUILDER",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S8",
+      "label": "resource-manifest → OPERATOR",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S8",
+      "label": "resource-manifest → USER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "resource-manifest 语义 → USER",
+      "ok": true,
+      "expected": "RESOURCE_MANIFEST_FORBIDDEN",
+      "actual": "RESOURCE_MANIFEST_FORBIDDEN",
+      "detail": "资源清单查询权限 BUILDER/OPERATOR/ADMIN"
+    },
+    {
+      "scene": "S8",
+      "label": "resource-manifest → SERVICE",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "resource-manifest 语义 → SERVICE",
+      "ok": true,
+      "expected": "RESOURCE_MANIFEST_FORBIDDEN",
+      "actual": "RESOURCE_MANIFEST_FORBIDDEN",
+      "detail": "资源清单查询权限 BUILDER/OPERATOR/ADMIN"
+    },
+    {
+      "scene": "S8",
+      "label": "USER 创建会话 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200",
+      "detail": ""
+    },
+    {
+      "scene": "S8",
+      "label": "诊断视图(自有会话) → USER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "诊断视图(自有会话) 语义 → USER",
+      "ok": true,
+      "expected": "SESSION_DIAGNOSTIC_VIEW_FORBIDDEN",
+      "actual": "SESSION_DIAGNOSTIC_VIEW_FORBIDDEN",
+      "detail": "诊断视图仅 OPERATOR/ADMIN 可用"
+    },
+    {
+      "scene": "S8",
+      "label": "诊断视图(自有会话) → BUILDER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "诊断视图(自有会话) 语义 → BUILDER",
+      "ok": true,
+      "expected": "SESSION_DIAGNOSTIC_VIEW_FORBIDDEN",
+      "actual": "SESSION_DIAGNOSTIC_VIEW_FORBIDDEN",
+      "detail": "诊断视图仅 OPERATOR/ADMIN 可用"
+    },
+    {
+      "scene": "S8",
+      "label": "诊断视图(自有会话) → OPERATOR",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S8",
+      "label": "诊断视图(自有会话) → ADMIN",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S8",
+      "label": "跨主体会话读取 404（归属先于角色，不泄露存在性）",
+      "ok": true,
+      "expected": "404",
+      "actual": "404",
+      "detail": "SESSION_NOT_FOUND"
+    },
+    {
+      "scene": "S8",
+      "label": "插件启用 → USER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "插件来源列表 → USER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "插件来源列表 → SERVICE",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "MCP test → USER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "模型供应商登记 → USER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "集成凭据签发 → USER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "模型供应商登记（ADMIN-only） → BUILDER",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    },
+    {
+      "scene": "S8",
+      "label": "USER 受理自有任务 200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S8",
+      "label": "他人任务详情 → ADMIN(非受理人)",
+      "ok": true,
+      "expected": "404",
+      "actual": "404"
+    },
+    {
+      "scene": "S8",
+      "label": "他人任务详情 语义 → ADMIN(非受理人)",
+      "ok": true,
+      "expected": "TASK_NOT_FOUND",
+      "actual": "TASK_NOT_FOUND",
+      "detail": "任务不存在或无权读取"
+    },
+    {
+      "scene": "S8",
+      "label": "他人任务取消 → OPERATOR(非受理人)",
+      "ok": true,
+      "expected": "404",
+      "actual": "404"
+    },
+    {
+      "scene": "S8",
+      "label": "他人任务取消 语义 → OPERATOR(非受理人)",
+      "ok": true,
+      "expected": "TASK_NOT_FOUND",
+      "actual": "TASK_NOT_FOUND",
+      "detail": "任务不存在或无权读取"
+    },
+    {
+      "scene": "S8",
+      "label": "受理人本人可取消",
+      "ok": true,
+      "expected": "CANCELLED",
+      "actual": "CANCELLED"
+    },
+    {
+      "scene": "S8",
+      "label": "任务列表（受理人范围）200",
+      "ok": true,
+      "expected": "200",
+      "actual": "200"
+    },
+    {
+      "scene": "S8",
+      "label": "列表按受理人过滤（他人任务不入列）",
+      "ok": true,
+      "expected": "true",
+      "actual": "true"
+    },
+    {
+      "scene": "S8",
+      "label": "确认中心 → SERVICE",
+      "ok": true,
+      "expected": "403",
+      "actual": "403"
+    }
+  ]
+}
