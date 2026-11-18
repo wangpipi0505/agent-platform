@@ -39,10 +39,15 @@ public final class Routes {
         // T2-2：任务域——受理（应用前缀）+ 详情/事件/取消/恢复/步骤调用（任务前缀）；
         // T2-11：任务事件 SSE 子路径（events/stream）显式接线；
         // T2-15：任务结果读取（/result）显式接线——SERVICE 四端点白名单的读面；
-        // 归属、工作区授权与状态机由 engine Tasks 核验，未登记子路径仍拒绝。
+        // R-9②：T2-3 计划面（plans 追加、修订读、版本级 confirm）与选定计划 execute 显式接线
+        // （authority 目录行已有，网关方向此前缺登记致经网关 404——M5-2/M5-3 缺陷②收口）；
+        // 归属、工作区授权与状态机由 engine Tasks/Plans 核验，未登记子路径仍拒绝。
         if (path.matches("/v1/apps/[A-Za-z0-9_-]+/tasks")) return "engine";
         if (path.matches(
-                "/v1/tasks/[A-Za-z0-9_-]+(?:/events(?:/stream)?|/cancel|/resume|/result|/steps/[A-Za-z0-9_-]+/calls)?"))
+                "/v1/tasks/[A-Za-z0-9_-]+(?:/events(?:/stream)?|/cancel|/resume|/result"
+                    + "|/steps/[A-Za-z0-9_-]+/calls"
+                    + "|/plans(?:/[A-Za-z0-9_-]+/revisions/[A-Za-z0-9_-]+(?:/confirm)?)?"
+                    + "|/execute)?"))
             return "engine";
         if (path.matches("/v1/apps/[^/]+/tasks(?:/.*)?"))
             throw new IllegalArgumentException("此任务入口不存在");

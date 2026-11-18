@@ -880,6 +880,32 @@ public class Tasks {
     return view;
   }
 
+  /**
+   * R-9⑤（M5-2 缺陷登记②收口）：{taskId} 路径变量解析——契约形状为对外业务号。
+   *
+   * <p>契约依据：contracts/error-codes.md §1"对外标识一律 public_id/taskId 等业务号，
+   * 不暴露内部 bigint" + 接口稿《04-接口设计-20261112》§5.2（taskId=task-N 形状；
+   * 受理/列表/详情响应均回业务号）。受理/列表返回 public_id，后续端点此前仅收内部
+   * bigint（400 MethodArgumentTypeMismatch，浏览器面无桥）。解析规则：
+   * 纯数字=内部 id 直传（存量 caller 与既有测试兼容，不扩大暴露面——形状本就经网关
+   * 与日志外的同一通道）；其余按 public_id 在本租户内查内部 id；查无→404
+   * TASK_NOT_FOUND（与 {@link #ownedTask} 同口径，不区分"不存在"与"他租户"）。
+   * 归属核验仍由 ownedTask 以 id+tenant+principal 承接，本方法只做形状解析。
+   */
+  public long resolveTaskId(String raw, Actor actor) {
+    if (raw.matches("[0-9]{1,18}")) return Long.parseLong(raw);
+    if (raw.length() > 100) throw new PlatformException(404, "TASK_NOT_FOUND", "任务不存在或无权读取");
+    var rows =
+            store.db()
+                    .queryForList(
+                            "select id from engine.task where public_id=? and tenant_id=?",
+                            raw,
+                            actor.tenantId());
+    if (rows.isEmpty() || rows.getFirst().get("id") == null)
+      throw new PlatformException(404, "TASK_NOT_FOUND", "任务不存在或无权读取");
+    return ((Number) rows.getFirst().get("id")).longValue();
+  }
+
   private Map<String, Object> ownedTask(long taskId, Actor actor) {
     var rows =
             store.db()

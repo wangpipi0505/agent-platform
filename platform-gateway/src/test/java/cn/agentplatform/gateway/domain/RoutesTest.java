@@ -121,6 +121,29 @@ class RoutesTest {
     }
 
     @Test
+    void routesTaskPlanAndExecuteEndpointsToEngineWithUnknownSubpathsRejected() {
+        // R-9②：T2-3 计划面（plans 追加/修订读/版本级 confirm）与选定计划 execute 显式接线
+        // （authority 目录行已有、网关方向此前缺登记致经网关 404——M5-2/M5-3 缺陷②收口）；
+        // {taskId} 形状覆盖对外业务号（task-publicId，R-9⑤）与数字 id 兼容形态；
+        // 形状相近但未登记的子路径仍拒绝。
+        assertThat(Routes.service("/v1/tasks/77/plans")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks/task-abcdef0123456789abcd/plans")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks/77/plans/p1/revisions/2")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks/77/plans/p1/revisions/2/confirm")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks/77/execute")).isEqualTo("engine");
+        for (String path : new String[] {
+                "/v1/tasks/77/plans/p1",
+                "/v1/tasks/77/plans/p1/revisions",
+                "/v1/tasks/77/plans/p1/revisions/2/confirm/extra",
+                "/v1/tasks/77/execute/extra",
+                "/v1/tasks/77/executex",
+                "/v1/tasks/77/plansx",
+                "/v1/tasks/77/plans/p1/revisions/2/confirmtx"
+        }) assertThatThrownBy(() -> Routes.service(path)).as(path)
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void routesMemoryCrudToEngineWithUnknownSubpathsRejected() {
         // A3-4：记忆列表/单条/保存/更新/撤销五条入口指向 engine；未登记子路径仍拒绝。
         assertThat(Routes.service("/v1/apps/ops/memories")).isEqualTo("engine");

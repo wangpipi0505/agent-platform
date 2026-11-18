@@ -19,7 +19,9 @@ import org.springframework.web.client.RestClient;
 
 import java.io.*;
 import java.net.*;
+import java.net.http.*;
 import java.nio.file.*;
+import java.time.Duration;
 import java.util.*;
 
 /** 单一入口和有界流转发；用户JWT在网关验签后换发内部票据，不透传至外部模型/工具。 */
@@ -92,49 +94,53 @@ public class GatewayController {
         integration.check(req, actor);
         String query = req.getQueryString();
         String target = base(service) + req.getRequestURI() + (query == null ? "" : "?" + query);
-        HttpURLConnection upstream =
-                (HttpURLConnection) URI.create(target).toURL().openConnection();
-        upstream.setConnectTimeout(5000);
-        upstream.setReadTimeout(650000);
-        upstream.setRequestMethod(req.getMethod());
-        upstream.setRequestProperty("Authorization", "Bearer " + ServiceTokens.issue(actor));
-        upstream.setRequestProperty(TraceContextFilter.HEADER, TraceContextFilter.current());
-        if (req.getContentType() != null)
-            upstream.setRequestProperty("Content-Type", req.getContentType());
+        // R-9③④：转发核心由 HttpURLConnection 换 java.net.http.HttpClient——前者
+        // setRequestMethod("PATCH") 直接 ProtocolException（缺陷③全 500）且 DELETE 无法携带
+        // 请求体（缺陷④体被丢弃）；HttpClient 支持任意方法+请求体，PATCH/DELETE 与响应如实透传。
+        // 有界流转发语义保持：请求体不缓存（BoundedInputStream 沿用原 requestLimit 额度）、
+        // 响应体逐块透传（SSE 同路）；连接超时 5s、响应头超时 650s（原 readTimeout 同额度）。
+        String method = req.getMethod();
+        boolean hasBody = !Set.of("GET", "HEAD", "OPTIONS", "TRACE").contains(method);
+        HttpRequest.Builder outbound =
+                HttpRequest.newBuilder(URI.create(target))
+                        .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+                        .header(TraceContextFilter.HEADER, TraceContextFilter.current());
+        if (req.getContentType() != null) outbound.header("Content-Type", req.getContentType());
         String cursor = req.getHeader("Last-Event-ID");
-        if (cursor != null) upstream.setRequestProperty("Last-Event-ID", cursor);
+        if (cursor != null) outbound.header("Last-Event-ID", cursor);
+        outbound.timeout(Duration.ofMillis(650000));
+        HttpRequest request;
+        if (hasBody) {
+            InputStream body = new BoundedInputStream(req.getInputStream(), requestLimit(req));
+            request = outbound.method(method, HttpRequest.BodyPublishers.ofInputStream(() -> body)).build();
+        } else {
+            request = outbound.method(method, HttpRequest.BodyPublishers.noBody()).build();
+        }
         try {
-            if (Set.of("POST", "PUT", "PATCH").contains(req.getMethod())) {
-                upstream.setDoOutput(true);
-                upstream.setChunkedStreamingMode(8192);
-                try (OutputStream out = upstream.getOutputStream()) {
-                    copyBounded(req.getInputStream(), out, requestLimit(req));
-                }
-            }
-            int status = upstream.getResponseCode();
+            HttpResponse<InputStream> upstream =
+                    UPSTREAM_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            int status = upstream.statusCode();
             res.setStatus(status);
-            if (upstream.getContentType() != null) res.setContentType(upstream.getContentType());
-            String upstreamTrace = upstream.getHeaderField(TraceContextFilter.HEADER);
+            String contentType = upstream.headers().firstValue("Content-Type").orElse(null);
+            if (contentType != null) res.setContentType(contentType);
+            String upstreamTrace = upstream.headers().firstValue(TraceContextFilter.HEADER).orElse(null);
             if (upstreamTrace != null) res.setHeader(TraceContextFilter.HEADER, upstreamTrace);
             for (String header : List.of("Content-Disposition", "ETag", "Retry-After")) {
-                String value = upstream.getHeaderField(header);
+                String value = upstream.headers().firstValue(header).orElse(null);
                 if (value != null) res.setHeader(header, value);
             }
-            if (Objects.toString(upstream.getContentType(), "").contains("text/event-stream")) {
+            if (Objects.toString(contentType, "").contains("text/event-stream")) {
                 res.setHeader("Cache-Control", "no-cache");
                 res.setHeader("X-Accel-Buffering", "no");
             }
-            InputStream input =
-                    status >= 400 ? upstream.getErrorStream() : upstream.getInputStream();
-            if (input != null)
-                try (input) {
-                    byte[] buffer = new byte[8192];
-                    int n;
-                    while ((n = input.read(buffer)) != -1) {
-                        res.getOutputStream().write(buffer, 0, n);
-                        res.flushBuffer();
-                    }
+            try (InputStream input = upstream.body()) {
+                byte[] buffer = new byte[8192];
+                int n;
+                while ((n = input.read(buffer)) != -1) {
+                    res.getOutputStream().write(buffer, 0, n);
+                    res.flushBuffer();
                 }
+            }
         } catch (IOException e) {
             if (!res.isCommitted()) {
                 res.setStatus(502);
@@ -148,8 +154,52 @@ public class GatewayController {
                                                 null,
                                                 null)));
             }
-        } finally {
-            upstream.disconnect();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            if (!res.isCommitted()) {
+                res.setStatus(502);
+                res.setContentType("application/json;charset=UTF-8");
+                res.getWriter()
+                        .write(
+                                Json.write(
+                                        new ApiResponse<>(
+                                                "DEPENDENCY_UNAVAILABLE",
+                                                "服务暂不可用，请检查新工程服务是否启动",
+                                                null,
+                                                null)));
+            }
+        }
+    }
+
+    /** R-9③④：共享上游客户端——连接建立 5s 上限（原 connectTimeout 同额度）。 */
+    private static final HttpClient UPSTREAM_CLIENT =
+            HttpClient.newBuilder().connectTimeout(Duration.ofMillis(5000)).build();
+
+    /** 请求体有界读（原 copyBounded 同额度与语义：超限 IOException→502，不缓存整体）。 */
+    private static final class BoundedInputStream extends FilterInputStream {
+        private long total;
+        private final int max;
+
+        BoundedInputStream(InputStream in, int max) {
+            super(in);
+            this.max = max;
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = in.read();
+            if (b >= 0 && ++total > max) throw new IOException("请求超过安全大小");
+            return b;
+        }
+
+        @Override
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            int n = in.read(buffer, offset, length);
+            if (n > 0) {
+                total += n;
+                if (total > max) throw new IOException("请求超过安全大小");
+            }
+            return n;
         }
     }
 
@@ -168,17 +218,8 @@ public class GatewayController {
         return 2 * 1024 * 1024;
     }
 
-    private static void copyBounded(InputStream in, OutputStream out, int max) throws IOException {
-        byte[] buffer = new byte[8192];
-        int total = 0, n;
-        while ((n = in.read(buffer)) != -1) {
-            total += n;
-            if (total > max) throw new IOException("请求超过安全大小");
-            out.write(buffer, 0, n);
-        }
-    }
-
     @GetMapping("/v3/api-docs")
+
     public Object openapi() {
         Actor actor = Actor.current();
         var factory = new SimpleClientHttpRequestFactory();

@@ -185,6 +185,28 @@ class TasksApiTest {
     }
 
     @Test
+    void resolveTaskIdAcceptsBusinessPublicIdAndKeepsNumericCompat() {
+        // R-9⑤（M5-2 缺陷登记②收口）：受理/列表回 public_id，后续端点 {taskId} 同形状回传——
+        // 业务号解析到内部 id（契约依据 error-codes §1 + 接口稿 §5.2 task-N 形状）；
+        // 纯数字=内部 id 兼容形态（存量 caller 不断裂）；查无/他租户/越形→404 同口径不泄露。
+        var t = tasks.create("t2-app", req("r-6", "AGENT"), actor);
+        String publicId = String.valueOf(t.get("taskId"));
+        long internal = taskId(t);
+        assertTrue(publicId.startsWith("task-"), "受理返回业务号形状");
+        assertEquals(internal, tasks.resolveTaskId(publicId, actor));
+        assertEquals(internal, tasks.resolveTaskId(String.valueOf(internal), actor));
+        assertThrows(
+                PlatformException.class,
+                () -> tasks.resolveTaskId("task-00000000000000000000", actor),
+                "不存在的业务号→404 TASK_NOT_FOUND");
+        var outsider = new Actor("other-tenant", "mallory", Set.of("EDITOR"), Map.of());
+        assertThrows(
+                PlatformException.class,
+                () -> tasks.resolveTaskId(publicId, outsider),
+                "他租户业务号同口径 404，不区分泄露存在性");
+    }
+
+    @Test
     void stepCallsAnchorFromToolCallSessionEvent() {
         var t = tasks.create("t2-app", req("r-5", "AGENT"), actor);
         long tid = taskId(t);
