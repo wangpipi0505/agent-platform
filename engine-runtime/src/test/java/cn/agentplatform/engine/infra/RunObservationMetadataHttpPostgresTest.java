@@ -166,10 +166,20 @@ class RunObservationMetadataHttpPostgresTest {
         });
     }
     static String publicId(long id){return db.queryForObject("select public_id from engine.run where id=?",String.class,id);}
+    /** R-10：404 同形比较剥离 traceId（每请求随机生成），保留业务形状（code/message/data/userMessage/category/retryable）。 */
+    static JsonNode withoutTrace(String body){
+        var node=Json.read(body, com.fasterxml.jackson.databind.node.ObjectNode.class);
+        node.remove("traceId");
+        return node;
+    }
     static void assertMetadataOnly(){
         assertThat(statements).isNotEmpty();
         assertThat(statements).allSatisfy(s->{
-            assertThat(s.sql()).startsWith("select ");assertThat(s.sql()).doesNotContain("select *","snapshot::","inputs::","version_refs::","output::","error::","run_event","node_instance","engine.attempt"," for update");
+            // R-10 对账：CHAT 形状校验（invalid_chat/has_tools）以 exists/count 元数据形态引用
+            // node_instance/chat_turn/model_invocation/tool_call/model_input_snapshot——不读任何
+            // payload 列；payload 读取形态（select */::text 大字段）与 run_event/attempt/for update
+            // 仍绝对禁用。
+            assertThat(s.sql()).startsWith("select ");assertThat(s.sql()).doesNotContain("select *","snapshot::","inputs::","version_refs::","output::","error::","run_event","engine.attempt"," for update");
             assertThat(s.isolation()).isEqualTo(Connection.TRANSACTION_REPEATABLE_READ);assertThat(s.readOnly()).isTrue();assertThat(s.autoCommit()).isFalse();
             assertThat(s.sql()).matches("(?s)select (r\\.id,r\\.public_id,.*from engine\\.run r where r\\.public_id=.*|r\\.id,r\\.public_id,.*a\\.\\* from engine\\.run r join engine\\.run_authority.*|tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine\\.material_scope.*)");
         });
@@ -254,10 +264,10 @@ class RunObservationMetadataHttpPostgresTest {
         var nonexistent=ticket(RUN);statements.clear();var missing=request("GET",path(RUN),nonexistent,null);assertThat(missing.statusCode()).isEqualTo(404);assertThat(statements).hasSize(1);assertMetadataOnly();
         iam.portalActor(new Actor(tenant,"bob",Set.of("EDITOR"),Map.of("region",Set.of("A","B"),"dataLabels",Set.of("initial"))));gateway.close();gateway=iam.client("gateway");String bob=iam.portal();
         var bobSelector=RunObservationSelectors.metadata(new SubjectKey(tenant,"bob"),run);var bobTicket=gateway.exchange(bob,new ServiceCall("engine",RunObservationSelectors.ACTION,bobSelector));
-        statements.clear();var hidden=request("GET",path(run),bobTicket,null);assertThat(hidden.statusCode()).isEqualTo(404);assertThat(Json.read(hidden.body())).isEqualTo(Json.read(missing.body()));assertThat(statements).hasSize(1);assertMetadataOnly();
+        statements.clear();var hidden=request("GET",path(run),bobTicket,null);assertThat(hidden.statusCode()).isEqualTo(404);assertThat(withoutTrace(hidden.body())).isEqualTo(withoutTrace(missing.body()));assertThat(statements).hasSize(1);assertMetadataOnly();
         iam.portalActor(new Actor("other-tenant","alice",Set.of("EDITOR"),Map.of("region",Set.of("A","B"),"dataLabels",Set.of("initial"))));gateway.close();gateway=iam.client("gateway");
         var otherSelector=RunObservationSelectors.metadata(new SubjectKey("other-tenant","alice"),run);var otherTicket=gateway.exchange(iam.portal(),new ServiceCall("engine",RunObservationSelectors.ACTION,otherSelector));
-        statements.clear();var otherResponse=request("GET",path(run),otherTicket,null);assertThat(otherResponse.statusCode()).isEqualTo(404);assertThat(Json.read(otherResponse.body())).isEqualTo(Json.read(missing.body()));assertMetadataOnly();
+        statements.clear();var otherResponse=request("GET",path(run),otherTicket,null);assertThat(otherResponse.statusCode()).isEqualTo(404);assertThat(withoutTrace(otherResponse.body())).isEqualTo(withoutTrace(missing.body()));assertMetadataOnly();
         iam.portalActor(new Actor(tenant,"alice",Set.of("EDITOR"),Map.of("region",Set.of("A","B"),"dataLabels",Set.of("initial"))));gateway.close();gateway=iam.client("gateway");source=iam.portal();
         bypass("delete from engine.material_scope where run_id=?",id);bypass("delete from engine.run_authority where run_id=?",id);
         var legacy=ticket(run);statements.clear();assertThat(request("GET",path(run),legacy,null).statusCode()).isEqualTo(403);assertMetadataOnly();

@@ -428,7 +428,10 @@ class RunObservationStatusHttpPostgresTest {
         var response=request("GET","/admin/runs/"+run,m,null);
         assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
         var result=Json.read(response.body()).get("data");
-        assertThat(result.size()).isEqualTo(12);assertThat(result.get("nodes").size()).isEqualTo(2);assertThat(result.get("events").size()).isEqualTo(1);
+        // R-10 对账：状态投影顶层键=13（含 paused 暂停态投影——nodes 有 WAITING_STEP 时给出
+        // nodeInstanceId/nodeDefId/pauseSeq 定位，本场景无暂停节点故值为 null/空对象形状）。
+        assertThat(result.size()).isEqualTo(13);assertThat(result.has("paused")).isTrue();
+        assertThat(result.get("nodes").size()).isEqualTo(2);assertThat(result.get("events").size()).isEqualTo(1);
         assertThat(result.get("events").get(0).path("payload").path("precise").bigIntegerValue().toString()).isEqualTo("123456789012345678901234567890");
         assertThat(response.body()).contains("1.2345678901234567890123456789");
         assertThat(result.get("output")).isEqualTo(Json.read("{}"));assertThat(result.get("error")).isEqualTo(Json.read("{}"));assertThat(result.get("fileRefs").isEmpty()).isTrue();
@@ -617,7 +620,7 @@ class RunObservationStatusHttpPostgresTest {
         });
         // Original POST-purpose reader remains concrete and returns the same complete status body.
         var admission=gateway.exchange(source,MAIN);
-        withFrame(admission,MAIN,"POST","/admin/apps/app-a/runs","/admin/apps/{code}/runs",p->{assertThat(service.status(run,Actor.current()).keySet()).hasSize(12);return null;});
+        withFrame(admission,MAIN,"POST","/admin/apps/app-a/runs","/admin/apps/{code}/runs",p->{assertThat(service.status(run,Actor.current()).keySet()).hasSize(13).contains("paused");return null;});
         var legacy=new RunService(trace,null,null,null);assertThat(legacy.iamEnabled()).isFalse();
     }
     @Test void validDigestUnsupportedFlowAndActualToolExistenceFailAtTheirOwnBoundaries()throws Exception {
@@ -636,13 +639,18 @@ class RunObservationStatusHttpPostgresTest {
     }
     static void assertReadOnlySql(){
         var allowed=new HashSet<>(List.of(
-            "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
+            // R-10 对账：run 主查询白名单补 invalid_chat 派生列（CHAT 形状校验——存在性/计数元数据判定，
+            // 不读 payload 列；与 Metadata 类 assertMetadataOnly 同源演进）。
+            "select r.id,r.public_id,r.tenant_id,r.principal_id,r.trigger_type,r.mode,(r.debug_snapshot is not null or r.eval_candidate is not null or r.controlled_draft_skill_version_id is not null or r.controlled_draft_skill_digest is not null or r.controlled_skill_test_version_id is not null or r.controlled_skill_test_digest is not null or r.controlled_skill_test_status is not null) as unsupported,exists(select 1 from engine.tool_call t where t.run_id=r.id) as has_tools,(r.trigger_type='CHAT' and (r.snapshot->>'type' is distinct from 'CHAT' or exists(select 1 from engine.chat_turn c where c.run_public_id=r.public_id) or (select count(*) from engine.node_instance n where n.run_id=r.id)<>1 or exists(select 1 from engine.node_instance n where n.run_id=r.id and (n.node_type<>'AGENT' or n.node_def_id is not null or n.step_seq<>1 or n.definition<>'{\"type\":\"AGENT\"}'::jsonb)) or (select count(*) from engine.model_invocation i where i.run_id=r.id)>1 or exists(select 1 from engine.model_invocation i where i.run_id=r.id and (i.kind<>'MAIN' or i.round_no<>0 or i.output_attempt_no<>0 or not exists(select 1 from engine.node_instance n where n.id=i.node_instance_id and n.run_id=r.id))) or (exists(select 1 from engine.model_invocation i where i.run_id=r.id) and not exists(select 1 from engine.model_input_snapshot m where m.run_id=r.id)))) as invalid_chat from engine.run r where r.public_id=? and r.tenant_id=? and r.principal_id=?",
             "select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",
             "select tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine.material_scope where run_id=? and kind in ('run-snapshot','run-inputs','run-version-refs')",
-            "select distinct on (kind,material_id) tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope,material_revision from engine.material_scope where run_id=? and kind not in ('run-snapshot','run-inputs','run-version-refs') order by kind,material_id,material_revision desc",
+            // R-10 对账：distinct-on 版本按 X2-4 裁决实施口径演进——model-input 超 256KB 不读 scope 正文（截断为 null）。
+            "select distinct on (kind,material_id) tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,case when kind<>'model-input' or octet_length(scope::text)<=262144 then scope::text end as scope,material_revision from engine.material_scope where run_id=? and kind not in ('run-snapshot','run-inputs','run-version-refs') order by kind,material_id,material_revision desc",
             "select run_id from engine.node_instance where id=?","select run_id from engine.run_event where id=?","select public_id from engine.run where id=?",
             "select scope::text from engine.material_scope where run_id=? and scope_sha256=? and material_revision<?",
-            "select id from engine.node_instance where run_id=? order by step_seq","select id from engine.run_event where run_id=? order by seq"));
+            "select id from engine.node_instance where run_id=? order by step_seq","select id from engine.run_event where run_id=? order by seq",
+            // R-10 对账：model-input 快照元数据查询（演进新增，仅取 material_id 标识列）。
+            "select material_id from engine.model_input_snapshot where run_id=?"));
         for(String field:List.of("snapshot","inputs","version_refs","budget","output","error"))allowed.add("select "+field+"::text from engine.run where id=?");
         for(String field:List.of("definition","output","error"))allowed.add("select "+field+"::text from engine.node_instance where id=?");
         allowed.add(statusProjection("run","id,public_id,app_code,status,event_seq,stop_reason,started_at,ended_at,mode,trigger_type,output_ref"));
