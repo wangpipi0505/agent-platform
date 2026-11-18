@@ -88,7 +88,16 @@ class PlansApiTest {
                         Map.of(
                                 "steps",
                                 java.util.List.of(
-                                        Map.of("stepId", "s1", "kind", "AGENT", "targetRef", "agent:default@1")))));
+                                        Map.of(
+                                                "stepId",
+                                                "s1",
+                                                "kind",
+                                                "AGENT",
+                                                "targetRef",
+                                                "agent:default@1",
+                                                // R-1：校验器接线后 inputBindings 必填（对象）——合法样例带空对象
+                                                "inputBindings",
+                                                Map.of())))));
     }
 
     @Test
@@ -97,6 +106,22 @@ class PlansApiTest {
         var first = plans.appendRevision(tid, appendReq("plan-t3", 0), actor);
         assertEquals(1, ((Number) first.get("revision")).intValue());
         assertEquals("VALID", first.get("validationStatus"));
+        // VALID 修订 diagnostics 为空且库行落 VALID（R-1：校验通过行为不变）
+        assertEquals(List.of(), first.get("diagnostics"));
+        assertEquals(
+                "VALID",
+                db.queryForObject(
+                        "select validation_status from engine.plan_revision where owner_task_id=?"
+                            + " and plan_id='plan-t3' and revision=1",
+                        String.class,
+                        tid));
+        assertNull(
+                db.queryForObject(
+                        "select diagnostics from engine.plan_revision where owner_task_id=?"
+                            + " and plan_id='plan-t3' and revision=1",
+                        Object.class,
+                        tid),
+                "VALID 修订 diagnostics=NULL（未产生）");
         var stale =
                 assertThrows(
                         PlatformException.class,
@@ -105,6 +130,201 @@ class PlansApiTest {
         assertEquals("PLAN_REVISION_CONFLICT", stale.code());
         var second = plans.appendRevision(tid, appendReq("plan-t3", 1), actor);
         assertEquals(2, ((Number) second.get("revision")).intValue());
+    }
+
+    // ------------------------------------------------- R-1：校验器接线（非法计划落 INVALID+diagnostics）
+
+    /** 环依赖样例：INVALID+DEPENDENCY_CYCLE 诊断带 /steps/<stepId>/dependsOn 定位；库行 diagnostics 落 jsonb。 */
+    @Test
+    void cycleDependencyFallsInvalidWithLocatedDiagnostics() {
+        long tid = planTask();
+        var result =
+                plans.appendRevision(
+                        tid,
+                        Json.tree(
+                                Map.of(
+                                        "planId",
+                                        "plan-cycle",
+                                        "baseRevision",
+                                        0,
+                                        "patch",
+                                        Map.of(
+                                                "steps",
+                                                java.util.List.of(
+                                                        Map.of(
+                                                                "stepId", "a",
+                                                                "kind", "AGENT",
+                                                                "targetRef", "agent:x",
+                                                                "inputBindings", Map.of(),
+                                                                "dependsOn", List.of("b")),
+                                                        Map.of(
+                                                                "stepId", "b",
+                                                                "kind", "AGENT",
+                                                                "targetRef", "agent:x",
+                                                                "inputBindings", Map.of(),
+                                                                "dependsOn", List.of("a")))))),
+                        actor);
+        assertEquals("INVALID", result.get("validationStatus"), "环依赖判 INVALID");
+        @SuppressWarnings("unchecked")
+        var diags = (List<Map<String, String>>) result.get("diagnostics");
+        assertTrue(
+                diags.stream().anyMatch(d -> "DEPENDENCY_CYCLE".equals(d.get("code"))),
+                "诊断含 DEPENDENCY_CYCLE: " + diags);
+        assertTrue(
+                diags.stream()
+                        .anyMatch(d -> "DEPENDENCY_CYCLE".equals(d.get("code"))
+                                && d.get("path") != null
+                                && d.get("path").matches("/steps/[aA-Za-z0-9_-]+/dependsOn")),
+                "诊断 path 定位到步骤 dependsOn: " + diags);
+        // 库行：validation_status=INVALID，diagnostics 落 jsonb（非 NULL）
+        var row = db.queryForMap("select validation_status,diagnostics from engine.plan_revision"
+                + " where owner_task_id=? and plan_id='plan-cycle' and revision=1", tid);
+        assertEquals("INVALID", row.get("validation_status"));
+        assertNotNull(row.get("diagnostics"), "diagnostics 落库");
+        assertTrue(Json.read(String.valueOf(row.get("diagnostics")), JsonNode.class).isArray());
+        // INVALID 不可确认（409 PLAN_NOT_VALID）且投影 canConfirm=false。
+        var rejected =
+                assertThrows(
+                        PlatformException.class,
+                        () ->
+                                plans.confirm(
+                                        tid,
+                                        "plan-cycle",
+                                        1,
+                                        Json.tree(Map.of("requestId", "c-inv", "digest", result.get("digest").toString())),
+                                        actor));
+        assertEquals("PLAN_NOT_VALID", rejected.code());
+        var detail = plans.revisionDetail(tid, "plan-cycle", 1, actor);
+        assertEquals("INVALID", detail.get("validationStatus"));
+        assertEquals(false, detail.get("canConfirm"), "INVALID 修订不可确认");
+        assertEquals(false, detail.get("canExecute"));
+        // INVALID 头修订不阻断追加链：baseRevision=1（INVALID 头）可继续追加修订 2。
+        var second = plans.appendRevision(tid, appendReq("plan-cycle", 1), actor);
+        assertEquals(2, ((Number) second.get("revision")).intValue());
+        assertEquals("VALID", second.get("validationStatus"));
+    }
+
+    /** 未知依赖样例：INVALID+DEPENDENCY_UNKNOWN 诊断；非法 shape 样例（SKILL 缺 digest+缺 inputBindings）带定位。 */
+    @Test
+    void unknownDependencyAndBadShapeFallInvalidWithLocatedDiagnostics() {
+        long tid = planTask();
+        // ①未知依赖
+        var unknown =
+                plans.appendRevision(
+                        tid,
+                        Json.tree(
+                                Map.of(
+                                        "planId",
+                                        "plan-unknown",
+                                        "baseRevision",
+                                        0,
+                                        "patch",
+                                        Map.of(
+                                                "steps",
+                                                java.util.List.of(
+                                                        Map.of(
+                                                                "stepId", "s1",
+                                                                "kind", "AGENT",
+                                                                "targetRef", "agent:x",
+                                                                "inputBindings", Map.of(),
+                                                                "dependsOn", List.of("ghost")))))),
+                        actor);
+        assertEquals("INVALID", unknown.get("validationStatus"));
+        @SuppressWarnings("unchecked")
+        var unknownDiags = (List<Map<String, String>>) unknown.get("diagnostics");
+        assertTrue(
+                unknownDiags.stream().anyMatch(d ->
+                        "DEPENDENCY_UNKNOWN".equals(d.get("code"))
+                                && "/steps/s1/dependsOn".equals(d.get("path"))
+                                && d.get("message").contains("ghost")),
+                "未知依赖诊断带定位与缺失步骤: " + unknownDiags);
+        // ②非法 shape：SKILL targetRef 缺 @版本#digest + inputBindings 缺失——两条诊断均定位到步骤
+        var badShape =
+                plans.appendRevision(
+                        tid,
+                        Json.tree(
+                                Map.of(
+                                        "planId",
+                                        "plan-shape",
+                                        "baseRevision",
+                                        0,
+                                        "patch",
+                                        Map.of(
+                                                "steps",
+                                                java.util.List.of(
+                                                        Map.of(
+                                                                "stepId", "sk1",
+                                                                "kind", "SKILL",
+                                                                "targetRef", "skill:lookup@1",
+                                                                "dependsOn", List.of()))))),
+                        actor);
+        assertEquals("INVALID", badShape.get("validationStatus"));
+        @SuppressWarnings("unchecked")
+        var shapeDiags = (List<Map<String, String>>) badShape.get("diagnostics");
+        assertTrue(
+                shapeDiags.stream().anyMatch(d ->
+                        "TARGET_REF_SHAPE".equals(d.get("code"))
+                                && "/steps/sk1/targetRef".equals(d.get("path"))),
+                "shape 诊断定位 targetRef: " + shapeDiags);
+        assertTrue(
+                shapeDiags.stream().anyMatch(d ->
+                        "INPUT_BINDINGS_REQUIRED".equals(d.get("code"))
+                                && "/steps/sk1/inputBindings".equals(d.get("path"))),
+                "缺 inputBindings 诊断定位: " + shapeDiags);
+        // ③能力引用不在授权范围（tool_policy.allowedToolRefs 限定 lookup，rogue 不可用）。
+        long tidPolicy = planTask();
+        db.update(
+                "update engine.task set tool_policy=?::jsonb where id=?",
+                "{\"allowedToolRefs\":[\"skill:lookup@1#" + "a".repeat(64) + "\"]}",
+                tidPolicy);
+        var notAllowed =
+                plans.appendRevision(
+                        tidPolicy,
+                        Json.tree(
+                                Map.of(
+                                        "planId",
+                                        "plan-rogue",
+                                        "baseRevision",
+                                        0,
+                                        "patch",
+                                        Map.of(
+                                                "steps",
+                                                java.util.List.of(
+                                                        Map.of(
+                                                                "stepId", "rogue1",
+                                                                "kind", "SKILL",
+                                                                "targetRef", "skill:rogue@1#" + "a".repeat(64),
+                                                                "inputBindings", Map.of()))))),
+                        actor);
+        assertEquals("INVALID", notAllowed.get("validationStatus"), "未授权技能判 INVALID");
+        @SuppressWarnings("unchecked")
+        var rogueDiags = (List<Map<String, String>>) notAllowed.get("diagnostics");
+        assertTrue(
+                rogueDiags.stream().anyMatch(d ->
+                        "CAPABILITY_NOT_ALLOWED".equals(d.get("code"))
+                                && d.get("message").contains("rogue")),
+                "能力范围诊断: " + rogueDiags);
+        // 授权范围内技能 → VALID（tool_policy 能力口径与校验器一致）。
+        var allowed =
+                plans.appendRevision(
+                        tidPolicy,
+                        Json.tree(
+                                Map.of(
+                                        "planId",
+                                        "plan-ok",
+                                        "baseRevision",
+                                        0,
+                                        "patch",
+                                        Map.of(
+                                                "steps",
+                                                java.util.List.of(
+                                                        Map.of(
+                                                                "stepId", "ok1",
+                                                                "kind", "SKILL",
+                                                                "targetRef", "skill:lookup@1#" + "a".repeat(64),
+                                                                "inputBindings", Map.of()))))),
+                        actor);
+        assertEquals("VALID", allowed.get("validationStatus"), "授权技能通过");
     }
 
     @Test
