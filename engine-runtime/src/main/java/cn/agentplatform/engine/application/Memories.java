@@ -32,6 +32,8 @@ public class Memories {
     /** 资产管理/无 sessionId 路径的当前发布快照来源；dev/test 组装可为 null（按无策略收窄）。 */
     private final RuntimeClients clients;
 
+    /** 全上下文组装主构造器：@Autowired 指定唯一候选（R-9 缺陷①——双构造器无标注时 Spring 无法选择）。 */
+    @org.springframework.beans.factory.annotation.Autowired
     public Memories(TraceStore store, MemoryRepository repository, RuntimeClients clients) {
         this.store = store;
         this.repository = repository;
