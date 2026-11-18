@@ -1,0 +1,23 @@
+G-9 路由目录比对：admin-common/src/main/resources/agent-service-authority.json
+服务                   handler  目录行  MISSING  PORTAL  排除  STALE
+app-management(app)         119     121        0       0     0      1
+engine-runtime(engine)       85      88        0       0     0      1
+skill-registry(skill)        67      70        0       0     0      1
+monitor(monitor)             20      22        0       0     0      1
+model-gateway(model)         26      27        0       0     0      1
+platform-gateway(gateway)        7       8        0       0     0      1
+
+STALE（有目录行无 handler，仅警告：可能是代理/下线/外部入口）：
+  app GET /v3/api-docs  mode=delegated  source=springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)
+  engine GET /v3/api-docs  mode=delegated  source=springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)
+  skill GET /v3/api-docs  mode=delegated  source=springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)
+  monitor GET /v3/api-docs  mode=delegated  source=springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)
+  model GET /v3/api-docs  mode=delegated  source=springdoc-openapi-starter-webmvc-api:2.8.9 (conditional framework handler)
+  gateway GET /admin/runs/{}/events  mode=delegated  source=admin-common/src/main/java/cn/agentplatform/common/authority/HttpCurrentAuthorityClient.java:621
+
+注意（排除表里没有匹配到缺失 handler 的条目，可能已失效）：
+  app POST /internal/iam/integration-policy/resolve
+
+合计：handler 324 / 目录行 336 / MISSING 0 / PORTAL_SURFACE 0 / EXCLUDED 0 / STALE 6
+
+通过：服务票据面没有 MISSING（blocking=false）。
