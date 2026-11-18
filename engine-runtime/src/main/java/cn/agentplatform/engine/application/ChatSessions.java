@@ -606,9 +606,9 @@ public class ChatSessions {
                     cn.agentplatform.engine.harness.session.SessionEvents.REQUEST_CONTEXT,
                     cn.agentplatform.engine.harness.session.SessionEvents.ASSISTANT_ATTEMPT);
 
-    /** 诊断视图角色门：仅 OPERATOR/ADMIN；无权 403 并记一条拒绝审计（拒绝原因入日志）。 */
+    /** 诊断视图角色门：仅 OPERATOR/ADMIN（R-17：角色判定引 §3.1 授权目录常量）；无权 403 并记一条拒绝审计（拒绝原因入日志）。 */
     private void requireDiagnosticRole(String code, String id, Actor actor) {
-        if (actor.roles().contains("OPERATOR") || actor.roles().contains("ADMIN")) return;
+        if (Roles.hasAny(actor, Roles.OPERATOR, Roles.ADMIN)) return;
         // 引擎无独立审计表（审计归口 monitor，§5.7 卡接线）；先落结构化审计日志行保证可追溯。
         org.slf4j.LoggerFactory.getLogger(ChatSessions.class)
                 .warn(

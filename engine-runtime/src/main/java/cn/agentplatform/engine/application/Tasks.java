@@ -3,6 +3,7 @@ package cn.agentplatform.engine.application;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.Roles;
 import cn.agentplatform.engine.infra.TraceStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1002,8 +1003,9 @@ public class Tasks {
     return actions;
   }
 
+  /** 特权门（R-17：角色判定引 §3.1 授权目录常量，与对账端点/诊断视图门同源）。 */
   private boolean privileged(Actor actor) {
-    return actor.roles().contains("OPERATOR") || actor.roles().contains("ADMIN");
+    return Roles.hasAny(actor, Roles.OPERATOR, Roles.ADMIN);
   }
 
   /** 请求摘要规范化（request_digest 输入）：mode/goal/inputs/sessionId/toolPolicy 键序规范拼接。 */

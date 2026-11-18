@@ -412,9 +412,94 @@ class ConfirmationCenterTest {
                                 && line.getFormattedMessage().contains("principal=h41-user")),
                 "越权拒绝必须落结构化审计日志行");
         // OPERATOR 无管理台确认中心入口（§5.9 读取角色=ADMIN/APPROVER/BUILDER）→同 403。
-        identity(new Actor(TENANT, "h41-operator", Set.of("OPERATOR"), Map.of()));
+        identity(new Actor(TENANT, "h41-operator", Set.of(Roles.OPERATOR), Map.of()));
         assertEquals(403, mvc.perform(get("/admin/confirmation-center/counts"))
                 .andReturn().getResponse().getStatus());
+    }
+
+    // ------------------------------------------------------------------
+    // R-17：publishReview 计数口径——按业务号 release_id 去重 + 与人工可复核清单逐条一致
+    // ------------------------------------------------------------------
+
+    /**
+     * publishReview 去重口径（R-17，台账 §7.6b）：同一 config_release（业务号）重复提交
+     * 不重复计数——现状核实：app.integration_config_release 主键 (tenant_id, release_id)
+     * 一行业务号一行，create/validate 幂等重放（ON CONFLICT DO NOTHING）与同行 CAS 状态迁移
+     * 均不新增行，重复提交在库层被拒或被吸收；服务端计数显式 count(distinct release_id)
+     * （口径显式化+防御性收口）。测试内断言 counts.publishReview 与人工可复核清单（同表
+     * 同范围 distinct release_id 逐条枚举）行数与成员一致（ADMIN 租户口径与 BUILDER 本人
+     * created_by 口径各验一遍）。
+     */
+    @Test
+    void publishReviewCountsDistinctReleaseBusinessIdsAndMatchesManualReviewList() throws Exception {
+        // 同一业务号首次提交。
+        release("h41-app1", "h41-rel-dup", "VALIDATED", "h41-alice");
+        // 重复提交（裸 INSERT 同号）：被主键 (tenant_id, release_id) 拒绝——一行业务号一行。
+        assertThrows(
+                org.springframework.dao.DuplicateKeyException.class,
+                () -> release("h41-app1", "h41-rel-dup", "VALIDATED", "h41-alice"),
+                "同业务号重复提交在库层被拒（一行一业务号）");
+        // 幂等重放路径（create/validate replay 语义 ON CONFLICT DO NOTHING）连投 3 次仍 1 行。
+        for (int i = 0; i < 3; i++)
+            db.update(
+                    "insert into app.integration_config_release(tenant_id,release_id,app_code,"
+                        + "status,created_by) values(?,?,?,?,?) on conflict do nothing",
+                    TENANT,
+                    "h41-rel-dup",
+                    "h41-app1",
+                    "VALIDATED",
+                    "h41-alice");
+        assertEquals(
+                1,
+                db.queryForObject(
+                        "select count(*) from app.integration_config_release where tenant_id=? and release_id=?",
+                        Integer.class,
+                        TENANT,
+                        "h41-rel-dup"),
+                "重复提交不新增行（同号吸收为同行）");
+        // 其余待审发布：同 app APPROVED 一条 + 另 app VALIDATED 一条（bob 提交）。
+        release("h41-app1", "h41-rel-dup2", "APPROVED", "h41-alice");
+        release("h41-app2", "h41-rel-dup3", "VALIDATED", "h41-bob");
+        // 已 VALIDATED 业务号再次"提交"（同行 CAS 再迁移，幂等重放口径）：仍一行、仍计 1。
+        // 注：引擎测试库最小兼容表无 updated_at 列（仅计数 SQL 引用列，见类 javadoc）。
+        db.update(
+                "update app.integration_config_release set status='VALIDATED'"
+                    + " where tenant_id=? and release_id=?",
+                TENANT,
+                "h41-rel-dup");
+        // ADMIN（租户口径）：人工可复核清单=同表 VALIDATED/APPROVED distinct release_id。
+        identity(ADMIN);
+        var counts = call("GET", "/admin/confirmation-center/counts", null, 200).path("data");
+        var reviewList =
+                db.queryForList(
+                        "select distinct release_id from app.integration_config_release"
+                            + " where tenant_id=? and status in ('VALIDATED','APPROVED')",
+                        String.class,
+                        TENANT);
+        assertEquals(
+                3, reviewList.size(), "人工可复核清单按业务号去重后 3 条（dup/dup2/dup3 各一）");
+        assertTrue(reviewList.contains("h41-rel-dup"), "重复提交业务号在清单恰一行");
+        assertEquals(
+                reviewList.size(),
+                counts.path("publishReview").asInt(),
+                "计数=人工可复核清单业务号数（去重口径逐条一致）");
+        assertEquals(3, counts.path("publishReview").asInt(), "重复提交不放大计数");
+        // BUILDER（提交人本人口径）：alice 2 条（dup/dup2），bob 的 dup3 不计。
+        identity(ALICE);
+        var aliceCounts = call("GET", "/admin/confirmation-center/counts", null, 200).path("data");
+        var aliceList =
+                db.queryForList(
+                        "select distinct release_id from app.integration_config_release"
+                            + " where tenant_id=? and status in ('VALIDATED','APPROVED') and created_by=?",
+                        String.class,
+                        TENANT,
+                        "h41-alice");
+        assertEquals(2, aliceList.size());
+        assertEquals(
+                aliceList.size(),
+                aliceCounts.path("publishReview").asInt(),
+                "BUILDER 口径计数与本人清单逐条一致");
+        assertEquals(2, aliceCounts.path("publishReview").asInt());
     }
 
     // ------------------------------------------------------------------

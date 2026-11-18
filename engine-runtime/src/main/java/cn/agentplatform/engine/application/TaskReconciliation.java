@@ -3,6 +3,7 @@ package cn.agentplatform.engine.application;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.Roles;
 import cn.agentplatform.engine.infra.ToolCalls;
 import cn.agentplatform.engine.infra.TraceStore;
 
@@ -16,7 +17,8 @@ import java.util.*;
  * T2-12（台账 §7.3）：调用级对账提交端点服务（评审十轮 P1-2：对账动作绑定到具体调用）。
  *
  * <p>授权链（评审十一/十二轮）：任务提交人本人、该任务工作区已授权的 OPERATOR（代运维，
- * 记审计）、ADMIN；APPROVER/SERVICE/BUILDER（非提交人）不可提交。
+ * 记审计）、ADMIN；APPROVER/SERVICE/BUILDER（非提交人）不可提交。角色判定引 §3.1 授权目录
+ * 常量 {@link Roles}（R-17 统一，此前内联字符串）。
  * 归属校验链（顺序执行）：①callId 归属 stepId（tool_call→node_instance→run 归属）→
  * ②stepId 归属 taskId（task_step 关联）→③任务归属与工作区授权（主体=提交人本人，或
  * OPERATOR 且对该任务所属工作区有运维授权——主方案 §7.3 口径非全局；ADMIN 全量）→
@@ -40,9 +42,10 @@ public class TaskReconciliation {
       throw new PlatformException(400, "RECONCILIATION_DECISION_INVALID", "decision 必须为 RETRY|TRACK_EXTERNAL|ADOPT_EXTERNAL|DISCLOSE");
     var task = ownedTask(taskId, actor);
     // ③ 归属与授权（先于 ①②——无权者不得探得归属链细节，403/404 口径照接口稿）
+    // 角色判定引 §3.1 授权目录常量（R-17；与 Tasks/ChatSessions/ConfirmationCenter 同源）。
     boolean owner = actor.principalId().equals(String.valueOf(task.get("principal_id")));
-    boolean admin = actor.roles().contains("ADMIN");
-    boolean operator = actor.roles().contains("OPERATOR") && authorizedWorkspace(actor, String.valueOf(task.get("app_code")));
+    boolean admin = Roles.has(actor, Roles.ADMIN);
+    boolean operator = Roles.has(actor, Roles.OPERATOR) && authorizedWorkspace(actor, String.valueOf(task.get("app_code")));
     if (!owner && !admin && !operator) {
       // 同租户未授权工作区 403 记审计（验收场景：同租户 OPERATOR 对未授权工作区提交对账）
       throw new PlatformException(403, "RECONCILIATION_FORBIDDEN", "对账处置需要任务提交人本人、已授权 OPERATOR 或 ADMIN");
