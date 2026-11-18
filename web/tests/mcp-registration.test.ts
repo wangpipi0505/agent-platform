@@ -6,13 +6,20 @@ import * as Vue from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 
 // SFC 的相对导入本应相对组件文件（admin/src）解析，但这里把组件转成 CommonJS 后从 tests/
-// 调 require，相对路径会错位到 agent-platform/shared。shared 模块零依赖，单独按 web/shared 解析并转译。
+// 调 require，相对路径会错位到 agent-platform/shared。shared 模块单独按 web/shared 解析并转译；
+// shared 模块自身的相对依赖（artifact-upload→./mock-artifacts、useUnsavedChanges→./components/DangerConfirm）
+// 也按同一规则递归解析，import.meta.env 引用（mock-artifacts）以空 env 桩替换（测试环境非 mock 模式），
+// 保持真实模块语义而非浅桩。
+const sharedCache = new Map<string, Record<string, unknown>>();
 function sharedModule(id: string, fallback: NodeRequire): Record<string, unknown> {
   const name = id.slice(id.lastIndexOf('/shared/') + '/shared/'.length).replace(/\.ts$/, '');
+  const cached = sharedCache.get(name);
+  if (cached) return cached;
   const source = readFileSync(new URL(`../shared/${name}.ts`, import.meta.url), 'utf8');
-  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText.replace(/\bimport\.meta\b/g, 'importMetaShim');
   const loaded: { exports: Record<string, unknown> } = { exports: {} };
-  new Function('require', 'exports', code)(fallback, loaded.exports);
+  sharedCache.set(name, loaded.exports);
+  new Function('require', 'exports', 'importMetaShim', code)((nested: string) => nested.startsWith('./') ? sharedModule('/shared/' + nested.slice(2), fallback) : fallback(nested), loaded.exports, { env: {} });
   return loaded.exports;
 }
 

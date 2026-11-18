@@ -1669,7 +1669,9 @@ const routes: [RegExp, Handler][] = [
       const savedState=JSON.parse(JSON.stringify(planningState))
       const result = planningTurn(m[1], pinned.config ?? {}, prepared.message, String(body?.conversationId ?? nextId('conversation')), nextId('run'))
       result.toolCalls.unshift(...prepared.toolCalls)
-      if(result.artifacts.length)for(const [code,name] of [['planning-file-export','生成结果文件'],['planning-file-download','提供受控下载入口']])result.toolCalls.push({id:result.runId+'-'+code,skillCode:code,name,status:'SUCCEEDED',input:{planId:result.plan?.id},output:{files:result.artifacts.map(file=>({artifactId:file.id,name:file.name,downloadUrl:file.downloadUrl}))}})
+      // 工具调用输入对齐目录契约：file-export 按 planId 定位规划，file-download 按 artifactId 定位制品
+      // （目录声明 required ['artifactId'] + additionalProperties:false，经 normalizeDemoToolSchemas 后生效）。
+      if(result.artifacts.length)for(const [code,name] of [['planning-file-export','生成结果文件'],['planning-file-download','提供受控下载入口']])result.toolCalls.push({id:result.runId+'-'+code,skillCode:code,name,status:'SUCCEEDED',input:code==='planning-file-download'?{artifactId:result.artifacts[0].id}:{planId:result.plan?.id},output:{files:result.artifacts.map(file=>({artifactId:file.id,name:file.name,downloadUrl:file.downloadUrl}))}})
       const errors=skillAccessErrors(result.toolCalls,pinned.config?.skillRefs??[])
       if(!businessActor()?.permissions.includes('space.plan'))errors.push('当前业务身份没有观测规划权限 space.plan')
       if(errors.length){Object.assign(planningState,savedState);denyPlanningCalls(result,errors)}
