@@ -232,7 +232,10 @@ class WorkspaceManifestPostgresTest {
         String version = db.queryForObject(
             "select coalesce(max(version),'none') from app.flyway_schema_history where success",
             String.class);
-        assertEquals("123", version, "app schema 必须迁移到 V123");
+        // R-12 处置：链尾随 M5-1 V901 种子演进（在 V123 之后）；断言锁下限=V123 已交付。
+        assertTrue(
+            Integer.parseInt(version) >= 123,
+            "app schema 必须迁移到 V123 或更高（现链尾含 V901 种子）");
         var ranks = db.queryForList("""
             select version, installed_rank from app.flyway_schema_history
              where version in ('122','123') and success
