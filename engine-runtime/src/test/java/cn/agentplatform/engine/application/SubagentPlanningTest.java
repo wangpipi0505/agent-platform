@@ -187,15 +187,74 @@ class SubagentPlanningTest {
                 "重放后仍只有一个根会话");
     }
 
+    // ---------------------------------------------------------------- R-2：真实受理路径派发
+
+    /**
+     * R-2（返工卡）：经真实受理路径（{@code Tasks.create} 公共入口，不直调
+     * startPlannerSubagents）受理 subagentPolicy.enabled 的 PLAN 任务→受理事务内派发规划
+     * 子代理；同 requestId 重放不重复建根会话、不重复派发（A03 幂等经真实路径复验）；
+     * 子代理目录接口可查到派发的子代理。
+     */
+    @Test
+    void realAcceptancePathStartsPlannerSubagentsIdempotentlyAndCatalogListsThem() throws Exception {
+        var first = tasks.create("h27-app", planBody("h27-r-real"), actor);
+        long tid =
+                db.queryForObject(
+                        "select id from engine.task where public_id=?", Long.class, first.get("taskId"));
+        String root = rootSession(tid);
+        // 经真实受理路径派发：缺省 PLANNER_ALGO×2（不直调 SubagentPlanning）。
+        var kids =
+                db.queryForList(
+                        "select role,state,parent_task_id from engine.task where parent_task_id=? order by id",
+                        tid);
+        assertEquals(2, kids.size(), "受理事务派发 2 个规划子代理");
+        assertEquals("PLANNER_ALGO", kids.get(0).get("role"));
+        assertEquals("PLANNING", kids.get(0).get("state"));
+        assertEquals(
+                2,
+                db.queryForObject(
+                        "select count(*) from engine.subagent_catalog where parent_session_id=?",
+                        Integer.class,
+                        root),
+                "目录行随受理事务落库");
+        // 子代理目录接口可查到（接口稿 §5.3——提交人本人视图）。
+        identity(TENANT, "h27-alice", List.of("USER"));
+        var data = callGet(mvc(), "/v1/sessions/" + root + "/subagents", 200).path("data");
+        assertEquals(2, data.path("children").size(), "目录接口返回受理事派发的子代理");
+        assertTrue(data.path("children").get(0).path("childTaskId").asLong() > 0, "目录携带子任务标识（任务卡关联）");
+        // 同 requestId 重放：返回原任务；根会话不另建、子代理不重复派发、事件不重复。
+        var replay = tasks.create("h27-app", planBody("h27-r-real"), actor);
+        assertEquals(first.get("taskId"), replay.get("taskId"));
+        assertEquals(
+                1,
+                db.queryForObject(
+                        "select count(*) from engine.chat_session where tenant_id='h27' and origin='TASK_INTERNAL'",
+                        Integer.class),
+                "重放不另建根会话（A03）");
+        assertEquals(2, db.queryForObject("select count(*) from engine.task where parent_task_id=?", Integer.class, tid),
+                "重放不重复派发子代理");
+        assertEquals(
+                2,
+                db.queryForObject(
+                        "select count(*) from engine.session_event where session_id=? and type='subagent/registered'",
+                        Integer.class,
+                        root),
+                "登记事件仍为 2 条（不重复）");
+    }
+
     // ---------------------------------------------------------------- 派发幂等与登记
 
-    /** startPlannerSubagents 受理事务幂等：重放返回既有子任务集，不重复创建；目录/子任务/事件齐备。 */
+    /**
+     * startPlannerSubagents 受理事务幂等（R-2 后受理即派发——经 planTask 真实受理路径先建，
+     * 直调=同 (parent_task_id, role) 重放键的重放）：重放返回既有子任务集，不重复创建；
+     * 目录/子任务/事件齐备。真实受理路径的主断言另见 realAcceptancePath... 用例。
+     */
     @Test
     void startPlannerSubagentsIsIdempotentAndRegistersCatalogAndSubtasks() {
-        long tid = planTask("h27-r-start");
+        long tid = planTask("h27-r-start"); // 受理事务内已派发 PLANNER_ALGO×2（真实受理路径）
         String root = rootSession(tid);
         var first = planning.startPlannerSubagents(tid, "PLANNER_ALGO", 2, SCHEMA);
-        assertTrue((Boolean) first.get("created"));
+        assertFalse((Boolean) first.get("created"), "受理已派发——直调按重放键返回既有集合");
         assertEquals(2, children(first).size());
         assertEquals("PLANNER_ALGO-1", children(first).get(0).get("label"));
         assertEquals("PLANNER_ALGO-2", children(first).get(1).get("label"));

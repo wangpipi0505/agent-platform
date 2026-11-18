@@ -18,7 +18,8 @@ import java.util.*;
  * requestId 幂等 UNIQUE(tenant, principal, request_id)——同号同参（规范化请求摘要一致）重放原任务，
  * 异参 409 REQUEST_REPLAY；toolPolicy 受理即固定（省略=继承发布范围，显式空数组=禁用工具）；
  * mode=PLAN 且显式启用规划子代理且未传 sessionId→受理事务创建 origin=TASK_INTERNAL
- * 规划根会话（主方案 §5.5——重放复用根会话，不另建）。
+ * 规划根会话并在同一受理事务派发规划子代理（主方案 §5.5——重放复用根会话，不另建；
+ * R-2 接线 {@link SubagentPlanning#startPlannerSubagents}，重放键幂等见其 javadoc）。
  *
  * <p>T2-15 外部集成 caller 语义（台账 §7.3，接口稿 §3.6/§6 权限矩阵 SERVICE 列）：SERVICE
  * 票据面（/embed/ticket 出票与直连 ApiKey 两面）首期仅受理 AGENT 任务——外部 caller 提交
@@ -40,6 +41,12 @@ import java.util.*;
 public class Tasks {
 
   private final TraceStore store;
+  /**
+   * R-2（返工卡）：规划子代理派发——本服务内持有（SubagentPlanning 无状态仅依赖 TraceStore，
+   * 与 {@code new Tasks(store)} 测试构造兼容）。规划受理路径（T2-7 原交付无调用点，A03 幂等
+   * 仅测试内成立——本卡接通真实受理入口后经 {@link #create} 受理事务派发）。
+   */
+  private final SubagentPlanning planning;
 
   // T2-11：活动任务事件 SSE 观察流（每连接一个泵；closeTaskStreams/@PreDestroy 收口）。
   private final Set<TaskEventPump> taskStreams = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -49,6 +56,7 @@ public class Tasks {
 
   public Tasks(TraceStore store) {
     this.store = store;
+    this.planning = new SubagentPlanning(store);
   }
 
   /** 受理：返回任务详情（首版 state=ACCEPTED；AGENT 直接受理入 QUEUED 由 T2-5 步骤映射接续）。 */
@@ -104,10 +112,13 @@ public class Tasks {
 
     // TASK_INTERNAL 根会话（主方案 §5.5）：无用户会话的 PLAN 任务显式启用规划子代理时，
     // 受理事务创建 origin=TASK_INTERNAL 规划根会话（重放复用——上方幂等分支已返回）。
-    String sessionId =
+    // R-2：同口径捕获规划受理路径（根会话存在的唯一场景），受理事务内派发规划子代理。
+    boolean plannerAcceptance =
             "PLAN".equals(mode)
                     && req.path("subagentPolicy").path("enabled").asBoolean(false)
-                    && req.path("sessionId").asText("").isBlank()
+                    && req.path("sessionId").asText("").isBlank();
+    String sessionId =
+            plannerAcceptance
                     ? createInternalRootSession(code, actor)
                     : req.path("sessionId").asText("").isBlank() ? null : req.path("sessionId").asText();
 
@@ -150,6 +161,23 @@ public class Tasks {
                                       "select id from engine.task where public_id=?", Long.class, publicId);
               // 任务事件目录 10 类（contracts/task-states.md §4）：受理落 TASK_ACCEPTED
               appendTaskEvent(taskId, "TASK_ACCEPTED", Json.tree(Map.of("mode", mode, "goal", goal)));
+              // R-2（返工卡）：规划子代理受理派发（T2-7 startPlannerSubagents 原无调用点）——
+              // 与 TASK_INTERNAL 根会话同一受理事务：锁父任务行→重放键 (parent_task_id, role)
+              // 查重→建三件套（子会话+子任务+目录行）。requestId 重放在上方幂等分支先行返回，
+              // 同请求重放不会二次派发（A03 主断言经真实受理路径成立）。锁序安全：父任务行是
+              // 本事务新建行，先锁后插子行，与 Plans.execute 的执行任务插入（PLANNED_EXEC 19 列，
+              // 只触达既有父任务）无锁序倒置。subagentPolicy 可选 role/count/outputSchema
+              // （缺省 PLANNER_ALGO×2，主方案 §5.5 并行规划量级）；派发参数非法（400
+              // SUBAGENT_REQUEST_INVALID）随受理整体回滚——任务与子代理同生同灭（单受理事务）。
+              if (plannerAcceptance) {
+                planning.startPlannerSubagents(
+                        taskId,
+                        req.path("subagentPolicy").path("role").asText("PLANNER_ALGO"),
+                        req.path("subagentPolicy").path("count").asInt(2),
+                        req.path("subagentPolicy").has("outputSchema")
+                                ? req.path("subagentPolicy").path("outputSchema")
+                                : null);
+              }
               // T2-6：依赖登记（库稿 §4.2——上游须已存在且调用方有权引用=同租户同主体；
               // 任一上游未满足→受理后置 WAITING_DEPENDENCIES，放行由 TaskDispatcher.dependencySatisfied 承接）
               boolean waiting = false;
