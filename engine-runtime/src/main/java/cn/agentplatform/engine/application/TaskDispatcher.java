@@ -47,7 +47,8 @@ import java.util.*;
  * STEP_FINISHED 事件。验证口径（台账）：旧执行者超时→新执行者接管→旧回执随后到达——回执可追溯、
  * 成功结果与下游就绪只提交一次。
  *
- * <p>错误码（contracts/error-codes.md 之外新增，随卡登记）：400 TASK_DISPATCH_DIGEST_INVALID /
+ * <p>错误码（TASK_DISPATCH_STALE/TASK_STEP_STALE 已登记 contracts/error-codes.md §2，R-3 2026-11-18）：
+ * 400 TASK_DISPATCH_DIGEST_INVALID /
  * 404 TASK_DISPATCH_NOT_FOUND / 409 TASK_DISPATCH_STALE（代次或租约或 owner 不匹配，同码同拒绝）/
  * 409 TASK_STEP_STALE（步骤状态版本条件未命中）/ 409 TASK_DEPENDENCY_UPSTREAM_NOT_SUCCEEDED /
  * 409 TASK_DEPENDENCY_DIGEST_MISMATCH / 404 TASK_DEPENDENCY_NOT_FOUND。

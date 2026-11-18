@@ -21,6 +21,7 @@ import {
   type DemoSnapshot,
   type DemoSubagentRow,
 } from "../../../shared/mock-session-detail";
+import { reasonCodeText } from "../../../shared/reason-code-text";
 
 // F3-6（台账 §7.5 / 前端稿 §5.4）：会话详情与步骤调用下钻——管理台侧参数页（深链
 // /sessions/:sessionId；管理台入口=/tasks 或 /runs 下钻，USER 助手端入口属 F4 域）。
@@ -481,7 +482,7 @@ void refresh();
           <el-table-column v-if="diagnosticVisible" label="对账（诊断）" min-width="190">
             <template #default="{ row }">
               <span v-if="row.reconciliation" class="mono">
-                {{ row.reconciliation.state }} · {{ row.reconciliation.reasonCode }}
+                {{ row.reconciliation.state }} · {{ row.reconciliation.reasonCode }}<template v-if="reasonCodeText(row.reconciliation.reasonCode)">（{{ reasonCodeText(row.reconciliation.reasonCode) }}）</template>
               </span>
               <span v-else class="muted">—</span>
             </template>
@@ -502,7 +503,7 @@ void refresh();
               <dt>来源</dt>
               <dd>{{ recovery.recoverySource === "MANUAL" ? "手动恢复" : "自动恢复" }}（{{ recovery.recoverySource }}）</dd>
             </div>
-            <div><dt>原因码</dt><dd class="mono">{{ recovery.reasonCode }}</dd></div>
+            <div><dt>原因码</dt><dd class="mono">{{ recovery.reasonCode }}<span v-if="reasonCodeText(recovery.reasonCode)" class="muted">（{{ reasonCodeText(recovery.reasonCode) }}）</span></dd></div>
             <div><dt>摘要</dt><dd>{{ recovery.reasonSummary }}</dd></div>
           </dl>
           <div v-if="recovery.checkpoint" class="recovery-extra">

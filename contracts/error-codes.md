@@ -36,6 +36,12 @@ C0-2 契约冻结（台账#C0-2），2026-11-13。
 | `MEMORY_VERSION_CONFLICT` | 409 | BUSINESS | 记忆更新期望版本号过期 |
 | `STATE_VERSION_CONFLICT` | 409 | BUSINESS | 状态版本 CAS 不一致（§2 通用约定表；task/step/dispatch 终态提交等场景） |
 | `SUBAGENT_NO_VALID_CANDIDATE` | —（任务终态原因码） | BUSINESS | 全部规划子代理无有效候选时父任务 FAILED 原因码（主方案 §5.5；经 TASK_FINISHED 事件 reasonCode 与任务详情暴露，非 HTTP 响应码。T2-7 登记转正，接口稿 §2 回写随文档同步） |
+| `TASK_DISPATCH_STALE` | 409 | BUSINESS | 分派三要素（owner+generation+租约）不匹配的晚到回执：先以 RECONCILIATION_REQUIRED 事件落对账留痕（独立事务，可追溯不覆盖）再拒绝，成功结果与下游就绪只提交一次（T2-6；R-3 登记 2026-11-18） |
+| `TASK_STEP_STALE` | 409 | BUSINESS | 步骤结果按事务内当前 state_version 条件更新未命中——晚到更新不覆盖（task 级 CAS 场景沿用 `STATE_VERSION_CONFLICT`；T2-6；R-3 登记 2026-11-18） |
+| `COMPACTION_PAIRING_BROKEN` | 409 | BUSINESS | 压缩区间将未闭合的工具调用/结果配对拆开（区间内存在有 call 无 result 的 callId）——硬性约束禁止本次压缩（T2-9；R-3 登记 2026-11-18） |
+| `INTEGRATION_PATH_FORBIDDEN` | —（审计事件码） | SECURITY | SERVICE/AGENT 集成票据访问白名单外路径：审计行 `AUDIT INTEGRATION_PATH_FORBIDDEN`（凭据标识+主体+路径+traceId，无密钥本体），对外响应恒为 403 `APP_BINDING_DENIED`"出票仅可访问绑定应用的已登记接口"（T2-15；R-3 登记 2026-11-18） |
+
+> **外部集成方说明（R-3）**：路径越权的对外响应码恒为 403 `APP_BINDING_DENIED`；`INTEGRATION_PATH_FORBIDDEN` 仅用于平台审计行，不随响应信封暴露。集成方按 `APP_BINDING_DENIED` 处理：核对出票 policy 白名单与所调路径/方法后重新出票，勿对同票据重试同路径。前端对 `TASK_DISPATCH_STALE`/`TASK_STEP_STALE`/`COMPACTION_PAIRING_BROKEN` 的兜底文案见 `web/shared/reason-code-text.ts`（恢复面板/对账列/失败摘要按码附文案）。
 
 ## 3. 待登记区（主方案引用、尚未列入接口稿 §2 表——使用前须先回写接口稿 §2）
 

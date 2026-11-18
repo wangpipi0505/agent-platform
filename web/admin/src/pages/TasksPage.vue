@@ -8,6 +8,7 @@ import { confirmDanger } from "../../../shared/components/DangerConfirm";
 import PageHeader from "../PageHeader.vue";
 import { usePageTitle } from "../usePageOperation";
 import { useLiveList } from "../../../shared/hooks/useLiveList";
+import { reasonCodeText } from "../../../shared/reason-code-text";
 import {
   callActions, cancelTask, listTaskDetail, listTasks, reconcileTaskCall, resumeTask,
   type DemoPendingCall, type DemoTaskListRow, type DemoTaskRecovery,
@@ -307,7 +308,7 @@ function gotoConfirm(task: TaskRow) {
               <header class="panel-title">恢复面板（角色投影）</header>
               <dl class="recovery-fields">
                 <div><dt>来源</dt><dd>{{ recoveryView(detailOf(task.taskId))?.sourceLabel }}（{{ recoveryView(detailOf(task.taskId))?.source }}）</dd></div>
-                <div><dt>原因码</dt><dd class="mono">{{ recoveryView(detailOf(task.taskId))?.reasonCode }}</dd></div>
+                <div><dt>原因码</dt><dd class="mono">{{ recoveryView(detailOf(task.taskId))?.reasonCode }}<span v-if="reasonCodeText(recoveryView(detailOf(task.taskId))?.reasonCode)" class="muted">（{{ reasonCodeText(recoveryView(detailOf(task.taskId))?.reasonCode) }}）</span></dd></div>
                 <div><dt>摘要</dt><dd>{{ recoveryView(detailOf(task.taskId))?.summary }}</dd></div>
               </dl>
               <div v-if="recoveryView(detailOf(task.taskId))?.checkpoint" class="recovery-extra">

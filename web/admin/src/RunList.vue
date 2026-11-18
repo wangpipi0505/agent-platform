@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from "vue";
 import { useApi } from "../../shared/api";
 import { record } from "../../shared/run-protocol";
 import { useLiveList } from "../../shared/hooks/useLiveList";
+import { reasonCodeText } from "../../shared/reason-code-text";
 import RunObservation from "./RunObservation.vue";
 import PageHeader from "./PageHeader.vue";
 import DataPage from "../../shared/components/DataPage.vue";
@@ -70,7 +71,8 @@ const failureOf = (row: RunRow): { code: string; text: string } | null => {
   // 既有文本已带 "CODE: " 前缀时不重复拼码。
   if (firstLine.startsWith(`${code}:`) || firstLine.startsWith(`${code}：`))
     return { code, text: firstLine };
-  return { code: code || "FAILED", text: firstLine || "服务端未返回错误详情" };
+  // R-3：已知语义码优先给兜底文案，其次首行错误，最后如实占位。
+  return { code: code || "FAILED", text: firstLine || reasonCodeText(code) || "服务端未返回错误详情" };
 };
 async function fetchPage(): Promise<RunRow[]> {
   const query = new URLSearchParams({ page: String(page.value), size: String(size.value) });

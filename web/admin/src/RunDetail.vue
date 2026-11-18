@@ -11,6 +11,7 @@ import RunObservation from './RunObservation.vue';
 import RunAuthorityPanel from '../../shared/RunAuthorityPanel.vue';
 import {emptyAuthority,readRunAuthority} from '../../shared/server-authority';
 import { confirmDanger } from '../../shared/components/DangerConfirm';
+import { reasonCodeText } from '../../shared/reason-code-text';
 const authority=ref(emptyAuthority());
 let authoritySequence=0;
 const props = defineProps<{ runId: string; nodeId?: string }>();
@@ -78,7 +79,7 @@ function nodeErrorText(n: RunNodeStatusRow): string {
     typeof err.message === "string" && err.message
       ? err.message
       : typeof err.reasonCode === "string" && err.reasonCode
-        ? err.reasonCode
+        ? (reasonCodeText(err.reasonCode) ?? err.reasonCode) // R-3：已知码给兜底文案
         : "";
   return (text || JSON.stringify(raw)).slice(0, 200);
 }

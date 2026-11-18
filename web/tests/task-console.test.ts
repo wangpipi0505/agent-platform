@@ -9,6 +9,7 @@ import ts from 'typescript';
 import * as Vue from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mockTask from '../shared/mock-task';
+import * as reasonCodeText from '../shared/reason-code-text';
 import { useLiveList } from '../shared/hooks/useLiveList';
 
 const cleanup: (() => void)[] = [];
@@ -56,6 +57,8 @@ function mountTasks(options: { confirmResult?: boolean } = {}) {
     if (id.includes('usePageOperation')) return { usePageTitle: () => {} };
     if (id.includes('useLiveList')) return { useLiveList };
     if (id.includes('mock-task')) return mockTask;
+    // R-3：纯函数模块用真实实现（无外部依赖）。
+    if (id.includes('reason-code-text')) return reasonCodeText;
     throw new Error(`unexpected require: ${id}`);
   };
   new Function('require', 'exports', code)(requireStub, exports);

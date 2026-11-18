@@ -12,6 +12,7 @@ import ts from 'typescript';
 import * as Vue from 'vue';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as mock from '../shared/mock-session-detail';
+import * as reasonCodeText from '../shared/reason-code-text';
 
 const cleanup: (() => void)[] = [];
 afterEach(() => {
@@ -48,6 +49,8 @@ function mountSession(sessionId: string) {
     if (id.endsWith('.vue')) return { default: { render: () => null } };
     if (id.includes('usePageOperation')) return { usePageTitle: () => {} };
     if (id.includes('mock-session-detail')) return mock;
+    // R-3：纯函数模块用真实实现（无外部依赖）。
+    if (id.includes('reason-code-text')) return reasonCodeText;
     throw new Error(`unexpected require: ${id}`);
   };
   new Function('require', 'exports', code)(requireStub, exports);
