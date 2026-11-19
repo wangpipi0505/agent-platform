@@ -1,0 +1,41 @@
+{
+  "at": "2026-11-19T05:12:06.399Z",
+  "gateway": "http://127.0.0.1:18980",
+  "tenant": "demo",
+  "app": "satellite-planning-assistant",
+  "agentTask": {
+    "taskId": "task-a2f331a5505b42debed9",
+    "requestId": "r24-ce9c97f8",
+    "stateAfterPoll": "ACCEPTED",
+    "note": "T2-5 派发接续未交付（M5-3/R-14 已登记口径），非 R-24 范围"
+  },
+  "chatTurn": {
+    "sessionId": "s_bc1d8dc21c144379ae273d3441f29220",
+    "turnState": "TIMEOUT",
+    "eventCount": 2,
+    "promptMismatchCount": 0,
+    "nodeFailedCount": 0,
+    "succeededFrame": false,
+    "failedFrame": false,
+    "tailEvents": [
+      {
+        "seq": 1,
+        "type": "turn/start",
+        "occurredAt": "2026-11-19T05:07:05.318695Z",
+        "data": {
+          "turn": 1
+        }
+      },
+      {
+        "seq": 2,
+        "type": "user/message",
+        "occurredAt": "2026-11-19T05:07:05.318695Z",
+        "data": {
+          "content": {
+            "message": "R-24 装配口径验证：请用一句话确认已受理并给出演示结论。"
+          }
+        }
+      }
+    ]
+  }
+}
