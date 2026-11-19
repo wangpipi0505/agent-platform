@@ -1,0 +1,7 @@
+75a76,81
+>       # R-26：测试用户票铸造端点双条件之一（另一条件是 test profile，见下一行）。
+>       # 该端点是测试支撑面（09 细则 §9.2，不进 04 对外契约）；回滚=删除本行并重建容器。
+>       AGENT_AUTHORITY_TEST_TICKET_ENABLED: "true"
+>       # R-26 双条件之二：authority 此前未挂 *backend-env（无 SPRING_PROFILES_ACTIVE），
+>       # 显式补 test profile（@Profile("test") 才会注册 /test/tickets；对既有行为无影响）。
+>       SPRING_PROFILES_ACTIVE: test
