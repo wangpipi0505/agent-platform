@@ -716,6 +716,9 @@ public class AppService {
 
     private Map<String, Object> templateConfig(Map<String, Object> config) {
         if (!config.containsKey("promptSource")) return config;
+        // R-25：promptSource 枚举与 engine ContextAssembler 对齐（TEMPLATE/DIRECT）——DIRECT=内联
+        // systemPrompt 显式声明，无模板引用处理，原样保存；未知值仍拒绝。
+        if ("DIRECT".equals(config.get("promptSource"))) return config;
         if (!"TEMPLATE".equals(config.get("promptSource")) || config.containsKey("frozenPrompts")
                 || config.containsKey("dependencyVersions"))
             throw error(400, "INVALID_INPUT", "模板来源必须显式选择，冻结正文由服务端提供");

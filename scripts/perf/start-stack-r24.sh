@@ -21,6 +21,9 @@ export AGENT_SECRET_DIR="$ROOT/.local/secrets-r24"
 export AGENT_BIND_ADDRESS=127.0.0.1
 export AGENT_SECURITY_MODE=dev-hmac
 export AGENT_DEV_AUTH=true
+# R-25：本机单栈=非生产发布目标（V901 演示评测来源=DEMO，仅 NON_PRODUCTION 目标可发——
+# AppPublicationService:478；@Value 属性 agent.publish.target-environment 的 env 映射名）。
+export AGENT_PUBLISH_TARGETENVIRONMENT=NON_PRODUCTION
 export AGENT_APP_URL=http://127.0.0.1:18981
 export AGENT_ENGINE_URL=http://127.0.0.1:18982
 export AGENT_SKILL_URL=http://127.0.0.1:18983
