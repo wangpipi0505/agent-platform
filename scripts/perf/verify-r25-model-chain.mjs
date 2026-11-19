@@ -18,7 +18,7 @@ const env = await loadEnv();
 const admin = client(identities(env).ADMIN, { base: GATEWAY });
 const user = client(identities(env).USER, { base: GATEWAY });
 const pg = (sql) =>
-  execFileSync(PSQL, ["-h", "127.0.0.1", "-p", "25432", "-U", env.AGENT_DB_USER, "-d", "r24_check", "-At", "-c", sql],
+  execFileSync(PSQL, ["-h", DB_HOST, "-p", DB_PORT, "-U", env.AGENT_DB_USER, "-d", DB_NAME, "-At", "-c", sql],
     { encoding: "utf8", env: { ...process.env, PGPASSWORD: env.AGENT_DB_PASSWORD } }).trim();
 
 /** 模型注册（照 e2e run-all.ensureModelRoute 同构；返回 entryId）。 */

@@ -1,0 +1,230 @@
+# R-22 测试环境编排（192.168.1.2 单机 Compose，host 网络 + iam 模式一步到位）——自建，不覆盖 release 蓝图原件。
+# 端口规划（宿主直绑，避开既有业务）：pg 15432 / redis 16379 / gateway 18090 / app 18081 / engine 18082 /
+#   skill 18083 / model 18084 / monitor 18085 / authority 18086 / frontend nginx 18091。
+# 鉴权：SPRING_PROFILES_ACTIVE=test 使 authority http+127.0.0.1 URI 通过 requireTrustedUri 的 test 分支；
+#   各服务 agent.security.authority.client-id=<serviceId>、audience=urn:agent-platform:service:<serviceId>。
+# 密钥：全部经 .env.test（服务器本地，chmod 600）。
+# 测试期登记（用户拍板③）：AGENT_RELEASE_GATE=IAM_SCOPE_ACCEPTED 先行置位（IAM 负向验收前）；
+#   entrypoint 覆盖绕过 dev-auth 禁令直启 jar（otel agent 照挂，OTEL_SDK_DISABLED=true 停遥测）。
+name: agent-platform-test
+
+
+x-backend-env: &backend-env
+  AGENT_BIND_ADDRESS: 127.0.0.1
+  AGENT_SECURITY_MODE: iam
+  AGENT_DEV_AUTH: "false"
+  AGENT_RELEASE_GATE: IAM_SCOPE_ACCEPTED
+  SPRING_PROFILES_ACTIVE: test
+  AGENT_JWT_SECRET: ${AGENT_JWT_SECRET}
+  AGENT_MASTER_KEY: ${AGENT_MASTER_KEY}
+  AGENT_DB_USER: agentplat
+  AGENT_DB_PASSWORD: ${PG_PASSWORD}
+  AGENT_DB_JDBC_BASE: jdbc:postgresql://127.0.0.1:15432/agent_platform
+  AGENT_APP_URL: http://127.0.0.1:18081
+  AGENT_ENGINE_URL: http://127.0.0.1:18082
+  AGENT_SKILL_URL: http://127.0.0.1:18083
+  AGENT_MODEL_URL: http://127.0.0.1:18084
+  AGENT_MONITOR_URL: http://127.0.0.1:18085
+  AGENT_SYSTEM_REDIS_ADDRESS: redis://:${REDIS_PASSWORD}@127.0.0.1:16379
+  AGENT_MINIO_ENDPOINT: http://127.0.0.1:9000
+  AGENT_MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  AGENT_MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  AGENT_MINIO_BUCKET: agent-platform
+  SPRING_CONFIG_ADDITIONAL_LOCATION: file:/opt/agent/authority-overlay.yml
+  OTEL_SDK_DISABLED: "true"
+  SERVER_PORT: "8080"
+  TZ: Asia/Shanghai
+
+services:
+  pg:
+    network_mode: host
+    image: postgres:16
+    container_name: agent-platform-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agentplat
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: agent_platform
+      PGPORT: "15432"
+    volumes:
+      - agentplat_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentplat"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+
+  redis:
+    network_mode: host
+    image: redis:7
+    container_name: agent-platform-redis
+    restart: unless-stopped
+    command: ["redis-server", "--bind", "127.0.0.1", "--port", "16379", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    volumes:
+      - agentplat_redis:/data
+
+  authority-service:
+    network_mode: host
+    image: agent-platform-v12/authority-service:0.1.0
+    container_name: agent-platform-authority
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: "18086"
+      AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-IAM_SCOPE_ACCEPTED}
+      AGENT_BIND_ADDRESS: 127.0.0.1
+      AGENT_AUTHORITY_ISSUER: http://127.0.0.1:18086
+      AGENT_AUTHORITY_KEY_PATH: /run/secrets/authority-rsa.pem
+      AGENT_AUTHORITY_KID: "2026-10"
+      AGENT_SECRET_IAM_GATEWAY_CLIENT: ${IAM_CLIENT_GATEWAY}
+      AGENT_SECRET_IAM_APP_CLIENT: ${IAM_CLIENT_APP}
+      AGENT_SECRET_IAM_ENGINE_CLIENT: ${IAM_CLIENT_ENGINE}
+      AGENT_SECRET_IAM_SKILL_CLIENT: ${IAM_CLIENT_SKILL}
+      AGENT_SECRET_IAM_MODEL_CLIENT: ${IAM_CLIENT_MODEL}
+      AGENT_SECRET_IAM_MONITOR_CLIENT: ${IAM_CLIENT_MONITOR}
+      TZ: Asia/Shanghai
+    secrets:
+      - authority-rsa.pem
+
+  platform-gateway:
+    network_mode: host
+    image: ${PLATFORM_GATEWAY_IMAGE}
+    volumes:
+      - /home/agent-platform/overlays/gateway.yml:/opt/agent/authority-overlay.yml:ro
+    container_name: agent-platform-gateway
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      SERVER_PORT: "18090"
+      AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=gateway
+      AGENT_SECURITY_SERVICEID: gateway
+      AGENT_SECURITY_AUTHORITY_CLIENTID: gateway
+      AGENT_SECURITY_AUTHORITY_AUDIENCE: urn:agent-platform:service:gateway
+      AGENT_SECRET_IAM_GATEWAY_CLIENT: ${IAM_CLIENT_GATEWAY}
+      AGENT_ONTOLOGY_URL: ""
+    depends_on:
+      pg: {condition: service_healthy}
+      redis: {condition: service_started}
+      authority-service: {condition: service_started}
+
+  app-management:
+    network_mode: host
+    image: ${APP_MANAGEMENT_IMAGE}
+    volumes:
+      - /home/agent-platform/overlays/app.yml:/opt/agent/authority-overlay.yml:ro
+    container_name: agent-platform-app
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      SERVER_PORT: "18081"
+      AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=app
+      AGENT_SECURITY_SERVICEID: app
+      AGENT_SECURITY_AUTHORITY_CLIENTID: app
+      AGENT_SECURITY_AUTHORITY_AUDIENCE: urn:agent-platform:service:app
+      AGENT_SECRET_IAM_APP_CLIENT: ${IAM_CLIENT_APP}
+    depends_on:
+      pg: {condition: service_healthy}
+      authority-service: {condition: service_started}
+
+  engine-runtime:
+    network_mode: host
+    image: ${ENGINE_RUNTIME_IMAGE}
+    volumes:
+      - /home/agent-platform/overlays/engine.yml:/opt/agent/authority-overlay.yml:ro
+    container_name: agent-platform-engine
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      SERVER_PORT: "18082"
+      AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=engine
+      AGENT_SECURITY_SERVICEID: engine
+      AGENT_SECURITY_AUTHORITY_CLIENTID: engine
+      AGENT_SECURITY_AUTHORITY_AUDIENCE: urn:agent-platform:service:engine
+      AGENT_SECRET_IAM_ENGINE_CLIENT: ${IAM_CLIENT_ENGINE}
+      AGENT_TOOL_OUTPUT_MAX_BYTES: 262144
+    depends_on:
+      pg: {condition: service_healthy}
+      redis: {condition: service_started}
+      authority-service: {condition: service_started}
+
+  skill-registry:
+    network_mode: host
+    image: ${SKILL_REGISTRY_IMAGE}
+    volumes:
+      - /home/agent-platform/overlays/skill.yml:/opt/agent/authority-overlay.yml:ro
+    container_name: agent-platform-skill
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      SERVER_PORT: "18083"
+      AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=skill
+      AGENT_SECURITY_SERVICEID: skill
+      AGENT_SECURITY_AUTHORITY_CLIENTID: skill
+      AGENT_SECURITY_AUTHORITY_AUDIENCE: urn:agent-platform:service:skill
+      AGENT_SECRET_IAM_SKILL_CLIENT: ${IAM_CLIENT_SKILL}
+    depends_on:
+      pg: {condition: service_healthy}
+      authority-service: {condition: service_started}
+
+  model-gateway:
+    network_mode: host
+    image: ${MODEL_GATEWAY_IMAGE}
+    volumes:
+      - /home/agent-platform/overlays/model.yml:/opt/agent/authority-overlay.yml:ro
+    container_name: agent-platform-model
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      SERVER_PORT: "18084"
+      AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=model
+      AGENT_SECURITY_SERVICEID: model
+      AGENT_SECURITY_AUTHORITY_CLIENTID: model
+      AGENT_SECURITY_AUTHORITY_AUDIENCE: urn:agent-platform:service:model
+      AGENT_SECRET_IAM_MODEL_CLIENT: ${IAM_CLIENT_MODEL}
+    depends_on:
+      pg: {condition: service_healthy}
+      authority-service: {condition: service_started}
+
+  monitor:
+    network_mode: host
+    image: ${MONITOR_IMAGE}
+    volumes:
+      - /home/agent-platform/overlays/monitor.yml:/opt/agent/authority-overlay.yml:ro
+    container_name: agent-platform-monitor
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      SERVER_PORT: "18085"
+      AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=monitor
+      AGENT_SECURITY_SERVICEID: monitor
+      AGENT_SECURITY_AUTHORITY_CLIENTID: monitor
+      AGENT_SECURITY_AUTHORITY_AUDIENCE: urn:agent-platform:service:monitor
+      AGENT_SECRET_IAM_MONITOR_CLIENT: ${IAM_CLIENT_MONITOR}
+    depends_on:
+      pg: {condition: service_healthy}
+      authority-service: {condition: service_started}
+
+  frontend:
+    network_mode: host
+    image: ${FRONTEND_IMAGE}
+    # R-28：E2 host 网络——挂载 nginx-test.conf（listen 18091+上游 127.0.0.1:18090）并覆盖入口
+    volumes:
+      - /home/agent-platform/nginx-test.conf:/etc/nginx/nginx-e2.conf:ro
+    entrypoint: ["nginx", "-c", "/etc/nginx/nginx-e2.conf", "-g", "daemon off;"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:18091/healthz || exit 1"]
+      interval: 15s
+      timeout: 4s
+      retries: 3
+    container_name: agent-platform-frontend
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    depends_on: [platform-gateway]
+
+volumes:
+  agentplat_pgdata: {}
+  agentplat_redis: {}
+
+secrets:
+  authority-rsa.pem:
+    file: /home/agent-platform/secrets/authority-rsa.pem

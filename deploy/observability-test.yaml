@@ -1,0 +1,43 @@
+# R-31 观测栈最小集（otel-collector + prometheus + grafana + cadvisor；loki/tempo 后置）
+# 与 compose-test.yaml 同目录同 env 文件使用：
+#   docker compose --env-file .env.test -f compose-test.yaml -f observability-test.yaml up -d
+# 服务 OTEL 开启：.env.test 置 OTEL_SDK_DISABLED=false + OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317
+#   （compose-test 六业务 env 改 OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}）
+name: agent-platform-obs
+
+x-obs-common: &obs-common
+  restart: unless-stopped
+  network_mode: host
+
+services:
+  otel-collector:
+    <<: *obs-common
+    image: otel/opentelemetry-collector-contrib:0.137.0
+    container_name: agent-platform-otel
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - /home/agent-platform/obs/otel-config.yaml:/etc/otel/config.yaml:ro
+
+  prometheus:
+    <<: *obs-common
+    image: prom/prometheus:v2.53.0
+    container_name: agent-platform-prometheus
+    volumes:
+      - /home/agent-platform/obs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - agentplat_prom_data:/prometheus
+
+  grafana:
+    <<: *obs-common
+    image: grafana/grafana:11.1.0
+    container_name: agent-platform-grafana
+    environment:
+      GF_SERVER_HTTP_PORT: "18093"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SECURITY_ADMIN_USER: admin
+    volumes:
+      - /home/agent-platform/obs/grafana-datasource.yml:/etc/grafana/provisioning/datasources/ds.yml:ro
+      - agentplat_grafana:/var/lib/grafana
+
+volumes:
+  agentplat_prom_data: {}
+  agentplat_grafana: {}

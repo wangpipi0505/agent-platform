@@ -13,6 +13,10 @@ const GATEWAY = process.env.E2E_GATEWAY || "http://127.0.0.1:18980";
 const TENANT = "demo";
 const APP = "satellite-planning-assistant";
 const OUT = "docs/evidence/2026-11-19-R-24";
+// R-27：E2E_* 环境变量覆盖（未设时保持 189xx/r24_check 默认，不回归）。
+const DB_HOST = process.env.E2E_DB_HOST || "127.0.0.1";
+const DB_PORT = process.env.E2E_DB_PORT || "25432";
+const DB_NAME = process.env.E2E_DB_NAME || "r24_check";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const env = await loadEnv();
@@ -128,7 +132,7 @@ const run = async () => {
   // DB 实证断言（会话事件投影过滤诊断帧，用户面事件流不承载 NODE_FAILED——以 run 表为准）：
   const PSQL = ".tools/postgresql-16.15/pgsql/bin/psql.exe";
   const pg = (sql) =>
-    execFileSync(PSQL, ["-h", "127.0.0.1", "-p", "25432", "-U", env.AGENT_DB_USER, "-d", "r24_check", "-At", "-c", sql],
+    execFileSync(PSQL, ["-h", DB_HOST, "-p", DB_PORT, "-U", env.AGENT_DB_USER, "-d", DB_NAME, "-At", "-c", sql],
       { encoding: "utf8", env: { ...process.env, PGPASSWORD: env.AGENT_DB_PASSWORD } }).trim();
   const runs = pg("select status,coalesce(stop_reason,'') from engine.run order by id").split("\n").filter(Boolean);
   const mismatchInDb = Number(pg("select count(*) from engine.run_event where payload::text like '%PROMPT_TEMPLATE_SNAPSHOT_MISMATCH%'"));
