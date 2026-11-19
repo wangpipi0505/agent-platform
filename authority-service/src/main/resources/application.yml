@@ -64,3 +64,9 @@ agent:
       grant-seconds: ${AGENT_AUTHORITY_DELEGATION_GRANT_SECONDS:60}
       decision-seconds: ${AGENT_AUTHORITY_DELEGATION_DECISION_SECONDS:60}
       capacity: ${AGENT_AUTHORITY_DELEGATION_CAPACITY:256}
+
+    # R-26 测试用户票铸造端点（测试支撑面，契约=09 细则 §9.2；不进 04 对外契约）：默认关。
+    # 注册双条件=Profile("test") 且本开关为 true（两处都在 TestTicketController 上）；
+    # 任一不成立则不注册路由（404），不存在"开关一开就全网可用"。
+    test-ticket:
+      enabled: ${AGENT_AUTHORITY_TEST_TICKET_ENABLED:false}

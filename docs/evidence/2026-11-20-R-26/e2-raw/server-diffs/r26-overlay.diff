@@ -1,0 +1,16 @@
+2a3,17
+>     # R-26（09 细则 §9.2）：portal 域（用户票链）issuer/jwks 指向 authority——测试用户票
+>     # POST /test/tickets（authority:18086）与生产用户票同 issuer/aud/client_id/scope 口径。
+>     # 回滚=删除 portal 段并重启 gateway（备份 gateway.yml.bak-r26）。
+>     portal:
+>       enabled: true
+>       issuer: http://127.0.0.1:18086
+>       jwks-uri: http://127.0.0.1:18086/.well-known/jwks.json
+>       audience: agent-platform-portal
+>       client-id: gateway
+>       role-allowlist: ADMIN,BUILDER,OPERATOR,USER
+>       attribute-allowlist: region,dataLabels
+>       attribute-value-allowlist:
+>         region: A,B
+>         dataLabels: public,internal
+>       scope-allowlist: platform.access
