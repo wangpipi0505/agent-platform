@@ -1,0 +1,130 @@
+- generic [ref=e12]:
+  - complementary [ref=e13]:
+    - generic [ref=e14]: ◈◈ 智能体平台
+    - generic [ref=e15]: 构建与管理
+    - generic [ref=e16]:
+      - button "智能体" [expanded] [ref=e17] [cursor=pointer]
+      - link "智能体管理" [ref=e23] [cursor=pointer]:
+        - /url: "#/apps"
+        - text: 智智能体管理
+    - generic [ref=e24]:
+      - button "任务与运行" [expanded] [ref=e25] [cursor=pointer]
+      - generic [ref=e28]:
+        - link "运行中心" [ref=e29] [cursor=pointer]:
+          - /url: "#/operations"
+          - text: 运运行中心
+        - link "运行监控" [ref=e30] [cursor=pointer]:
+          - /url: "#/runs"
+          - text: 运运行监控
+        - link "服务管理" [ref=e31] [cursor=pointer]:
+          - /url: "#/services"
+          - text: 服服务管理
+        - link "任务工作台" [ref=e32] [cursor=pointer]:
+          - /url: "#/tasks"
+          - text: 任任务工作台
+    - generic [ref=e33]:
+      - button "构建资产" [expanded] [ref=e34] [cursor=pointer]
+      - generic [ref=e38]:
+        - link "技能库" [ref=e39] [cursor=pointer]:
+          - /url: "#/skills"
+          - text: 技技能库
+        - link "提示词模板" [ref=e40] [cursor=pointer]:
+          - /url: "#/model/prompt-templates"
+          - text: 提提示词模板
+        - link "规则管理" [ref=e41] [cursor=pointer]:
+          - /url: "#/assets/rules"
+          - text: 规规则管理
+    - generic [ref=e42]:
+      - button "集成与治理" [expanded] [ref=e43] [cursor=pointer]
+      - generic [ref=e46]:
+        - link "集成控制台" [ref=e47] [cursor=pointer]:
+          - /url: "#/integration/console"
+          - text: 集集成控制台
+        - link "插件与来源" [ref=e48] [cursor=pointer]:
+          - /url: "#/assets/plugins"
+          - text: 插插件与来源
+        - link "MCP 连接" [ref=e49] [cursor=pointer]:
+          - /url: "#/assets/mcp"
+          - text: MMCP 连接
+        - link "记忆管理" [active] [ref=e50] [cursor=pointer]:
+          - /url: "#/assets/memories"
+          - text: 记记忆管理
+    - generic [ref=e51]:
+      - button "平台管理" [expanded] [ref=e52] [cursor=pointer]
+      - generic [ref=e58]:
+        - link "软件能力目录" [ref=e59] [cursor=pointer]:
+          - /url: "#/capability-packages"
+          - text: 软软件能力目录
+        - link "模型管理" [ref=e60] [cursor=pointer]:
+          - /url: "#/model/management"
+          - text: 模模型管理
+        - link "确认中心" [ref=e61] [cursor=pointer]:
+          - /url: "#/approvals"
+          - text: 确确认中心
+          - generic [ref=e62]: "0"
+        - link "统计分析" [ref=e63] [cursor=pointer]:
+          - /url: "#/statistics"
+          - text: 统统计分析
+        - link "审计记录" [ref=e64] [cursor=pointer]:
+          - /url: "#/audit"
+          - text: 审审计记录
+        - link "系统管理" [ref=e65] [cursor=pointer]:
+          - /url: "#/system"
+          - text: 系系统管理
+        - link "评测中心" [ref=e66] [cursor=pointer]:
+          - /url: "#/evaluations"
+          - text: 评评测中心
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - navigation "面包屑" [ref=e69]:
+        - generic [ref=e70]: 集成与治理
+        - generic [aria-hidden] [ref=e71]: /
+        - strong [ref=e72]: 记忆管理
+      - button "刷新" [ref=e591] [cursor=pointer]
+      - generic [ref=e79]:
+        - button "搜索 Ctrl K" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - text: 搜索
+            - generic [ref=e82]: Ctrl K
+        - button "切换主题，当前亮色" [ref=e83] [cursor=pointer]:
+          - generic [ref=e84]: ☀ 亮色
+        - generic [ref=e85]: 显示密度
+        - generic [ref=e87] [cursor=pointer]:
+          - generic:
+            - combobox "显示密度" [ref=e89]
+            - generic [ref=e90]: 标准
+        - generic [ref=e95]: developer-v12
+        - button "退出" [ref=e96] [cursor=pointer]
+    - generic [ref=e593]:
+      - alert [ref=e595]:
+        - generic [ref=e599]:
+          - strong [ref=e600]: 请求失败 (500)
+          - paragraph [ref=e601]: 请检查输入与服务状态后重试；业务数据以服务端为准。
+      - generic [ref=e603]:
+        - group "范围筛选" [ref=e604]:
+          - button "全部范围" [ref=e605] [cursor=pointer]
+          - button "私有" [ref=e606] [cursor=pointer]
+          - button "共享" [ref=e607] [cursor=pointer]
+        - group "状态筛选" [ref=e608]:
+          - button "全部" [ref=e609] [cursor=pointer]
+          - button "生效" [ref=e610] [cursor=pointer]
+          - button "待审批草稿" [ref=e611] [cursor=pointer]
+          - button "已撤销" [ref=e612] [cursor=pointer]
+      - generic [ref=e616]:
+        - table [ref=e618]:
+          - rowgroup [ref=e628]:
+            - row [ref=e629]:
+              - columnheader "记忆 ID" [ref=e630]
+              - columnheader "类型" [ref=e632]
+              - columnheader "范围" [ref=e634]
+              - columnheader "标签" [ref=e636]
+              - columnheader "版本" [ref=e638]
+              - columnheader "状态" [ref=e640]
+              - columnheader "来源任务" [ref=e642]
+              - columnheader "操作" [ref=e644]
+        - generic [ref=e649]:
+          - table:
+            - rowgroup
+          - generic [ref=e652]:
+            - paragraph [ref=e656]: 请求失败 (500)
+            - button "刷新重试" [ref=e657] [cursor=pointer]

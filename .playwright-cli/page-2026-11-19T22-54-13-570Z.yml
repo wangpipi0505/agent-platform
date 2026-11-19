@@ -1,0 +1,258 @@
+- generic [ref=e12]:
+  - complementary [ref=e13]:
+    - generic [ref=e14]: ◈◈ 智能体平台
+    - generic [ref=e15]: 构建与管理
+    - generic [ref=e16]:
+      - button "智能体" [expanded] [ref=e17] [cursor=pointer]
+      - link "智能体管理" [ref=e23] [cursor=pointer]:
+        - /url: "#/apps"
+        - text: 智智能体管理
+    - generic [ref=e24]:
+      - button "任务与运行" [expanded] [ref=e25] [cursor=pointer]
+      - generic [ref=e28]:
+        - link "运行中心" [active] [ref=e29] [cursor=pointer]:
+          - /url: "#/operations"
+          - text: 运运行中心
+        - link "运行监控" [ref=e30] [cursor=pointer]:
+          - /url: "#/runs"
+          - text: 运运行监控
+        - link "服务管理" [ref=e31] [cursor=pointer]:
+          - /url: "#/services"
+          - text: 服服务管理
+        - link "任务工作台" [ref=e32] [cursor=pointer]:
+          - /url: "#/tasks"
+          - text: 任任务工作台
+    - generic [ref=e33]:
+      - button "构建资产" [expanded] [ref=e34] [cursor=pointer]
+      - generic [ref=e38]:
+        - link "技能库" [ref=e39] [cursor=pointer]:
+          - /url: "#/skills"
+          - text: 技技能库
+        - link "提示词模板" [ref=e40] [cursor=pointer]:
+          - /url: "#/model/prompt-templates"
+          - text: 提提示词模板
+        - link "规则管理" [ref=e41] [cursor=pointer]:
+          - /url: "#/assets/rules"
+          - text: 规规则管理
+    - generic [ref=e42]:
+      - button "集成与治理" [expanded] [ref=e43] [cursor=pointer]
+      - generic [ref=e46]:
+        - link "集成控制台" [ref=e47] [cursor=pointer]:
+          - /url: "#/integration/console"
+          - text: 集集成控制台
+        - link "插件与来源" [ref=e48] [cursor=pointer]:
+          - /url: "#/assets/plugins"
+          - text: 插插件与来源
+        - link "MCP 连接" [ref=e49] [cursor=pointer]:
+          - /url: "#/assets/mcp"
+          - text: MMCP 连接
+        - link "记忆管理" [ref=e50] [cursor=pointer]:
+          - /url: "#/assets/memories"
+          - text: 记记忆管理
+    - generic [ref=e51]:
+      - button "平台管理" [expanded] [ref=e52] [cursor=pointer]
+      - generic [ref=e58]:
+        - link "软件能力目录" [ref=e59] [cursor=pointer]:
+          - /url: "#/capability-packages"
+          - text: 软软件能力目录
+        - link "模型管理" [ref=e60] [cursor=pointer]:
+          - /url: "#/model/management"
+          - text: 模模型管理
+        - link "确认中心" [ref=e61] [cursor=pointer]:
+          - /url: "#/approvals"
+          - text: 确确认中心
+          - generic [ref=e62]: "0"
+        - link "统计分析" [ref=e63] [cursor=pointer]:
+          - /url: "#/statistics"
+          - text: 统统计分析
+        - link "审计记录" [ref=e64] [cursor=pointer]:
+          - /url: "#/audit"
+          - text: 审审计记录
+        - link "系统管理" [ref=e65] [cursor=pointer]:
+          - /url: "#/system"
+          - text: 系系统管理
+        - link "评测中心" [ref=e66] [cursor=pointer]:
+          - /url: "#/evaluations"
+          - text: 评评测中心
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - navigation "面包屑" [ref=e69]:
+        - generic [ref=e70]: 任务与运行
+        - generic [aria-hidden] [ref=e71]: /
+        - strong [ref=e72]: 运行中心
+      - generic [ref=e243]:
+        - button "评估告警" [ref=e244] [cursor=pointer]
+        - button "刷新" [ref=e246] [cursor=pointer]
+      - generic [ref=e79]:
+        - button "搜索 Ctrl K" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - text: 搜索
+            - generic [ref=e82]: Ctrl K
+        - button "切换主题，当前亮色" [ref=e83] [cursor=pointer]:
+          - generic [ref=e84]: ☀ 亮色
+        - generic [ref=e85]: 显示密度
+        - generic [ref=e87] [cursor=pointer]:
+          - generic:
+            - combobox "显示密度" [ref=e89]
+            - generic [ref=e90]: 标准
+        - generic [ref=e95]: developer-v12
+        - button "退出" [ref=e96] [cursor=pointer]
+    - generic [ref=e98]:
+      - generic [ref=e248]:
+        - generic [ref=e249]:
+          - strong [ref=e250]: 统计窗口
+          - text: 运行按开始时间、模型与工具按调用时间纳入。
+        - generic [ref=e252] [cursor=pointer]:
+          - generic:
+            - combobox "统计窗口" [ref=e254]
+            - generic [ref=e255]: 最近 24 小时
+      - generic [ref=e260]:
+        - generic [ref=e261]:
+          - generic [ref=e262]: 检查时间
+          - strong [ref=e263]: 2026-11-19 22:54:13 UTC
+        - generic [ref=e264]:
+          - generic [ref=e265]: 窗口
+          - strong [ref=e266]: 24 小时
+        - generic [ref=e267]:
+          - generic [ref=e268]: 待处理告警
+          - strong [ref=e269]: "0"
+        - generic [ref=e270]:
+          - generic [ref=e271]: 请求追踪号
+          - strong [ref=e272]: a264bdd8-76e7-47a3-8412-a00b7722ffe8
+      - generic [ref=e273]:
+        - generic [ref=e274]:
+          - heading "服务健康" [level=2] [ref=e275]
+          - generic [ref=e276]: 实时 GET /actuator/health，4 秒并发上限。
+        - generic [ref=e277]:
+          - generic [ref=e278]:
+            - generic [ref=e279]:
+              - strong [ref=e280]: 应用管理
+              - generic [ref=e281]: 正常
+            - paragraph [ref=e283]: 运行正常
+            - text: 67 ms
+          - generic [ref=e284]:
+            - generic [ref=e285]:
+              - strong [ref=e286]: 运行时
+              - generic [ref=e287]: 正常
+            - paragraph [ref=e289]: 运行正常
+            - text: 70 ms
+          - generic [ref=e290]:
+            - generic [ref=e291]:
+              - strong [ref=e292]: 技能注册
+              - generic [ref=e293]: 正常
+            - paragraph [ref=e295]: 运行正常
+            - text: 74 ms
+          - generic [ref=e296]:
+            - generic [ref=e297]:
+              - strong [ref=e298]: 模型网关
+              - generic [ref=e299]: 正常
+            - paragraph [ref=e301]: 运行正常
+            - text: 81 ms
+          - generic [ref=e302]:
+            - generic [ref=e303]:
+              - strong [ref=e304]: 监控/审批/统计
+              - generic [ref=e305]: 正常
+            - paragraph [ref=e307]: 运行正常
+            - text: 67 ms
+      - generic [ref=e308]:
+        - generic [ref=e309]:
+          - heading "运行概况" [level=2] [ref=e310]
+          - generic [ref=e311]: 窗口 2026-11-18 22:54:13 UTC → 2026-11-19 22:54:13 UTC
+        - generic [ref=e312]:
+          - generic [ref=e313]:
+            - generic [ref=e314]: 完成运行
+            - strong [ref=e315]: "0"
+          - generic [ref=e316]:
+            - generic [ref=e317]: 成功
+            - strong [ref=e318]: "0"
+          - generic [ref=e319]:
+            - generic [ref=e320]: 失败
+            - strong [ref=e321]: "0"
+          - generic [ref=e322]:
+            - generic [ref=e323]: 失败率
+            - strong [ref=e324]: —
+          - generic [ref=e325]:
+            - generic [ref=e326]: 当前活跃
+            - strong [ref=e327]: "0"
+          - generic [ref=e328]:
+            - generic [ref=e329]: 平均耗时
+            - strong [ref=e330]: 0 ms
+          - generic [ref=e331]:
+            - generic [ref=e332]: P95 耗时
+            - strong [ref=e333]: —
+        - paragraph [ref=e334]: 失败率只统计已完成（成功/失败/取消）运行；未结束运行单列。
+      - generic [ref=e335]:
+        - generic [ref=e336]:
+          - heading "模型调用" [level=2] [ref=e337]
+          - generic [ref=e338]:
+            - generic [ref=e339]:
+              - generic [ref=e340]: 调用
+              - strong [ref=e341]: "0"
+            - generic [ref=e342]:
+              - generic [ref=e343]: 失败
+              - strong [ref=e344]: "0"
+        - generic [ref=e345]:
+          - heading "工具调用" [level=2] [ref=e346]
+          - generic [ref=e347]:
+            - generic [ref=e348]:
+              - generic [ref=e349]: 调用
+              - strong [ref=e350]: "0"
+            - generic [ref=e351]:
+              - generic [ref=e352]: 失败
+              - strong [ref=e353]: "0"
+            - generic [ref=e354]:
+              - generic [ref=e355]: 未知
+              - strong [ref=e356]: "0"
+      - generic [ref=e357]:
+        - heading "失败归因 Top 5" [level=2] [ref=e358]
+        - generic [ref=e360]:
+          - table [ref=e362]:
+            - rowgroup [ref=e366]:
+              - row [ref=e367]:
+                - columnheader "语义" [ref=e368]
+                - columnheader "次数" [ref=e370]
+          - generic [ref=e375]:
+            - table:
+              - rowgroup
+            - generic [ref=e376]: 窗口内没有失败运行
+      - generic [ref=e378]:
+        - heading "最近失败运行" [level=2] [ref=e379]
+        - generic [ref=e381]:
+          - table [ref=e383]:
+            - rowgroup [ref=e390]:
+              - row [ref=e391]:
+                - columnheader "运行" [ref=e392]
+                - columnheader "应用" [ref=e394]
+                - columnheader "语义" [ref=e396]
+                - columnheader "消息" [ref=e398]
+                - columnheader "结束时间" [ref=e400]
+          - generic [ref=e405]:
+            - table:
+              - rowgroup
+            - generic [ref=e406]: 窗口内没有失败运行
+      - generic [ref=e408]:
+        - generic [ref=e409]:
+          - heading "告警" [level=2] [ref=e410]
+          - generic [ref=e411]: 只在点击“评估告警”时写入；恢复后自动置为已恢复。告警列表是历史记录，不受上方统计窗口过滤。
+        - generic [ref=e413]:
+          - table [ref=e415]:
+            - rowgroup [ref=e423]:
+              - row [ref=e424]:
+                - columnheader "级别" [ref=e425]
+                - columnheader "告警" [ref=e427]
+                - columnheader "说明" [ref=e429]
+                - columnheader "状态" [ref=e431]
+                - columnheader "最近发现" [ref=e433]
+                - columnheader "操作" [ref=e435]
+          - generic [ref=e440]:
+            - table:
+              - rowgroup
+            - generic [ref=e441]: 尚无告警记录
+      - generic [ref=e443]:
+        - heading "保留与清理" [level=2] [ref=e444]
+        - paragraph [ref=e445]: 统计快照保留 30 天，已恢复告警保留 90 天；到期清理会真实删除数据库行。
+        - generic [ref=e446]:
+          - textbox "输入 PURGE 确认清理" [ref=e449]:
+            - /placeholder: 输入 PURGE 确认
+          - button "清理过期数据" [disabled] [ref=e450]
+        - paragraph [ref=e452]: 自动清理每小时运行一次。页面不会把外部 Prometheus/Grafana 冒充为产品能力；指标口径和来源时刻均显示在上方。

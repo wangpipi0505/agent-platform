@@ -1,0 +1,137 @@
+- generic [ref=e12]:
+  - complementary [ref=e13]:
+    - generic [ref=e14]: ◈◈ 智能体平台
+    - generic [ref=e15]: 构建与管理
+    - generic [ref=e16]:
+      - button "智能体" [expanded] [ref=e17] [cursor=pointer]
+      - link "智能体管理" [ref=e23] [cursor=pointer]:
+        - /url: "#/apps"
+        - text: 智智能体管理
+    - generic [ref=e24]:
+      - button "任务与运行" [expanded] [ref=e25] [cursor=pointer]
+      - generic [ref=e28]:
+        - link "运行中心" [ref=e29] [cursor=pointer]:
+          - /url: "#/operations"
+          - text: 运运行中心
+        - link "运行监控" [ref=e30] [cursor=pointer]:
+          - /url: "#/runs"
+          - text: 运运行监控
+        - link "服务管理" [ref=e31] [cursor=pointer]:
+          - /url: "#/services"
+          - text: 服服务管理
+        - link "任务工作台" [ref=e32] [cursor=pointer]:
+          - /url: "#/tasks"
+          - text: 任任务工作台
+    - generic [ref=e33]:
+      - button "构建资产" [expanded] [ref=e34] [cursor=pointer]
+      - generic [ref=e38]:
+        - link "技能库" [ref=e39] [cursor=pointer]:
+          - /url: "#/skills"
+          - text: 技技能库
+        - link "提示词模板" [ref=e40] [cursor=pointer]:
+          - /url: "#/model/prompt-templates"
+          - text: 提提示词模板
+        - link "规则管理" [ref=e41] [cursor=pointer]:
+          - /url: "#/assets/rules"
+          - text: 规规则管理
+    - generic [ref=e42]:
+      - button "集成与治理" [expanded] [ref=e43] [cursor=pointer]
+      - generic [ref=e46]:
+        - link "集成控制台" [ref=e47] [cursor=pointer]:
+          - /url: "#/integration/console"
+          - text: 集集成控制台
+        - link "插件与来源" [active] [ref=e48] [cursor=pointer]:
+          - /url: "#/assets/plugins"
+          - text: 插插件与来源
+        - link "MCP 连接" [ref=e49] [cursor=pointer]:
+          - /url: "#/assets/mcp"
+          - text: MMCP 连接
+        - link "记忆管理" [ref=e50] [cursor=pointer]:
+          - /url: "#/assets/memories"
+          - text: 记记忆管理
+    - generic [ref=e51]:
+      - button "平台管理" [expanded] [ref=e52] [cursor=pointer]
+      - generic [ref=e58]:
+        - link "软件能力目录" [ref=e59] [cursor=pointer]:
+          - /url: "#/capability-packages"
+          - text: 软软件能力目录
+        - link "模型管理" [ref=e60] [cursor=pointer]:
+          - /url: "#/model/management"
+          - text: 模模型管理
+        - link "确认中心" [ref=e61] [cursor=pointer]:
+          - /url: "#/approvals"
+          - text: 确确认中心
+          - generic [ref=e62]: "0"
+        - link "统计分析" [ref=e63] [cursor=pointer]:
+          - /url: "#/statistics"
+          - text: 统统计分析
+        - link "审计记录" [ref=e64] [cursor=pointer]:
+          - /url: "#/audit"
+          - text: 审审计记录
+        - link "系统管理" [ref=e65] [cursor=pointer]:
+          - /url: "#/system"
+          - text: 系系统管理
+        - link "评测中心" [ref=e66] [cursor=pointer]:
+          - /url: "#/evaluations"
+          - text: 评评测中心
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - navigation "面包屑" [ref=e69]:
+        - generic [ref=e70]: 集成与治理
+        - generic [aria-hidden] [ref=e71]: /
+        - strong [ref=e72]: 插件管理
+      - generic [ref=e502]:
+        - button "登记来源" [ref=e503] [cursor=pointer]
+        - button "刷新" [ref=e505] [cursor=pointer]
+      - generic [ref=e79]:
+        - button "搜索 Ctrl K" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - text: 搜索
+            - generic [ref=e82]: Ctrl K
+        - button "切换主题，当前亮色" [ref=e83] [cursor=pointer]:
+          - generic [ref=e84]: ☀ 亮色
+        - generic [ref=e85]: 显示密度
+        - generic [ref=e87] [cursor=pointer]:
+          - generic:
+            - combobox "显示密度" [ref=e89]
+            - generic [ref=e90]: 标准
+        - generic [ref=e95]: developer-v12
+        - button "退出" [ref=e96] [cursor=pointer]
+    - generic [ref=e507]:
+      - generic [ref=e508]: 插件 0（启用 0 / 停用 0）
+      - generic [ref=e513]:
+        - generic [ref=e514]:
+          - generic [ref=e515]: 插件来源与发现
+          - generic [ref=e517]:
+            - table [ref=e519]:
+              - rowgroup [ref=e526]:
+                - row [ref=e527]:
+                  - columnheader "来源" [ref=e528]
+                  - columnheader "类型" [ref=e530]
+                  - columnheader "地址" [ref=e532]
+                  - columnheader "最近发现" [ref=e534]
+                  - columnheader "操作" [ref=e536]
+            - generic [ref=e541]:
+              - table:
+                - rowgroup
+              - generic [ref=e542]: No Data
+        - generic [ref=e544]:
+          - generic [ref=e545]: 插件版本与授权
+          - generic [ref=e547]:
+            - table [ref=e549]:
+              - rowgroup [ref=e559]:
+                - row [ref=e560]:
+                  - columnheader "来源" [ref=e561]
+                  - columnheader "插件" [ref=e563]
+                  - columnheader "版本" [ref=e565]
+                  - columnheader "能力" [ref=e567]
+                  - columnheader "授权" [ref=e569]
+                  - columnheader "状态" [ref=e571]
+                  - columnheader "停用原因" [ref=e573]
+                  - columnheader "操作" [ref=e575]
+            - generic [ref=e580]:
+              - table:
+                - rowgroup
+              - generic [ref=e583]:
+                - paragraph [ref=e587]: 暂无插件；触发来源发现后目录将展示。
+                - button "登记来源" [ref=e588] [cursor=pointer]

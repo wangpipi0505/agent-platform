@@ -1,0 +1,138 @@
+- generic [ref=e12]:
+  - complementary [ref=e13]:
+    - generic [ref=e14]: ◈◈ 智能体平台
+    - generic [ref=e15]: 构建与管理
+    - generic [ref=e16]:
+      - button "智能体" [expanded] [ref=e17] [cursor=pointer]
+      - link "智能体管理" [ref=e23] [cursor=pointer]:
+        - /url: "#/apps"
+        - text: 智智能体管理
+    - generic [ref=e24]:
+      - button "任务与运行" [expanded] [ref=e25] [cursor=pointer]
+      - generic [ref=e28]:
+        - link "运行中心" [ref=e29] [cursor=pointer]:
+          - /url: "#/operations"
+          - text: 运运行中心
+        - link "运行监控" [ref=e30] [cursor=pointer]:
+          - /url: "#/runs"
+          - text: 运运行监控
+        - link "服务管理" [ref=e31] [cursor=pointer]:
+          - /url: "#/services"
+          - text: 服服务管理
+        - link "任务工作台" [ref=e32] [cursor=pointer]:
+          - /url: "#/tasks"
+          - text: 任任务工作台
+    - generic [ref=e33]:
+      - button "构建资产" [expanded] [ref=e34] [cursor=pointer]
+      - generic [ref=e38]:
+        - link "技能库" [ref=e39] [cursor=pointer]:
+          - /url: "#/skills"
+          - text: 技技能库
+        - link "提示词模板" [ref=e40] [cursor=pointer]:
+          - /url: "#/model/prompt-templates"
+          - text: 提提示词模板
+        - link "规则管理" [ref=e41] [cursor=pointer]:
+          - /url: "#/assets/rules"
+          - text: 规规则管理
+    - generic [ref=e42]:
+      - button "集成与治理" [expanded] [ref=e43] [cursor=pointer]
+      - generic [ref=e46]:
+        - link "集成控制台" [active] [ref=e47] [cursor=pointer]:
+          - /url: "#/integration/console"
+          - text: 集集成控制台
+        - link "插件与来源" [ref=e48] [cursor=pointer]:
+          - /url: "#/assets/plugins"
+          - text: 插插件与来源
+        - link "MCP 连接" [ref=e49] [cursor=pointer]:
+          - /url: "#/assets/mcp"
+          - text: MMCP 连接
+        - link "记忆管理" [ref=e50] [cursor=pointer]:
+          - /url: "#/assets/memories"
+          - text: 记记忆管理
+    - generic [ref=e51]:
+      - button "平台管理" [expanded] [ref=e52] [cursor=pointer]
+      - generic [ref=e58]:
+        - link "软件能力目录" [ref=e59] [cursor=pointer]:
+          - /url: "#/capability-packages"
+          - text: 软软件能力目录
+        - link "模型管理" [ref=e60] [cursor=pointer]:
+          - /url: "#/model/management"
+          - text: 模模型管理
+        - link "确认中心" [ref=e61] [cursor=pointer]:
+          - /url: "#/approvals"
+          - text: 确确认中心
+          - generic [ref=e62]: "0"
+        - link "统计分析" [ref=e63] [cursor=pointer]:
+          - /url: "#/statistics"
+          - text: 统统计分析
+        - link "审计记录" [ref=e64] [cursor=pointer]:
+          - /url: "#/audit"
+          - text: 审审计记录
+        - link "系统管理" [ref=e65] [cursor=pointer]:
+          - /url: "#/system"
+          - text: 系系统管理
+        - link "评测中心" [ref=e66] [cursor=pointer]:
+          - /url: "#/evaluations"
+          - text: 评评测中心
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - navigation "面包屑" [ref=e69]:
+        - generic [ref=e70]: 集成与治理
+        - generic [aria-hidden] [ref=e71]: /
+        - strong [ref=e72]: 集成控制台
+      - button "刷新" [ref=e772] [cursor=pointer]
+      - generic [ref=e79]:
+        - button "搜索 Ctrl K" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - text: 搜索
+            - generic [ref=e82]: Ctrl K
+        - button "切换主题，当前亮色" [ref=e83] [cursor=pointer]:
+          - generic [ref=e84]: ☀ 亮色
+        - generic [ref=e85]: 显示密度
+        - generic [ref=e87] [cursor=pointer]:
+          - generic:
+            - combobox "显示密度" [ref=e89]
+            - generic [ref=e90]: 标准
+        - generic [ref=e95]: developer-v12
+        - button "退出" [ref=e96] [cursor=pointer]
+    - generic [ref=e774]:
+      - region "智能体上下文" [ref=e775]:
+        - generic [ref=e778] [cursor=pointer]:
+          - generic:
+            - combobox "选择智能体" [ref=e780]
+            - generic [ref=e781]: 选择智能体（六个面板共享）
+        - generic [ref=e786]: 选一次全面板共享；上下文随地址持久，刷新与深链不丢失。
+      - generic [ref=e787]:
+        - navigation "集成控制台导航" [ref=e788]:
+          - button "配置发布 草稿→校验→批准→CAS 激活" [ref=e789] [cursor=pointer]:
+            - generic [ref=e790]: 配置发布
+            - generic [ref=e791]: 草稿→校验→批准→CAS 激活
+          - button "连接档案 协议、端点策略与认证引用" [ref=e792] [cursor=pointer]:
+            - generic [ref=e793]: 连接档案
+            - generic [ref=e794]: 协议、端点策略与认证引用
+          - button "环境绑定 连接档案钉到环境与物理端点" [ref=e795] [cursor=pointer]:
+            - generic [ref=e796]: 环境绑定
+            - generic [ref=e797]: 连接档案钉到环境与物理端点
+          - button "接入档案 业务系统、等级与体验引用" [ref=e798] [cursor=pointer]:
+            - generic [ref=e799]: 接入档案
+            - generic [ref=e800]: 业务系统、等级与体验引用
+          - button "体验编辑 欢迎语、能力说明与呈现" [ref=e801] [cursor=pointer]:
+            - generic [ref=e802]: 体验编辑
+            - generic [ref=e803]: 欢迎语、能力说明与呈现
+          - button "诊断 按环境只读投影逐阶段状态" [ref=e804] [cursor=pointer]:
+            - generic [ref=e805]: 诊断
+            - generic [ref=e806]: 按环境只读投影逐阶段状态
+        - generic [ref=e808]:
+          - generic [ref=e809]:
+            - generic [ref=e811] [cursor=pointer]:
+              - generic:
+                - combobox "选择环境" [ref=e813]
+                - generic [ref=e814]: production
+            - button "复制激活版本为草稿" [disabled] [ref=e819]
+            - button "新建配置发布" [disabled] [ref=e821]
+          - region "当前激活版本" [ref=e823]:
+            - heading "当前激活（production）" [level=2] [ref=e824]
+            - paragraph [ref=e844]: 该环境没有激活的配置版本；新会话将回退为无配置引用。
+          - region "发布列表" [ref=e846]:
+            - heading "发布记录" [level=2] [ref=e847]
+            - paragraph [ref=e867]: 暂无发布记录

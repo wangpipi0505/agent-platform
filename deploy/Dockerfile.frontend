@@ -1,4 +1,6 @@
 ARG NODE_BUILD_IMAGE
+# FT-WEB：VITE_AUTH_MODE 构建参数（portal=默认/release；dev=开发工作台直登，E1 走查用）
+ARG VITE_AUTH_MODE=portal
 ARG NGINX_RUNTIME_IMAGE
 FROM ${NODE_BUILD_IMAGE} AS frontend-build
 WORKDIR /build/web
@@ -9,8 +11,12 @@ COPY web/assistant.js/package.json assistant.js/package.json
 COPY web/shared/package.json shared/package.json
 COPY web/flow-designer/package.json flow-designer/package.json
 COPY web/debug-panel/package.json debug-panel/package.json
+ARG VITE_AUTH_MODE=portal
+ENV VITE_AUTH_MODE=${VITE_AUTH_MODE}
 RUN npm ci
 COPY web/ ./
+# flow-designer TS 引用仓库根 contracts/graph-definition.schema.json（R-28 修）
+COPY contracts/ ../contracts/
 # The three release artifacts have independent asset prefixes on the same origin.
 RUN npx vue-tsc --noEmit && npx vite build --config admin/vite.config.ts --base=/console/ \
  && npx vite build --config webapp/vite.config.ts --base=/w/ \

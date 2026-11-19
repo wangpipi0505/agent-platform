@@ -1,0 +1,143 @@
+- generic [ref=e12]:
+  - complementary [ref=e13]:
+    - generic [ref=e14]: ◈◈ 智能体平台
+    - generic [ref=e15]: 构建与管理
+    - generic [ref=e16]:
+      - button "智能体" [expanded] [ref=e17] [cursor=pointer]
+      - link "智能体管理" [ref=e23] [cursor=pointer]:
+        - /url: "#/apps"
+        - text: 智智能体管理
+    - generic [ref=e24]:
+      - button "任务与运行" [expanded] [ref=e25] [cursor=pointer]
+      - generic [ref=e28]:
+        - link "运行中心" [ref=e29] [cursor=pointer]:
+          - /url: "#/operations"
+          - text: 运运行中心
+        - link "运行监控" [ref=e30] [cursor=pointer]:
+          - /url: "#/runs"
+          - text: 运运行监控
+        - link "服务管理" [ref=e31] [cursor=pointer]:
+          - /url: "#/services"
+          - text: 服服务管理
+        - link "任务工作台" [ref=e32] [cursor=pointer]:
+          - /url: "#/tasks"
+          - text: 任任务工作台
+    - generic [ref=e33]:
+      - button "构建资产" [expanded] [ref=e34] [cursor=pointer]
+      - generic [ref=e38]:
+        - link "技能库" [ref=e39] [cursor=pointer]:
+          - /url: "#/skills"
+          - text: 技技能库
+        - link "提示词模板" [ref=e40] [cursor=pointer]:
+          - /url: "#/model/prompt-templates"
+          - text: 提提示词模板
+        - link "规则管理" [ref=e41] [cursor=pointer]:
+          - /url: "#/assets/rules"
+          - text: 规规则管理
+    - generic [ref=e42]:
+      - button "集成与治理" [expanded] [ref=e43] [cursor=pointer]
+      - generic [ref=e46]:
+        - link "集成控制台" [ref=e47] [cursor=pointer]:
+          - /url: "#/integration/console"
+          - text: 集集成控制台
+        - link "插件与来源" [ref=e48] [cursor=pointer]:
+          - /url: "#/assets/plugins"
+          - text: 插插件与来源
+        - link "MCP 连接" [ref=e49] [cursor=pointer]:
+          - /url: "#/assets/mcp"
+          - text: MMCP 连接
+        - link "记忆管理" [ref=e50] [cursor=pointer]:
+          - /url: "#/assets/memories"
+          - text: 记记忆管理
+    - generic [ref=e51]:
+      - button "平台管理" [expanded] [ref=e52] [cursor=pointer]
+      - generic [ref=e58]:
+        - link "软件能力目录" [ref=e59] [cursor=pointer]:
+          - /url: "#/capability-packages"
+          - text: 软软件能力目录
+        - link "模型管理" [ref=e60] [cursor=pointer]:
+          - /url: "#/model/management"
+          - text: 模模型管理
+        - link "确认中心" [ref=e61] [cursor=pointer]:
+          - /url: "#/approvals"
+          - text: 确确认中心
+          - generic [ref=e62]: "0"
+        - link "统计分析" [ref=e63] [cursor=pointer]:
+          - /url: "#/statistics"
+          - text: 统统计分析
+        - link "审计记录" [ref=e64] [cursor=pointer]:
+          - /url: "#/audit"
+          - text: 审审计记录
+        - link "系统管理" [ref=e65] [cursor=pointer]:
+          - /url: "#/system"
+          - text: 系系统管理
+        - link "评测中心" [ref=e66] [cursor=pointer]:
+          - /url: "#/evaluations"
+          - text: 评评测中心
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - navigation "面包屑" [ref=e69]:
+        - generic [ref=e70]: 智能体
+        - generic [aria-hidden] [ref=e71]: /
+        - strong [ref=e72]: 智能体管理
+      - generic [ref=e74]:
+        - button "创建智能体" [ref=e75] [cursor=pointer]
+        - button "刷新" [ref=e77] [cursor=pointer]
+      - generic [ref=e79]:
+        - button "搜索 Ctrl K" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - text: 搜索
+            - generic [ref=e82]: Ctrl K
+        - button "切换主题，当前亮色" [ref=e83] [cursor=pointer]:
+          - generic [ref=e84]: ☀ 亮色
+        - generic [ref=e85]: 显示密度
+        - generic [ref=e87] [cursor=pointer]:
+          - generic:
+            - combobox "显示密度" [ref=e89]
+            - generic [ref=e90]: 标准
+        - generic [ref=e95]: developer-v12
+        - button "退出" [ref=e96] [cursor=pointer]
+    - generic [ref=e98]:
+      - generic [ref=e99]: 共 0 条记录
+      - generic [ref=e101]:
+        - generic [ref=e102]:
+          - textbox "搜索名称或运行编码" [ref=e105]
+          - textbox "应用编码" [ref=e109]
+          - textbox "专业领域" [ref=e113]
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - combobox [ref=e119]
+              - generic [ref=e120]: 选择业务分类
+            - generic [ref=e122] [cursor=pointer]
+          - textbox "标签" [ref=e127]
+          - generic [ref=e130] [cursor=pointer]:
+            - generic:
+              - combobox "智能体状态" [ref=e132]
+              - generic [ref=e133]: 状态（默认不含归档）
+        - generic [ref=e139]:
+          - table [ref=e141]:
+            - rowgroup [ref=e152]:
+              - row [ref=e153]:
+                - columnheader "名称 / 编码" [ref=e154]
+                - columnheader "状态" [ref=e156]
+                - columnheader "当前版本" [ref=e158]
+                - columnheader "类型" [ref=e160]
+                - columnheader "专业领域" [ref=e162]
+                - columnheader "业务分类" [ref=e164]
+                - columnheader "说明" [ref=e166]
+                - columnheader "更新于" [ref=e168]
+                - columnheader "操作" [ref=e170]
+          - generic [ref=e175]:
+            - table:
+              - rowgroup
+            - paragraph [ref=e197]: 还没有智能体，创建第一个
+        - generic [ref=e198]:
+          - generic [ref=e201] [cursor=pointer]:
+            - generic:
+              - combobox [ref=e203]
+              - generic [ref=e204]: 12/page
+          - button "Go to previous page" [disabled] [ref=e209]
+          - list [ref=e210]:
+            - listitem "page 1" [ref=e211]: "1"
+          - button "Go to next page" [disabled] [ref=e212]
+          - generic [ref=e213]: Total 0

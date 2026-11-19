@@ -93,3 +93,16 @@ services:
     environment:
       <<: *e1-env
       SERVER_PORT: "18985"
+  frontend:
+    network_mode: host
+    image: ${FRONTEND_IMAGE}
+    container_name: e1-frontend
+    restart: unless-stopped
+    volumes:
+      - /home/agent-platform/nginx-e1.conf:/etc/nginx/nginx-e2.conf:ro
+    entrypoint: ["nginx", "-c", "/etc/nginx/nginx-e2.conf", "-g", "daemon off;"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:18094/healthz || exit 1"]
+      interval: 15s
+      timeout: 4s
+      retries: 3
