@@ -9,3 +9,7 @@
 管理台默认要求显式选择模板/版本，也可主动选择稍后配置内联；不自动挑列表首项。构建时 `VITE_PROMPT_TEMPLATE_SELECTION=false` 可恢复原创建界面；这不删除已有引用或改变历史重放。回滚只撤本地代码提交，保留已存引用/评测/运行事实。
 
 这是源码接口增补；live服务OpenAPI重新构建/读取、真实模型/IAM及浏览器联合仍按EX-06/07/26验收，不由本地协议测试代替。
+
+## promptSource=DIRECT 显式内联（R-24，2026-11-19）
+
+`config.promptSource="DIRECT"` 为显式内联声明：主段取 `config.systemPrompt`（必须非空，空正文 409 `PROMPT_TEMPLATE_SNAPSHOT_MISMATCH`"直连来源缺少内联正文"），不要求 `frozenPrompts`；附加模板（frozenPrompts）若在仍按原顺序追加。未知 promptSource 值一律 409（仅 TEMPLATE/DIRECT 合法）；缺省键维持旧内联兼容。演示种子 V901 四应用采用 DIRECT（提示词内联于快照 config，无模板引用），engine 装配（ContextAssembler.promptText）同轮接受。

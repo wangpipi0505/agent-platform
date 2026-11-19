@@ -124,11 +124,20 @@ public class ContextAssembler {
     }
 
     public static String promptText(JsonNode config, JsonNode inputs) {
-        boolean primary = "TEMPLATE".equals(config.path("promptSource").asText());
-        if (config.has("promptSource") && !primary)
-            throw new PlatformException(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "提示词来源无效");
+        // R-24：promptSource 二值枚举对齐——TEMPLATE=冻结模板主段（EX-20 既有）；DIRECT=内联
+        // systemPrompt 显式声明（V901 演示种子口径，此前被 409 误拒）；缺省=旧内联兼容。
+        boolean primary;
+        boolean explicitInline = false;
+        if (config.has("promptSource")) {
+            String source = config.path("promptSource").asText("");
+            if ("TEMPLATE".equals(source)) primary = true;
+            else if ("DIRECT".equals(source)) { primary = false; explicitInline = true; }
+            else throw new PlatformException(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "提示词来源无效（仅 TEMPLATE/DIRECT）");
+        } else primary = false;
         if (primary && (!config.path("frozenPrompts").isArray() || config.path("frozenPrompts").isEmpty()))
             throw new PlatformException(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "模板主来源缺少冻结正文");
+        if (explicitInline && config.path("systemPrompt").asText("").isBlank())
+            throw new PlatformException(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "直连来源缺少内联正文");
         // 只有显式新选择才切换主段；旧内联和附加模板维持原重放顺序。
         String prompt = primary ? "" : config.path("systemPrompt").asText(config.path("prompt").asText("你是一个助手。"));
         for (JsonNode template : config.path("frozenPrompts"))
