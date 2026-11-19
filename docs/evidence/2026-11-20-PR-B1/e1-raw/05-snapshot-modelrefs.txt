@@ -1,0 +1,45 @@
+{
+  "versionNo": 2,
+  "modelRefsCount": 1,
+  "modelRefs": [
+    {
+      "entry": {
+        "id": 1,
+        "baseUrl": "https://api.deepseek.com",
+        "protocol": "OPENAI_COMPATIBLE",
+        "provider": {
+          "id": 1,
+          "code": "deepseek",
+          "name": "DeepSeek(E2测试)",
+          "trustLabels": [
+            "E2_REAL"
+          ]
+        },
+        "modelName": "deepseek-flash",
+        "providerId": 1,
+        "displayName": "DeepSeek V4.1 Flash",
+        "capabilities": [
+          "chat"
+        ],
+        "tokenizerUrl": "",
+        "contextWindow": 1048576,
+        "maxOutputTokens": 393216
+      },
+      "modelEntryId": 1,
+      "modelBindingRef": {
+        "sha256": "bfb944fed74809b1cb30356ad6fa53fed87ad3cd9aaf0a6985bbf8bbe8a705db",
+        "bindingId": 1
+      }
+    }
+  ],
+  "modelBinding": {
+    "modelName": "demo-model",
+    "modelEntryId": 1,
+    "providerCode": "demo-provider"
+  },
+  "promptSource": "DIRECT",
+  "dependencyVersionsKeys": [
+    "modelRefs",
+    "skillRefs"
+  ]
+}

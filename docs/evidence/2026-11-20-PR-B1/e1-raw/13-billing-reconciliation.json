@@ -1,0 +1,36 @@
+{
+  "runId": "r_290fc90bc6a04165bfcd1ff4fb440e97",
+  "messages_count": 2,
+  "stream_recorded": true,
+  "metering": {
+    "exact": true,
+    "baseEstimate": 181,
+    "displayFactor": 1.0,
+    "estimateMethod": "CHARACTERS_DIVIDED_BY_FOUR_WITH_SCOPED_CALIBRATION_FOR_DISPLAY",
+    "admissionMethod": "MODEL_TOKENIZER",
+    "calibrationScope": "69834c758cb7aa5a114b0a37042507a46a5cd82f82c02600017a56edb5455b8f"
+  },
+  "comparison": {
+    "platform_recorded": {
+      "prompt_tokens": 206,
+      "completion_tokens": 380,
+      "total_tokens": 586,
+      "estimated_tokens": 181
+    },
+    "deepseek_direct_usage": {
+      "prompt_tokens": 206,
+      "completion_tokens": 297,
+      "total_tokens": 503,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 152
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 206
+    },
+    "prompt_tokens_match": true,
+    "total_tokens_within_reason": false
+  }
+}
