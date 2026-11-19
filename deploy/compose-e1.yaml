@@ -1,0 +1,95 @@
+# E1 形态辅助栈（192.168.1.2 上 189xx 段，dev-hmac+本机 HS256 票口径，供 /v1 用户面用例）——
+# 判定上限=L-链路（09 细则 §2.1）；与 E2 iam 主栈完全隔离（端口段/库 r24_check/容器名 -e1）。
+# 出话=DeepSeek 真实 API（注册后），不再用模型桩冒充（细则 §3.0.6）。
+name: agent-platform-e1
+
+x-e1-env: &e1-env
+  AGENT_BIND_ADDRESS: 127.0.0.1
+  AGENT_SECURITY_MODE: dev-hmac
+  AGENT_DEV_AUTH: "true"
+  AGENT_JWT_SECRET: ${AGENT_JWT_SECRET}
+  AGENT_MASTER_KEY: ${AGENT_MASTER_KEY}
+  AGENT_DB_USER: agentplat
+  AGENT_DB_PASSWORD: ${PG_PASSWORD}
+  AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/r24_check
+  AGENT_APP_URL: http://127.0.0.1:18981
+  AGENT_ENGINE_URL: http://127.0.0.1:18982
+  AGENT_SKILL_URL: http://127.0.0.1:18983
+  AGENT_MODEL_URL: http://127.0.0.1:18984
+  AGENT_MONITOR_URL: http://127.0.0.1:18985
+  AGENT_SYSTEM_REDIS_ADDRESS: redis://:${REDIS_PASSWORD}@127.0.0.1:16379
+  AGENT_SECRET_DIR: /home/agent-platform/secrets-e1
+  AGENT_MINIO_ENDPOINT: http://127.0.0.1:9000
+  AGENT_MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  AGENT_MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  AGENT_MINIO_BUCKET: agent-platform
+  OTEL_SDK_DISABLED: "true"
+  TZ: Asia/Shanghai
+
+services:
+  platform-gateway:
+    network_mode: host
+    entrypoint: ["java", "-Xms64m", "-Xmx512m", "-jar", "/opt/agent/service.jar"]
+    image: ${PLATFORM_GATEWAY_IMAGE}
+    volumes:
+      - /home/agent-platform/secrets-e1:/home/agent-platform/secrets-e1
+    container_name: e1-gateway
+    restart: unless-stopped
+    environment:
+      <<: *e1-env
+      SERVER_PORT: "18980"
+  app-management:
+    network_mode: host
+    entrypoint: ["java", "-Xms64m", "-Xmx512m", "-jar", "/opt/agent/service.jar"]
+    image: ${APP_MANAGEMENT_IMAGE}
+    volumes:
+      - /home/agent-platform/secrets-e1:/home/agent-platform/secrets-e1
+    container_name: e1-app
+    restart: unless-stopped
+    environment:
+      <<: *e1-env
+      SERVER_PORT: "18981"
+  engine-runtime:
+    network_mode: host
+    entrypoint: ["java", "-Xms64m", "-Xmx512m", "-jar", "/opt/agent/service.jar"]
+    image: ${ENGINE_RUNTIME_IMAGE}
+    volumes:
+      - /home/agent-platform/secrets-e1:/home/agent-platform/secrets-e1
+    container_name: e1-engine
+    restart: unless-stopped
+    environment:
+      <<: *e1-env
+      SERVER_PORT: "18982"
+  skill-registry:
+    network_mode: host
+    entrypoint: ["java", "-Xms64m", "-Xmx512m", "-jar", "/opt/agent/service.jar"]
+    image: ${SKILL_REGISTRY_IMAGE}
+    volumes:
+      - /home/agent-platform/secrets-e1:/home/agent-platform/secrets-e1
+    container_name: e1-skill
+    restart: unless-stopped
+    environment:
+      <<: *e1-env
+      SERVER_PORT: "18983"
+  model-gateway:
+    network_mode: host
+    entrypoint: ["java", "-Xms64m", "-Xmx512m", "-jar", "/opt/agent/service.jar"]
+    image: ${MODEL_GATEWAY_IMAGE}
+    volumes:
+      - /home/agent-platform/secrets-e1:/home/agent-platform/secrets-e1
+    container_name: e1-model
+    restart: unless-stopped
+    environment:
+      <<: *e1-env
+      SERVER_PORT: "18984"
+  monitor:
+    network_mode: host
+    entrypoint: ["java", "-Xms64m", "-Xmx512m", "-jar", "/opt/agent/service.jar"]
+    image: ${MONITOR_IMAGE}
+    volumes:
+      - /home/agent-platform/secrets-e1:/home/agent-platform/secrets-e1
+    container_name: e1-monitor
+    restart: unless-stopped
+    environment:
+      <<: *e1-env
+      SERVER_PORT: "18985"
