@@ -285,4 +285,33 @@ class RoutesTest {
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    /** R-34：portal ingress /v1/apps/* 形状卡——Routes 对用户面（会话/任务/记忆/计划）的登记保持不变。 */
+    @Test
+    void userPlaneV1AppShapesRemainRegisteredUnchangedByIngressShapeCard() {
+        // 会话面（归属核验在 engine：mine 语义与固定版本）
+        assertThat(Routes.service("/v1/apps/satellite-planning-assistant/sessions"))
+                .isEqualTo("engine");
+        assertThat(Routes.service("/v1/apps/satellite-planning-assistant/sessions/s_1"))
+                .isEqualTo("engine");
+        assertThat(Routes.service("/v1/apps/satellite-planning-assistant/sessions/s_1/events"))
+                .isEqualTo("engine");
+        // 任务面：应用前缀列表 + 任务前缀详情/计划/执行
+        assertThat(Routes.service("/v1/apps/satellite-planning-assistant/tasks")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks/77/plans")).isEqualTo("engine");
+        assertThat(Routes.service("/v1/tasks/77/execute")).isEqualTo("engine");
+        // 记忆面
+        assertThat(Routes.service("/v1/apps/satellite-planning-assistant/memories"))
+                .isEqualTo("engine");
+        // 本卡明确不放行的非用户面前缀：Routes 登记同样不因 ingress 形状卡变化。
+        // （/v1/deploy 仅登记 resource-manifest 单入口；/v1/runs 仅登记 runs 与 artifact download。）
+        assertThat(Routes.service("/v1/deploy/resource-manifest")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/v1/deploy/other"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(Routes.service("/v1/runs/r_1/artifacts/abc/download")).isEqualTo("skill");
+        // /v1/sessions 家族维持既有精确白名单（仅 {id}/subagents），列表入口不存在。
+        assertThat(Routes.service("/v1/sessions/s_1/subagents")).isEqualTo("engine");
+        assertThatThrownBy(() -> Routes.service("/v1/sessions"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

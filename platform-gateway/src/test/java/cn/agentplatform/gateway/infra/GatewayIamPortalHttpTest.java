@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -250,6 +252,68 @@ class GatewayIamPortalHttpTest {
         // vacuous today and becomes meaningful the moment one is added without a catalog row.
         var interceptors = app.getBeansOfType(MappedInterceptor.class).values();
         assertThat(interceptors).as("portal ingress interceptor registered once").hasSize(1);
+    }
+
+    // ---- R-34：portal ingress /v1 用户面形状 ------------------------------------------------------
+
+    /**
+     * R-34 形状卡：票源过滤器与 ingress 边界两个注册的 URL 形状同步扩 {@code /v1/apps/*}（用户面：
+     * 会话/任务列表/记忆），且只扩这一个前缀——deploy/runs/sessions 非用户面不入 portal 形状。
+     */
+    @Test
+    void v1AppsUserPlaneIsInsideBothPortalIngressRegistrationsAndNothingElse() {
+        var source = (FilterRegistrationBean<?>) app.getBean("gatewayPortalTicketSource");
+        var ingress = (FilterRegistrationBean<?>) app.getBean("gatewayPortalIngress");
+        for (var registration : List.of(source, ingress)) {
+            assertThat(registration.getUrlPatterns())
+                    .contains("/admin/*", "/auth/session", "/v1/apps/*");
+            assertThat(registration.getUrlPatterns())
+                    .doesNotContain("/v1/deploy/*", "/v1/runs/*", "/v1/sessions/*", "/v1/tasks/*");
+        }
+    }
+
+    /** R-34：票源过滤器的 portalSurface 判定扩 {@code /v1/apps/} 前缀，且仅此前缀。 */
+    @Test
+    void portalSurfaceShapeCoversTheV1AppsPrefixOnly() {
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/apps/ops/sessions")).isTrue();
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/apps/ops/memories")).isTrue();
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/apps/ops")).isTrue();
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/appsx/ops")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/deploy/resource-manifest")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/runs/r_1")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/sessions/s_1/subagents")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("/v1/tasks/77/plans")).isFalse();
+    }
+
+    /** R-34：查询串票据在 /v1/apps 用户面上同样以 400 拒绝（票源判定先于安全链）。 */
+    @Test
+    void queryStringTicketIsRejectedOnTheV1AppsUserPlane() throws Exception {
+        var response = get("/v1/apps/ops/sessions?access_token=leaked", null);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(400);
+        assertThat(response.body()).contains("PORTAL_TICKET_SOURCE_INVALID");
+    }
+
+    /** R-34 负向：非用户面前缀不因形状卡入票源判定——/v1/runs 带查询串票据走安全链语义（无票 401）。 */
+    @Test
+    void queryStringTicketIsNotPortalRejectedOutsideTheV1AppsUserPlane() throws Exception {
+        var response = get("/v1/runs/r_0123456789abcdef0123456789abcdef?access_token=leaked", null);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(401);
+        assertThat(response.body()).contains("SYS-AUTH-401");
+    }
+
+    /**
+     * R-34 诚实钉子（R-26 §5-1 残余缺口）：ingress 注册形状扩到 /v1/apps/* 后，门户票在请求形状层
+     * 已进入边界，但 {@code GatewayIngressBoundary.route()}（admin-common）仍只承认 RUN/SESSION/
+     * STATUS/EVENTS 四种受管形状，{@code GatewayController.proxy} 的 iam 分支对一切 /v1/** 走
+     * claim（要求 Purpose.RUN）——因此门户票 GET /v1/apps/... 仍是 403（与票据有效性无关）。
+     * 本断言钉住形状卡之后的真实现状：用户面 200 翻转需要后续卡的 route()/claim() 配套改动，
+     * 那张卡落地时把本断言翻成 200。
+     */
+    @Test
+    void portalTicketOnV1AppsUserPlaneRemainsDeniedByTheBoundaryRoutePendingTheFlipCard() throws Exception {
+        var response = get("/v1/apps/ops/sessions?mine=true", iam.portal());
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(403);
+        assertThat(response.body()).contains("SYS-AUTH-403");
     }
 
     // ---- helpers ---------------------------------------------------------------------------------
