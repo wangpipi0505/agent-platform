@@ -4,8 +4,9 @@
 # 鉴权：SPRING_PROFILES_ACTIVE=test 使 authority http+127.0.0.1 URI 通过 requireTrustedUri 的 test 分支；
 #   各服务 agent.security.authority.client-id=<serviceId>、audience=urn:agent-platform:service:<serviceId>。
 # 密钥：全部经 .env.test（服务器本地，chmod 600）。
-# 测试期登记（用户拍板③）：AGENT_RELEASE_GATE=IAM_SCOPE_ACCEPTED 先行置位（IAM 负向验收前）；
-#   entrypoint 覆盖绕过 dev-auth 禁令直启 jar（otel agent 照挂，OTEL_SDK_DISABLED=true 停遥测）。
+# 登记修正（R-29 收口后，2026-11-20 核对订正）：AGENT_RELEASE_GATE=IAM_SCOPE_ACCEPTED 已置位——负向留证见
+#   evidence/r29-neggate.log|r29-negdev.log（默认 BLOCKED 与 dev-auth=true 各 exit 78）；entrypoint 覆盖已在 R-29 移除，
+#   现走镜像原版 entrypoint.sh（gate 已置位故放行）；OTEL_SDK_DISABLED 可调（R-31 观测栈开启时置 false）。
 name: agent-platform-test
 
 
