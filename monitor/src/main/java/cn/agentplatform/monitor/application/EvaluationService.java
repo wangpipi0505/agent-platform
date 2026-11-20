@@ -654,6 +654,14 @@ public class EvaluationService {
     private Map<String, Object> promptTemplateRef(Map<String, Object> candidate) {
         var snapshot = Json.tree(candidate);
         if (!snapshot.path("config").has("promptSource")) return null;
+        // R-33：DIRECT 候选无模板引用可核，但报告仍须保留"评的是哪份内联提示词"的事后证明——
+        // 返回内联正文的 canonical SHA-256 而非 null；缺内联正文与 engine ContextAssembler 同判 409。
+        if ("DIRECT".equals(snapshot.path("config").path("promptSource").asText())) {
+            var inline = snapshot.path("config").path("systemPrompt");
+            if (!inline.isTextual() || inline.asText().isBlank())
+                throw fail(409, "PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", "直连来源缺少内联正文");
+            return Map.of("source", "DIRECT", "promptSha256", Digest.sha256(inline.asText()));
+        }
         var refs = snapshot.path("config").path("promptRefs");
         var frozen = snapshot.path("dependencyVersions").path("frozenPrompts");
         if (!"TEMPLATE".equals(snapshot.path("config").path("promptSource").asText())

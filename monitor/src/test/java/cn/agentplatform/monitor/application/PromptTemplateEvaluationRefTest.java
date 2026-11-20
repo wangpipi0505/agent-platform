@@ -76,6 +76,18 @@ class PromptTemplateEvaluationRefTest {
         return candidate;
     }
 
+    Map<String, Object> directCandidate(String systemPrompt) {
+        var candidate = new LinkedHashMap<String, Object>();
+        candidate.put("appCode", code); candidate.put("type", "CHAT");
+        candidate.put("name", "评测直连"); candidate.put("description", "");
+        candidate.put("domain", ""); candidate.put("bizCategory", ""); candidate.put("tags", List.of());
+        candidate.put("definition", Map.of());
+        candidate.put("config", Map.of("promptSource", "DIRECT", "systemPrompt", systemPrompt));
+        candidate.put("candidateSha256", Digest.sha256(Json.canonical(candidate)));
+        candidate.put("draftRev", 1);
+        return candidate;
+    }
+
     Map<String, Object> request() {
         return Map.of("appCode", code, "draftRev", 1, "candidateSha256", service.candidate.get("candidateSha256"),
                 "datasetVersion", "template-v1", "cases", List.of(Map.of("id", "safe", "inputs", Map.of(),
@@ -105,6 +117,45 @@ class PromptTemplateEvaluationRefTest {
         ((com.fasterxml.jackson.databind.node.ObjectNode) bad.path("dependencyVersions").path("frozenPrompts").get(0))
                 .put("content", "伪造正文");
         service.candidate = Json.mapper().convertValue(bad, Map.class);
+        var error = assertThrows(PlatformException.class, () -> service.evaluate(request()));
+        assertEquals(409, error.status()); assertEquals("PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", error.code());
+        assertTrue(service.sent.isEmpty());
+        assertEquals(0, db.queryForObject("select count(*) from monitor.evaluation_report where tenant_id=?", Integer.class, tenant));
+    }
+
+    /** R-33：DIRECT 候选不丢提示词证据——报告读回 promptTemplateRef={source,promptSha256}，摘要可事后定位内联正文。 */
+    @Test void directCandidateReportCarriesInlinePromptShaEvidence() {
+        String systemPrompt = "你是直连评测助手。";
+        service.candidate = directCandidate(systemPrompt);
+        var report = service.evaluate(request());
+        assertEquals("RUNNING", report.get("status"));
+        assertEquals(Map.of("source", "DIRECT", "promptSha256", Digest.sha256(systemPrompt)),
+                report.get("promptTemplateRef"));
+        assertNotNull(report.get("publicationEvidence"));
+        String id = report.get("id").toString();
+        service.pending = false;
+        var resumed = service.resume(id);
+        assertEquals("ACCEPTED", resumed.get("status"));
+        assertEquals(Map.of("source", "DIRECT", "promptSha256", Digest.sha256(systemPrompt)),
+                resumed.get("promptTemplateRef"));
+        assertEquals(1, service.candidateReads);
+    }
+
+    /** R-33：DIRECT 候选缺内联正文与引擎 ContextAssembler 同判——409，不落库、不发起执行。 */
+    @Test void directCandidateWithoutInlineBodyIsRejectedBeforePersistence() {
+        service.candidate = directCandidate("  ");
+        var error = assertThrows(PlatformException.class, () -> service.evaluate(request()));
+        assertEquals(409, error.status()); assertEquals("PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", error.code());
+        assertTrue(service.sent.isEmpty());
+        assertEquals(0, db.queryForObject("select count(*) from monitor.evaluation_report where tenant_id=?", Integer.class, tenant));
+    }
+
+    /** R-33：未知 promptSource 仍 409（TEMPLATE/DIRECT 二值枚举，与 engine ContextAssembler 对齐）。 */
+    @Test void unknownPromptSourceIsRejectedBeforePersistence() {
+        var candidate = directCandidate("你是直连评测助手。");
+        candidate.put("config", Map.of("promptSource", "INLINE", "systemPrompt", "你是直连评测助手。"));
+        candidate.put("candidateSha256", Digest.sha256(Json.canonical(candidate)));
+        service.candidate = candidate;
         var error = assertThrows(PlatformException.class, () -> service.evaluate(request()));
         assertEquals(409, error.status()); assertEquals("PROMPT_TEMPLATE_SNAPSHOT_MISMATCH", error.code());
         assertTrue(service.sent.isEmpty());
