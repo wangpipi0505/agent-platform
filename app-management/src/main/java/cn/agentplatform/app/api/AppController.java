@@ -13,19 +13,49 @@ public class AppController {
     private final AppService apps;
     private final TemplateService templates;
     private final AuthorityProperties authorityProperties;
+    private final PlatformAccessService platformAccess;
 
     public AppController(AppService apps, TemplateService templates, AuthorityProperties authorityProperties) {
+        this(apps, templates, authorityProperties, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AppController(AppService apps, TemplateService templates, AuthorityProperties authorityProperties,
+                         PlatformAccessService platformAccess) {
         this.apps = apps;
         this.templates = templates;
         this.authorityProperties = Objects.requireNonNull(authorityProperties);
+        this.platformAccess = platformAccess;
     }
 
     private void edit() {
-        Actor.current().requireRole("EDITOR");
+        require(PlatformAccessService.BUILD, null);
+    }
+
+    private boolean iam() {
+        return "iam".equals(authorityProperties.mode());
+    }
+
+    private PlatformAccessService access() {
+        if (platformAccess == null) {
+            throw AppService.error(403, "PLATFORM_CAPABILITY_DENIED", "平台授权服务不可用");
+        }
+        return platformAccess;
+    }
+
+    private void require(String capability, String code) {
+        if (iam()) {
+            access().require(Actor.current(), capability, code);
+        } else if (!PlatformAccessService.VIEW.equals(capability)) {
+            Actor.current().requireRole("EDITOR");
+        }
     }
 
     @GetMapping("/admin/apps")
     public Object list(@RequestParam Map<String, String> filters) {
+        if (iam()) {
+            return ApiResponse.ok(apps.list(filters, access().scope(Actor.current(), PlatformAccessService.VIEW)));
+        }
         return ApiResponse.ok(apps.list(filters));
     }
 
@@ -38,68 +68,76 @@ public class AppController {
     @PostMapping("/admin/apps/{code}/copy")
     public Object copy(@PathVariable String code, @RequestBody Map<String, Object> b) {
         edit();
+        require(PlatformAccessService.VIEW, code);
         return ApiResponse.ok(apps.copy(code, b));
     }
 
     @GetMapping("/admin/apps/{code}/lifecycle-logs")
     public Object lifecycleLogs(@PathVariable String code) {
+        require(PlatformAccessService.VIEW, code);
         return ApiResponse.ok(apps.lifecycleLogs(code));
     }
 
     @GetMapping("/admin/apps/{code}")
     public Object get(@PathVariable String code) {
+        require(PlatformAccessService.VIEW, code);
         return ApiResponse.ok(apps.get(code));
     }
 
     /** 只读最近pin观测，沿相邻GET的身份边界；租户与应用存在性由现有服务统一校验。 */
     @GetMapping("/admin/apps/{code}/pin-status")
     public Object pinStatus(@PathVariable String code) {
+        require(PlatformAccessService.VIEW, code);
         return ApiResponse.ok(apps.pinStatus(code));
     }
 
     @PutMapping("/admin/apps/{code}")
     public Object metadata(@PathVariable String code, @RequestBody Map<String, Object> b) {
-        edit();
+        require(PlatformAccessService.BUILD, code);
         return ApiResponse.ok(apps.metadata(code, b));
     }
 
     @DeleteMapping("/admin/apps/{code}")
     public Object delete(@PathVariable String code) {
-        edit();
+        require(PlatformAccessService.BUILD, code);
         apps.delete(code);
         return ApiResponse.ok(Map.of("deleted", true));
     }
 
     @PutMapping("/admin/apps/{code}/config")
     public Object config(@PathVariable String code, @RequestBody Map<String, Object> b) {
-        edit();
+        require(PlatformAccessService.BUILD, code);
         return ApiResponse.ok(apps.save(code, b, false));
     }
 
     @GetMapping("/admin/flows/{code}")
     public Object flow(@PathVariable String code) {
+        require(PlatformAccessService.VIEW, code);
         return ApiResponse.ok(apps.get(code));
     }
 
     @PutMapping("/admin/flows/{code}")
     public Object flowSave(@PathVariable String code, @RequestBody Map<String, Object> b) {
-        edit();
+        require(PlatformAccessService.BUILD, code);
         return ApiResponse.ok(apps.save(code, b, true));
     }
 
     @GetMapping("/admin/apps/{code}/versions")
     public Object versions(@PathVariable String code) {
+        require(PlatformAccessService.VIEW, code);
         return ApiResponse.ok(apps.versions(code));
     }
 
     @GetMapping("/admin/apps/{code}/versions/diff")
     public Object versionDiff(
             @PathVariable String code, @RequestParam int fromVersion, @RequestParam int toVersion) {
+        require(PlatformAccessService.VIEW, code);
         return ApiResponse.ok(apps.versionDiff(code, fromVersion, toVersion));
     }
 
     @GetMapping("/admin/apps/{code}/versions/{versionNo}")
     public Object adminVersion(@PathVariable String code, @PathVariable int versionNo) {
+        require(PlatformAccessService.VIEW, code);
         apps.get(code);
         return ApiResponse.ok(apps.version(code, versionNo));
     }
@@ -112,13 +150,13 @@ public class AppController {
 
     @PostMapping("/admin/apps/{code}/publish/precheck")
     public Object precheck(@PathVariable String code) {
-        edit();
+        require(PlatformAccessService.PUBLISH, code);
         return ApiResponse.ok(apps.precheck(code));
     }
 
     @PostMapping("/admin/apps/{code}/publish/commit")
     public Object commit(@PathVariable String code, @RequestBody Map<String, Object> b) {
-        edit();
+        require(PlatformAccessService.PUBLISH, code);
         return ApiResponse.ok(apps.commit(code, b));
     }
 
@@ -127,7 +165,7 @@ public class AppController {
             @PathVariable String code,
             @PathVariable String action,
             @RequestBody(required = false) Map<String, Object> b) {
-        edit();
+        require(PlatformAccessService.PUBLISH, code);
         return ApiResponse.ok(apps.lifecycle(code, action, b == null ? Map.of() : b));
     }
 
@@ -178,6 +216,7 @@ public class AppController {
 
     @GetMapping("/admin/classifications")
     public Object classifications() {
+        require(PlatformAccessService.VIEW, null);
         return ApiResponse.ok(templates.classifications());
     }
 
@@ -197,6 +236,7 @@ public class AppController {
 
     @GetMapping("/admin/prompt-templates")
     public Object templateList() {
+        require(PlatformAccessService.VIEW, null);
         return ApiResponse.ok(templates.list());
     }
 
@@ -214,6 +254,7 @@ public class AppController {
 
     @GetMapping("/admin/prompt-templates/{code}/versions")
     public Object templateVersions(@PathVariable String code) {
+        require(PlatformAccessService.VIEW, null);
         return ApiResponse.ok(templates.versions(code));
     }
 

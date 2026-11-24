@@ -4,7 +4,7 @@
 // Enter 跳转（router.push(path)）、Esc/点击遮罩关闭。样式只用 tokens 变量（F1-1 词表）。
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { pageAccess, type PageAccessEntry } from "./page-access";
+import { accessDecisionByKey, pageAccess, type PageAccessEntry } from "./page-access";
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ close: [] }>();
@@ -23,8 +23,9 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKey));
 
 const results = computed<PageAccessEntry[]>(() => {
   const q = query.value.trim().toLowerCase();
-  if (!q) return pageAccess;
-  return pageAccess.filter(
+  const allowed = pageAccess.filter((entry) => accessDecisionByKey(entry.key).allow);
+  if (!q) return allowed;
+  return allowed.filter(
     (entry) =>
       entry.title.toLowerCase().includes(q) ||
       entry.key.toLowerCase().includes(q) ||

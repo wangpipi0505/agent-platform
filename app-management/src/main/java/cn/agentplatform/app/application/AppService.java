@@ -276,6 +276,11 @@ public class AppService {
     }
 
     public List<Map<String, Object>> list(Map<String, String> filters) {
+        return list(filters, new PlatformAccessService.ApplicationScope(true, Set.of()));
+    }
+
+    public List<Map<String, Object>> list(Map<String, String> filters, PlatformAccessService.ApplicationScope scope) {
+        if (!scope.all() && scope.codes().isEmpty()) return List.of();
         var sql =
                 new StringBuilder(
                         "select a.*,d.id as"
@@ -284,6 +289,11 @@ public class AppService {
                             + " and d.app_code=a.code where a.tenant_id=?");
         var args = new ArrayList<Object>();
         args.add(tenant());
+        if (!scope.all()) {
+            sql.append(" and a.code in (").append(String.join(",", Collections.nCopies(scope.codes().size(), "?")))
+                    .append(")");
+            args.addAll(scope.codes());
+        }
         String status = filters.getOrDefault("status", "").trim();
         if (status.isEmpty()) sql.append(" and a.status<>'ARCHIVED'");
         else {

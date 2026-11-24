@@ -10,6 +10,12 @@ import NotFoundPage from "./pages/NotFoundPage.vue";
 const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/apps" },
   {
+    path: "/platform/authorizations",
+    name: "platform-authorizations",
+    component: () => import("./pages/PlatformAuthorizationsPage.vue"),
+    meta: { access: "platform-authorizations", title: "用户与授权" },
+  },
+  {
     path: "/capability-packages",
     name: "capability-packages",
     component: () => import("./pages/CapabilityPackagesPage.vue"),

@@ -3,11 +3,28 @@ import {createPinia, setActivePinia} from 'pinia';
 import {useAuth, createApi} from '../shared/api';
 import {createPortalSession, portalMode, trustedPortal} from '../shared/portal-auth';
 import {downloadArtifact} from '../shared/artifact';
+import {navigationDecision, pageByKey} from '../admin/src/page-access';
 const session=(roles:string[]=[])=>({tenantId:'tenant',principalId:'person',roles,expiresAt:new Date(Date.now()+60_000).toISOString()});
 const reply=(data:any,status=200,code='OK')=>new Response(JSON.stringify({code,data}),{status});
 const deferred=<T>()=>{let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>resolve=r);return {promise,resolve};};
 beforeEach(()=>setActivePinia(createPinia()));
 afterEach(()=>{vi.restoreAllMocks();vi.useRealTimers();vi.unstubAllGlobals();});
+it('uses the server capability and current page mapping for a scoped builder', async () => {
+ const auth = useAuth();
+ const portal = createPortalSession(auth, {
+   getAccessToken: async () => 'ticket',
+   onSessionChanged: () => () => {},
+ }, {
+   mode: 'portal',
+   transport: async () => reply({ ...session(['BUILDER']), capabilities: ['agent.build'], pages: ['/apps'] }),
+ });
+ await portal.connect();
+ expect(auth.can('edit')).toBe(true);
+ const pageSession = { hasToken: true, roles: auth.roles, pages: auth.user.pages };
+ expect(navigationDecision(pageByKey.apps, pageSession).allow).toBe(true);
+ expect(navigationDecision(pageByKey['platform-authorizations'], pageSession).allow).toBe(false);
+ portal.dispose();
+});
 it('D4b lifecycle logout unsubscribes and old queued callbacks cannot revive or replace a later subscription',async()=>{
  const auth=useAuth(),callbacks:Array<()=>void>=[],getAccessToken=vi.fn(async()=> 'same'),unsubscribe=vi.fn();
  const subscribe=vi.fn((listener:()=>void)=>{callbacks.push(listener);return ()=>{unsubscribe();listener();};});

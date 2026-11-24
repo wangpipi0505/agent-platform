@@ -68,6 +68,13 @@ class GatewayIamPortalHttpTest {
         engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
         engine.createContext("/internal/apps/ops/published-metadata", GatewayIamPortalHttpTest::respondAsApp);
+        engine.createContext("/internal/platform-authorization/session", GatewayIamPortalHttpTest::respondWithAccess);
+        engine.createContext("/admin/platform-authorization/grants", GatewayIamPortalHttpTest::respondAsGrantService);
+        engine.createContext("/admin/apps", request -> {
+            try (request) {
+                request.sendResponseHeaders(403, -1);
+            }
+        });
         engine.start();
         var deployment = properties();
         app = (ServletWebServerApplicationContext)
@@ -218,7 +225,58 @@ class GatewayIamPortalHttpTest {
         var response = get("/auth/session", iam.portal());
         assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
         assertThat(response.headers().firstValue("Cache-Control")).contains("no-store");
-        assertThat(response.body()).contains("tenant-a").doesNotContain("access_token");
+        var identity = Json.read(response.body()).path("data");
+        assertThat(identity.path("tenantId").asText()).isEqualTo("tenant-a");
+        assertThat(identity.path("roles").get(0).asText()).isEqualTo("BUILDER");
+        assertThat(identity.path("capabilities").get(0).asText()).isEqualTo("agent.build");
+        assertThat(identity.path("pages").get(0).asText()).isEqualTo("/apps");
+        assertThat(response.body()).doesNotContain("access_token");
+    }
+
+    private static void respondWithAccess(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {
+        try (request; var authority = iam.client("app")) {
+            var subject = new cn.agentplatform.common.authority.SubjectKey("tenant-a", "alice");
+            var call = cn.agentplatform.common.authority.PlatformBuildRoutes.call(
+                    new ServiceRoutePolicy(), "GET", "/internal/platform-authorization/session", subject);
+            String bearer = request.getRequestHeaders().getFirst("Authorization");
+            var actor = authority.authorize(bearer.substring("Bearer ".length()), call).actor();
+            var result = Map.of("tenantId", actor.tenantId(), "principalId", actor.principalId(),
+                    "roles", List.of("BUILDER"), "capabilities", List.of("agent.build"), "pages", List.of("/apps"));
+            byte[] body = Json.write(ApiResponse.ok(result)).getBytes(StandardCharsets.UTF_8);
+            request.getResponseHeaders().set("Content-Type", "application/json");
+            request.sendResponseHeaders(200, body.length);
+            request.getResponseBody().write(body);
+        }
+    }
+
+    @Test
+    void platformGrantWritesUseThePortalSubjectAndPreserveTheOriginalRequest() throws Exception {
+        String path = "/admin/platform-authorization/grants";
+        String body = "{\"subject\":\"operator\",\"role\":\"BUILDER\",\"appScope\":[\"ops\"]}";
+        for (String method : List.of("PUT", "DELETE")) {
+            var result = send(HttpRequest.newBuilder(URI.create(base + path))
+                    .header("Authorization", "Bearer " + iam.portal())
+                    .header("Content-Type", "application/json")
+                    .method(method, HttpRequest.BodyPublishers.ofString(body)));
+            assertThat(result.statusCode()).as(result.body()).isEqualTo(200);
+            assertThat(result.body()).isEqualTo(method + " tenant-a/alice " + body);
+        }
+    }
+
+    private static void respondAsGrantService(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {
+        try (request; var authority = iam.client("app")) {
+            var subject = new cn.agentplatform.common.authority.SubjectKey("tenant-a", "alice");
+            String method = request.getRequestMethod();
+            var call = cn.agentplatform.common.authority.PlatformBuildRoutes.call(
+                    new ServiceRoutePolicy(), method, "/admin/platform-authorization/grants", subject);
+            var bearer = request.getRequestHeaders().getFirst("Authorization");
+            var actor = authority.authorize(bearer.substring("Bearer ".length()), call).actor();
+            String body = new String(request.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            byte[] result = (method + " " + actor.tenantId() + "/" + actor.principalId() + " " + body)
+                    .getBytes(StandardCharsets.UTF_8);
+            request.sendResponseHeaders(200, result.length);
+            request.getResponseBody().write(result);
+        }
     }
 
     @Test

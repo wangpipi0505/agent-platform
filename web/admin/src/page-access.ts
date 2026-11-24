@@ -96,6 +96,7 @@ export const pageAccess: PageAccessEntry[] = [
   { key: "approvals", path: "/approvals", title: "确认中心", area: "平台管理", read: "session", write: "approve", menu: true },
   { key: "statistics", path: "/statistics", title: "统计分析", area: "平台管理", read: "session", write: "", menu: true },
   { key: "audit", path: "/audit", title: "审计记录", area: "平台管理", read: "session", write: "", menu: true },
+  { key: "platform-authorizations", path: "/platform/authorizations", title: "用户与授权", area: "平台管理", read: "admin", write: "admin", menu: true },
   { key: "system", path: "/system", title: "系统管理", area: "平台管理", read: "session", write: "admin", menu: true },
   // 评测中心：前端稿 §3.1 移入"内部工具"子组（属平台管理分组，独立子组随 F3 落地）
   { key: "evaluations", path: "/evaluations", title: "评测中心", area: "平台管理", read: "session", write: "", menu: true },
@@ -139,25 +140,26 @@ export function roleAllows(read: PageRole, roles: readonly string[]): boolean {
  * 鉴权读取桥：由 PortalShell（应用壳）安装，读取活跃会话的已验证状态。
  * 默认放行——未安装桥时由 PortalShell 自身的 token 门承接（App 仅在已验证后渲染路由内容）。
  */
-let authReader: () => { hasToken: boolean; roles: readonly string[] } = () => ({
+type PageSession = { hasToken: boolean; roles: readonly string[]; pages?: readonly string[] };
+let authReader: () => PageSession = () => ({
   hasToken: true,
   roles: [],
 });
 
-export function installPageAccessAuth(reader: () => {
-  hasToken: boolean;
-  roles: readonly string[];
-}) {
+export function installPageAccessAuth(reader: () => PageSession) {
   authReader = reader;
 }
 
 /** 导航决策：读条件不满足时不加载页面，并给出 403 入口原因（reason=role）或引导登录（session）。 */
 export function navigationDecision(
   entry: PageAccessEntry,
-  auth: { hasToken: boolean; roles: readonly string[] },
+  auth: PageSession,
 ): { allow: boolean; reason?: "session" | "role" } {
-  if (entry.read === "session") return auth.hasToken ? { allow: true } : { allow: false, reason: "session" };
   if (!auth.hasToken) return { allow: false, reason: "session" };
+  if (auth.pages) {
+    return auth.pages.includes(entry.path) || (entry.route && auth.pages.includes(entry.route))
+      ? { allow: true } : { allow: false, reason: "role" };
+  }
   return roleAllows(entry.read, auth.roles) ? { allow: true } : { allow: false, reason: "role" };
 }
 

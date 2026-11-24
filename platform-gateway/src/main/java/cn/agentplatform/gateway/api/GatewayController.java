@@ -4,6 +4,7 @@ import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.AuthorityProperties;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.GatewayIngressBoundary;
+import cn.agentplatform.common.authority.PlatformBuildRoutes;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
@@ -82,6 +83,16 @@ public class GatewayController {
     @RequestMapping({"/admin/**", "/v1/**"})
     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
         if ("iam".equals(deployment.mode())) {
+            String buildTemplate = PlatformBuildRoutes.template(req.getMethod(), req.getRequestURI());
+            if (buildTemplate != null) {
+                var source = GatewayIngressBoundary.claimRuntime(req);
+                var call = PlatformBuildRoutes.call(serviceRoutes, req.getMethod(), buildTemplate, source.subject());
+                var ticket = authority.orElseThrow(() -> new PlatformException(
+                        503, "DEPENDENCY_UNAVAILABLE", "门户构建授权服务暂不可用"))
+                        .exchange(source.sourceToken(), call);
+                forward(req, res, call.target(), ticket.value());
+                return;
+            }
             if (PortalRuntimeRoutes.matches(req.getMethod(), req.getRequestURI())) {
                 var source = GatewayIngressBoundary.claimRuntime(req);
                 var call = PortalRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());

@@ -107,7 +107,8 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
 
     private Purpose route(HttpServletRequest r) {
         if (r.getDispatcherType() == DispatcherType.REQUEST && r.getContextPath().isEmpty()
-                && PortalRuntimeRoutes.matches(r.getMethod(), r.getRequestURI())) return Purpose.RUNTIME;
+                && (PortalRuntimeRoutes.matches(r.getMethod(), r.getRequestURI())
+                    || PlatformBuildRoutes.template(r.getMethod(), r.getRequestURI()) != null)) return Purpose.RUNTIME;
         if(eventsInstalled&&r.getDispatcherType()==DispatcherType.REQUEST&&"GET".equals(r.getMethod())
                 &&r.getRequestURI().matches("/admin/runs/r_[0-9a-f]{32}/events")&&r.getContextPath().isEmpty())return Purpose.EVENTS;
         if(statusInstalled&&r.getDispatcherType()==DispatcherType.REQUEST&&"GET".equals(r.getMethod())

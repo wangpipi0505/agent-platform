@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "../../shared/api";
 import { PAGE_ACTIONS_TARGET, pageChrome } from "./page-chrome";
 import { navMenus } from "./router";
-import { MENU_GROUP_ORDER, type MenuGroup } from "./page-access";
+import { accessDecisionByKey, MENU_GROUP_ORDER, type MenuGroup } from "./page-access";
 import { canReadCapabilityPackages } from "../../shared/capability-package";
 import {
   fetchConfirmationCounts,
@@ -16,6 +16,7 @@ import { useTheme } from "../../shared/theme";
 
 const auth = useAuth();
 const route = useRoute();
+const router = useRouter();
 // MNT-02子步1：菜单从 page-access 单一来源派生（标题/路径/分组与路由 meta 同表）。
 // F1-2：按五分组（§3.1）渲染，分组常显、可折叠（折叠后 tooltip 显示分组名）。
 const density = ref(localStorage.getItem("density") || "标准");
@@ -45,9 +46,17 @@ const isActive = (menu: string) =>
 // capability 目录可见性沿用既有角色判断（canReadCapabilityPackages）。
 const visibleMenus = computed(() =>
   navMenus.filter(
-    (item) => item.key !== "capability-packages" || canReadCapabilityPackages(auth.roles),
+    (item) => accessDecisionByKey(item.key).allow
+      && (auth.user?.pages || item.key !== "capability-packages" || canReadCapabilityPackages(auth.roles)),
   ),
 );
+watch(() => [route.meta.access, auth.user?.pages] as const, ([key, pages]) => {
+  if (!pages || typeof key !== "string") return;
+  const decision = accessDecisionByKey(key);
+  if (!decision.allow && decision.reason === "role") {
+    void router.replace({ path: "/not-found", query: { denied: decision.entry?.title || "" } });
+  }
+}, { immediate: true });
 const groups = computed(() =>
   MENU_GROUP_ORDER.map((group) => ({
     group,
