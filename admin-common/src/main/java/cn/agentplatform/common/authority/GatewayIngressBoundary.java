@@ -426,6 +426,15 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
                 return;
             }
             try {
+                if (r.getDispatcherType() == DispatcherType.REQUEST && r.getContextPath().isEmpty()
+                        && IntegrationRuntimeRoutes.metadata(r.getMethod(), r.getRequestURI())
+                        && IntegrationRuntimeRoutes.currentSource() != null) {
+                    if (r.getContentLengthLong() > 0 || r.getHeader("Transfer-Encoding") != null
+                            || r.getInputStream().read() != -1 || Collections.list(r.getHeaders("Authorization")).size() != 1
+                            || Collections.list(r.getHeaders("Origin")).size() > 1) throw denied();
+                    chain.doFilter(r, s);
+                    return;
+                }
                 var purpose=route(r);
                 observation=purpose==Purpose.STATUS||purpose==Purpose.EVENTS;
                 eventsObservation=purpose==Purpose.EVENTS;

@@ -6,6 +6,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PlatformBuildRoutesTest {
     @Test
+    void integrationCredentialManagementStaysOnTheAppBuildSurface() {
+        var issue = PlatformBuildRoutes.template("POST", "/admin/apps/example/integration/credentials");
+        assertThat(issue).isEqualTo("/admin/apps/{code}/integration/credentials");
+        assertThat(PlatformBuildRoutes.call(new ServiceRoutePolicy(), "POST", issue,
+                new SubjectKey("a", "user")).target()).isEqualTo("app");
+        assertThat(PlatformBuildRoutes.template("POST", "/v1/apps/example/integration/credentials")).isNull();
+    }
+
+    @Test
+    void integrationMetadataUsesASeparateCredentialBoundRoute() {
+        assertThat(IntegrationRuntimeRoutes.metadata("GET", "/v1/apps/example/input-schema")).isTrue();
+        assertThat(IntegrationRuntimeRoutes.metadata("GET", "/admin/apps/example/input-schema")).isFalse();
+        assertThat(IntegrationRuntimeRoutes.metadata("POST", "/v1/apps/example/input-schema")).isFalse();
+        var call = IntegrationRuntimeRoutes.call(new ServiceRoutePolicy(), "GET", "/v1/apps/example/input-schema");
+        assertThat(call.resource()).isEqualTo(IntegrationRuntimeRoutes.application("example"));
+    }
+
+    @Test
     void auditCapabilityDoesNotOpenApprovals() {
         var template = PlatformBuildRoutes.template("GET", "/admin/audit");
         assertThat(template).isEqualTo("/admin/{kind:approvals|audit}");

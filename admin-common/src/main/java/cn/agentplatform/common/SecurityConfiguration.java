@@ -205,7 +205,10 @@ public class SecurityConfiguration {
                                 FilterChain chain)
                                 throws ServletException, IOException {
                             String header = request.getHeader("Authorization");
-                            if (request.getRequestURI().startsWith("/v1/")
+                            if ((trusted ? Boolean.TRUE.equals(deployment.allowEmbed())
+                                    && cn.agentplatform.common.authority.IntegrationRuntimeRoutes.metadata(
+                                            request.getMethod(), request.getRequestURI())
+                                    : request.getRequestURI().startsWith("/v1/"))
                                     && header != null
                                     && header.startsWith("ApiKey ")) {
                                 try {
@@ -268,6 +271,12 @@ public class SecurityConfiguration {
                                                                 auth.get().getAuthorities().stream()
                                                                         .anyMatch(
                                                                                 a -> a.getAuthority().equals("ROLE_SERVICE"))));
+                            if (trusted && "gateway".equals(deployment.serviceId())) {
+                                x.requestMatchers(request -> cn.agentplatform.common.authority.IntegrationRuntimeRoutes.metadata(
+                                        request.getMethod(), request.getRequestURI()))
+                                        .access((auth, context) -> new AuthorizationDecision(
+                                                cn.agentplatform.common.authority.IntegrationRuntimeRoutes.currentSource() != null));
+                            }
                             x.anyRequest()
                                     .access(
                                             (auth, context) ->

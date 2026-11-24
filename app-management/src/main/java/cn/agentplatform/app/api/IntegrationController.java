@@ -29,7 +29,6 @@ public class IntegrationController {
 
     @GetMapping("/admin/apps/{code}/integration")
     public Object list(@PathVariable String code) {
-        Actor.current().requireRole("ADMIN");
         return ApiResponse.ok(service.list(code));
     }
 

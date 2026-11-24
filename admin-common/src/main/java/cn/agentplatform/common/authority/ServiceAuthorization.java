@@ -58,7 +58,8 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         String method = request.getMethod();
         String path = request.getRequestURI();
         return switch (serviceId) {
-            case "app", "model", "skill" -> PlatformBuildRoutes.serves(serviceId, method, path);
+            case "app" -> PlatformBuildRoutes.serves(serviceId, method, path) || IntegrationRuntimeRoutes.metadata(method, path);
+            case "model", "skill" -> PlatformBuildRoutes.serves(serviceId, method, path);
             case "monitor" -> EvaluationCandidateBinding.portalTemplate(method, path) != null
                     || PlatformBuildRoutes.serves(serviceId, method, path);
             default -> false;
@@ -166,6 +167,12 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         if(!(attributes instanceof ServletRequestAttributes servlet))throw AuthorityProtocol.denied();
         var request=servlet.getRequest();
         Object template=request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        if ("app".equals(serviceId) && IntegrationRuntimeRoutes.metadata(request.getMethod(), request.getRequestURI())) {
+            AuthorityProtocol.same("delegated", mode);
+            AuthorityProtocol.same("gateway", jwt.getClaimAsString("caller"));
+            AuthorityProtocol.same("INTEGRATION", operation.path("origin_kind").asText());
+            AuthorityProtocol.same(IntegrationRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI()), call);
+        }
         boolean runAudit = "engine".equals(serviceId) && PlatformBuildRoutes.RUN_AUDIT.equals(template);
         if ("platform-build".equals(call.resource().kind()) || requiresBuildLookup(request)
                 || PlatformBuildRoutes.SESSION.equals(template) || runAudit) {

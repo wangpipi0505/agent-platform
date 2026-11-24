@@ -51,6 +51,12 @@ public final class RouteDirectory {
                 && mode.equals(route.mode()));
     }
 
+    public boolean permitsIntegration(String caller, String target, String action) {
+        return "gateway".equals(caller) && routes.stream().anyMatch(route -> route.integrationAllowed()
+                && DELEGATED.equals(route.mode()) && caller.equals(route.caller())
+                && route.target().equals(target) && route.action().equals(action));
+    }
+
     public List<ServiceRoutePolicy.Route> routes() {
         return routes;
     }

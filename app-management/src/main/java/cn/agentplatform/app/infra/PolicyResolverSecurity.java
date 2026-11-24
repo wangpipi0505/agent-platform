@@ -25,7 +25,7 @@ public class PolicyResolverSecurity {
     }
     public static java.lang.reflect.Method handler(){try{return IntegrationPolicyResolverController.class.getMethod("resolve",HttpServletRequest.class);}catch(Exception e){throw new IllegalStateException(e);}}
     public static RouteCoverageVerifier.Ingress ingress(){return new RouteCoverageVerifier.Ingress("POST",PolicyRequestVerifier.PATH,handler());}
-    @Bean @Order(1) SecurityFilterChain policySecurity(HttpSecurity http,PolicyRequestVerifier verifier)throws Exception{
+    @Bean @Order(ServiceTrustChain.ORDER - 1) SecurityFilterChain policySecurity(HttpSecurity http,PolicyRequestVerifier verifier)throws Exception{
         // Security's first matching chain is exact; no /internal/** exemption.
         return http.securityMatcher(r->"POST".equals(r.getMethod())&&PolicyRequestVerifier.PATH.equals(r.getServletPath()))
             .csrf(x->x.disable()).sessionManagement(x->x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

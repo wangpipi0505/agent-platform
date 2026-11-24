@@ -7,6 +7,8 @@ import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,22 @@ import java.util.*;
 public class IntegrationService {
     private final JdbcTemplate db;
     private final AppService apps;
+    private PlatformAccessService platformAccess;
+    private boolean iam;
 
     public IntegrationService(JdbcTemplate db, AppService apps) {
         this.db = db;
         this.apps = apps;
+    }
+
+    @Autowired
+    void platformAccess(PlatformAccessService access) {
+        platformAccess = access;
+    }
+
+    @Value("${agent.security.mode:dev-hmac}")
+    void securityMode(String mode) {
+        iam = "iam".equals(mode);
     }
 
     private String tenant() {
@@ -31,6 +45,7 @@ public class IntegrationService {
     }
 
     public List<Map<String, Object>> list(String code) {
+        requireManagement(code);
         apps.get(code);
         return db
                 .queryForList(
@@ -182,7 +197,7 @@ public class IntegrationService {
 
     @Transactional
     public Map<String, Object> issue(String code, Map<String, Object> body) {
-        Actor.current().requireRole("ADMIN");
+        requireManagement(code);
         requirePublishedVersion(code);
         String biz = text(body, "bizSystemCode");
         if (!biz.matches("[A-Za-z][A-Za-z0-9_-]{0,63}"))
@@ -225,7 +240,7 @@ public class IntegrationService {
 
     @Transactional
     public Map<String, Object> revoke(String code, String biz) {
-        Actor.current().requireRole("ADMIN");
+        requireManagement(code);
         long credentialId = requireCredential(code, biz);
         db.update(
                 "update app.integration_credential set status='REVOKED',revoked_at=now(),policy_revision=policy_revision+1 where"
@@ -239,7 +254,7 @@ public class IntegrationService {
 
     @Transactional
     public Map<String, Object> policy(String code, String biz, Map<String, Object> body) {
-        Actor.current().requireRole("ADMIN");
+        requireManagement(code);
         long credentialId = requireCredential(code, biz);
         var limits = object(body.get("claimLimits"));
         Object origins = body.get("allowedOrigins");
@@ -289,13 +304,25 @@ public class IntegrationService {
         return result;
     }
 
+    private void requireManagement(String appCode) {
+        var actor = Actor.current();
+        if (!iam) {
+            actor.requireRole("ADMIN");
+            return;
+        }
+        var subject = new SubjectKey(actor.tenantId(), actor.principalId());
+        AuthorityContext.requireFor(actor, PlatformBuildRoutes.resource(subject));
+        platformAccess.require(actor, PlatformAccessService.GRANT, appCode);
+    }
+
     /** Lock the real published pointer before authorization and retain the lock until issue commits.
      * The stored immutable published SHA is authoritative; no draft/payload is read to derive it. */
     private void requirePublishedVersion(String code) {
         var rows=db.queryForList("select a.current_version_no,v.candidate_sha256 from app.application a left join app.app_version v on v.tenant_id=a.tenant_id and v.app_code=a.code and v.version_no=a.current_version_no where a.tenant_id=? and a.code=? for update of a",tenant(),code);
         if(rows.isEmpty())throw error(404,"APP_NOT_FOUND","应用不存在");
         var row=rows.getFirst();if(row.get("current_version_no")==null||row.get("candidate_sha256")==null)throw error(409,"APP_UNPUBLISHED","请先发布应用");
-        AuthorityContext.requireFor(Actor.current(),new ResourceBinding("app-version",code+"@"+row.get("current_version_no"),row.get("candidate_sha256").toString())).actor().requireRole("ADMIN");
+        if (!iam)
+            AuthorityContext.requireFor(Actor.current(),new ResourceBinding("app-version",code+"@"+row.get("current_version_no"),row.get("candidate_sha256").toString())).actor().requireRole("ADMIN");
     }
     /** Policy metadata is read under the row lock. The same transaction verifies the old exact
      * resource, mutates policy and increments revision; concurrent updates cannot lose increments.
@@ -304,6 +331,7 @@ public class IntegrationService {
         var rows=db.queryForList("select id,policy_revision,secret_ref,claim_limits,allowed_origins,role_mapping from app.integration_credential where tenant_id=? and app_code=? and biz_system_code=? for update",tenant(),code,biz);
         if(rows.isEmpty())throw error(404,"INTEGRATION_NOT_FOUND","集成凭据不存在");
         var row=rows.getFirst();long id=((Number)row.get("id")).longValue();
+        if (iam) return id;
         String digest=IntegrationClaims.digest(Json.tree(Map.of("secretRef",row.get("secret_ref"),"claimLimits",Json.read(row.get("claim_limits").toString()),"allowedOrigins",Json.read(row.get("allowed_origins").toString()),"roleMapping",Json.read(row.get("role_mapping").toString()))));
         String version=Digest.sha256(Json.canonical(Map.of("credentialId",id,"policyVersion",id+":"+row.get("policy_revision"),"policyDigest",digest)));
         AuthorityContext.requireFor(Actor.current(),new ResourceBinding("integration-credential",Long.toString(id),version)).actor().requireRole("ADMIN");

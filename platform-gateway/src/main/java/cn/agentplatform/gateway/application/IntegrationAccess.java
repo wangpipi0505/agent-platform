@@ -3,6 +3,9 @@ package cn.agentplatform.gateway.application;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.IntegrationCredentialCalls;
+import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
+import cn.agentplatform.common.authority.ServiceCall;
+import cn.agentplatform.common.authority.ServiceTicket;
 import cn.agentplatform.common.authority.IntegrationClaims;
 import cn.agentplatform.gateway.domain.IntegrationPolicy;
 import cn.agentplatform.gateway.domain.IntegrationRateLimit;
@@ -97,6 +100,9 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
 
     @Override
     public Authentication authenticate(HttpServletRequest request) {
+        if (iam && (Collections.list(request.getHeaders("Authorization")).size() != 1
+                || Collections.list(request.getHeaders("Origin")).size() > 1))
+            throw new PlatformException(400, "INVALID_CLAIMS", "集成身份声明请求形状无效");
         // 只允许可信后端声明"这是哪个终端用户"；tenant/principal 属于票据派生字段，出现即拒绝。
         for (String header : List.of("X-User-Tenant", "X-Tenant", "X-Principal", "X-User-Principal")) {
             if (request.getHeader(header) != null)
@@ -243,7 +249,7 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
                 try { details = Json.read(rejected.getResponseBodyAsString()); }
                 catch (RuntimeException malformed) { throw unavailable(); }
                 String code = details.path("code").asText();
-                if (Set.of("INVALID_CLAIMS", "CLAIM_LIMIT_EXCEEDED", "APP_BINDING_DENIED",
+                if (Set.of("INVALID_CLAIMS", "CLAIMS_TOO_LARGE", "CLAIM_LIMIT_EXCEEDED", "APP_BINDING_DENIED",
                         "INTEGRATION_CLIENT_IDENTITY_REJECTED", "INTEGRATION_SOURCE_NOT_ALLOWED").contains(code))
                     throw new PlatformException(status, code, "集成身份声明超出接入档案允许范围");
             }
@@ -266,6 +272,16 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
     private CurrentAuthorityClient iamAuthority() {
         if (authority == null) throw unavailable();
         return authority;
+    }
+
+    public ServiceTicket exchangeMetadata(HttpServletRequest request, ServiceCall call) {
+        var jwt = IntegrationRuntimeRoutes.currentSource();
+        if (jwt == null) throw new PlatformException(401, "INVALID_TICKET", "请提供有效集成短票");
+        var id = jwt.<Number>getClaim("credential_id");
+        var ticket = iamAuthority().exchangeIntegration(jwt.getTokenValue(), call, request.getHeader("Origin"));
+        if (!Boolean.TRUE.equals(request.getAttribute(IntegrationRateLimit.METERED_ATTRIBUTE)))
+            rateLimit.admit(id.longValue(), null, request.getRequestURI());
+        return ticket;
     }
 
     private static PlatformException unavailable() {

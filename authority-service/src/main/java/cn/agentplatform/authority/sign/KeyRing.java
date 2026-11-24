@@ -55,6 +55,19 @@ public final class KeyRing {
     private final SigningKey previous;
     private final Clock clock;
 
+    private KeyRing(SigningKey active, Clock clock) {
+        this.active = active;
+        this.clock = clock;
+        this.previous = null;
+    }
+
+    public static KeyRing policySigner(String kid, String path, Clock clock) {
+        if (kid == null || !kid.matches("[A-Za-z0-9._-]{1,64}") || path == null || path.isBlank())
+            throw new IllegalArgumentException("INTEGRATION_POLICY_SIGNER_REQUIRED");
+        return new KeyRing(load(kid, path), clock);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
     public KeyRing(AuthorityServiceProperties properties, Clock clock) {
         this.clock = clock;
         if (properties.keyPath() == null || properties.keyPath().isBlank()) {

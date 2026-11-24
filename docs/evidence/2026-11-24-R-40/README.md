@@ -47,4 +47,21 @@ mvn -B -ntp -pl app-management,platform-gateway,skill-registry,authority-service
 
 JDK 21 定向 72 例通过。新增出票端点测试先复现 app 客户端签发返回 403，实施后返回 200，并确认 gateway 客户端不能直接签发集成短票。
 
-IAM `exchange_integration`、网关 `/v1/**`、同软件中断、跨边界拒绝审计、运行面平台授权隔离及 FT-INT 整栈联验继续跟踪。
+## 应用元数据委派
+
+2026-11-25，本地 IAM 接通集成短票的 `exchange_integration`，用于读取发布版输入模式和体验配置。authority-service 使用独立策略签名密钥查询 app-management，校验凭据当前版本、角色、数据标签、业务系统和允许来源。接收端请求决策时再次查询当前策略。
+
+| 本机真实 HTTP 验证 | 结果 |
+| --- | --- |
+| 集成短票读取凭据绑定应用的发布版输入模式 | 200，返回版本 1 及输入字段 |
+| 直连 ApiKey 带业务用户声明读取相同输入模式 | 200 |
+| 同一短票读取另一个应用或访问平台构建面 | 403 |
+| 仅声明平台 ADMIN，在接入上限裁剪后无运行角色 | 出票成功，读取输入模式 403 |
+| 修改接入档案后使用原短票读取 | 403 |
+| 修改接入档案后，向应用服务重放此前已经换出的服务票 | 403，接收端复核也生效 |
+
+部署由 authority-service 设置 `AGENT_AUTHORITY_INTEGRATION_POLICY_URL`、`AGENT_AUTHORITY_INTEGRATION_POLICY_ISSUER`、`AGENT_AUTHORITY_INTEGRATION_POLICY_KID` 和 `AGENT_AUTHORITY_INTEGRATION_POLICY_KEY_PATH`。app-management 设置 `AGENT_POLICY_RESOLVER_ENABLED=true`、`AGENT_POLICY_RESOLVER_ISSUER` 及对应公钥的 `AGENT_POLICY_RESOLVER_PUBLIC_JWKS`。常规部署的策略查询使用 HTTPS。回环 HTTP 用于本地 test profile。
+
+运行受理、详情、事件流、同软件中断及跨边界拒绝的业务审计仍待接线和 FT-INT 联验。
+
+本轮 JDK 21 定向测试 74 例通过，七个服务模块打包成功。执行上节命令并与 `PlatformBuildRoutesTest` 中的元数据和接入档案路由用例一同核对。

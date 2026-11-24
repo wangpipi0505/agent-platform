@@ -7,6 +7,7 @@ import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 import cn.agentplatform.common.authority.GatewayIngressBoundary;
 import cn.agentplatform.common.authority.PlatformBuildRoutes;
 import cn.agentplatform.common.authority.PlatformAccessClient;
+import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
@@ -94,6 +95,12 @@ public class GatewayController {
     @RequestMapping({"/admin/**", "/v1/**"})
     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
         if ("iam".equals(deployment.mode())) {
+            if (IntegrationRuntimeRoutes.metadata(req.getMethod(), req.getRequestURI())) {
+                var call = IntegrationRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());
+                var ticket = integration.exchangeMetadata(req, call);
+                forward(req, res, call.target(), ticket.value());
+                return;
+            }
             String evaluationTemplate = EvaluationCandidateBinding.portalTemplate(req.getMethod(), req.getRequestURI());
             if (evaluationTemplate != null) {
                 evaluate(req, res, evaluationTemplate);

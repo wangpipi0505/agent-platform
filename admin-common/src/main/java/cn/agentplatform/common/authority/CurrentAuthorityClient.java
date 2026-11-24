@@ -12,6 +12,7 @@ public interface CurrentAuthorityClient {
  }
  ServiceTicket client(ServiceCall call);
  default IntegrationSource.Ticket issueIntegration(Map<String, Object> claims){throw AuthorityProtocol.denied();}
+ default ServiceTicket exchangeIntegration(String token, ServiceCall call, String origin){throw AuthorityProtocol.denied();}
  ServiceTicket exchange(String subjectToken,ServiceCall call);
  /** Only the IAM gateway's original portal exchange can mint this short-lived local proof. */
  default HttpCurrentAuthorityClient.GatewayRunAuthorization exchangeGatewayPublishedRun(String originalPortalToken,ResourceBinding publishedRoot){

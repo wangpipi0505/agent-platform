@@ -12,7 +12,10 @@ import cn.agentplatform.authority.route.RouteDirectory;
 import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
+import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.common.authority.EvaluationCandidateBinding;
+import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
+import cn.agentplatform.common.authority.IntegrationSource;
 import cn.agentplatform.common.authority.OperationBinding;
 import cn.agentplatform.common.authority.PortalEventsBinding;
 import cn.agentplatform.common.authority.ResourceBinding;
@@ -121,6 +124,12 @@ public final class DelegatedAuthority {
     private final IssuerResolver issuer;
     private final Clock clock;
     private final SessionService sessions;
+    private IntegrationPolicyClient integrationPolicy;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void integrationPolicy(IntegrationPolicyClient policy) {
+        this.integrationPolicy = policy;
+    }
 
     public DelegatedAuthority(KeyRing keys, TicketService tickets, RouteDirectory routes, DecisionStore decisions,
                               DelegationProperties delegation, AuthorityServiceProperties properties,
@@ -178,6 +187,9 @@ public final class DelegatedAuthority {
             if (!clientId.equals(decision.caller())) {
                 throw AuthorityException.denied("FORWARD_CALLER");
             }
+            if ("INTEGRATION".equals(decision.operation().get("origin_kind"))) {
+                throw AuthorityException.denied("INTEGRATION_METADATA_FORWARD_FORBIDDEN");
+            }
             if (!grantRef.equals(decision.grantRef())
                     || !operationId.equals(Objects.toString(decision.operation().get("operation_id"), null))) {
                 throw AuthorityException.denied("FORWARD_GRANT");
@@ -212,6 +224,74 @@ public final class DelegatedAuthority {
             deny("decision", FORWARD, clientId, request, denied);
             throw denied;
         }
+    }
+
+    public Map<String, Object> exchangeIntegration(String clientId, AuthorityRequest request) {
+        requireEnabled();
+        if (!routes.permitsIntegration(clientId, request.call().target(), request.call().action()))
+            throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
+        requireIntegrationExchangeShape(request);
+        var signed = keys.verify(request.subjectToken(), IntegrationSource.TYPE);
+        if (!"integration".equals(text(signed, "token_use")) || !issuer.issuer().equals(text(signed, "iss"))
+                || !IntegrationSource.AUDIENCE.equals(audienceOf(signed)))
+            throw AuthorityException.denied("INTEGRATION_SOURCE_PROFILE");
+        JsonNode identity;
+        try {
+            identity = IntegrationSource.identity(signed);
+        } catch (PlatformException denied) {
+            throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
+        }
+        if (!IntegrationRuntimeRoutes.permits(request.call(), required(identity, "app_code")))
+            throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
+        Set<String> roles = rolesOf(identity.get("roles"));
+        if (roles.isEmpty()) throw AuthorityException.denied("INTEGRATION_RUNTIME_READ_DENIED");
+
+        String origin = text(request.raw(), "request_origin");
+        String version = integrationPolicy.require(identity, origin, null);
+        var issued = Instant.ofEpochSecond(now());
+        var expires = earlier(issued.plusSeconds(delegation.grantSeconds()), Instant.ofEpochSecond(signed.path("exp").longValue()));
+        if (!expires.isAfter(issued)) throw AuthorityException.denied("INTEGRATION_SOURCE_EXPIRY");
+        String tenant = required(identity, "tenant_id");
+        String principal = required(identity, "sub");
+        var attributes = attributesOf(identity.get("attributes"));
+        var actor = actor(tenant, principal, roles, attributes);
+        String ceilingSha = Digest.sha256(Json.canonical(ceiling(tenant, principal, roles, attributes)));
+        String grant = newId("grt");
+        var operation = operation(newId("op"), issued, expires, grant, tenant, principal, request.call(),
+                ceilingSha, "INTEGRATION", "INTEGRATION");
+        operation.put("integration_credential", IntegrationSource.credentialBinding(identity));
+        operation.put("policy_version", version);
+        if (origin != null) operation.put("request_origin", origin);
+        String sourceHash = Digest.sha256(Json.canonical(request.subjectToken()));
+        var decision = new DecisionStore.Decision(newId("dec"), clientId, request.call().target(),
+                request.call().action(), resourceOf(request.call()), actor, actor, operation, grant, expires,
+                PORTAL_CALLER, null, null, "integration:" + version,
+                earlier(issued.plusSeconds(delegation.decisionSeconds()), expires),
+                null, sourceHash, request.nonce(), Digest.sha256(Json.canonical(request.raw())),
+                null, null, null, null, null, null, null);
+        var ticket = ticket(decision, clientId, request.call(), issued.getEpochSecond());
+        var recorded = decision.withTicketJti(ticket.jti());
+        decisions.put(recorded);
+        var claims = authorityClaims(recorded, request, issued.getEpochSecond());
+        for (String field : List.of("app_code", "biz_system_code", "user_id", "credential_id", "policy_digest")) {
+            claims.put(field, identity.get(field));
+        }
+        claims.put("subject_token_sha256", sourceHash);
+        claims.put("ticket", ticket.value());
+        return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket.value());
+    }
+
+    private static void requireIntegrationExchangeShape(AuthorityRequest request) {
+        var allowed = new java.util.HashSet<>(Set.of("operation", "target", "action", "resource", "nonce", "subject_token"));
+        if (request.raw().has("request_origin")) {
+            var origin = request.raw().get("request_origin");
+            if (!origin.isTextual() || origin.textValue().isBlank() || origin.textValue().length() > 512)
+                throw AuthorityException.denied("INTEGRATION_ORIGIN");
+            allowed.add("request_origin");
+        }
+        if (request.subjectToken() == null || request.raw().size() != allowed.size()
+                || allowed.stream().anyMatch(field -> !request.raw().has(field)))
+            throw AuthorityException.denied("INTEGRATION_EXCHANGE_REQUEST");
     }
 
     /**
@@ -1541,6 +1621,18 @@ public final class DelegatedAuthority {
         JsonNode operationNode = claims.get("operation");
         if (operationNode == null || !operationNode.isObject()) {
             throw AuthorityException.denied("TICKET_OPERATION");
+        }
+        if ("INTEGRATION".equals(routeOriginKind)) {
+            JsonNode identity;
+            try {
+                identity = IntegrationSource.decisionIdentity(operationNode.get("integration_credential"), claims);
+            } catch (PlatformException denied) {
+                throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
+            }
+            if (!routes.permitsIntegration(upstream, call.target(), call.action())
+                    || !IntegrationRuntimeRoutes.permits(call, required(identity, "app_code")))
+                throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
+            integrationPolicy.require(identity, text(operationNode, "request_origin"), required(operationNode, "policy_version"));
         }
         Map<String, Object> operation = toMap(operationNode);
         String grantRef = required(claims, "grant_ref");

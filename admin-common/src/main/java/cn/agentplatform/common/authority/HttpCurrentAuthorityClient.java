@@ -136,19 +136,28 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
         if(subjectToken==null||subjectToken.length()>16384||subjectToken.split("\\.").length!=3)throw AuthorityProtocol.denied();
         // Unverified use only selects a fixed mutually exclusive profile. It never supplies permission.
         var input=AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(subjectToken.split("\\.")[1]));
-        if("integration".equals(input.path("token_use").textValue())){
-            if(!"gateway".equals(config.serviceId())||config.integration()==null||!config.integration().enabled())throw AuthorityProtocol.denied();
-            var c=query("exchange_integration",call,Map.of("subject_token",subjectToken),true);
-            AuthorityProtocol.same(AuthorityProtocol.digest(subjectToken),AuthorityProtocol.text(c,"subject_token_sha256"));
-            for(String k:List.of("tenant_id","sub","app_code","biz_system_code","user_id","credential_id","policy_digest"))
-                if(!input.has(k)||!Objects.equals(input.get(k),c.get(k)))throw AuthorityProtocol.denied();
-            var result=ticket(c,call,"delegated",null,null);
-            if(!"INTEGRATION".equals(result.operation().sourceKind())||result.operation().expiresAt().isAfter(AuthorityProtocol.time(input,"exp")))throw AuthorityProtocol.denied();
-            AuthorityProtocol.same(AuthorityProtocol.text(input,"tenant_id"),result.operation().subject().tenantId());
-            AuthorityProtocol.same(AuthorityProtocol.text(input,"sub"),result.operation().subject().principalId());
-            return result;
-        }
+        if("integration".equals(input.path("token_use").textValue())) return exchangeIntegration(subjectToken, call, null);
         return portalExchange(subjectToken,call).verified().ticket();
+    }
+    @Override public ServiceTicket exchangeIntegration(String token, ServiceCall call, String origin) {
+        boolean enabled = Boolean.TRUE.equals(config.allowEmbed()) || (config.integration() != null && config.integration().enabled());
+        if (!"gateway".equals(config.serviceId()) || !enabled || token == null || token.length() > 16384
+                || !token.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"))
+            throw AuthorityProtocol.denied();
+        var input = AuthorityResponseVerifier.object(Base64.getUrlDecoder().decode(token.split("\\.")[1]));
+        var fields = new LinkedHashMap<String, Object>();
+        fields.put("subject_token", token);
+        if (origin != null) fields.put("request_origin", origin);
+        var decision = query("exchange_integration", call, fields, true);
+        AuthorityProtocol.same(AuthorityProtocol.digest(token), AuthorityProtocol.text(decision, "subject_token_sha256"));
+        for (String key : List.of("tenant_id", "sub", "app_code", "biz_system_code", "user_id", "credential_id", "policy_digest"))
+            if (!input.has(key) || !Objects.equals(input.get(key), decision.get(key))) throw AuthorityProtocol.denied();
+        var result = ticket(decision, call, "delegated", null, null);
+        if (!"INTEGRATION".equals(result.operation().sourceKind())
+                || result.operation().expiresAt().isAfter(AuthorityProtocol.time(input, "exp"))) throw AuthorityProtocol.denied();
+        AuthorityProtocol.same(AuthorityProtocol.text(input, "tenant_id"), result.operation().subject().tenantId());
+        AuthorityProtocol.same(AuthorityProtocol.text(input, "sub"), result.operation().subject().principalId());
+        return result;
     }
     private record VerifiedTicket(ServiceTicket ticket,JsonNode claims) {}
     private record PortalExchange(VerifiedTicket verified,JsonNode current,Instant sourceExpiresAt,

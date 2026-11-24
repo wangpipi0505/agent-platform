@@ -18,6 +18,7 @@ import cn.agentplatform.common.SecurityConfiguration;
 import cn.agentplatform.common.authority.AuthorityProperties;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.HttpCurrentAuthorityClient;
+import cn.agentplatform.common.authority.PolicyRequestVerifier;
 import cn.agentplatform.common.authority.ServiceAuthorization;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.common.authority.ServiceTrustChain;
@@ -85,12 +86,15 @@ public class ServiceTrustChainConfiguration implements WebMvcConfigurer {
      */
     @Bean
     ServiceAuthorization serviceAuthorization(AuthorityProperties deployment,
-            ObjectProvider<CurrentAuthorityClient> authority) {
+            ObjectProvider<CurrentAuthorityClient> authority, ObjectProvider<PolicyRequestVerifier> policy) {
         if (!SERVICE_ID.equals(deployment.serviceId())) {
             throw new IllegalStateException(
                     "IAM_SERVICE_ID_MISMATCH: expected " + SERVICE_ID + " but deployment is " + deployment.serviceId());
         }
-        return new ServiceAuthorization(SERVICE_ID, new ServiceRoutePolicy(), authority.getObject());
+        var verifier = policy.getIfAvailable();
+        var handler = verifier == null ? null : PolicyResolverSecurity.handler();
+        return new ServiceAuthorization(SERVICE_ID, new ServiceRoutePolicy(), authority.getObject(),
+                null, handler, verifier);
     }
 
     /**

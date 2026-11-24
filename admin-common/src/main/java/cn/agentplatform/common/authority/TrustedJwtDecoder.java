@@ -20,7 +20,7 @@ public final class TrustedJwtDecoder implements JwtDecoder,AutoCloseable {
     private final AuthorityProperties config;
     private final Clock clock;
     private final BoundedIamHttp http;
-    private final NimbusJwtDecoder authority,portal;
+    private final NimbusJwtDecoder authority,portal,integration;
     private final PortalClaimMapper mapper;
     private final List<ServiceRoutePolicy.Route> routes=new ServiceRoutePolicy().routes();
     public TrustedJwtDecoder(AuthorityProperties config,Clock clock,boolean testProfile){
@@ -30,15 +30,28 @@ public final class TrustedJwtDecoder implements JwtDecoder,AutoCloseable {
         boolean enabled=config.portal()!=null && config.portal().enabled();
         portal=enabled?decoder(config.portal().issuer(),config.portal().jwksUri(),true):null;
         mapper=enabled?new PortalClaimMapper(config.portal()):null;
+        integration = "gateway".equals(config.serviceId()) && Boolean.TRUE.equals(config.allowEmbed())
+                ? integrationDecoder() : null;
     }
     @Override public Jwt decode(String token){
         try{
             if(token==null || token.length()>16384 || !token.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"))throw invalid();
             var parts=token.split("\\.");var header=object(Base64.getUrlDecoder().decode(parts[0]));
-            if(!"RS256".equals(header.path("alg").textValue()) || !"at+jwt".equals(header.path("typ").textValue())
+            if(!"RS256".equals(header.path("alg").textValue())
                     || !header.path("kid").isTextual() || header.path("kid").textValue().isBlank()
                     || header.has("jku") || header.has("x5u") || header.has("jwk") || header.has("x5c") || header.has("crit"))throw invalid();
             var raw=object(Base64.getUrlDecoder().decode(parts[1]));
+            String type = header.path("typ").textValue();
+            if (IntegrationSource.TYPE.equals(type)) {
+                if (integration == null) throw invalid();
+                for (String k : List.of("iss", "sub", "jti", "token_use")) requiredText(raw, k);
+                for (String k : List.of("exp", "iat", "nbf")) numericDate(raw, k);
+                var verified = integration.decode(token);
+                try { IntegrationSource.identity(raw); }
+                catch (PlatformException malformed) { throw invalid(); }
+                return verified;
+            }
+            if (!"at+jwt".equals(type)) throw invalid();
             // Original JSON types are checked before Nimbus/Spring coercion and synthesized iat.
             for(String k:List.of("iss","sub","jti","token_use","client_id"))requiredText(raw,k);
             for(String k:List.of("exp","iat"))numericDate(raw,k);
@@ -67,6 +80,31 @@ public final class TrustedJwtDecoder implements JwtDecoder,AutoCloseable {
             throw new BadJwtException("JWT_INVALID");
         }catch(PlatformException ex){throw ex;}
         catch(Exception ex){throw invalid();}
+    }
+    private NimbusJwtDecoder integrationDecoder() {
+        String issuer = config.authority().issuer();
+        var jwks = URI.create(config.authority().jwksUri());
+        JWKSource<SecurityContext> source = (selector, context) -> selector.select(keys(jwks));
+        var processor = new DefaultJWTProcessor<SecurityContext>();
+        processor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType(IntegrationSource.TYPE)));
+        processor.setJWSKeySelector(new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, source));
+        processor.setJWTClaimsSetVerifier((claims, context) -> {});
+        var decoder = new NimbusJwtDecoder(processor);
+        var timestamps = new JwtTimestampValidator(Duration.ZERO);
+        timestamps.setClock(clock);
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(timestamps, new JwtIssuerValidator(issuer), jwt -> {
+            var issued = jwt.getIssuedAt();
+            var expires = jwt.getExpiresAt();
+            if (!"integration".equals(jwt.getClaimAsString("token_use"))
+                    || !List.of(IntegrationSource.AUDIENCE).equals(jwt.getAudience())
+                    || issued == null || expires == null || jwt.getNotBefore() == null
+                    || issued.isAfter(clock.instant()) || !expires.isAfter(clock.instant())
+                    || jwt.getNotBefore().isBefore(issued) || !expires.isAfter(issued)
+                    || expires.isAfter(issued.plusSeconds(config.authority().maxTicketSeconds())))
+                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "JWT_PROFILE_INVALID", null));
+            return OAuth2TokenValidatorResult.success();
+        }));
+        return decoder;
     }
     private NimbusJwtDecoder decoder(String issuer,String jwks,boolean user){
         JWKSource<SecurityContext> source=(selector,context)->selector.select(keys(URI.create(jwks)));

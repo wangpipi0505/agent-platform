@@ -32,8 +32,7 @@ import java.util.Set;
  *   <li>{@code POST /internal/authorize} 支持 {@code operation=authorize_workload}（第二跳决策断言）与
  *       {@code operation=authorize}（portal 主体或上游 delegated 票换决策）。</li>
  * </ul>
- * 其余 operation（{@code exchange_integration/resume/response_*}）在 M1 一律 403 + 审计：
- * 最小面越窄，越不可能出现"没验证就许可"的路径；完整语义留给 M2/M3。
+ * 集成短票通过 {@code exchange_integration} 换取应用元数据委派，策略复核由接入档案提供。
  * <p>两条 POST 都走 {@link #handle}：先认证、再解析、再按目录裁决，permit/deny 都落一条
  * {@code authority.audit}（只记 client_id/operation/target/action/nonce，不记 secret 与 token 原文）。
  */
@@ -92,6 +91,9 @@ public final class AuthorityController {
     private Map<String, Object> issueTicket(String clientId, AuthorityRequest request) {
         if (IntegrationSource.OPERATION.equals(request.operation())) {
             return tickets.integrationSource(clientId, request);
+        }
+        if ("exchange_integration".equals(request.operation())) {
+            return delegated.exchangeIntegration(clientId, request);
         }
         // 转发也走 tokenUri（平台客户端就是这么做的），但语义是把一张已登记决策换成新目标的票据。
         if (DelegatedAuthority.FORWARD.equals(request.operation())) {
