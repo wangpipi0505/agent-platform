@@ -707,6 +707,18 @@
   "reason": "R-40 按凭据档案及摘要核验 ApiKey，响应不携带密钥材料"
  },
  {
+  "method": "POST",
+  "template": "/internal/integration-credentials/{id}/tickets",
+  "caller": "gateway",
+  "target": "app",
+  "action": "integration.credential.issue-source",
+  "mode": "workload",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java::issueSource",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/application/IntegrationAccess.java::issueIamSource",
+  "reason": "R-40 由接入档案和已验证ApiKey派生集成主体，经 authority 签发专用短票"
+ },
+ {
   "method": "GET",
   "template": "/internal/integration/{code}/{biz}",
   "caller": null,

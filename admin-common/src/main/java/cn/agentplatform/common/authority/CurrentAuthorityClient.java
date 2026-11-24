@@ -11,6 +11,7 @@ public interface CurrentAuthorityClient {
   throw new cn.agentplatform.common.PlatformException(503,"PORTAL_SESSION_UNAVAILABLE","门户会话能力尚未就绪");
  }
  ServiceTicket client(ServiceCall call);
+ default IntegrationSource.Ticket issueIntegration(Map<String, Object> claims){throw AuthorityProtocol.denied();}
  ServiceTicket exchange(String subjectToken,ServiceCall call);
  /** Only the IAM gateway's original portal exchange can mint this short-lived local proof. */
  default HttpCurrentAuthorityClient.GatewayRunAuthorization exchangeGatewayPublishedRun(String originalPortalToken,ResourceBinding publishedRoot){

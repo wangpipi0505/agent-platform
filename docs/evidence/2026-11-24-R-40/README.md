@@ -27,4 +27,24 @@ mvn -B -ntp -pl app-management,platform-gateway -am '-Dtest=IntegrationClaimsTes
 
 定向命令以 JDK 21 对 `admin-common,app-management,platform-gateway` 及其依赖执行 `PlatformBuildRoutesTest,PlatformRoleStorageTest,ServiceAuthorizationTest,GatewayIamPortalHttpTest,RouteCoverageVerifierTest,IntegrationCredentialVerificationTest,IntegrationPolicyTest`，62 例通过。其中新增 PostgreSQL 测试覆盖验证前后的平台授权对照、错误密钥和即时撤销。集成凭据由隔离库的测试记录初始化。
 
-待接通 IAM `exchange_integration` 服务端、公开出票及网关 `/v1/**`。同软件中断、跨边界拒绝审计、运行面平台授权隔离及 FT-INT 整栈联验继续跟踪。
+## 公开出票联验
+
+本地网关的 `POST /embed/ticket` 经网关 workload 认证调用应用管理。应用管理核验 ApiKey 并按当前接入档案裁剪声明，然后以自己的服务身份请求 authority-service 签发 RS256 短票。票据使用独立的集成类型和受众，有效期最多 60 秒。
+
+| 本机真实 HTTP 验证 | 结果 |
+| --- | --- |
+| 缺少 ApiKey 或 ApiKey 错误 | 401 |
+| 出票 URL 附带查询参数 | 400 |
+| 声明其他应用或请求来自未登记 Origin | 403 |
+| 正确凭据和 Origin | 200，使用 authority JWKS 验证通过 |
+| 声明额外角色、跨软件属性和超额数据标签 | 票面仅保留 `AGENT_VIEWER`、凭据所属软件及允许的数据标签 |
+| 同租户增加平台 ADMIN 后以原 ApiKey 再签 | 200，票面角色及属性逐项相同 |
+| 撤销凭据后重新出票 | 401 |
+
+```powershell
+mvn -B -ntp -pl app-management,platform-gateway,skill-registry,authority-service,monitor,engine-runtime,model-gateway -am '-Dtest=PlatformBuildRoutesTest,PlatformRoleStorageTest,ServiceAuthorizationTest,GatewayIamPortalHttpTest,RouteCoverage*Test,IntegrationCredentialVerificationTest,IntegrationPolicyTest,IntegrationExperiencePolicyTest,TokenEndpointTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-Dmaven.jar.forceCreation=true' package
+```
+
+JDK 21 定向 72 例通过。新增出票端点测试先复现 app 客户端签发返回 403，实施后返回 200，并确认 gateway 客户端不能直接签发集成短票。
+
+IAM `exchange_integration`、网关 `/v1/**`、同软件中断、跨边界拒绝审计、运行面平台授权隔离及 FT-INT 整栈联验继续跟踪。

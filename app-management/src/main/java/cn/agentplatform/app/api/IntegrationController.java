@@ -3,9 +3,12 @@ package cn.agentplatform.app.api;
 import cn.agentplatform.app.application.IntegrationService;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.IntegrationCredentialCalls;
+import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.ServiceAuthorization;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +18,13 @@ import java.util.*;
 public class IntegrationController {
     private final IntegrationService service;
     private final boolean iam;
+    private final ObjectProvider<CurrentAuthorityClient> authority;
 
-    public IntegrationController(IntegrationService service, @Value("${agent.security.mode:dev-hmac}") String mode) {
+    public IntegrationController(IntegrationService service, @Value("${agent.security.mode:dev-hmac}") String mode,
+            ObjectProvider<CurrentAuthorityClient> authority) {
         this.service = service;
         this.iam = "iam".equals(mode);
+        this.authority = authority;
     }
 
     @GetMapping("/admin/apps/{code}/integration")
@@ -62,6 +68,20 @@ public class IntegrationController {
 
     public record ApiKeyVerification(String secret) {
         @Override public String toString() { return "ApiKeyVerification[redacted]"; }
+    }
+
+    @PostMapping(IntegrationCredentialCalls.TICKETS)
+    public Object issueSource(@PathVariable long id, @RequestBody SourceRequest body, HttpServletRequest request) {
+        ServiceAuthorization.requireWorkloadRequest(request, "gateway", IntegrationCredentialCalls.issue(id));
+        var issuer = authority.getIfAvailable();
+        if (issuer == null) throw new PlatformException(503, "INTEGRATION_IDENTITY_PROVIDER_UNAVAILABLE", "集成出票暂不可用");
+        var claims = service.sourceClaims(id, body.secret(), body.claims(), body.origin());
+        var ticket = issuer.issueIntegration(claims);
+        return ApiResponse.ok(Map.of("ticket", ticket.value(), "expiresAt", ticket.expiresAt()));
+    }
+
+    public record SourceRequest(String secret, JsonNode claims, String origin) {
+        @Override public String toString() { return "SourceRequest[redacted]"; }
     }
 
     @GetMapping("/internal/integration-credentials/{id}")

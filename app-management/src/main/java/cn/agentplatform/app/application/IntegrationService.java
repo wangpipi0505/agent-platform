@@ -5,6 +5,7 @@ import static cn.agentplatform.app.application.AppService.*;
 import cn.agentplatform.app.domain.IntegrationRules;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -97,6 +98,20 @@ public class IntegrationService {
         credential.put("policyDigest", IntegrationClaims.digest(Json.tree(credential)));
         credential.remove("secretRef");
         return credential;
+    }
+
+    public Map<String, Object> sourceClaims(long id, String secret, JsonNode requested,
+            String origin) {
+        if (requested == null || !requested.isObject())
+            throw error(400, "INVALID_CLAIMS", "集成身份声明须为JSON对象");
+        var credential = Json.tree(verifyApiKey(id, secret));
+        IntegrationClaimPolicy.origin(credential, origin);
+        String app = credential.path("appCode").asText();
+        if (requested.has("appCode") && !app.equals(requested.path("appCode").asText()))
+            throw error(403, "APP_BINDING_DENIED", "凭据不属于此应用");
+        var actor = IntegrationClaimPolicy.clip(credential, requested);
+        return IntegrationSource.claims(id, app, credential.path("bizSystemCode").asText(),
+                actor.attributes().get("userId").iterator().next(), credential.path("policyDigest").asText(), actor);
     }
 
     private static PlatformException invalidApiKey() {

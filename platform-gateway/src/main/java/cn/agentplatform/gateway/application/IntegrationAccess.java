@@ -1,6 +1,8 @@
 package cn.agentplatform.gateway.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.CurrentAuthorityClient;
+import cn.agentplatform.common.authority.IntegrationCredentialCalls;
 import cn.agentplatform.common.authority.IntegrationClaims;
 import cn.agentplatform.gateway.domain.IntegrationPolicy;
 import cn.agentplatform.gateway.domain.IntegrationRateLimit;
@@ -10,6 +12,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,18 +22,26 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 /** 每次新请求实时读取权威状态，吊销/策略收紧无需等待JWT过期；在途SSE完成当前响应后关闭。 */
 @Service
 public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticator {
     private final RestClient client;
+    private final RestClient iamClient;
     private final String appUrl, engineUrl;
     private final JwtDecoder decoder;
+    private CurrentAuthorityClient authority;
+    private boolean iam;
     // T18.1：凭据维度入口限流；默认关（application.yml），构造期即装配，@Value 注入仅调参。
     private final IntegrationRateLimit rateLimit = new IntegrationRateLimit(Clock.systemUTC());
     private static final Actor BOOTSTRAP =
@@ -46,6 +58,21 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
         client = RestClient.builder().requestFactory(factory).build();
+        var safeTransport = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2))
+                .followRedirects(HttpClient.Redirect.NEVER).build();
+        var safeFactory = new JdkClientHttpRequestFactory(safeTransport);
+        safeFactory.setReadTimeout(Duration.ofSeconds(4));
+        iamClient = RestClient.builder().baseUrl(appUrl).requestFactory(safeFactory).build();
+    }
+
+    @Autowired(required = false)
+    void authority(CurrentAuthorityClient authority) {
+        this.authority = authority;
+    }
+
+    @Value("${agent.security.mode:dev-hmac}")
+    void mode(String mode) {
+        iam = "iam".equals(mode);
     }
 
     @Value("${agent.integration.rate-limit-enabled:false}")
@@ -158,6 +185,11 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
         } catch (Exception e) {
             throw new PlatformException(401, "INVALID_CREDENTIAL", "集成凭据格式无效");
         }
+        if (iam) {
+            var issued = issueIamSource(id, pair[1], requested, origin);
+            if (meter != null) meter.admit(id, tail4(pair[1]));
+            return issued;
+        }
         JsonNode credential = credential(id);
         IntegrationPolicy.active(credential);
         IntegrationPolicy.origin(credential, origin);
@@ -187,6 +219,57 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
         if (meter != null) meter.admit(id, tail4(pair[1]));
         return Map.of(
                 "ticket", token, "accessToken", token, "expiresIn", 300, "tokenType", "Bearer");
+    }
+
+    private Map<String, Object> issueIamSource(long id, String secret, JsonNode requested, String origin) {
+        if (id <= 0 || secret.isEmpty() || secret.length() > 256)
+            throw new PlatformException(401, "INVALID_CREDENTIAL", "集成凭据格式无效");
+        var issuer = iamAuthority();
+        var proof = issuer.client(IntegrationCredentialCalls.issue(id));
+        var body = new LinkedHashMap<String, Object>();
+        body.put("secret", secret);
+        body.put("claims", requested);
+        if (origin != null) body.put("origin", origin);
+        JsonNode response;
+        try {
+            response = iamClient.post().uri(IntegrationCredentialCalls.TICKETS, id)
+                    .headers(headers -> headers.setBearerAuth(proof.value()))
+                    .body(body).retrieve().body(JsonNode.class);
+        } catch (RestClientResponseException rejected) {
+            int status = rejected.getStatusCode().value();
+            if (status == 401) throw new PlatformException(401, "INVALID_CREDENTIAL", "集成凭据无效");
+            if (status == 400 || status == 403) {
+                JsonNode details;
+                try { details = Json.read(rejected.getResponseBodyAsString()); }
+                catch (RuntimeException malformed) { throw unavailable(); }
+                String code = details.path("code").asText();
+                if (Set.of("INVALID_CLAIMS", "CLAIM_LIMIT_EXCEEDED", "APP_BINDING_DENIED",
+                        "INTEGRATION_CLIENT_IDENTITY_REJECTED", "INTEGRATION_SOURCE_NOT_ALLOWED").contains(code))
+                    throw new PlatformException(status, code, "集成身份声明超出接入档案允许范围");
+            }
+            throw unavailable();
+        } catch (RestClientException unavailable) {
+            throw unavailable();
+        }
+        if (response == null || !"OK".equals(response.path("code").asText())) throw unavailable();
+        var data = response.path("data");
+        String token = data.path("ticket").asText();
+        try {
+            long seconds = Duration.between(Instant.now(), Instant.parse(data.path("expiresAt").asText())).toSeconds();
+            if (token.isBlank() || token.length() > 16384 || seconds < 1 || seconds > 60) throw unavailable();
+            return Map.of("ticket", token, "accessToken", token, "expiresIn", seconds, "tokenType", "Bearer");
+        } catch (java.time.format.DateTimeParseException malformed) {
+            throw unavailable();
+        }
+    }
+
+    private CurrentAuthorityClient iamAuthority() {
+        if (authority == null) throw unavailable();
+        return authority;
+    }
+
+    private static PlatformException unavailable() {
+        return new PlatformException(503, "INTEGRATION_IDENTITY_PROVIDER_UNAVAILABLE", "接入档案暂不可用，未执行任何业务操作");
     }
 
     public void check(HttpServletRequest req, Actor actor) {
@@ -282,6 +365,12 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
     public boolean allowed(String origin) {
         if (origin == null || origin.length() > 2048) return false;
         try {
+            if (iam) {
+                var proof = iamAuthority().client(IntegrationCredentialCalls.origin(origin));
+                var result = iamClient.get().uri(IntegrationCredentialCalls.ORIGINS + "?origin={origin}", origin)
+                        .headers(headers -> headers.setBearerAuth(proof.value())).retrieve().body(JsonNode.class);
+                return result != null && result.path("data").path("allowed").asBoolean(false);
+            }
             JsonNode result =
                     client.get()
                             .uri(appUrl + "/internal/integration-origins?origin={origin}", origin)

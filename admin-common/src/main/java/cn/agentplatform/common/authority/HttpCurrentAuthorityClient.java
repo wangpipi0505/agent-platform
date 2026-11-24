@@ -121,6 +121,17 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
         }
     }
     @Override public ServiceTicket client(ServiceCall call){return ticket(query("client",call,Map.of(),true),call,"workload",null,null);}
+    @Override public IntegrationSource.Ticket issueIntegration(Map<String, Object> claims) {
+        if (!"app".equals(config.serviceId())) throw AuthorityProtocol.denied();
+        var requested = cn.agentplatform.common.Json.tree(claims);
+        var call = IntegrationSource.call(requested);
+        var decision = query(IntegrationSource.OPERATION, call, Map.of("integration_claims", requested), true);
+        String value = AuthorityProtocol.text(decision, "source_ticket");
+        var ticket = verifier.verify(value, IntegrationSource.TYPE, "integration", IntegrationSource.AUDIENCE,
+                config.authority().maxTicketSeconds()).claims();
+        IntegrationSource.requireMatches(requested, ticket);
+        return new IntegrationSource.Ticket(value, AuthorityProtocol.time(ticket, "exp"));
+    }
     @Override public ServiceTicket exchange(String subjectToken,ServiceCall call){
         if(subjectToken==null||subjectToken.length()>16384||subjectToken.split("\\.").length!=3)throw AuthorityProtocol.denied();
         // Unverified use only selects a fixed mutually exclusive profile. It never supplies permission.

@@ -6,6 +6,7 @@ import cn.agentplatform.authority.decision.DelegatedAuthority;
 import cn.agentplatform.authority.identity.SessionService;
 import cn.agentplatform.authority.route.RouteDirectory;
 import cn.agentplatform.authority.sign.KeyRing;
+import cn.agentplatform.common.authority.IntegrationSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -26,7 +27,8 @@ import java.util.Set;
  * <ul>
  *   <li>{@code GET /.well-known/jwks.json} 公钥集，供平台按 kid 验签；</li>
  *   <li>{@code POST /oauth/token} 支持 {@code operation=client}（workload 票据）与
- *       {@code operation=forward}/{@code operation=exchange}（委派票据 / portal 令牌换票）；</li>
+ *       {@code operation=forward}/{@code operation=exchange}（委派票据 / portal 令牌换票），
+ *       以及 app-management 专用的 {@code operation=issue_integration}；</li>
  *   <li>{@code POST /internal/authorize} 支持 {@code operation=authorize_workload}（第二跳决策断言）与
  *       {@code operation=authorize}（portal 主体或上游 delegated 票换决策）。</li>
  * </ul>
@@ -88,6 +90,9 @@ public final class AuthorityController {
 
     /** {@code operation=client}：目录命中 workload 行才签票，票面只描述"client 到 target 的这一跳"。 */
     private Map<String, Object> issueTicket(String clientId, AuthorityRequest request) {
+        if (IntegrationSource.OPERATION.equals(request.operation())) {
+            return tickets.integrationSource(clientId, request);
+        }
         // 转发也走 tokenUri（平台客户端就是这么做的），但语义是把一张已登记决策换成新目标的票据。
         if (DelegatedAuthority.FORWARD.equals(request.operation())) {
             return delegated.forward(clientId, request);

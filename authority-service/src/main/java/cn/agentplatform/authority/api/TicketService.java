@@ -6,6 +6,8 @@ import cn.agentplatform.authority.config.IssuerResolver;
 import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
+import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.authority.IntegrationSource;
 import cn.agentplatform.common.authority.ResourceBinding;
 import cn.agentplatform.common.authority.ServiceCall;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -65,6 +68,35 @@ public final class TicketService {
         this.clock = clock;
         this.ticketSeconds = properties.ticketSeconds();
         this.assertionSeconds = properties.assertionSeconds();
+    }
+
+    /** Only app-management may attest a subject it obtained from a verified integration credential. */
+    public Map<String, Object> integrationSource(String clientId, AuthorityRequest request) {
+        if (!"app".equals(clientId)) throw AuthorityException.denied("INTEGRATION_SOURCE_CALLER");
+        var claims = request.raw().get("integration_claims");
+        Set<String> allowed = Set.of("operation", "target", "action", "resource", "nonce", "integration_claims");
+        if (request.raw().size() != allowed.size() || allowed.stream().anyMatch(field -> !request.raw().has(field)))
+            throw AuthorityException.denied("INTEGRATION_SOURCE_REQUEST");
+        try {
+            if (!request.call().equals(IntegrationSource.call(claims)))
+                throw AuthorityException.denied("INTEGRATION_SOURCE_RESOURCE");
+        } catch (PlatformException denied) {
+            throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
+        }
+        long iat = now();
+        Map<String, Object> source = new LinkedHashMap<>();
+        claims.fields().forEachRemaining(field -> source.put(field.getKey(), field.getValue()));
+        source.put("iss", issuer.issuer());
+        source.put("aud", IntegrationSource.AUDIENCE);
+        source.put("token_use", "integration");
+        source.put("jti", newId("int"));
+        source.put("iat", iat);
+        source.put("nbf", iat);
+        source.put("exp", iat + ticketSeconds);
+        String token = keys.sign(IntegrationSource.TYPE, source);
+        var assertion = envelope(clientId, request.call(), request.nonce(), request.raw(), newId("dec"), iat);
+        assertion.put("source_ticket", token);
+        return Map.of("assertion", keys.sign(ASSERTION_TYPE, assertion), "ticket", token);
     }
 
     /** 签发票据 + 决策断言（{@code operation=client}）。 */

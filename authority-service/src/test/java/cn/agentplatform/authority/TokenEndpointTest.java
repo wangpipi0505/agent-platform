@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.security.PublicKey;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +27,32 @@ import static org.assertj.core.api.Assertions.assertThat;
                 AuthorityTestSupport.P_GATEWAY,
                 AuthorityTestSupport.P_APP})
 class TokenEndpointTest extends AuthorityTestSupport {
+
+    @Test
+    void issuesIntegrationSourceOnlyFromAppAndKeepsItOutsideServiceDomain() {
+        var identity = Map.of("tenant_id", "tenant-a", "sub", "software-a:member", "app_code", "app-a",
+                "biz_system_code", "software-a", "user_id", "member", "credential_id", 7,
+                "policy_digest", DIGEST, "roles", List.of("AGENT_VIEWER"),
+                "attributes", Map.of("bizSystemCode", List.of("software-a"), "userId", List.of("member")));
+        var wire = Map.of("operation", "issue_integration", "target", "gateway",
+                "action", "integration.source.issue", "nonce", "integration-issue-1",
+                "resource", Map.of("kind", "integration-credential", "id", "7", "version_digest", DIGEST),
+                "integration_claims", identity);
+        String request = Json.write(wire);
+        assertThat(postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET), request).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        var issued = postJson("/oauth/token", basic(APP, APP_SECRET), request);
+        assertThat(issued.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var token = TestJwt.verifiedClaims(issued.getBody().path("ticket").asText(),
+                "agent-integration+jwt", publishedKey());
+        assertThat(token.path("token_use").asText()).isEqualTo("integration");
+        assertThat(token.path("aud").asText()).isEqualTo("agent-platform-embed");
+        assertThat(token.path("roles").get(0).asText()).isEqualTo("AGENT_VIEWER");
+        assertThat(token.path("credential_id").asLong()).isEqualTo(7L);
+        assertThat(token.path("biz_system_code").asText()).isEqualTo("software-a");
+        assertThat(token.has("authority_mode")).isFalse();
+        assertThat(token.path("exp").asLong() - token.path("iat").asLong()).isBetween(1L, 60L);
+    }
 
     private static final List<String> WORKLOAD_FORBIDDEN =
             List.of("tenant_id", "grant_ref", "roles", "attributes", "operation");
