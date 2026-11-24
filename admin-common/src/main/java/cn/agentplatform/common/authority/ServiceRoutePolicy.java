@@ -52,7 +52,8 @@ public final class ServiceRoutePolicy {
     public static boolean localRunAdvance(String caller, ServiceCall call, String mode, String source, String origin) {
         return call != null && "engine".equals(caller) && "engine".equals(call.target())
             && "run.advance".equals(call.action()) && "delegated".equals(mode)
-            && call.resource() != null && "app-version".equals(call.resource().kind())
+            && call.resource() != null && Set.of("app-version", EvaluationCandidateBinding.KIND)
+                    .contains(call.resource().kind())
             && "DELEGATED".equals(source) && "PORTAL".equals(origin);
     }
 

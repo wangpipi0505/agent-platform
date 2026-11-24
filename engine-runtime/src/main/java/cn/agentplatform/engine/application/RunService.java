@@ -534,7 +534,9 @@ public class RunService {
         // The three requestId branches return metadata only while locked. One protected RR view
         // supplies both original replay validation and the complete response after the lock ends.
         String id = metadata.get("public_id").toString();
-        if (!("TASK".equals(metadata.get("trigger_type")) || initialMaterials != null && "CHAT".equals(metadata.get("trigger_type")))
+        boolean evaluation = "EVALUATION".equals(trigger) && "EVALUATION".equals(metadata.get("trigger_type"));
+        if (!(evaluation || "TASK".equals(metadata.get("trigger_type"))
+                || initialMaterials != null && "CHAT".equals(metadata.get("trigger_type")))
                 || !"FULL".equals(metadata.get("mode"))
                 || !code.equals(metadata.get("app_code"))
                 || !actor.tenantId().equals(metadata.get("tenant_id"))
@@ -688,8 +690,9 @@ public class RunService {
         // REQUIRED can join an ambient transaction. Reject it before any refresh/app I/O so
         // this admission owns the real outer commit boundary (Spring 6.2.7 TransactionTemplate).
         final boolean protectedAdmission = iamEnabled();
+        final boolean candidateAdmission = protectedAdmission && "EVALUATION".equals(trigger);
         admissions.requireNoAmbientTransaction(protectedAdmission);
-        if (protectedAdmission)
+        if (protectedAdmission && !candidateAdmission)
             RunAdmissionService.requirePublishedRequest(
                     req,
                     trigger,
@@ -703,9 +706,13 @@ public class RunService {
         if (req.has("versionNo") && req.path("versionNo").asInt() < 1)
             throw new PlatformException(400, "VERSION_INVALID", "版本号必须大于零");
         final RetainedAuthorization opening =
-                admissions.opening(code, actor, protectedAdmission, taskEntry != null);
+                candidateAdmission ? admissions.evaluationOpening(code, req, actor)
+                        : admissions.opening(code, actor, protectedAdmission, taskEntry != null);
         if (trigger.equals("DEBUG")) actor.requireRole("EDITOR");
-        if (trigger.equals("EVALUATION") && trustedSnapshot != null && trustedSnapshot.has("evaluationConversation"))
+        if (candidateAdmission) {
+            ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId", "evaluation-" + Digest.sha256(
+                    Json.canonical(List.of(req.path("evalReportId"), req.path("caseId")))));
+        } else if (trigger.equals("EVALUATION") && trustedSnapshot != null && trustedSnapshot.has("evaluationConversation"))
             ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId","evt_"+Digest.sha256(Json.canonical(Map.of(
                     "tenant",actor.tenantId(),"principal",actor.principalId(),"binding",trustedSnapshot.path("evaluationConversation"),
                     "turn",trustedSnapshot.path("chatSession").path("turnNo")))).substring(0,44));
@@ -765,7 +772,7 @@ public class RunService {
                                             : clients.get("app", path, actor);
             if (taskEntry != null && !"CHAT".equals(source.path("type").asText()))
                 throw new PlatformException(409, "CHAT_REQUIRED", "单步 AGENT 任务需要已发布的对话应用");
-            final boolean firstChat = protectedAdmission && "CHAT".equals(source.path("type").asText());
+            final boolean firstChat = protectedAdmission && !candidateAdmission && "CHAT".equals(source.path("type").asText());
             if (firstChat) requireFirstChat(source, req.path("inputs"));
             else if (protectedAdmission) requirePublishedFlow(source);
             final String actualTrigger =
@@ -844,7 +851,8 @@ public class RunService {
             // admission 槽位由外层 finally 释放。开关关闭（默认）或夹具未装配时旁路。
             if (runQuota != null) runQuota.requireRunAdmission(actor, code, frozen);
             final RetainedAuthorization admissionProof =
-                    admissions.bind(code, actor, protectedAdmission, taskEntry != null);
+                    candidateAdmission ? admissions.evaluationOpening(code, req, actor)
+                            : admissions.bind(code, actor, protectedAdmission, taskEntry != null);
             if (protectedAdmission) admissions.requireInitialCoverage(admissionProof);
             final var created = new java.util.concurrent.atomic.AtomicBoolean(!protectedAdmission);
             String id =
@@ -895,7 +903,11 @@ public class RunService {
                                             throw new PlatformException(
                                                     409, "PUBLISHED_VERSION_REQUIRED", "请先发布应用");
                                         long rid =
-                                                protectedAdmission
+                                                candidateAdmission
+                                                        ? admissionStore.createEvaluation(admissionProof, frozen, req,
+                                                                Json.tree(versionRefs(source, frozen, req)),
+                                                                Json.tree(initialBudget(frozen.path("config"))))
+                                                        : protectedAdmission
                                                         ? firstChat ? admissionStore.createPublishedFirstChat(
                                                                 admissionProof,
                                                                 frozen,
@@ -1751,7 +1763,7 @@ public class RunService {
             result.put("graph", snapshotJson.path("definition"));
         // PLAT-20 T20.1：environment/dataset 标注随冻结快照铺到详情顶层；旧运行无标注时不落键。
         surfaceRuntimeAnnotation(result, snapshotJson);
-        if (!protectedView && "EVALUATION".equals(run.get("trigger_type")))
+        if ("EVALUATION".equals(run.get("trigger_type")))
             result.put("sourceEvidence", participantSource(run));
         // PLAT-14 T14.1：工具档案选择留痕（生效清单/所选档案/排除原因）同规则透出。
         surfaceToolSelection(result, snapshotJson);

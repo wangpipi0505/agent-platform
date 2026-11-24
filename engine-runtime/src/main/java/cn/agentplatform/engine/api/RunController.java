@@ -71,7 +71,7 @@ public class RunController {
     @PostMapping("/internal/evaluations/run")
     public Object eval(@RequestBody JsonNode req) {
         Actor actor = Actor.current();
-        actor.requireRole("SERVICE");
+        if (!service.iamEnabled()) actor.requireRole("SERVICE");
         return ApiResponse.ok(
                 service.create(req.path("appCode").asText(), req, "EVALUATION", actor));
     }

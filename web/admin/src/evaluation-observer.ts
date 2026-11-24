@@ -72,7 +72,8 @@ export async function observeEvaluation(initial:any, options:Options) {
       if(['ACCEPTED','REJECTED'].includes(report.status))continue;
       if(report.status==='ERROR'&&!explicit)continue;
       if(!canResume()){notice('stopped','当前身份不能恢复此报告。');return;}
-      report=validate(await api('/admin/evaluations/'+encodeURIComponent(id)+'/resume','POST',undefined,signal));
+      const candidate = { appCode: initial.appCode, draftRev: initial.draftRev, candidateSha256: initial.candidateSha256 };
+      report=validate(await api('/admin/evaluations/'+encodeURIComponent(id)+'/resume','POST',candidate,signal));
       if(signal.aborted)return;publish(report);failures=0;cycles++;explicit=false;
       notice('observing','正在观察原报告；离开页面不会取消评测。');
     } catch(e:any) {

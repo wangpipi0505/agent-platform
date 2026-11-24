@@ -87,14 +87,19 @@ public class GatewayController {
     @RequestMapping({"/admin/**", "/v1/**"})
     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
         if ("iam".equals(deployment.mode())) {
-            if ("POST".equals(req.getMethod()) && EvaluationCandidateBinding.ROUTE.equals(req.getRequestURI())) {
-                evaluate(req, res);
+            String evaluationTemplate = EvaluationCandidateBinding.portalTemplate(req.getMethod(), req.getRequestURI());
+            if (evaluationTemplate != null) {
+                evaluate(req, res, evaluationTemplate);
                 return;
             }
             String buildTemplate = PlatformBuildRoutes.template(req.getMethod(), req.getRequestURI());
             if (buildTemplate != null) {
                 var source = GatewayIngressBoundary.claimRuntime(req);
                 var call = PlatformBuildRoutes.call(serviceRoutes, req.getMethod(), buildTemplate, source.subject());
+                if (EvaluationCandidateBinding.PRECHECK_TEMPLATE.equals(buildTemplate)) {
+                    String code = req.getRequestURI().split("/")[3];
+                    call = new ServiceCall(call.target(), call.action(), EvaluationCandidateBinding.publication(code));
+                }
                 var ticket = authority.orElseThrow(() -> new PlatformException(
                         503, "DEPENDENCY_UNAVAILABLE", "门户构建授权服务暂不可用"))
                         .exchange(source.sourceToken(), call);
@@ -152,8 +157,17 @@ public class GatewayController {
         forward(req, res, service, token, null);
     }
 
-    private void evaluate(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    private void evaluate(HttpServletRequest req, HttpServletResponse res, String template) throws IOException {
         String source = GatewayIngressBoundary.claimEvaluation(req);
+        var route = serviceRoutes.require("gateway", "monitor", req.getMethod(), template);
+        if ("GET".equals(req.getMethod())) {
+            var resource = EvaluationCandidateBinding.ROUTE.equals(template)
+                    ? EvaluationCandidateBinding.reports()
+                    : EvaluationCandidateBinding.report(req.getRequestURI().split("/")[3]);
+            forward(req, res, route.target(), evaluationTicket(source,
+                    new ServiceCall(route.target(), route.action(), resource)));
+            return;
+        }
         int limit = requestLimit(req);
         byte[] body = req.getInputStream().readNBytes(limit + 1);
         if (body.length > limit) {
@@ -169,11 +183,14 @@ public class GatewayController {
             throw new PlatformException(400, "INVALID_INPUT", "评测请求 JSON 无效");
         }
         var resource = EvaluationCandidateBinding.from(json);
-        var route = serviceRoutes.require("gateway", "monitor", "POST", EvaluationCandidateBinding.ROUTE);
-        var ticket = authority.orElseThrow(() -> new PlatformException(
+        forward(req, res, route.target(), evaluationTicket(source,
+                new ServiceCall(route.target(), route.action(), resource)), body);
+    }
+
+    private String evaluationTicket(String source, ServiceCall call) {
+        return authority.orElseThrow(() -> new PlatformException(
                 503, "DEPENDENCY_UNAVAILABLE", "门户评测授权服务暂不可用"))
-                .exchange(source, new ServiceCall(route.target(), route.action(), resource));
-        forward(req, res, route.target(), ticket.value(), body);
+                .exchange(source, call).value();
     }
 
     private void forward(HttpServletRequest req, HttpServletResponse res, String service, String token, byte[] capturedBody)

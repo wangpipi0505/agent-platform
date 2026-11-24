@@ -23,7 +23,9 @@ describe('frozen evaluation observer', () => {
   it('stops on ERROR until explicit retry and preserves the original report identity',async()=>{
     const api=vi.fn(async()=>({...frozen,status:'ACCEPTED'}));const options={api,signal:new AbortController().signal,canResume:()=>true,publish:()=>{},notice:vi.fn(),sleep:async()=>{}};
     await observeEvaluation({...frozen,status:'ERROR'},options);expect(api).not.toHaveBeenCalled();
-    await observeEvaluation({...frozen,status:'ERROR'},{...options,resumeError:true});expect(api).toHaveBeenCalledExactlyOnceWith('/admin/evaluations/er_one/resume','POST',undefined,options.signal);
+    await observeEvaluation({...frozen,status:'ERROR'},{...options,resumeError:true});expect(api).toHaveBeenCalledExactlyOnceWith('/admin/evaluations/er_one/resume','POST',{
+      appCode:frozen.appCode,draftRev:frozen.draftRev,candidateSha256:frozen.candidateSha256,
+    },options.signal);
   });
   it.each([400,401,403,404,409])('never retries a %s response',async status=>{
     const api=vi.fn(async()=>{throw Object.assign(Error('denied'),{status});});const notice=vi.fn();

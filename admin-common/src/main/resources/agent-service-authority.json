@@ -1,6 +1,18 @@
 [
  {
   "method": "GET",
+  "template": "/internal/evaluations/access/{code}",
+  "caller": "monitor",
+  "target": "app",
+  "action": "app.evaluation.access",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java::evaluationAccess",
+  "callerSource": "monitor/src/main/java/cn/agentplatform/monitor/application/EvaluationService.java::resume",
+  "reason": "恢复原评测前按平台授权复核冻结候选"
+ },
+ {
+  "method": "GET",
   "template": "/admin/platform-authorization/configuration-audit",
   "caller": "gateway",
   "target": "app",

@@ -153,6 +153,10 @@ public class AppController {
     @PostMapping("/admin/apps/{code}/publish/precheck")
     public Object precheck(@PathVariable String code) {
         require(PlatformAccessService.PUBLISH, code);
+        if (iam()) {
+            EvaluationCandidateBinding.requirePublication(code, "gateway", "app",
+                    EvaluationCandidateBinding.PRECHECK_ACTION);
+        }
         return ApiResponse.ok(apps.precheck(code));
     }
 
@@ -183,9 +187,19 @@ public class AppController {
                 throw AppService.error(403, "SYS-AUTH-403", "当前授权不能读取评测候选");
             }
             var resource = EvaluationCandidateBinding.of(code, draftRev, candidateSha256);
-            AuthorityContext.requireFor(current.actor(), resource).actor().requireRole("EDITOR");
+            var authorized = AuthorityContext.requireFor(current.actor(), resource);
+            access().require(authorized.actor(), PlatformAccessService.BUILD, code);
         }
         return ApiResponse.ok(apps.frozenCandidate(code, draftRev, candidateSha256));
+    }
+
+    @GetMapping("/internal/evaluations/access/{code}")
+    public Object evaluationAccess(@PathVariable String code, @RequestParam long draftRev,
+                                   @RequestParam String candidateSha256) {
+        var resource = EvaluationCandidateBinding.of(code, draftRev, candidateSha256);
+        var verified = EvaluationCandidateBinding.requirePortal("monitor", "app", "app.evaluation.access", resource);
+        access().require(verified.actor(), PlatformAccessService.BUILD, code);
+        return ApiResponse.ok(Map.of("allowed", true));
     }
 
     @GetMapping("/internal/apps/{code}/versions/{version}")

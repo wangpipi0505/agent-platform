@@ -45,6 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 AuthorityTestSupport.P_KID,
                 AuthorityTestSupport.P_KEY,
                 AuthorityTestSupport.P_GATEWAY,
+                "agent.authority.clients.monitor=test-monitor-secret",
                 DelegatedTestSupport.P_ENGINE,
                 DelegatedTestSupport.P_DELEGATION_ON})
 class ExchangeContractTest extends DelegatedTestSupport {
@@ -54,6 +55,52 @@ class ExchangeContractTest extends DelegatedTestSupport {
     private static final String EVENTS_ACTION = "proxy.engine.get.RunController.events";
     private static final String PORTAL_AUDIENCE = "agent-platform-portal";
     private static final String SELECTOR_ID = "r_0123456789abcdef0123456789abcdef";
+
+    @Test
+    void thePlatformAuthorityRenewsTheOriginalEvaluationGrantForEngine() {
+        var root = EvaluationCandidateBinding.of("ops", 7, DIGEST);
+        var begin = new ServiceCall("monitor", "proxy.monitor.post.EvaluationController.evaluate", root);
+        var execute = new ServiceCall(ENGINE, "evaluation.run", root);
+        var advance = new ServiceCall(ENGINE, "run.advance", root);
+        String portal = portalToken(40);
+        var exchange = postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET),
+                exchangeBody(begin, "r37-candidate-exchange", portal));
+        assertThat(exchange.getStatusCode()).as("exchange").isEqualTo(HttpStatus.OK);
+
+        String monitorAuth = basic("monitor", "test-monitor-secret");
+        var monitor = postJson("/internal/authorize", monitorAuth, callBody("authorize", begin,
+                "r37-candidate-monitor", Map.of("service_ticket", exchange.getBody().path("ticket").asText())));
+        assertThat(monitor.getStatusCode()).as("monitor authorize").isEqualTo(HttpStatus.OK);
+        var monitorProof = TestJwt.claims(monitor.getBody().path("assertion").asText());
+        var forwarded = postJson("/oauth/token", monitorAuth, callBody("forward", execute,
+                "r37-candidate-forward", forwardFields(monitorProof)));
+        assertThat(forwarded.getStatusCode()).as("forward").isEqualTo(HttpStatus.OK);
+        String engineAuth = basic(ENGINE, ENGINE_SECRET);
+        var admitted = postJson("/internal/authorize", engineAuth, callBody("authorize", execute,
+                "r37-candidate-engine", Map.of("service_ticket", forwarded.getBody().path("ticket").asText())));
+        assertThat(admitted.getStatusCode()).as("engine authorize").isEqualTo(HttpStatus.OK);
+        String grant = monitorProof.path("grant_ref").asText();
+        var renewed = postJson("/oauth/token", engineAuth,
+                callBody("resume", advance, "r37-candidate-renew", Map.of("grant_ref", grant)));
+        assertThat(renewed.getStatusCode()).as("engine resume").isEqualTo(HttpStatus.OK);
+        var proof = TestJwt.verifiedClaims(renewed.getBody().path("ticket").asText(), "at+jwt", publishedKey());
+        assertThat(proof.path("grant_ref").asText()).isEqualTo(grant);
+        assertThat(proof.path("operation").path("source_kind").asText()).isEqualTo("DELEGATED");
+        assertThat(proof.path("resource").path("id").asText()).isEqualTo("ops@7");
+
+        var other = new ServiceCall(ENGINE, "run.advance", EvaluationCandidateBinding.of("ops", 8, DIGEST));
+        var denied = postJson("/oauth/token", engineAuth,
+                callBody("resume", other, "r37-candidate-other", Map.of("grant_ref", grant)));
+        assertThat(denied.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    private static String callBody(String operation, ServiceCall call, String nonce, Map<String, Object> extra) {
+        var fields = new LinkedHashMap<String, Object>(AuthorityProtocol.call(call));
+        fields.put("operation", operation);
+        fields.put("nonce", nonce);
+        fields.putAll(extra);
+        return Json.write(fields);
+    }
 
     @Test
     void gatewayExchangesAPortalUserTokenForTheSseTicket() {

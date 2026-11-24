@@ -107,8 +107,9 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
 
     private Purpose route(HttpServletRequest r) {
         if (r.getDispatcherType() == DispatcherType.REQUEST && r.getContextPath().isEmpty()
-                && "POST".equals(r.getMethod()) && r.getQueryString() == null
-                && EvaluationCandidateBinding.ROUTE.equals(r.getRequestURI())) return Purpose.EVALUATION;
+                && r.getQueryString() == null
+                && EvaluationCandidateBinding.portalTemplate(r.getMethod(), r.getRequestURI()) != null)
+            return Purpose.EVALUATION;
         if (r.getDispatcherType() == DispatcherType.REQUEST && r.getContextPath().isEmpty()
                 && (PortalRuntimeRoutes.matches(r.getMethod(), r.getRequestURI())
                     || PlatformBuildRoutes.template(r.getMethod(), r.getRequestURI()) != null)) return Purpose.RUNTIME;
@@ -439,8 +440,7 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
                         if(Set.of("tenant","tenant-id","principal","principal-id","subject","resource","target","action","actor","roles","attributes","access-token","service-token").contains(lower)
                                 ||List.of("x-actor","x-role","x-attribute","x-identity","x-credential","x-access-token","x-service-token","x-forwarded-user","x-forwarded-tenant").stream().anyMatch(lower::startsWith))throw denied();
                     }
-                    if (purpose != Purpose.EVALUATION
-                            && (purpose != Purpose.RUNTIME || "GET".equals(r.getMethod()))) {
+                    if (("GET".equals(r.getMethod()) || (purpose != Purpose.EVALUATION && purpose != Purpose.RUNTIME))) {
                         if (r.getContentLengthLong() > 0 || r.getHeader("Transfer-Encoding") != null
                                 || r.getInputStream().read() != -1) throw denied();
                     }

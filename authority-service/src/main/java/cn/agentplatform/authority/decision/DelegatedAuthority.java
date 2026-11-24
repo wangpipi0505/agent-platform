@@ -319,6 +319,11 @@ public final class DelegatedAuthority {
             // 而不是"换一跳"；平台客户端 RunAuthority 也只识别 403/503，409 会被原样上抛。
             throw new AuthorityException(403, "AUTHORITY_EXPIRED", "原委托已过期", "RESUME_GRANT_EXPIRED");
         }
+        if ("run.advance".equals(request.call().action())
+                && "evaluation-candidate".equals(request.call().resource().kind())
+                && !Set.of("evaluation.run", "evaluation.turn", "run.advance").contains(original.action())) {
+            throw AuthorityException.denied("RESUME_ACTION");
+        }
         if (!request.call().action().equals(original.action())
                 && !ServiceRoutePolicy.localRunAdvance(clientId, request.call(), MODE, "DELEGATED",
                         operationText(original.operation(), "origin_kind"))) {

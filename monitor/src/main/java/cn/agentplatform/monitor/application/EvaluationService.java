@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -30,6 +31,8 @@ import java.util.regex.Pattern;
 public class EvaluationService {
     private static final Pattern CANDIDATE_PATH =
             Pattern.compile("/internal/apps/([A-Za-z][A-Za-z0-9_-]{0,63})/candidate");
+    private static final Pattern ACCESS_PATH =
+            Pattern.compile("/internal/evaluations/access/([A-Za-z][A-Za-z0-9_-]{0,63})");
     private static final Pattern CANDIDATE_QUERY =
             Pattern.compile("draftRev=([1-9][0-9]*)&candidateSha256=([a-f0-9]{64})");
     private static final Set<String> EVALUATION_ACTIONS = Set.of(
@@ -46,6 +49,10 @@ public class EvaluationService {
 
     @Value("${agent.security.mode:dev-hmac}")
     private String securityMode = "dev-hmac";
+
+    public boolean iamEnabled() {
+        return "iam".equals(securityMode);
+    }
 
     @org.springframework.beans.factory.annotation.Autowired
     public void authority(ObjectProvider<CurrentAuthorityClient> clients) {
@@ -152,6 +159,9 @@ public class EvaluationService {
                                 .body(Map.class);
             if (raw == null) throw new IllegalStateException("空响应");
             return raw.containsKey("data") ? raw.get("data") : raw;
+        } catch (RestClientResponseException e) {
+            if (iam && e.getStatusCode().value() == 403) throw evaluationDenied();
+            throw fail(502, "DEPENDENCY_UNAVAILABLE", "依赖服务调用失败，稍后重试");
         } catch (Exception e) {
             throw fail(502, "DEPENDENCY_UNAVAILABLE", "依赖服务调用失败，稍后重试");
         }
@@ -159,17 +169,19 @@ public class EvaluationService {
 
     private String evaluationTicket(String method, URI uri, Map<String, Object> body) {
         var candidate = CANDIDATE_PATH.matcher(Objects.toString(uri.getRawPath(), ""));
+        var access = ACCESS_PATH.matcher(Objects.toString(uri.getRawPath(), ""));
         String query = Objects.toString(uri.getRawQuery(), "");
         String target;
         String template;
         ResourceBinding expected;
-        if ("GET".equals(method) && candidate.matches() && sameOrigin(uri, appUrl)) {
+        if ("GET".equals(method) && sameOrigin(uri, appUrl) && (candidate.matches() || access.matches())) {
             var parameters = CANDIDATE_QUERY.matcher(query);
             if (!parameters.matches()) throw evaluationDenied();
             target = "app";
-            template = "/internal/apps/{code}/candidate";
-            expected = new ResourceBinding("evaluation-candidate", candidate.group(1) + "@" + parameters.group(1),
-                    parameters.group(2));
+            boolean readCandidate = candidate.matches();
+            template = readCandidate ? "/internal/apps/{code}/candidate" : EvaluationCandidateBinding.ACCESS_TEMPLATE;
+            expected = new ResourceBinding(EvaluationCandidateBinding.KIND,
+                    (readCandidate ? candidate.group(1) : access.group(1)) + "@" + parameters.group(1), parameters.group(2));
         } else if ("POST".equals(method) && query.isEmpty() && sameOrigin(uri, engineUrl)
                 && Set.of("/internal/evaluations/run", "/internal/evaluations/turn").contains(uri.getRawPath())) {
             if (body == null) throw evaluationDenied();
@@ -190,9 +202,7 @@ public class EvaluationService {
                 || current.operation() == null || !"PORTAL".equals(current.operation().originKind())
                 || !expected.equals(current.call().resource()))
             throw evaluationDenied();
-        current.actor().requireRole("EDITOR");
         var verified = AuthorityContext.requireFor(current.actor(), expected);
-        verified.actor().requireRole("EDITOR");
         var client = authority == null ? null : authority.getIfAvailable();
         if (client == null)
             throw fail(503, "DEPENDENCY_UNAVAILABLE", "评测服务授权暂不可用");
@@ -240,7 +250,7 @@ public class EvaluationService {
                     || !"PORTAL".equals(current.operation().originKind())) {
                 throw evaluationDenied();
             }
-            AuthorityContext.requireFor(current.actor(), expected).actor().requireRole("EDITOR");
+            AuthorityContext.requireFor(current.actor(), expected);
         }
         var suite = new ArrayList<>(cases(b.get("cases")));
         var ids = new HashSet<String>();
@@ -422,9 +432,7 @@ public class EvaluationService {
             result.put("sourceEvidence", source);
             try {
                 var run =
-                        call(
-                                "POST",
-                                engineUrl + "/internal/evaluations/run",
+                        evaluateRun(
                                 Map.of(
                                         "appCode",
                                         code,
@@ -536,9 +544,23 @@ public class EvaluationService {
     }
 
     public Map<String, Object> resume(String id) {
+        return resume(id, null);
+    }
+
+    public Map<String, Object> resume(String id, Map<String, Object> binding) {
         var current = report(id);
         if (!Actor.current().principalId().equals(current.get("createdBy")))
             throw fail(403, "EVALUATION_OWNER_REQUIRED", "仅原发起人可恢复评测，避免更换主体产生新的业务执行");
+        if (iamEnabled()) {
+            var supplied = EvaluationCandidateBinding.from(Json.tree(binding));
+            var stored = EvaluationCandidateBinding.from(Json.tree(current));
+            if (!stored.equals(supplied)) throw evaluationDenied();
+            EvaluationCandidateBinding.requirePortal("gateway", "monitor",
+                    "proxy.monitor.post.EvaluationController.resume", stored);
+            String path = "/internal/evaluations/access/" + current.get("appCode")
+                    + "?draftRev=" + current.get("draftRev") + "&candidateSha256=" + current.get("candidateSha256");
+            if (!Boolean.TRUE.equals(call("GET", appUrl + path, Map.of()).get("allowed"))) throw evaluationDenied();
+        }
         if (Set.of("ACCEPTED", "REJECTED").contains(current.get("status"))) return current;
         var frozen =
                 db.queryForList(
@@ -575,15 +597,49 @@ public class EvaluationService {
                 Objects.toString(current.get("assertionModel"), EvaluationAssertions.MODEL_EXACT));
     }
 
+    private Map<String, Object> evaluateRun(Map<String, Object> request) {
+        String path = engineUrl + "/internal/evaluations/run";
+        var result = call("POST", path, request);
+        if (!iamEnabled()) return result;
+        long deadline = System.nanoTime() + Duration.ofSeconds(2).toNanos();
+        while (Set.of("PENDING", "QUEUED", "RUNNING").contains(result.get("status"))
+                && System.nanoTime() < deadline) {
+            try {
+                Thread.sleep(Duration.ofMillis(100));
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw fail(503, "EVALUATION_INTERRUPTED", "评测等待已中断");
+            }
+            // engine pins the request to the report and case so reads cannot create another run.
+            result = call("POST", path, request);
+        }
+        return result;
+    }
+
     public List<Map<String, Object>> list() {
-        return db
-                .queryForList(
-                        "select id from monitor.evaluation_report where tenant_id=? order by"
-                                + " created_at desc limit 200",
-                        tenant())
-                .stream()
+        String query = "select id from monitor.evaluation_report where tenant_id=?";
+        String limit = " order by created_at desc limit 200";
+        String tenant = tenant();
+        List<Map<String, Object>> rows;
+        if (iamEnabled()) {
+            var proof = EvaluationCandidateBinding.requirePortal("gateway", "monitor",
+                    "proxy.monitor.get.EvaluationController.list", EvaluationCandidateBinding.reports());
+            rows = db.queryForList(query + " and created_by=?" + limit, tenant, proof.actor().principalId());
+        } else {
+            rows = db.queryForList(query + limit, tenant);
+        }
+        return rows.stream()
                 .map(r -> report(r.get("id").toString()))
                 .toList();
+    }
+
+    public Map<String, Object> portalReport(String id) {
+        if (!iamEnabled()) return report(id);
+        var proof = EvaluationCandidateBinding.requirePortal("gateway", "monitor",
+                "proxy.monitor.get.EvaluationController.report", EvaluationCandidateBinding.report(id));
+        var current = report(id);
+        if (!proof.actor().principalId().equals(current.get("createdBy"))) throw evaluationDenied();
+        return current;
     }
 
     public Map<String, Object> report(String id) {
@@ -706,6 +762,14 @@ public class EvaluationService {
      * @param semanticDigest 调用方当前候选的语义摘要；不知道就传 null，此时只走 sha 精确匹配
      */
     public Map<String, Object> accepted(String code, long rev, String hash, String semanticDigest) {
+        if ("iam".equals(securityMode)) {
+            EvaluationCandidateBinding.of(code, rev, hash);
+            if (semanticDigest != null && !semanticDigest.matches("[a-f0-9]{64}")) {
+                throw fail(400, "INVALID_CANDIDATE_DIGEST", "候选语义摘要格式无效");
+            }
+            EvaluationCandidateBinding.requirePublication(code, "app", "monitor",
+                    EvaluationCandidateBinding.EVIDENCE_ACTION);
+        }
         var rows =
                 db.queryForList(
                         "select id,candidate_sha256,candidate_semantic_digest from"

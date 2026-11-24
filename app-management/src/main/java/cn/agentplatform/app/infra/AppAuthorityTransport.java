@@ -8,6 +8,7 @@ import cn.agentplatform.common.TraceContextFilter;
 import cn.agentplatform.common.auth.OnboardingServiceProof;
 import cn.agentplatform.common.authority.AuthorityContext;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
+import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -161,7 +162,19 @@ public class AppAuthorityTransport {
         var first = AuthorityContext.current();
         if (!"app".equals(first.call().target()) || first.call().resource() == null || first.operation() == null)
             throw new PlatformException(403, "AUTHORITY_RESOURCE_MISMATCH", "应用出站缺少当前同根授权");
-        var current = AuthorityContext.requireFor(actor, first.call().resource());
+        cn.agentplatform.common.authority.VerifiedAuthority current;
+        if (EvaluationCandidateBinding.EVIDENCE_ACTION.equals(endpoint.route().action())) {
+            String query = URI.create(pathAndQuery).getRawQuery();
+            if (query == null || !query.matches("appCode=[A-Za-z][A-Za-z0-9_-]{0,63}"
+                    + "&draftRev=[1-9][0-9]*&candidateSha256=[a-f0-9]{64}(?:&semanticDigest=[a-f0-9]{64})?")) {
+                throw new PlatformException(403, "AUTHORITY_RESOURCE_MISMATCH", "预检证据查询格式与已登记能力不符");
+            }
+            String code = query.substring("appCode=".length(), query.indexOf('&'));
+            current = EvaluationCandidateBinding.requirePublication(code, "gateway", "app",
+                    EvaluationCandidateBinding.PRECHECK_ACTION);
+        } else {
+            current = AuthorityContext.requireFor(actor, first.call().resource());
+        }
         remaining(deadline);
         var ticket = client.forward(current,
                 new ServiceCall(endpoint.route().target(), endpoint.route().action(), current.call().resource()));

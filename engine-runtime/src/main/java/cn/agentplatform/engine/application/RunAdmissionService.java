@@ -139,6 +139,37 @@ public class RunAdmissionService {
         return AuthorityContext.requireInitialFor(actor, root);
     }
 
+    RetainedAuthorization evaluationOpening(String code, JsonNode request, Actor actor) {
+        if (!wired()) {
+            throw new PlatformException(403, "IAM_ADMISSION_UNAVAILABLE", "受理授权尚未装配");
+        }
+        if (!request.path("frozenCandidate").isObject() || !request.path("inputs").isObject()
+                || !code.equals(request.path("appCode").asText())
+                || !request.path("caseId").isTextual() || request.path("caseId").asText().isBlank()
+                || request.path("caseId").asText().length() > 128
+                || !request.path("evalReportId").isTextual() || request.path("evalReportId").asText().isBlank()
+                || request.path("evalReportId").asText().length() > 128
+                || !request.path("datasetVersion").isTextual() || request.path("datasetVersion").asText().isBlank()
+                || request.path("inputs").has("materialRefs") || request.path("inputs").has("historyRefs")) {
+            throw RunAuthorityStore.denied();
+        }
+        var fields = request.fieldNames();
+        Set<String> allowed = Set.of("appCode", "draftRev", "candidateSha256", "frozenCandidate",
+                "evalReportId", "caseId", "datasetVersion", "inputs", "requestId");
+        while (fields.hasNext()) {
+            if (!allowed.contains(fields.next())) throw RunAuthorityStore.denied();
+        }
+        var root = EvaluationCandidateBinding.from(request);
+        var current = AuthorityContext.current();
+        if (!"monitor".equals(current.caller())
+                || !new ServiceCall("engine", "evaluation.run", root).equals(current.call())
+                || current.operation() == null || !"PORTAL".equals(current.operation().sourceKind())
+                || !"PORTAL".equals(current.operation().originKind()) || !root.equals(current.operation().resource())) {
+            throw RunAuthorityStore.denied();
+        }
+        return AuthorityContext.requireInitialFor(actor, root);
+    }
+
     /** 调度之前的幂等读取：同一 (tenant, principal, requestId) 已有受理结果时不再占新槽位。 */
     Map<String, Object> existing(Actor actor, JsonNode request, boolean protectedAdmission) {
         if (!request.hasNonNull("requestId")) return null;

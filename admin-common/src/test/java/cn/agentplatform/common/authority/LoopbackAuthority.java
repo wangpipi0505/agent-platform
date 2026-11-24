@@ -691,7 +691,15 @@ public final class LoopbackAuthority implements AutoCloseable {
                 AuthorityProtocol.text(verifiedSource, "sub")));
         AuthorityProtocol.same(known.resource(), call.resource());
     }
-    private static void requireLocalGrant(String caller,ServiceCall call,Grant grant){
+    private void requireLocalGrant(String caller,ServiceCall call,Grant grant){
+        if (EvaluationCandidateBinding.KIND.equals(call.resource().kind())) {
+            if (!ServiceRoutePolicy.localRunAdvance(caller, call, "delegated", "DELEGATED", grant.origin)
+                    || !grant.resource.equals(call.resource())
+                    || decisions.values().stream().noneMatch(decision -> decision.operation.grant.id.equals(grant.id)
+                            && "engine".equals(decision.call.target())
+                            && "evaluation.run".equals(decision.call.action()))) throw AuthorityProtocol.denied();
+            return;
+        }
         if(!ServiceRoutePolicy.localRunAdvance(caller,call,"delegated","DELEGATED",grant.origin)
             || !"engine".equals(grant.originalCall.target())
             || !"proxy.engine.post.RunController.run".equals(grant.originalCall.action())

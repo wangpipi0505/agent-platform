@@ -17,7 +17,7 @@ public class EvaluationController {
 
     @PostMapping("/admin/evaluations")
     public Object evaluate(@RequestBody Map<String, Object> b) {
-        Actor.current().requireRole("EDITOR");
+        if (!evaluations.iamEnabled()) Actor.current().requireRole("EDITOR");
         return ApiResponse.ok(evaluations.evaluate(b));
     }
 
@@ -27,14 +27,14 @@ public class EvaluationController {
     }
 
     @PostMapping("/admin/evaluations/{id}/resume")
-    public Object resume(@PathVariable String id) {
-        Actor.current().requireRole("EDITOR");
-        return ApiResponse.ok(evaluations.resume(id));
+    public Object resume(@PathVariable String id, @RequestBody(required = false) Map<String, Object> candidate) {
+        if (!evaluations.iamEnabled()) Actor.current().requireRole("EDITOR");
+        return ApiResponse.ok(evaluations.resume(id, candidate));
     }
 
     @GetMapping("/admin/evaluations/{id}")
     public Object report(@PathVariable String id) {
-        return ApiResponse.ok(evaluations.report(id));
+        return ApiResponse.ok(evaluations.portalReport(id));
     }
 
     @GetMapping("/internal/evaluations/accepted")

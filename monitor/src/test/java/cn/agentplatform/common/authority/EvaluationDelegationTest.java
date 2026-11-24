@@ -12,6 +12,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -22,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,6 +43,7 @@ class EvaluationDelegationTest {
 
     @Autowired private EvaluationService evaluation;
     @Autowired private CurrentAuthorityClient authority;
+    @Autowired private JdbcTemplate db;
 
     @DynamicPropertySource
     static void origins(DynamicPropertyRegistry properties) throws Exception {
@@ -102,6 +107,35 @@ class EvaluationDelegationTest {
         }
         assertThatThrownBy(() -> evaluation.call("POST", run, body)).isInstanceOf(PlatformException.class);
         assertThat(REQUESTS).hasValue(1);
+    }
+
+    @Test
+    void publicationEvidenceUsesTheDelegatedTenantAndBoundApplication() {
+        var now = Instant.now();
+        var user = new Actor("tenant-a", "publisher", Set.of("USER"), Map.of());
+        var subject = new SubjectKey(user.tenantId(), user.principalId());
+        var root = EvaluationCandidateBinding.publication("eval-app");
+        var call = new ServiceCall("monitor", EvaluationCandidateBinding.EVIDENCE_ACTION, root);
+        var grant = new DelegationRef("grt-publication", subject, now.plusSeconds(45));
+        var operation = new OperationBinding("publication", "PORTAL", "PORTAL", now, now.plusSeconds(30),
+                grant.value(), subject, root, SHA);
+        var delegated = new VerifiedAuthority(user, "app", call, grant, "v1", now, now.plusSeconds(20),
+                "decision-publication", operation);
+        var jwt = Jwt.withTokenValue("verified-fixture").header("alg", "RS256").subject(user.principalId())
+                .claim("tenant_id", user.tenantId()).claim("authority_mode", "delegated")
+                .claim("roles", List.of("USER")).build();
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+        try (var frame = AuthorityContext.bind(delegated, () -> delegated)) {
+            assertThat(evaluation.accepted("eval-app", 7, SHA)).containsEntry("accepted", false);
+            assertThatThrownBy(() -> evaluation.accepted("other-app", 7, SHA))
+                    .isInstanceOfSatisfying(PlatformException.class, error -> assertThat(error.status()).isEqualTo(403));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        org.mockito.Mockito.verify(db).queryForList(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.eq("tenant-a"), org.mockito.ArgumentMatchers.eq("eval-app"),
+                org.mockito.ArgumentMatchers.eq(7L), org.mockito.ArgumentMatchers.eq(SHA),
+                org.mockito.ArgumentMatchers.isNull());
     }
 
     private static String origin() {

@@ -184,10 +184,9 @@ Content-Type: application/json
 
 ## 10. 未实现与已知缺口
 
-1. **IAM 模式入口**：`GatewayIngressBoundary` 只放行 `/admin/apps/{code}/runs`、`/auth/session`、
-   `/admin/runs/{id}`、`/admin/runs/{id}/events` 四种形状；`/embed/ticket` 与 `/v1/**` 在 iam 网关
-   一律 403 `SYS-AUTH-403`。当前短票 provider 实际只服务非 IAM 的可信 BFF 部署；IAM 门户模式以
-   portal JWT 作为短凭据。放开入口属平台边界变更（admin-common），不在 INT-04 白名单。
+1. **IAM 集成票**：IAM 网关目前有已登记的门户会话、构建和运行入口。业务宿主的
+   `/embed/ticket` 与 `/v1/**` 集成票链路由 R-40 接通 authority 换票并验证。宿主按本协议实现，
+   具体可调用动作以目标部署公布的入口为准。见 [统一授权通道](business-platform-access.md)。
 2. **环境与接入档案的一致性**：网关无 `app.integration_profile` 内部读取端点，无法自动校验
    `environment` 与 `IntegrationProfile.environment` 相等；当前以 `claim_limits.attributes.environment`
    为唯一上限，需管理员核对。

@@ -70,6 +70,7 @@ class GatewayIamPortalHttpTest {
         engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
         engine.createContext("/internal/apps/ops/published-metadata", GatewayIamPortalHttpTest::respondAsApp);
         engine.createContext("/admin/evaluations", GatewayIamPortalHttpTest::respondAsMonitor);
+        engine.createContext("/admin/apps/ops/publish/precheck", GatewayIamPortalHttpTest::respondAsPrecheck);
         engine.createContext("/internal/platform-authorization/session", GatewayIamPortalHttpTest::respondWithAccess);
         engine.createContext("/admin/platform-authorization/grants", GatewayIamPortalHttpTest::respondAsGrantService);
         engine.createContext("/admin/apps", request -> {
@@ -480,6 +481,30 @@ class GatewayIamPortalHttpTest {
                     .getBytes(StandardCharsets.UTF_8);
             request.sendResponseHeaders(200, response.length);
             request.getResponseBody().write(response);
+        }
+    }
+
+    @Test
+    void releasePrecheckGetsADelegationForTheRequestedApplication() throws Exception {
+        var response = postEvaluation("/admin/apps/ops/publish/precheck", iam.portal(), "");
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+        assertThat(response.body()).isEqualTo("tenant-a/alice ops");
+    }
+
+    private static void respondAsPrecheck(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {
+        try (request; var authority = iam.client("app")) {
+            var call = new ServiceCall("app", "proxy.app.post.AppController.precheck",
+                    new ResourceBinding("evaluation-publication", "ops", Digest.sha256("evaluation-publication.v1:ops")));
+            try {
+                String bearer = request.getRequestHeaders().getFirst("Authorization");
+                var actor = authority.authorize(bearer.substring("Bearer ".length()), call).actor();
+                byte[] response = (actor.tenantId() + "/" + actor.principalId() + " ops")
+                        .getBytes(StandardCharsets.UTF_8);
+                request.sendResponseHeaders(200, response.length);
+                request.getResponseBody().write(response);
+            } catch (cn.agentplatform.common.PlatformException denied) {
+                request.sendResponseHeaders(denied.status(), -1);
+            }
         }
     }
 

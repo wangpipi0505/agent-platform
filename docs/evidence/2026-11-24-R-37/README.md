@@ -18,4 +18,23 @@ mvn -B -ntp -pl platform-gateway,monitor,app-management -am '-Dtest=GatewayIamPo
 
 入口两例和 app 候选读取一例在实现前复现失败。联合回归共 46 例通过。见 [输出摘录](gateway-monitor-result.txt) 和同目录的 `raw-02-gateway-before.log`、`raw-05-app-before.log`、`raw-06-iam-evaluation.log`。
 
-engine 的受理、存储和恢复仍要求 `app-version` 根。候选 `run` 和 `turn` 需要自己的持久授权绑定。发布预检委派和从真实评测执行到预检证据消费的联合验收待完成。
+## 统一 IAM 通道、纯 FLOW 候选与发布预检
+
+本分支已合入 R-39 应用授权判定及会话能力。网关使用已有 authority-service 为评测和发布预检换票，业务软件接入见 [统一授权通道](../../../contracts/business-platform-access.md)。
+
+- 修复前发布预检使用普通构建资源，应用级预检用例收到 403。修复后网关、app 与 monitor 之间使用按应用编码绑定的评测证据委派。monitor 拒绝拿该委派读取其他应用，app 的发布环境门另用 PostgreSQL 回归覆盖报告匹配与阻断。
+- 修复前 engine 拒绝 monitor 转发的候选委派。V232 使纯 FLOW 候选按草稿修订独立保存授权、材料范围和原委托引用。PostgreSQL 实跑由网关用户委派经 monitor 进入 engine，后台续用原授权跑到 `SUCCEEDED`，用例重放返回同一运行 ID，改输入返回 409。
+- 真实 authority-service HTTP 回归覆盖换票、monitor 判权、转发、engine 受理与记录同一引用、原授权续票；修改草稿修订的续票返回 403。
+- 门户查询及恢复保持原报告身份，monitor 在继续执行前通过 app 复核当前应用构建权限。前端传回原报告的冻结候选元组，恢复沿用同一报告和用例。
+
+```powershell
+# 设置隔离 PG 测试库，engine 专用库名为 agent_platform_r37_eval。使用 JDK 21。
+mvn -B -ntp -pl engine-runtime,authority-service,platform-gateway,app-management,monitor -am '-Dtest=EvaluationRunAuthorityTest,EvaluationRunPostgresTest,ExchangeContractTest,EvaluationEnvironmentGateTest,GatewayIamPortalHttpTest,GatewayIngressBoundaryTest,EvaluationCandidateReadTest,EvaluationDelegationTest,EvaluationRulesTest,EvaluationAssertionsTest' '-Dsurefire.failIfNoSpecifiedTests=false' test
+# 从 web 执行
+npm exec -- vue-tsc --noEmit
+npm exec -- vitest run tests/evaluation-observer.test.ts tests/portal-auth.test.ts tests/navigation-policy.test.ts
+```
+
+Java 58 例和前端 53 例通过。 [输出摘录](iam-candidate-result.txt)。
+
+部署级验收需用实际门户票串起真实评测报告的 `ACCEPTED` 与发布预检。CHAT 多轮的历史材料持久授权绑定及授权换代方案见 [评测委派契约](../../../contracts/evaluation-delegation.md)。

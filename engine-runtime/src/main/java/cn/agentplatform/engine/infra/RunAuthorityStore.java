@@ -22,16 +22,22 @@ public final class RunAuthorityStore {
 
     public long createPublished(RetainedAuthorization admission,JsonNode snapshot,JsonNode inputs,JsonNode refs,
             JsonNode budget,String mode,String requestId,Set<String> labels){
-        return create(admission,snapshot,inputs,refs,budget,mode,requestId,labels,false);
+        return create(admission,snapshot,inputs,refs,budget,mode,requestId,labels,false,null);
     }
     public long createPublishedFirstChat(RetainedAuthorization admission,JsonNode snapshot,JsonNode inputs,JsonNode refs,
             JsonNode budget,String mode,String requestId,Set<String> labels){
-        return create(admission,snapshot,inputs,refs,budget,mode,requestId,labels,true);
+        return create(admission,snapshot,inputs,refs,budget,mode,requestId,labels,true,null);
+    }
+    public long createEvaluation(RetainedAuthorization admission, JsonNode snapshot, JsonNode request,
+                                 JsonNode refs, JsonNode budget) {
+        object(request);
+        return create(admission, snapshot, request.path("inputs"), refs, budget, "FULL",
+                text(request, "requestId"), Set.of(), false, request);
     }
     private long create(RetainedAuthorization admission,JsonNode snapshot,JsonNode inputs,JsonNode refs,
-            JsonNode budget,String mode,String requestId,Set<String> labels,boolean firstChat){
+            JsonNode budget,String mode,String requestId,Set<String> labels,boolean firstChat,JsonNode evaluation){
         requireWrite(source);
-        try{return createBound(admission,snapshot,inputs,refs,budget,mode,requestId,labels,firstChat);}
+        try{return createBound(admission,snapshot,inputs,refs,budget,mode,requestId,labels,firstChat,evaluation);}
         catch(RuntimeException|Error failure){
             // Spring 6.2.7 DataSourceTransactionObject.isRollbackOnly reads this exact holder.
             // A caller catching an authorization failure must not commit a partially admitted run.
@@ -40,7 +46,7 @@ public final class RunAuthorityStore {
         }
     }
     private long createBound(RetainedAuthorization admission,JsonNode snapshot,JsonNode inputs,JsonNode refs,
-            JsonNode budget,String mode,String requestId,Set<String> labels,boolean firstChat){
+            JsonNode budget,String mode,String requestId,Set<String> labels,boolean firstChat,JsonNode evaluation){
         AuthorityContext.requireBound(admission);
         // No REQUIRES_NEW: the run, admission, every scope and caller's subsequent node share rollback.
         var current=admission.current();requirePurpose(current,false);
@@ -48,12 +54,25 @@ public final class RunAuthorityStore {
         object(snapshot);object(inputs);object(refs);object(budget);
         if(firstChat) cn.agentplatform.engine.domain.InitialChatRules.requireSources(snapshot,inputs);
         String code=MetadataSelectors.code(text(snapshot,"appCode"));
-        long no=positive(snapshot.get("versionNo")),version=snapshot.has("appVersionId")?positive(snapshot.get("appVersionId")):positive(snapshot.get("versionId"));
-        if(snapshot.has("versionId")&&positive(snapshot.get("versionId"))!=version)throw denied();
-        if(positive(refs.get("appVer"))!=no)throw denied();
-        String rootId=code+"@"+no,candidate=text(snapshot,"candidateSha256");hash(candidate);
-        if(snapshot.has("appVersionKey")&&!rootId.equals(text(snapshot,"appVersionKey")))throw denied();
-        same(new ResourceBinding("app-version",rootId,candidate),current.call().resource());
+        Long no = null, version = null, revision = null;
+        ResourceBinding root;
+        String candidate = text(snapshot, "candidateSha256");
+        hash(candidate);
+        if (evaluation == null) {
+            no = positive(snapshot.get("versionNo"));
+            version = snapshot.has("appVersionId") ? positive(snapshot.get("appVersionId")) : positive(snapshot.get("versionId"));
+            if (snapshot.has("versionId") && positive(snapshot.get("versionId")) != version) throw denied();
+            same(no, positive(refs.get("appVer")));
+            root = new ResourceBinding("app-version", code + "@" + no, candidate);
+            if (snapshot.has("appVersionKey")) same(root.id(), text(snapshot, "appVersionKey"));
+        } else {
+            cn.agentplatform.engine.domain.GraphRules.requirePublishedFlow(snapshot);
+            same("evaluation.run", current.call().action());
+            revision = positive(snapshot.get("draftRev"));
+            root = EvaluationCandidateBinding.of(code, revision, candidate);
+            same(root, EvaluationCandidateBinding.from(evaluation));
+        }
+        same(root,current.call().resource());
         if(!"FULL".equals(mode)||requestId!=null&&(requestId.isBlank()||requestId.length()>128)||labels==null)throw denied();
         labels.forEach(RunAuthorityStore::nonblank);validateBudget(snapshot,budget);
         // External sources and historical references need their own scopes before this seam can accept them.
@@ -61,11 +80,14 @@ public final class RunAuthorityStore {
                 || !refs.path("ontology").isMissingNode()&&(!refs.path("ontology").isArray()||!refs.path("ontology").isEmpty())
                 || snapshot.path("config").hasNonNull("dataSources")||inputs.hasNonNull("materialRefs")||inputs.hasNonNull("historyRefs"))throw denied();
         String publicId="r_"+UUID.randomUUID().toString().replace("-","");
-        long id=db.queryForObject("insert into engine.run(public_id,app_code,app_version_id,trigger_type,status,principal_id,tenant_id,input_ref,version_refs,guard_ctx,budget,snapshot,inputs,mode,request_id) values(?,?,?,?,'PENDING',?,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb,?::jsonb,?,?) returning id",Long.class,
-            publicId,code,version,firstChat?"CHAT":"TASK",initial.principalId(),initial.tenantId(),"pg:run/"+publicId+"/input",Json.write(refs),Json.write(Map.of("tenantId",initial.tenantId(),"principalId",initial.principalId(),"roles",current.actor().roles(),"attributes",current.actor().attributes(),"snapshotAt",clock.instant().toString())),Json.write(budget),Json.write(snapshot),Json.write(inputs),mode,requestId);
+        String trigger = evaluation != null ? "EVALUATION" : firstChat ? "CHAT" : "TASK";
+        String candidateRef = evaluation == null ? null : Json.write(Map.of("appCode", code, "draftRev", revision,
+                "candidateSha256", candidate));
+        long id=db.queryForObject("insert into engine.run(public_id,app_code,app_version_id,trigger_type,status,principal_id,tenant_id,input_ref,version_refs,guard_ctx,budget,snapshot,inputs,mode,request_id,eval_candidate) values(?,?,?,?,'PENDING',?,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb,?::jsonb,?,?,?::jsonb) returning id",Long.class,
+            publicId,code,version,trigger,initial.principalId(),initial.tenantId(),"pg:run/"+publicId+"/input",Json.write(refs),Json.write(Map.of("tenantId",initial.tenantId(),"principalId",initial.principalId(),"roles",current.actor().roles(),"attributes",current.actor().attributes(),"snapshotAt",clock.instant().toString())),Json.write(budget),Json.write(snapshot),Json.write(inputs),mode,requestId,candidateRef);
         String snapshotSha=MaterialScopeStore.payloadDigest(db,"run-snapshot",id);
-        db.update("insert into engine.run_authority(run_id,tenant_id,principal_id,grant_ref,grant_expires_at,initial_ceiling,resource_digest,source_kind,origin_authentication_id,app_version_id,app_version_no,root_kind,root_id,initial_ceiling_sha256,accepted_snapshot_sha256,admission_decision_id,authorization_version,operation_id) values(?,?,?,?,?,?::jsonb,?,'PORTAL',?,?,?,'app-version',?,?,?,?,?,?)",
-            id,initial.tenantId(),initial.principalId(),current.delegation().value(),Timestamp.from(current.delegation().expiresAt()),Json.write(initial),candidate,origin,version,no,rootId,MaterialAuthorization.ceilingSha256(initial),snapshotSha,current.decisionId(),current.authorizationVersion(),current.operation().operationId());
+        db.update("insert into engine.run_authority(run_id,tenant_id,principal_id,grant_ref,grant_expires_at,initial_ceiling,resource_digest,source_kind,origin_authentication_id,app_version_id,app_version_no,root_kind,root_id,initial_ceiling_sha256,accepted_snapshot_sha256,admission_decision_id,authorization_version,operation_id,candidate_rev) values(?,?,?,?,?,?::jsonb,?,'PORTAL',?,?,?,?,?,?,?,?,?,?,?)",
+            id,initial.tenantId(),initial.principalId(),current.delegation().value(),Timestamp.from(current.delegation().expiresAt()),Json.write(initial),candidate,origin,version,no,root.kind(),root.id(),MaterialAuthorization.ceilingSha256(initial),snapshotSha,current.decisionId(),current.authorizationVersion(),current.operation().operationId(),revision);
         var materialStore=new MaterialScopeStore(source,clock);
         var entitlements=new TreeMap<>(initial.attributes());entitlements.remove("dataLabels");
         var obligations=new TreeSet<>(initial.attributes().getOrDefault("dataLabels",Set.of()));obligations.addAll(current.actor().attributes().getOrDefault("dataLabels",Set.of()));obligations.addAll(labels);
@@ -169,18 +191,31 @@ public final class RunAuthorityStore {
         }catch(DateTimeException invalid){throw denied();}
     }
     static Binding load(JdbcTemplate db,long runId,boolean complete){
-        var rows=db.queryForList("select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",runId);
+        var rows=db.queryForList("select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,r.trigger_type,r.eval_candidate::text,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",runId);
         if(rows.size()!=1)throw denied();var r=rows.getFirst();
         Actor initial=parseInitial(Json.read(r.get("initial_ceiling").toString()));
         var owner=new SubjectKey(str(r,"tenant_id"),str(r,"principal_id"));same(owner,new SubjectKey(initial.tenantId(),initial.principalId()));
         same(owner,new SubjectKey(str(r,"run_tenant"),str(r,"run_principal")));
-        long version=((Number)r.get("app_version_id")).longValue(),no=((Number)r.get("app_version_no")).longValue();
-        if(version<1||no<1||!Objects.equals(r.get("run_version"),r.get("app_version_id")))throw denied();
-        same("app-version",str(r,"root_kind"));same(str(r,"app_code")+"@"+no,str(r,"root_id"));same("PORTAL",str(r,"source_kind"));
+        long version=0,no=0;
+        String kind = str(r, "root_kind");
+        same("PORTAL",str(r,"source_kind"));
         String initialSha=str(r,"initial_ceiling_sha256"),snapshotSha=str(r,"accepted_snapshot_sha256"),candidate=str(r,"resource_digest");
         hash(initialSha);hash(snapshotSha);hash(candidate);same(initialSha,MaterialAuthorization.ceilingSha256(initial));
+        var root = new ResourceBinding(kind, str(r, "root_id"), candidate);
+        if (EvaluationCandidateBinding.KIND.equals(kind)) {
+            same("EVALUATION", str(r, "trigger_type"));
+            same(null, r.get("run_version"));
+            same(root, EvaluationCandidateBinding.of(str(r, "app_code"), ((Number) r.get("candidate_rev")).longValue(), candidate));
+            same(root, EvaluationCandidateBinding.from(Json.read(str(r, "eval_candidate"))));
+        } else {
+            version=((Number)r.get("app_version_id")).longValue();
+            no=((Number)r.get("app_version_no")).longValue();
+            if(version<1||no<1||!Objects.equals(r.get("run_version"),r.get("app_version_id")))throw denied();
+            same("app-version",kind);
+            same(str(r,"app_code")+"@"+no,root.id());
+        }
         var b=new Binding(runId,str(r,"public_id"),owner,new DelegationRef(str(r,"grant_ref"),owner,instant(r,"grant_expires_at")),initial,
-            new ResourceBinding("app-version",str(r,"root_id"),candidate),version,no,initialSha,snapshotSha,str(r,"origin_authentication_id"),str(r,"admission_decision_id"),str(r,"authorization_version"),str(r,"operation_id"),((Number)r.get("check_version")).longValue(),(String)r.get("blocked_reason"),instant(r,"retry_not_before"),List.of());
+            root,version,no,initialSha,snapshotSha,str(r,"origin_authentication_id"),str(r,"admission_decision_id"),str(r,"authorization_version"),str(r,"operation_id"),((Number)r.get("check_version")).longValue(),(String)r.get("blocked_reason"),instant(r,"retry_not_before"),List.of());
         if(!complete)return b;
         var scopes=MaterialScopeStore.scopes(db,b);
         return new Binding(b.runId,b.publicId,b.owner,b.delegation,b.initial,b.root,b.appVersionId,b.appVersionNo,b.initialSha,b.snapshotSha,b.originId,b.admissionDecision,b.authorizationVersion,b.operationId,b.checkVersion,b.blockedReason,b.retryNotBefore,scopes);
@@ -218,7 +253,12 @@ public final class RunAuthorityStore {
                         .contains(a.call().action())
                 && "app-version".equals(a.call().resource().kind())
                 && "PORTAL".equals(a.operation().sourceKind()) && "PORTAL".equals(a.operation().originKind());
-        if(localOnly?!local:!main)throw denied();same(a.call().resource(),a.operation().resource());
+        boolean evaluation = "monitor".equals(a.caller()) && "engine".equals(a.call().target())
+                && "evaluation.run".equals(a.call().action())
+                && EvaluationCandidateBinding.KIND.equals(a.call().resource().kind())
+                && "PORTAL".equals(a.operation().sourceKind()) && "PORTAL".equals(a.operation().originKind());
+        if(localOnly ? !local : !(main || evaluation))throw denied();
+        same(a.call().resource(),a.operation().resource());
     }
     static void requireWrite(DataSource source){
         if(!TransactionSynchronizationManager.isActualTransactionActive()||TransactionSynchronizationManager.isCurrentTransactionReadOnly()||!TransactionSynchronizationManager.hasResource(source))throw new IllegalStateException("SAME_DATASOURCE_WRITE_TRANSACTION_REQUIRED");

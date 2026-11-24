@@ -461,6 +461,10 @@ public class TraceStore {
     }
     static void requireSnapshotRelations(Binding b,JsonNode snapshot,JsonNode refs){
         object(snapshot);object(refs);
+        if (EvaluationCandidateBinding.KIND.equals(b.root().kind())) {
+            same(b.root(), EvaluationCandidateBinding.from(snapshot));
+            return;
+        }
         String code=MetadataSelectors.code(text(snapshot,"appCode"));long no=positive(snapshot.get("versionNo"));
         long version=snapshot.has("appVersionId")?positive(snapshot.get("appVersionId")):positive(snapshot.get("versionId"));
         if(snapshot.has("versionId"))same(version,positive(snapshot.get("versionId")));
@@ -484,6 +488,14 @@ public class TraceStore {
     }
     private static StatusData statusData(Binding b,StatusPlan plan,Map<String,JsonNode> values,Set<String> nulls){
         var run=state(values,"run-state",b.publicId());run.put("id",b.runId());
+        if (EvaluationCandidateBinding.KIND.equals(b.root().kind())) {
+            var snapshot = values.get(key("run-snapshot", b.publicId()));
+            same(b.root(), EvaluationCandidateBinding.from(snapshot));
+            run.put("snapshot", snapshot);
+            run.put("tenant_id", b.owner().tenantId());
+            run.put("principal_id", b.owner().principalId());
+            run.put("eval_candidate", Json.tree(Map.of("candidateSha256", snapshot.path("candidateSha256"))));
+        }
         for(String kind:List.of("run-inputs","run-output","run-error","run-version-refs")){
             String locator=key(kind,b.publicId());run.put(kind.substring(4).replace('-','_'),nulls.contains(locator)?null:values.get(locator));
         }
@@ -1485,7 +1497,8 @@ public class TraceStore {
         var run = flowRun(view);
         var snapshot = json(run.get("snapshot"));
         if (!"FULL".equals(run.get("mode"))
-                || !"TASK".equals(run.get("trigger_type"))
+                || !(EvaluationCandidateBinding.KIND.equals(view.binding().root().kind())
+                        ? "EVALUATION" : "TASK").equals(run.get("trigger_type"))
                 || !snapshot.path("type").asText().equals("FLOW")
                 || !snapshot.path("definition").isObject()
                 || flowNodes(view).isEmpty()) throw denied();
