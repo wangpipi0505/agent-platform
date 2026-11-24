@@ -108,6 +108,22 @@ class IntegrationPolicyResolverHttpTest {
         var revoked=admin("POST","/admin/apps/"+APP+"/integration/credentials/"+BIZ+"/revoke","/admin/apps/{code}/integration/credentials/{biz}/revoke",credentialResource(),"");assertThat(revoked.statusCode()).as(revoked.body()).isEqualTo(200);assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(3);
     }
 
+    @Test void mappedBusinessRolesAreReadFromTheCredentialAndInvalidateOldPolicy() throws Exception {
+        var before = Json.read(resolve(requestBody("alice")).body());
+        var change = new HashMap<>(policy("alice"));
+        change.put("roleMapping", Map.of("reader", "AGENT_VIEWER"));
+        var updated = update(change);
+        assertThat(updated.statusCode()).as(updated.body()).isEqualTo(200);
+        assertThat(Json.read(updated.body()).path("data").path("roleMapping").path("reader").asText())
+                .isEqualTo("AGENT_VIEWER");
+        var after = Json.read(resolve(requestBody("alice")).body());
+        assertThat(after.path("roleCeiling")).isEqualTo(Json.tree(List.of("AGENT_VIEWER")));
+        assertThat(after.path("policyDigest").asText()).isNotEqualTo(before.path("policyDigest").asText());
+        var old = requestBody("alice");
+        old.put("expectedPolicyVersion", before.path("policyVersion").asText());
+        assertThat(resolve(old).statusCode()).isEqualTo(409);
+    }
+
     @Test void wrongSignatureClaimsAlgorithmsMethodPathAndBindingNeverQueryPg()throws Exception{
         String body=Json.write(requestBody("alice"));
         for(String field:List.of("iss","caller","sub","target","action","aud","token_use","nonce","bodySha256")){

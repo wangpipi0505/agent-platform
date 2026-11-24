@@ -41,8 +41,8 @@ Content-Type: application/json
   不符 403 `INTEGRATION_SOURCE_NOT_ALLOWED`。部署级 CORS 可能在更早的过滤器拒绝未登记来源，
   此时响应不含本协议错误码——宿主应把两者都视为来源不符。
 - `userId` 必填，且必须落在 `claim_limits.principalIds` 内，否则 403 `CLAIM_LIMIT_EXCEEDED`。
-- `roles` 与档案 `claim_limits.roles` 求交；平台角色（`ADMIN`/`EDITOR`/`SERVICE`/`GATEWAY_AUTH`）一律剔除，
-  集成票永不带平台权限。
+- `roles` 是业务软件角色，先与档案 `claim_limits.roles` 求交。档案配置 `roleMapping` 时，只签入映射后的 `AGENT_VIEWER`、`AGENT_OPERATOR` 或 `AGENT_ADMIN`。已登记的 `AGENT_BUILDER` 声明降为 `AGENT_VIEWER`。
+- 存量档案未配置 `roleMapping` 时保留已登记的业务角色，剔除 `ADMIN`、`EDITOR`、`SERVICE` 和 `GATEWAY_AUTH`。配置变更更新策略版本和摘要，宿主须重新出票。
 - `attributes` 只保留档案允许的键值；`bizSystemCode`、`userId` 由服务端注入，调用方提供即被覆盖。
 - `environment` 为环境选择器（不是身份）；档案声明上限时必填且须逐字命中，见 §3。
 - 携带 `tenant`/`tenantId`/`tenant_id`/`principal`/`principalId`/`principal_id`（顶层或 `attributes` 内）

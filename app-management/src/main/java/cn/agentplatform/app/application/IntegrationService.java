@@ -57,6 +57,7 @@ public class IntegrationService {
                             result.put(
                                     "allowedOrigins",
                                     Json.read(r.getString("allowed_origins"), Object.class));
+                            result.put("roleMapping", Json.read(r.getString("role_mapping"), Object.class));
                             result.put(
                                     "issuedAt", r.getTimestamp("issued_at").toInstant().toString());
                             if (internal) result.put("secretRef", r.getString("secret_ref"));
@@ -75,7 +76,7 @@ public class IntegrationService {
         var rows =
                 db.query(
                         "select"
-                            + " id,tenant_id,app_code,biz_system_code,status,secret_ref,claim_limits,allowed_origins"
+                            + " id,tenant_id,app_code,biz_system_code,status,secret_ref,claim_limits,allowed_origins,role_mapping"
                             + " from app.integration_credential where id=?",
                         (r, n) ->
                                 Map.<String, Object>of(
@@ -94,7 +95,9 @@ public class IntegrationService {
                                         "claimLimits",
                                         Json.read(r.getString("claim_limits"), Object.class),
                                         "allowedOrigins",
-                                        Json.read(r.getString("allowed_origins"), Object.class)),
+                                        Json.read(r.getString("allowed_origins"), Object.class),
+                                        "roleMapping",
+                                        Json.read(r.getString("role_mapping"), Object.class)),
                         id);
         if (rows.isEmpty()) throw error(404, "INTEGRATION_NOT_FOUND", "集成凭据不存在");
         return rows.getFirst();
@@ -134,6 +137,7 @@ public class IntegrationService {
             throw error(400, "INVALID_INPUT", "业务系统编码无效");
         var limits = object(body.get("claimLimits"));
         Object origins = body.get("allowedOrigins");
+        var roleMapping = roleMapping(body.getOrDefault("roleMapping", Map.of()), limits);
         try {
             IntegrationRules.origins(origins);
             IntegrationRules.limits(limits);
@@ -148,8 +152,8 @@ public class IntegrationService {
         // 密钥库与PG不能跨资源原子提交；数据库失败最多留下不可引用的密文孤儿，不能产生可用凭据。
         db.update(
                 "insert into"
-                    + " app.integration_credential(tenant_id,app_code,biz_system_code,secret_ref,secret_sha256,status,claim_limits,allowed_origins,issued_by)"
-                    + " values(?,?,?,?,?,'ACTIVE',?::jsonb,?::jsonb,?)",
+                    + " app.integration_credential(tenant_id,app_code,biz_system_code,secret_ref,secret_sha256,status,claim_limits,allowed_origins,role_mapping,issued_by)"
+                    + " values(?,?,?,?,?,'ACTIVE',?::jsonb,?::jsonb,?::jsonb,?)",
                 tenant(),
                 code,
                 biz,
@@ -157,6 +161,7 @@ public class IntegrationService {
                 Digest.sha256(secret),
                 Json.write(limits),
                 Json.write(origins),
+                Json.write(roleMapping),
                 Actor.current().principalId());
         var result = new LinkedHashMap<>(get(code, biz, false));
         // PLAT-12 审计三元组：凭据生命周期审计带上 credential_id，可从凭据反查
@@ -186,6 +191,7 @@ public class IntegrationService {
         long credentialId = requireCredential(code, biz);
         var limits = object(body.get("claimLimits"));
         Object origins = body.get("allowedOrigins");
+        String mapping = body.containsKey("roleMapping") ? Json.write(roleMapping(body.get("roleMapping"), limits)) : null;
         try {
             IntegrationRules.origins(origins);
             IntegrationRules.limits(limits);
@@ -194,15 +200,41 @@ public class IntegrationService {
         }
         db.update(
                 "update app.integration_credential set"
-                    + " claim_limits=?::jsonb,allowed_origins=?::jsonb,policy_revision=policy_revision+1 where tenant_id=? and"
+                    + " claim_limits=?::jsonb,allowed_origins=?::jsonb,role_mapping=coalesce(?::jsonb,role_mapping),"
+                    + " policy_revision=policy_revision+1 where tenant_id=? and"
                     + " app_code=? and biz_system_code=?",
                 Json.write(limits),
                 Json.write(origins),
+                mapping,
                 tenant(),
                 code,
                 biz);
         audit(Actor.current(), code, "INTEGRATION_POLICY", biz, Long.toString(credentialId));
         return get(code, biz, false);
+    }
+
+    private static Map<String, String> roleMapping(Object supplied, Map<String, Object> limits) {
+        if (!(supplied instanceof Map<?, ?> mapping) || mapping.size() > 128) {
+            throw error(400, "INVALID_INTEGRATION_POLICY", "角色映射须为最多 128 个已登记角色的对象");
+        }
+        var result = new TreeMap<String, String>();
+        var allowed = Json.tree(limits.getOrDefault("roles", List.of()));
+        var admitted = new HashSet<String>();
+        allowed.forEach(role -> { if (role.isTextual()) admitted.add(role.textValue()); });
+        for (var entry : mapping.entrySet()) {
+            if (!(entry.getKey() instanceof String role) || !admitted.contains(role)
+                    || !(entry.getValue() instanceof String value) || !IntegrationClaims.RUNTIME_ROLES.contains(value)
+                    || "AGENT_BUILDER".equalsIgnoreCase(role) && !"AGENT_VIEWER".equals(value)) {
+                throw error(400, "INVALID_INTEGRATION_POLICY", "角色映射超出接入档案上限");
+            }
+            result.put(role, value);
+        }
+        // JSONB's textual form inserts a space after each colon and comma.
+        if (Json.write(result).getBytes(java.nio.charset.StandardCharsets.UTF_8).length
+                + 2 * result.size() > 16384) {
+            throw error(400, "INVALID_INTEGRATION_POLICY", "角色映射超过 16 KiB");
+        }
+        return result;
     }
 
     /** Lock the real published pointer before authorization and retain the lock until issue commits.
@@ -217,10 +249,10 @@ public class IntegrationService {
      * resource, mutates policy and increments revision; concurrent updates cannot lose increments.
      * 返回凭据 id 供审计三元组（runId↔principalId↔credentialId）落关联列。 */
     private long requireCredential(String code,String biz) {
-        var rows=db.queryForList("select id,policy_revision,secret_ref,claim_limits,allowed_origins from app.integration_credential where tenant_id=? and app_code=? and biz_system_code=? for update",tenant(),code,biz);
+        var rows=db.queryForList("select id,policy_revision,secret_ref,claim_limits,allowed_origins,role_mapping from app.integration_credential where tenant_id=? and app_code=? and biz_system_code=? for update",tenant(),code,biz);
         if(rows.isEmpty())throw error(404,"INTEGRATION_NOT_FOUND","集成凭据不存在");
         var row=rows.getFirst();long id=((Number)row.get("id")).longValue();
-        String digest=IntegrationClaims.digest(Json.tree(Map.of("secretRef",row.get("secret_ref"),"claimLimits",Json.read(row.get("claim_limits").toString()),"allowedOrigins",Json.read(row.get("allowed_origins").toString()))));
+        String digest=IntegrationClaims.digest(Json.tree(Map.of("secretRef",row.get("secret_ref"),"claimLimits",Json.read(row.get("claim_limits").toString()),"allowedOrigins",Json.read(row.get("allowed_origins").toString()),"roleMapping",Json.read(row.get("role_mapping").toString()))));
         String version=Digest.sha256(Json.canonical(Map.of("credentialId",id,"policyVersion",id+":"+row.get("policy_revision"),"policyDigest",digest)));
         AuthorityContext.requireFor(Actor.current(),new ResourceBinding("integration-credential",Long.toString(id),version)).actor().requireRole("ADMIN");
         return id;

@@ -46,8 +46,7 @@ public final class IntegrationPolicy {
             throw new PlatformException(403, "CLAIM_LIMIT_EXCEEDED", "用户不在签发声明上限内");
         Set<String> roles = strings(requested.path("roles"));
         roles.retainAll(strings(limits.path("roles")));
-        // 平台管理/内部角色即使被签发者写进请求也不生效：这里是"不采信"，不是放行后再校验。
-        roles.removeIf(IntegrationClaims::platformRole);
+        roles = IntegrationClaims.runtimeRoles(roles, credential.path("roleMapping"));
         Map<String, Set<String>> attributes = new LinkedHashMap<>();
         requested
                 .path("attributes")

@@ -9,6 +9,29 @@ import org.junit.jupiter.api.Test;
 import java.util.*;
 
 class IntegrationPolicyTest {
+    @Test
+    void mapsDeclaredRolesByCredentialAndDowngradesBuilder() {
+        var a = new HashMap<>(credential());
+        a.put("bizSystemCode", "softwareA");
+        a.put("claimLimits", Map.of("principalIds", List.of("alice"),
+                "roles", List.of("leader", "AGENT_BUILDER"), "attributes", Map.of("dataLabels", List.of("A"))));
+        a.put("roleMapping", Map.of("leader", "AGENT_ADMIN", "AGENT_BUILDER", "AGENT_ADMIN"));
+        var b = new HashMap<>(a);
+        b.put("bizSystemCode", "softwareB");
+        b.put("roleMapping", Map.of("leader", "AGENT_VIEWER"));
+        var request = Json.tree(Map.of("userId", "alice", "roles", List.of("leader", "AGENT_BUILDER", "ADMIN"),
+                "attributes", Map.of("bizSystemCode", List.of("softwareB"), "dataLabels", List.of("A", "B"))));
+        var actorA = IntegrationPolicy.clip(Json.tree(a), request);
+        var actorB = IntegrationPolicy.clip(Json.tree(b), request);
+        assertThat(actorA.roles()).containsExactlyInAnyOrder("AGENT_ADMIN", "AGENT_VIEWER");
+        assertThat(actorB.roles()).containsExactly("AGENT_VIEWER");
+        assertThat(actorA.principalId()).isEqualTo("softwareA:alice");
+        assertThat(actorB.principalId()).isEqualTo("softwareB:alice");
+        assertThat(actorA.attributes().get("bizSystemCode")).containsExactly("softwareA");
+        assertThat(actorA.attributes().get("dataLabels")).containsExactly("A");
+        assertThat(IntegrationPolicy.digest(Json.tree(a))).isNotEqualTo(IntegrationPolicy.digest(Json.tree(b)));
+    }
+
     private Map<String, Object> credential() {
         return Map.of(
                 "id",
@@ -49,14 +72,16 @@ class IntegrationPolicyTest {
                                         "attributes",
                                         Map.of(
                                                 "region",
-                                                List.of("A", "B"),
-                                                "tenant_id",
-                                                List.of("evil")))));
+                                                List.of("A", "B")))));
         assertThat(actor.tenantId()).isEqualTo("tenant-a");
         assertThat(actor.principalId()).isEqualTo("partner:alice");
         assertThat(actor.roles()).containsExactly("operator");
         assertThat(actor.attributes().get("region")).containsExactly("A");
         assertThat(actor.attributes()).doesNotContainKey("tenant_id");
+        assertThatThrownBy(() -> IntegrationPolicy.clip(Json.tree(credential()),
+                Json.tree(Map.of("userId", "alice", "attributes", Map.of("tenant_id", List.of("evil"))))))
+                .isInstanceOfSatisfying(PlatformException.class,
+                        failure -> assertThat(failure.code()).isEqualTo("INTEGRATION_CLIENT_IDENTITY_REJECTED"));
     }
 
     @Test
