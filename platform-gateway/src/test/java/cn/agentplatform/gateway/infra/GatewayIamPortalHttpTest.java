@@ -58,6 +58,7 @@ class GatewayIamPortalHttpTest {
     private static ServletWebServerApplicationContext app;
     private static HttpServer engine;
     private static final String VERSION_SHA = Digest.sha256("r36-published-version");
+    private static final String CANDIDATE_SHA = Digest.sha256("r37-evaluation-candidate");
     private static String base;
 
     @BeforeAll
@@ -68,6 +69,7 @@ class GatewayIamPortalHttpTest {
         engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
         engine.createContext("/internal/apps/ops/published-metadata", GatewayIamPortalHttpTest::respondAsApp);
+        engine.createContext("/admin/evaluations", GatewayIamPortalHttpTest::respondAsMonitor);
         engine.start();
         var deployment = properties();
         app = (ServletWebServerApplicationContext)
@@ -129,6 +131,7 @@ class GatewayIamPortalHttpTest {
         values.put("agent.security.portal.role-allowlist", "ADMIN,EDITOR,USER");
         values.put("agent.services.engine", "http://127.0.0.1:" + engine.getAddress().getPort());
         values.put("agent.services.app", "http://127.0.0.1:" + engine.getAddress().getPort());
+        values.put("agent.services.monitor", "http://127.0.0.1:" + engine.getAddress().getPort());
         // attribute-value-allowlist 是 Map<String,Set<String>>：没有 String→Map 的转换器，而方括号/
         // 点号记法都会被适配成小写键（datalabels），与 camelCase 白名单键集不再相等并报未绑定。
         // 因此键名只留在 application.yml（YAML 保留大小写），测试与生产一样只注入取值。
@@ -370,6 +373,56 @@ class GatewayIamPortalHttpTest {
                 .header("Authorization", "Bearer " + iam.portal())
                 .POST(HttpRequest.BodyPublishers.ofString("{}")));
         assertThat(write.statusCode()).as(write.body()).isEqualTo(403);
+    }
+
+    @Test
+    void evaluationUsesTheExactCandidateAndPreservesTheRequestBody() throws Exception {
+        String body = """
+                {"appCode":"ops","draftRev":7,"candidateSha256":"%s","datasetVersion":"case-v1"}
+                """.formatted(CANDIDATE_SHA);
+        var response = postEvaluation("/admin/evaluations", iam.portal(), body);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+        assertThat(response.body()).isEqualTo("tenant-a/alice " + body);
+    }
+
+    @Test
+    void evaluationRejectsNonPortalCredentialsAndUnboundCandidates() throws Exception {
+        String body = """
+                {"appCode":"ops","draftRev":7,"candidateSha256":"%s"}
+                """.formatted(CANDIDATE_SHA);
+        var service = iam.base("service", "urn:agent-platform:service:gateway", 60);
+        service.put("sub", "app");
+        service.put("authority_mode", "workload");
+        var workload = iam.sign(service, iam.authoritySigningKey(), "at+jwt");
+        assertThat(postEvaluation("/admin/evaluations", workload, body).statusCode()).isBetween(401, 403);
+        assertThat(postEvaluation("/admin/evaluations?draftRev=8", iam.portal(), body).statusCode())
+                .isEqualTo(403);
+        assertThat(postEvaluation("/admin/evaluations", iam.portal(),
+                body.replace("\"draftRev\":7", "\"draftRev\":7.5")).statusCode()).isEqualTo(400);
+        assertThat(postEvaluation("/admin/evaluations", iam.portal(),
+                body.replace("\"draftRev\":7", "\"draftRev\":7,\"draftRev\":8")).statusCode()).isEqualTo(400);
+        assertThat(postEvaluation("/admin/evaluations", iam.portal(), "{}").statusCode()).isEqualTo(400);
+    }
+
+    private static HttpResponse<String> postEvaluation(String path, String token, String body) throws Exception {
+        return send(HttpRequest.newBuilder(URI.create(base + path))
+                .header("Authorization", "Bearer " + token)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body)));
+    }
+
+    private static void respondAsMonitor(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {
+        try (request; var authority = iam.client("monitor")) {
+            var call = new ServiceCall("monitor", "proxy.monitor.post.EvaluationController.evaluate",
+                    new ResourceBinding("evaluation-candidate", "ops@7", CANDIDATE_SHA));
+            String bearer = request.getRequestHeaders().getFirst("Authorization");
+            var actor = authority.authorize(bearer.substring("Bearer ".length()), call).actor();
+            var body = new String(request.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            byte[] response = (actor.tenantId() + "/" + actor.principalId() + " " + body)
+                    .getBytes(StandardCharsets.UTF_8);
+            request.sendResponseHeaders(200, response.length);
+            request.getResponseBody().write(response);
+        }
     }
 
     private static void respondAsEngine(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {

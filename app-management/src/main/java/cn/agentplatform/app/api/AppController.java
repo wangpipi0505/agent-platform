@@ -2,7 +2,9 @@ package cn.agentplatform.app.api;
 
 import cn.agentplatform.app.application.*;
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.AuthorityContext;
 import cn.agentplatform.common.authority.AuthorityProperties;
+import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -136,6 +138,15 @@ public class AppController {
             @PathVariable String code,
             @RequestParam long draftRev,
             @RequestParam String candidateSha256) {
+        if ("iam".equals(authorityProperties.mode())) {
+            var current = AuthorityContext.current();
+            if (!"app.candidate.read".equals(current.call().action()) || current.operation() == null
+                    || !"PORTAL".equals(current.operation().originKind())) {
+                throw AppService.error(403, "SYS-AUTH-403", "当前授权不能读取评测候选");
+            }
+            var resource = EvaluationCandidateBinding.of(code, draftRev, candidateSha256);
+            AuthorityContext.requireFor(current.actor(), resource).actor().requireRole("EDITOR");
+        }
         return ApiResponse.ok(apps.frozenCandidate(code, draftRev, candidateSha256));
     }
 

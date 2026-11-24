@@ -3,6 +3,7 @@ package cn.agentplatform.monitor.application;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.AuthorityContext;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
+import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 import cn.agentplatform.common.authority.ResourceBinding;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
@@ -232,6 +233,15 @@ public class EvaluationService {
                 || !hash.matches("[a-f0-9]{64}")
                 || !(b.get("draftRev") instanceof Number rev)
                 || rev.longValue() < 1) throw fail(400, "INVALID_INPUT", "候选标识无效");
+        if ("iam".equals(securityMode)) {
+            var expected = EvaluationCandidateBinding.from(Json.tree(b));
+            var current = AuthorityContext.current();
+            if (!EVALUATION_ACTIONS.contains(current.call().action()) || current.operation() == null
+                    || !"PORTAL".equals(current.operation().originKind())) {
+                throw evaluationDenied();
+            }
+            AuthorityContext.requireFor(current.actor(), expected).actor().requireRole("EDITOR");
+        }
         var suite = new ArrayList<>(cases(b.get("cases")));
         var ids = new HashSet<String>();
         // 判分模型与断言快照随报告一起冻结：恢复执行只认快照，不受后续数据集/默认值变化影响。

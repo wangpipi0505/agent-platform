@@ -9,3 +9,10 @@ monitor在首次外调前持久化sourceEvidence，基于服务端冻结candidat
 非生产确认请求追加evaluationEnvironmentConfirmation={confirmed:true,precheckId,evalReportId,evidenceSha256}，值全部来自本次服务端预检；缺少、旧绑定或目标变化拒绝。Vue真实宿主仅在服务端允许NON_PRODUCTION+DEMO时显示确认，切换预检/身份/候选/失败或提交结束清除，不提供普通质量豁免绕过入口。
 
 回滚不删除旧报告、预检或版本snapshot。历史缺字段不能改写为REAL；保留当前默认PRODUCTION与来源缺失拒绝，不能用质量OFF恢复演示生产放行。live OpenAPI/正式服务与真实模型/IAM联合另按EX06/07/17承接。
+
+## IAM 评测入口
+
+`POST /admin/evaluations` 使用门户用户票。网关从请求中的 `appCode`、正整数 `draftRev` 与
+`candidateSha256` 换取目标为 monitor 的委派票，资源为 `evaluation-candidate`、
+`<appCode>@<draftRev>` 与候选摘要。monitor 在读取候选和提交评测前复核资源绑定及门户来源。
+app 在候选读取端点复核同一绑定及编辑权限。

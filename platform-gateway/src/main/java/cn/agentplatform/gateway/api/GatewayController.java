@@ -3,6 +3,7 @@ package cn.agentplatform.gateway.api;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.AuthorityProperties;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
+import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 import cn.agentplatform.common.authority.GatewayIngressBoundary;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.authority.ServiceCall;
@@ -13,6 +14,9 @@ import cn.agentplatform.gateway.application.PublishedMetadataClient;
 import cn.agentplatform.gateway.application.RunStatusProxy;
 import cn.agentplatform.gateway.application.RunEventsProxy;
 import cn.agentplatform.gateway.domain.Routes;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import jakarta.servlet.http.*;
 
@@ -82,6 +86,10 @@ public class GatewayController {
     @RequestMapping({"/admin/**", "/v1/**"})
     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
         if ("iam".equals(deployment.mode())) {
+            if ("POST".equals(req.getMethod()) && EvaluationCandidateBinding.ROUTE.equals(req.getRequestURI())) {
+                evaluate(req, res);
+                return;
+            }
             if (PortalRuntimeRoutes.matches(req.getMethod(), req.getRequestURI())) {
                 var source = GatewayIngressBoundary.claimRuntime(req);
                 var call = PortalRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());
@@ -130,6 +138,35 @@ public class GatewayController {
 
     private void forward(HttpServletRequest req, HttpServletResponse res, String service, String token)
             throws IOException {
+        forward(req, res, service, token, null);
+    }
+
+    private void evaluate(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        String source = GatewayIngressBoundary.claimEvaluation(req);
+        int limit = requestLimit(req);
+        byte[] body = req.getInputStream().readNBytes(limit + 1);
+        if (body.length > limit) {
+            throw new PlatformException(413, "PAYLOAD_TOO_LARGE", "评测请求超过大小限制");
+        }
+        JsonNode json;
+        try {
+            json = Json.mapper().readerFor(JsonNode.class)
+                    .with(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+                    .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+                    .readValue(body);
+        } catch (IOException malformed) {
+            throw new PlatformException(400, "INVALID_INPUT", "评测请求 JSON 无效");
+        }
+        var resource = EvaluationCandidateBinding.from(json);
+        var route = serviceRoutes.require("gateway", "monitor", "POST", EvaluationCandidateBinding.ROUTE);
+        var ticket = authority.orElseThrow(() -> new PlatformException(
+                503, "DEPENDENCY_UNAVAILABLE", "门户评测授权服务暂不可用"))
+                .exchange(source, new ServiceCall(route.target(), route.action(), resource));
+        forward(req, res, route.target(), ticket.value(), body);
+    }
+
+    private void forward(HttpServletRequest req, HttpServletResponse res, String service, String token, byte[] capturedBody)
+            throws IOException {
         String query = req.getQueryString();
         String target = base(service) + req.getRequestURI() + (query == null ? "" : "?" + query);
         // R-9③④：转发核心由 HttpURLConnection 换 java.net.http.HttpClient——前者
@@ -148,7 +185,9 @@ public class GatewayController {
         if (cursor != null) outbound.header("Last-Event-ID", cursor);
         outbound.timeout(Duration.ofMillis(650000));
         HttpRequest request;
-        if (hasBody) {
+        if (capturedBody != null) {
+            request = outbound.method(method, HttpRequest.BodyPublishers.ofByteArray(capturedBody)).build();
+        } else if (hasBody) {
             InputStream body = new BoundedInputStream(req.getInputStream(), requestLimit(req));
             request = outbound.method(method, HttpRequest.BodyPublishers.ofInputStream(() -> body)).build();
         } else {

@@ -96,6 +96,9 @@ class EvaluationDelegationTest {
             assertThat(evaluation.call("POST", run, body)).containsEntry("status", "received");
             var changed = Map.<String, Object>of("appCode", "other-app", "draftRev", 7, "candidateSha256", SHA);
             assertThatThrownBy(() -> evaluation.call("POST", run, changed)).isInstanceOf(PlatformException.class);
+            assertThatThrownBy(() -> evaluation.evaluate(Map.of("appCode", "other-app", "draftRev", 7,
+                    "candidateSha256", SHA, "datasetVersion", "v1")))
+                    .isInstanceOfSatisfying(PlatformException.class, error -> assertThat(error.status()).isEqualTo(403));
         }
         assertThatThrownBy(() -> evaluation.call("POST", run, body)).isInstanceOf(PlatformException.class);
         assertThat(REQUESTS).hasValue(1);
