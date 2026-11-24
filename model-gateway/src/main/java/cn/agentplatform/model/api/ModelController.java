@@ -1,6 +1,9 @@
 package cn.agentplatform.model.api;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.AuthorityContext;
+import cn.agentplatform.common.authority.PlatformBuildRoutes;
+import cn.agentplatform.common.authority.SubjectKey;
 import cn.agentplatform.model.application.ModelCalls;
 import cn.agentplatform.model.infra.ModelStore;
 
@@ -16,70 +19,85 @@ import java.util.*;
 public class ModelController {
     private final ModelStore store;
     private final ModelCalls calls;
+    @org.springframework.beans.factory.annotation.Value("${agent.security.mode:}")
+    private String securityMode;
 
     public ModelController(ModelStore store, ModelCalls calls) {
         this.store = store;
         this.calls = calls;
     }
 
+    /** 托管模型入口已由网关按 model.manage 判权。角色投影只用于本请求的既有业务方法。 */
+    private Actor modelManager() {
+        var identity = Actor.current();
+        if (!"iam".equals(securityMode)) return identity;
+        var current = AuthorityContext.current();
+        var root = PlatformBuildRoutes.resource(new SubjectKey(identity.tenantId(), identity.principalId()));
+        if (!"gateway".equals(current.caller()) || !"model".equals(current.call().target())
+                || !root.equals(current.call().resource()) || !"PORTAL".equals(current.operation().originKind())) {
+            throw new PlatformException(403, "PLATFORM_CAPABILITY_DENIED", "当前平台授权不允许管理模型");
+        }
+        return new Actor(identity.tenantId(), identity.principalId(), Set.of("ADMIN"), identity.attributes());
+    }
+
     @GetMapping("/admin/model-providers")
     public Object providers() {
-        return ApiResponse.ok(store.providers(Actor.current()));
+        return ApiResponse.ok(store.providers(modelManager()));
     }
 
     @PostMapping("/admin/model-providers")
     public Object provider(@RequestBody JsonNode body) {
-        return ApiResponse.ok(store.createProvider(body, Actor.current()));
+        return ApiResponse.ok(store.createProvider(body, modelManager()));
     }
 
     @PostMapping("/admin/model-providers/{id}/test")
     public Object test(@PathVariable long id) {
-        return ApiResponse.ok(calls.testProvider(id, Actor.current()));
+        return ApiResponse.ok(calls.testProvider(id, modelManager()));
     }
 
     @PutMapping("/admin/model-providers/{id}")
     public Object updateProvider(@PathVariable long id, @RequestBody JsonNode body) {
-        return ApiResponse.ok(store.updateProvider(id, body, Actor.current()));
+        return ApiResponse.ok(store.updateProvider(id, body, modelManager()));
     }
 
     @PostMapping("/admin/model-providers/{id}/disable")
     public Object disableProvider(@PathVariable long id) {
-        return ApiResponse.ok(store.disableProvider(id, Actor.current()));
+        return ApiResponse.ok(store.disableProvider(id, modelManager()));
     }
 
     @PostMapping("/admin/model-providers/{id}/credentials/rotate")
     public Object rotate(@PathVariable long id, @RequestBody JsonNode body) {
-        return ApiResponse.ok(store.rotate(id, body, Actor.current()));
+        return ApiResponse.ok(store.rotate(id, body, modelManager()));
     }
 
     @PutMapping("/admin/model-providers/{id}/quota")
     public Object quota(@PathVariable long id, @RequestBody JsonNode body) {
-        return ApiResponse.ok(store.configureQuota(id, body, Actor.current()));
+        return ApiResponse.ok(store.configureQuota(id, body, modelManager()));
     }
 
     @GetMapping("/admin/model-entries")
     public Object entries() {
-        return ApiResponse.ok(store.entries(Actor.current()));
+        return ApiResponse.ok(store.entries(modelManager()));
     }
 
     @PostMapping("/admin/model-entries")
     public Object entry(@RequestBody JsonNode body) {
-        return ApiResponse.ok(store.createEntry(body, Actor.current()));
+        return ApiResponse.ok(store.createEntry(body, modelManager()));
     }
 
     @PutMapping("/admin/model-entries/{id}")
     public Object updateEntry(@PathVariable long id, @RequestBody JsonNode body) {
-        return ApiResponse.ok(store.updateEntry(id, body, Actor.current()));
+        return ApiResponse.ok(store.updateEntry(id, body, modelManager()));
     }
 
     @PostMapping("/admin/model-entries/{id}/test")
     public Object testEntry(@PathVariable long id) {
-        return ApiResponse.ok(calls.entryHealth(id, Actor.current()));
+        return ApiResponse.ok(calls.entryHealth(id, modelManager()));
     }
 
     @GetMapping("/admin/model-entries/{id}/metering")
     public Object metering(@PathVariable long id) {
-        return ApiResponse.ok(store.calibrations(id, Actor.current()));
+        return ApiResponse.ok(store.calibrations(id, modelManager()));
     }
 
     @GetMapping("/internal/model-entries/{id}")

@@ -1,0 +1,14 @@
+Local IAM gateway HTTP, 2026-11-24 Asia/Shanghai
+POST /admin/model-providers with outside ADMIN and no platform grant: 403 PLATFORM_CAPABILITY_DENIED
+POST /admin/model-providers with outside USER and platform model.manage: 200 OK
+GET /admin/platform-authorization/users?q=operatorA: 200 OK, operatorA present
+GET /admin/apps/r37chat61c680a6 before grant: 403 PLATFORM_CAPABILITY_DENIED
+POST /admin/apps before grant: 403 PLATFORM_CAPABILITY_DENIED
+PUT /admin/platform-authorization/grants scoped BUILDER: 200 OK
+GET /auth/session same external ADMIN ticket: 200 OK, platform BUILDER with agent.build
+GET /admin/apps/r37chat61c680a6 after grant: 200 OK
+GET /admin/apps/r37chatde9c9ebe after grant: 403 PLATFORM_CAPABILITY_DENIED
+DELETE /admin/platform-authorization/grants: 200 OK
+GET /admin/apps/r37chat61c680a6 after revoke: 403 PLATFORM_CAPABILITY_DENIED
+GET /admin/platform-authorization/audit?subject=operatorA: 200 OK
+PLATFORM_GRANT_SAVED and PLATFORM_GRANT_REVOKED recorded for the platform administrator

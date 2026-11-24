@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/** Exact portal build requests currently served by app. */
+/** Exact portal build requests and their owning services. */
 public final class PlatformBuildRoutes {
     public static final String SESSION = "/internal/platform-authorization/session";
     private static final String CODE = "[A-Za-z][A-Za-z0-9_-]{0,63}";
@@ -37,14 +37,29 @@ public final class PlatformBuildRoutes {
             rule("GET,PUT,DELETE", "/admin/platform-authorization/grants", "/admin/platform-authorization/grants"),
             rule("GET", "/admin/platform-authorization/audit", "/admin/platform-authorization/audit"),
             rule("GET", "/admin/platform-authorization/configuration-audit",
-                    "/admin/platform-authorization/configuration-audit"));
+                    "/admin/platform-authorization/configuration-audit"),
+            model("GET,POST", "/admin/model-providers", "/admin/model-providers"),
+            model("PUT", "/admin/model-providers/[1-9][0-9]*", "/admin/model-providers/{id}"),
+            model("POST", "/admin/model-providers/[1-9][0-9]*/test", "/admin/model-providers/{id}/test"),
+            model("POST", "/admin/model-providers/[1-9][0-9]*/disable", "/admin/model-providers/{id}/disable"),
+            model("POST", "/admin/model-providers/[1-9][0-9]*/credentials/rotate",
+                    "/admin/model-providers/{id}/credentials/rotate"),
+            model("PUT", "/admin/model-providers/[1-9][0-9]*/quota", "/admin/model-providers/{id}/quota"),
+            model("GET,POST", "/admin/model-entries", "/admin/model-entries"),
+            model("PUT", "/admin/model-entries/[1-9][0-9]*", "/admin/model-entries/{id}"),
+            model("POST", "/admin/model-entries/[1-9][0-9]*/test", "/admin/model-entries/{id}/test"),
+            model("GET", "/admin/model-entries/[1-9][0-9]*/metering", "/admin/model-entries/{id}/metering"));
 
     private PlatformBuildRoutes() {}
 
-    private record Rule(Set<String> methods, Pattern path, String template) {}
+    private record Rule(Set<String> methods, Pattern path, String template, String target, String capability) {}
 
     private static Rule rule(String methods, String path, String template) {
-        return new Rule(Set.of(methods.split(",")), Pattern.compile(path), template);
+        return new Rule(Set.of(methods.split(",")), Pattern.compile(path), template, "app", null);
+    }
+
+    private static Rule model(String methods, String path, String template) {
+        return new Rule(Set.of(methods.split(",")), Pattern.compile(path), template, "model", "model.manage");
     }
 
     public static String template(String method, String path) {
@@ -55,8 +70,23 @@ public final class PlatformBuildRoutes {
     }
 
     public static ServiceCall call(ServiceRoutePolicy routes, String method, String template, SubjectKey subject) {
-        var route = routes.require("gateway", "app", method, template);
+        String target = SESSION.equals(template) ? "app" : ruleFor(method, template).target();
+        var route = routes.require("gateway", target, method, template);
         return new ServiceCall(route.target(), route.action(), resource(subject));
+    }
+
+    public static boolean serves(String service, String method, String path) {
+        String template = template(method, path);
+        return template != null && service.equals(ruleFor(method, template).target());
+    }
+
+    public static String requiredCapability(String method, String template) {
+        return ruleFor(method, template).capability();
+    }
+
+    private static Rule ruleFor(String method, String template) {
+        return RULES.stream().filter(rule -> rule.methods().contains(method) && rule.template().equals(template))
+                .findFirst().orElseThrow(AuthorityProtocol::denied);
     }
 
     public static ResourceBinding resource(SubjectKey subject) {

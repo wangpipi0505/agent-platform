@@ -30,4 +30,12 @@ npm exec --yes --package=@playwright/cli -- playwright-cli -s=agent-r39 open abo
 npm exec --yes --package=@playwright/cli -- playwright-cli -s=agent-r39 run-code --filename ../docs/evidence/2026-11-24-R-39/browser-check.js
 ```
 
-跨服务的技能、插件、模型和评测构建入口还需接入同一平台能力判定。部署栈使用真实门户会话的联合自测待执行。
+## 本地 IAM 授权联验
+
+- 网关在模型供应商和模型条目的精确管理入口核验平台 `model.manage`，然后为模型服务签发绑定当前主体的构建委派。模型管理方法使用该能力判定。
+- 本机 authority、网关、app 和 model 服务使用 PostgreSQL，并访问真实 user-mgmt 的用户检索及主体状态接口。门户用 authority 测试档签发的 RS256 票。
+- `operatorA` 的外部票带 `ADMIN`，缺平台授权时创建模型供应商和应用均返回 `403 PLATFORM_CAPABILITY_DENIED`。本地已授权的管理员持外部 `USER` 票创建模型供应商返回 200。
+- 对同一张 `operatorA` 票，检索用户、授予 scoped `BUILDER`、读门户会话、访问指定应用、拒绝访问其他应用、回收后再次拒绝均在真实服务完成。管理员从授权审计查询到保存和回收两条事件。
+- Java 网关及服务授权链 24 例通过。 [联合验证结果](joined-build-result.txt)
+
+技能、插件等其余构建面权限接入及 E2 联验继续跟踪。

@@ -46,6 +46,7 @@ public class GatewayController {
     private final Optional<RunEventsProxy> events;
     private final Optional<CurrentAuthorityClient> authority;
     private final ObjectProvider<PublishedMetadataClient> taskMetadata;
+    private cn.agentplatform.gateway.infra.PlatformAccessClient platformAccess;
     private final ServiceRoutePolicy serviceRoutes = new ServiceRoutePolicy();
 
     public GatewayController(
@@ -84,6 +85,11 @@ public class GatewayController {
         return env.getRequiredProperty("agent.services." + service);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    void platformAccess(cn.agentplatform.gateway.infra.PlatformAccessClient client) {
+        this.platformAccess = client;
+    }
+
     @RequestMapping({"/admin/**", "/v1/**"})
     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
         if ("iam".equals(deployment.mode())) {
@@ -100,9 +106,15 @@ public class GatewayController {
                     String code = req.getRequestURI().split("/")[3];
                     call = new ServiceCall(call.target(), call.action(), EvaluationCandidateBinding.publication(code));
                 }
-                var ticket = authority.orElseThrow(() -> new PlatformException(
-                        503, "DEPENDENCY_UNAVAILABLE", "门户构建授权服务暂不可用"))
-                        .exchange(source.sourceToken(), call);
+                var client = authority.orElseThrow(() -> new PlatformException(
+                        503, "DEPENDENCY_UNAVAILABLE", "门户构建授权服务暂不可用"));
+                String capability = PlatformBuildRoutes.requiredCapability(req.getMethod(), buildTemplate);
+                if (capability != null) {
+                    if (platformAccess == null) throw new PlatformException(503, "PLATFORM_ACCESS_UNAVAILABLE", "平台授权暂不可用");
+                    var lookup = PlatformBuildRoutes.call(serviceRoutes, "GET", PlatformBuildRoutes.SESSION, source.subject());
+                    platformAccess.require(client.exchange(source.sourceToken(), lookup), source.subject(), capability);
+                }
+                var ticket = client.exchange(source.sourceToken(), call);
                 forward(req, res, call.target(), ticket.value());
                 return;
             }

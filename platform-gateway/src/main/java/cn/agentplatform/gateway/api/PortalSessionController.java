@@ -2,16 +2,11 @@ package cn.agentplatform.gateway.api;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
+import cn.agentplatform.gateway.infra.PlatformAccessClient;
 import jakarta.servlet.http.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import java.io.IOException;
-import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,17 +14,12 @@ import java.util.Optional;
 @RestController
 public final class PortalSessionController {
     private final Optional<CurrentAuthorityClient> authority;
-    private final RestClient app;
+    private final PlatformAccessClient app;
     private final ServiceRoutePolicy routes = new ServiceRoutePolicy();
 
-    public PortalSessionController(Optional<CurrentAuthorityClient> authority,
-                                   @Value("${agent.services.app}") String appUrl) {
+    public PortalSessionController(Optional<CurrentAuthorityClient> authority, PlatformAccessClient app) {
         this.authority = authority;
-        var http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2))
-                .followRedirects(HttpClient.Redirect.NEVER).build();
-        var factory = new JdkClientHttpRequestFactory(http);
-        factory.setReadTimeout(Duration.ofSeconds(2));
-        this.app = RestClient.builder().baseUrl(appUrl).requestFactory(factory).build();
+        this.app = app;
     }
 
     @GetMapping("/auth/session")
@@ -44,7 +34,7 @@ public final class PortalSessionController {
             var subject = new SubjectKey(identity.tenantId(), identity.principalId());
             var call = PlatformBuildRoutes.call(routes, "GET", PlatformBuildRoutes.SESSION, subject);
             var ticket = client.exchange(source.sourceToken(), call);
-            var access = readAccess(ticket, subject);
+            var access = app.session(ticket, subject);
             byte[] json = Json.write(ApiResponse.ok(Map.of(
                     "tenantId", identity.tenantId(), "principalId", identity.principalId(),
                     "expiresAt", identity.expiresAt(), "roles", access.path("roles"),
@@ -67,24 +57,6 @@ public final class PortalSessionController {
                 response.getOutputStream().write(Json.write(ApiResponse.error(emitted.status(),emitted.code(),emitted.getMessage())).getBytes(StandardCharsets.UTF_8));
             }
         }
-    }
-
-    private com.fasterxml.jackson.databind.JsonNode readAccess(ServiceTicket ticket, SubjectKey subject) {
-        try {
-            var envelope = app.get().uri(PlatformBuildRoutes.SESSION)
-                    .headers(headers -> headers.setBearerAuth(ticket.value()))
-                    .retrieve().body(com.fasterxml.jackson.databind.JsonNode.class);
-            if (envelope != null && "OK".equals(envelope.path("code").asText())) {
-                var access = envelope.path("data");
-                if (subject.tenantId().equals(access.path("tenantId").asText())
-                        && subject.principalId().equals(access.path("principalId").asText())
-                        && access.path("roles").isArray() && access.path("capabilities").isArray()
-                        && access.path("pages").isArray()) return access;
-            }
-        } catch (RestClientException unavailable) {
-            throw new PlatformException(503, "PLATFORM_ACCESS_UNAVAILABLE", "平台授权暂不可用");
-        }
-        throw new PlatformException(503, "PLATFORM_ACCESS_UNAVAILABLE", "平台授权暂不可用");
     }
 
     /**
