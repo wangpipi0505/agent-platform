@@ -1,26 +1,55 @@
 package cn.agentplatform.monitor.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.AuthorityContext;
+import cn.agentplatform.common.authority.CurrentAuthorityClient;
+import cn.agentplatform.common.authority.ResourceBinding;
+import cn.agentplatform.common.authority.ServiceCall;
+import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.monitor.domain.EvaluationAssertions;
 import cn.agentplatform.monitor.domain.EvaluationRules;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Service
 public class EvaluationService {
+    private static final Pattern CANDIDATE_PATH =
+            Pattern.compile("/internal/apps/([A-Za-z][A-Za-z0-9_-]{0,63})/candidate");
+    private static final Pattern CANDIDATE_QUERY =
+            Pattern.compile("draftRev=([1-9][0-9]*)&candidateSha256=([a-f0-9]{64})");
+    private static final Set<String> EVALUATION_ACTIONS = Set.of(
+            "proxy.monitor.post.EvaluationController.evaluate", "proxy.monitor.post.EvaluationController.resume");
+
     private final JdbcTemplate db;
     private final TransactionTemplate tx;
     private final RestClient http = client();
+    private final RestClient delegatedHttp = delegatedClient();
+    private final ServiceRoutePolicy routes = new ServiceRoutePolicy();
     private final String appUrl, engineUrl;
     private final boolean assertionsEnabled;
+    private ObjectProvider<CurrentAuthorityClient> authority;
+
+    @Value("${agent.security.mode:dev-hmac}")
+    private String securityMode = "dev-hmac";
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void authority(ObjectProvider<CurrentAuthorityClient> clients) {
+        authority = clients;
+    }
 
     public EvaluationService(
             JdbcTemplate db,
@@ -48,6 +77,14 @@ public class EvaluationService {
         var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(60000);
+        return RestClient.builder().requestFactory(factory).build();
+    }
+
+    private static RestClient delegatedClient() {
+        var transport = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3))
+                .followRedirects(HttpClient.Redirect.NEVER).build();
+        var factory = new org.springframework.http.client.JdkClientHttpRequestFactory(transport);
+        factory.setReadTimeout(Duration.ofSeconds(60));
         return RestClient.builder().requestFactory(factory).build();
     }
 
@@ -87,24 +124,28 @@ public class EvaluationService {
     }
 
     private Object callRaw(String method, String url, Map<String, Object> body) {
+        boolean iam = "iam".equals(securityMode);
+        String delegated = iam ? evaluationTicket(method, URI.create(url), body) : null;
+        RestClient transport = iam ? delegatedHttp : http;
         try {
+            String bearer = "Bearer " + (iam ? delegated : ServiceTokens.issue(Actor.current()));
             Map<?, ?> raw;
             if (method.equals("GET"))
                 raw =
-                        http.get()
+                        transport.get()
                                 .uri(url)
                                 .header(
                                         "Authorization",
-                                        "Bearer " + ServiceTokens.issue(Actor.current()))
+                                        bearer)
                                 .retrieve()
                                 .body(Map.class);
             else
                 raw =
-                        http.post()
+                        transport.post()
                                 .uri(url)
                                 .header(
                                         "Authorization",
-                                        "Bearer " + ServiceTokens.issue(Actor.current()))
+                                        bearer)
                                 .body(body)
                                 .retrieve()
                                 .body(Map.class);
@@ -113,6 +154,64 @@ public class EvaluationService {
         } catch (Exception e) {
             throw fail(502, "DEPENDENCY_UNAVAILABLE", "依赖服务调用失败，稍后重试");
         }
+    }
+
+    private String evaluationTicket(String method, URI uri, Map<String, Object> body) {
+        var candidate = CANDIDATE_PATH.matcher(Objects.toString(uri.getRawPath(), ""));
+        String query = Objects.toString(uri.getRawQuery(), "");
+        String target;
+        String template;
+        ResourceBinding expected;
+        if ("GET".equals(method) && candidate.matches() && sameOrigin(uri, appUrl)) {
+            var parameters = CANDIDATE_QUERY.matcher(query);
+            if (!parameters.matches()) throw evaluationDenied();
+            target = "app";
+            template = "/internal/apps/{code}/candidate";
+            expected = new ResourceBinding("evaluation-candidate", candidate.group(1) + "@" + parameters.group(1),
+                    parameters.group(2));
+        } else if ("POST".equals(method) && query.isEmpty() && sameOrigin(uri, engineUrl)
+                && Set.of("/internal/evaluations/run", "/internal/evaluations/turn").contains(uri.getRawPath())) {
+            if (body == null) throw evaluationDenied();
+            String code = Objects.toString(body.get("appCode"), "");
+            String revision = Objects.toString(body.get("draftRev"), "");
+            String sha = Objects.toString(body.get("candidateSha256"), "");
+            if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || !revision.matches("[1-9][0-9]*")
+                    || !sha.matches("[a-f0-9]{64}")) throw evaluationDenied();
+            target = "engine";
+            template = uri.getRawPath();
+            expected = new ResourceBinding("evaluation-candidate", code + "@" + revision, sha);
+        } else {
+            throw evaluationDenied();
+        }
+
+        var current = AuthorityContext.current();
+        if (!"monitor".equals(current.call().target()) || !EVALUATION_ACTIONS.contains(current.call().action())
+                || current.operation() == null || !"PORTAL".equals(current.operation().originKind())
+                || !expected.equals(current.call().resource()))
+            throw evaluationDenied();
+        current.actor().requireRole("EDITOR");
+        var verified = AuthorityContext.requireFor(current.actor(), expected);
+        verified.actor().requireRole("EDITOR");
+        var client = authority == null ? null : authority.getIfAvailable();
+        if (client == null)
+            throw fail(503, "DEPENDENCY_UNAVAILABLE", "评测服务授权暂不可用");
+        var call = routes.require("monitor", target, method, template);
+        var ticket = client.forward(verified, new ServiceCall(target, call.action(), expected));
+        if (ticket == null || !verified.operation().equals(ticket.operation())
+                || ticket.expiresAt() == null || !ticket.expiresAt().isAfter(Instant.now())
+                || ticket.value() == null || ticket.value().isBlank()) throw evaluationDenied();
+        return ticket.value();
+    }
+
+    private static boolean sameOrigin(URI request, String configured) {
+        var origin = URI.create(configured);
+        return request.getUserInfo() == null && request.getFragment() == null
+                && Objects.equals(origin.getScheme(), request.getScheme())
+                && Objects.equals(origin.getRawAuthority(), request.getRawAuthority());
+    }
+
+    private static PlatformException evaluationDenied() {
+        return new PlatformException(403, "SYS-AUTH-403", "评测服务调用与当前候选授权不匹配");
     }
 
     private EvaluationAssertions.Spec assertionSpec(
