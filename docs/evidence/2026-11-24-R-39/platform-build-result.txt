@@ -1,0 +1,17 @@
+raw-build-entry-before.log
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+
+raw-platform-audit.log
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- admin-common
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0 -- platform-gateway
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0 -- app-management
+[INFO] BUILD SUCCESS
+
+raw-vue-final.log
+Test Files  3 passed (3)
+Tests  40 passed (40)
+built in 7.43s
+
+raw-browser-verified.log
+{"grant":{"subject":"operator","role":"BUILDER","appScope":["ops"],"status":"REVOKED"},"requests":[{"path":"/auth/session","method":"GET"},{"path":"/admin/confirmation-center/counts","method":"GET"},{"path":"/admin/apps","method":"GET"},{"path":"/admin/platform-authorization/users","method":"GET"},{"path":"/admin/platform-authorization/grants","method":"GET"},{"path":"/admin/platform-authorization/grants","method":"PUT"},{"path":"/admin/platform-authorization/grants","method":"GET"},{"path":"/admin/platform-authorization/grants","method":"DELETE"},{"path":"/admin/platform-authorization/grants","method":"GET"}]}

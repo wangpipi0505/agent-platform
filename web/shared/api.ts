@@ -2,7 +2,14 @@ import axios from "axios";
 import { defineStore, getActivePinia } from "pinia";
 import { ref, shallowRef, onScopeDispose, getCurrentScope } from "vue";
 export type SessionScope = { signal: AbortSignal; current: () => boolean };
-export type PortalIdentity = {tenantId:string;principalId:string;roles:string[];expiresAt:string};
+export type PortalIdentity = {
+  tenantId: string;
+  principalId: string;
+  roles: string[];
+  expiresAt: string;
+  capabilities?: string[];
+  pages?: string[];
+};
 export function checkScope(scope?: SessionScope) {
   if (scope && (scope.signal.aborted || !scope.current()))
     throw new DOMException('会话已停止，请重新连接', 'AbortError');
@@ -48,17 +55,13 @@ export const useAuth = defineStore("auth", () => {
     clearTimeout(timer);expire();return true;
   }
   // UI visibility is not authorization. Every action is still verified by the backend Actor.
-  const can = (permission: string) =>
-    !!token.value &&
-    (roles.value.includes("ADMIN") ||
-      roles.value.includes(
-        (
-          { edit: "EDITOR", approve: "APPROVER", admin: "ADMIN" } as Record<
-            string,
-            string
-          >
-        )[permission],
-      ));
+  const can = (permission: string) => {
+    if (!token.value) return false;
+    const capabilities = (user.value as PortalIdentity | undefined)?.capabilities;
+    if (capabilities && permission === "edit") return capabilities.includes("agent.build");
+    const role = ({ edit: "EDITOR", approve: "APPROVER", admin: "ADMIN" } as Record<string, string>)[permission];
+    return roles.value.includes("ADMIN") || roles.value.includes(role);
+  };
   return { token, roles, user, can, generation, connection, notice, snapshot, invalidate, install };
 });
 export function createApi(

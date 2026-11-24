@@ -24,7 +24,7 @@ const routerSource = readFileSync(
   "utf8",
 );
 
-it("单一来源：主入口（C0-1 裁剪+F3-4 收敛+F3-1 任务工作台+F3-3 资产管理后 19 个）与全部页面登记齐全且字段完整", () => {
+it("单一来源：20 个菜单入口与全部页面登记齐全且字段完整", () => {
   const menu = menuEntries();
   // C0-1 裁剪：接入模板/语义与目标两条挂起线移出菜单（主方案 §2.1），17→15；
   // F3-4 菜单收敛（前端稿 §5.7/§5.8）：集成控制台 1 条替代配置发布 1 条（其余深链页本就
@@ -32,8 +32,9 @@ it("单一来源：主入口（C0-1 裁剪+F3-4 收敛+F3-1 任务工作台+F3-3
   // F3-1：任务工作台（方案 §5.3 管理台侧）入「任务与运行」组菜单，14→15。
   // F3-3：资产管理四页（前端稿 §3.1：规则管理→构建资产；插件与来源/MCP 连接/记忆管理→
   // 集成与治理）入菜单，15→19（每组 ≤10 断言保持：构建资产 3、集成与治理 4）。
-  expect(menu.length).toBe(19);
-  expect(new Set(menu.map((e) => e.path)).size).toBe(19);
+  // R-39 用户与授权纳入平台管理。
+  expect(menu.length).toBe(20);
+  expect(new Set(menu.map((e) => e.path)).size).toBe(20);
   for (const entry of pageAccess) {
     expect(entry.title.length, entry.key).toBeGreaterThan(0);
     expect(entry.area.length, entry.key).toBeGreaterThan(0);
@@ -61,11 +62,14 @@ it("C0-1 挂起线：Semantic*/onboarding 移出菜单但代码保留、深链�
   expect(routerSource).toContain('"/integration/semantic-bindings"');
 });
 
-it("读权限本轮统一为已验证主体：不以edit替代读门", () => {
+it("保留旧页面的开发会话读门，授权管理仅对管理员开放", () => {
   expect(PAGE_ACCESS_VERSION).toBe(1);
   for (const entry of pageAccess) {
-    expect(entry.read, entry.key).toBe("session");
+    expect(entry.read, entry.key).toBe(entry.key === "platform-authorizations" ? "admin" : "session");
   }
+  const grants = pageByKey["platform-authorizations"];
+  expect(navigationDecision(grants, { hasToken: true, roles: ["ADMIN"], pages: [] }).allow).toBe(false);
+  expect(navigationDecision(grants, { hasToken: true, roles: [], pages: [grants.path] }).allow).toBe(true);
   // 写上下文按页面实际用法登记（证据=页面内 can()/v-permission 用法），非空仅在确有写操作处
   // F1-2：既有 edit 值迁移为 builder（BUILDER=现 EDITOR 扩展，主方案 §7.2）——条目数据同步改名
   expect(pageByKey["services"].write).toBe("admin");

@@ -17,13 +17,21 @@ export function trustedPortal(host:{agentPlatformPortal?:unknown}):PortalTokenPr
   return {getAccessToken:value.getAccessToken.bind(value),onSessionChanged:value.onSessionChanged.bind(value)};
 }
 function identity(data:any):PortalIdentity {
-  if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).sort().join(',')!=='expiresAt,principalId,roles,tenantId'
+  const fields = data && Object.keys(data).sort().join(',');
+  const hasAccess = fields === 'capabilities,expiresAt,pages,principalId,roles,tenantId';
+  if(!data||typeof data!=='object'||Array.isArray(data)||(!hasAccess && fields!=='expiresAt,principalId,roles,tenantId')
     ||![data.tenantId,data.principalId].every(x=>typeof x==='string'&&x.trim())
     ||!Array.isArray(data.roles)||!data.roles.every((x:unknown)=>typeof x==='string'&&x.trim())
     ||typeof data.expiresAt!=='string'||!/^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/.test(data.expiresAt)
     ||!Number.isFinite(Date.parse(data.expiresAt))||Date.parse(data.expiresAt)<=Date.now())
     throw Error('门户会话响应无效或已到期，请重新连接');
-  return {tenantId:data.tenantId,principalId:data.principalId,roles:[...data.roles],expiresAt:data.expiresAt};
+  if (hasAccess && (!Array.isArray(data.capabilities) || !Array.isArray(data.pages)
+    || !data.capabilities.every((value: unknown) => typeof value === 'string' && /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/.test(value))
+    || !data.pages.every((value: unknown) => typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')))) {
+    throw Error('门户会话权限字段无效，请重新连接');
+  }
+  return {tenantId:data.tenantId,principalId:data.principalId,roles:[...data.roles],expiresAt:data.expiresAt,
+    ...(hasAccess ? { capabilities: [...data.capabilities], pages: [...data.pages] } : {})};
 }
 function devIdentity(data:any):PortalIdentity {
   const user=data?.user,expiresIn=Number(data?.expiresIn);
