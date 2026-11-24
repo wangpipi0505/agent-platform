@@ -98,7 +98,7 @@ class DecisionStoreRestartTest extends GatewayEventsSlice1fSupport {
                 command(GATEWAY_CHECK, retainedCall(), "n-s6-restart-after", extra)
                         .getBytes(StandardCharsets.UTF_8));
         DelegatedAuthority afterRestart = new DelegatedAuthority(keys, tickets, routes, restarted,
-                delegation, properties, identity, issuer, clock);
+                delegation, properties, identity, issuer, clock, sessions);
 
         assertThatThrownBy(() -> afterRestart.eventsWindowCheck(GATEWAY, request))
                 .isInstanceOfSatisfying(AuthorityException.class, denied -> {

@@ -39,13 +39,16 @@ agent:
       monitor: ${AGENT_SECRET_IAM_MONITOR_CLIENT:}
 
     # 人身份会话（口径 B 的 M4 前置）：把 user-mgmt 的 API-Key 身份换成平台 gateway 认得的 portal 令牌。
-    # 默认关：不配 url/api-key-ref 时该 operation 一律 403，既有部署行为不变。
+    # enabled 只控制会话签发。门户换票始终进行主体代查。
     # issuer/audience/client-id 必须与平台 AuthorityProperties.portal 逐字一致，否则签出的票没人认。
     identity:
       enabled: ${AGENT_AUTHORITY_IDENTITY_ENABLED:false}
       url: ${AGENT_AUTHORITY_IDENTITY_URL:}
       api-key-ref: ${AGENT_AUTHORITY_IDENTITY_KEY_REF:}
       identity-path: ${AGENT_AUTHORITY_IDENTITY_PATH:/system/apikeys/identity/self}
+      # 除显式启用 test/dev 的进程，启动必须配置独立的代查密钥引用。
+      subject-lookup-key-ref: ${AGENT_AUTHORITY_IDENTITY_SUBJECT_KEY_REF:}
+      subject-lookup-path: ${AGENT_AUTHORITY_IDENTITY_SUBJECT_PATH:/system/apikeys/identity/}
       tenant: ${AGENT_AUTHORITY_IDENTITY_TENANT:local-v12}
       issuer: ${AGENT_AUTHORITY_IDENTITY_ISSUER:${AGENT_AUTHORITY_ISSUER:}}
       audience: ${AGENT_AUTHORITY_IDENTITY_AUDIENCE:agent-platform-portal}

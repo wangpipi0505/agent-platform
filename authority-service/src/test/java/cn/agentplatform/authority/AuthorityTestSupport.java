@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 三个端点共用的测试支撑：固定测试密钥（classpath 里的 PEM，只用于测试）、固定 client 凭据、
  * 以及与目录行一致的 resource。所有子类共享同一组 properties，因此整个测试运行只起一个 Spring 上下文。
  */
+@ActiveProfiles("test")
 public abstract class AuthorityTestSupport {
 
     public static final String ISSUER = "https://authority.test";

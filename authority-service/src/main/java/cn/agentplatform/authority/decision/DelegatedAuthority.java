@@ -7,6 +7,7 @@ import cn.agentplatform.authority.config.AuthorityServiceProperties;
 import cn.agentplatform.authority.config.DelegationProperties;
 import cn.agentplatform.authority.config.IssuerResolver;
 import cn.agentplatform.authority.identity.IdentityProperties;
+import cn.agentplatform.authority.identity.SessionService;
 import cn.agentplatform.authority.route.RouteDirectory;
 import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Digest;
@@ -118,10 +119,11 @@ public final class DelegatedAuthority {
     private final IdentityProperties identity;
     private final IssuerResolver issuer;
     private final Clock clock;
+    private final SessionService sessions;
 
     public DelegatedAuthority(KeyRing keys, TicketService tickets, RouteDirectory routes, DecisionStore decisions,
                               DelegationProperties delegation, AuthorityServiceProperties properties,
-                              IdentityProperties identity, IssuerResolver issuer, Clock clock) {
+                              IdentityProperties identity, IssuerResolver issuer, Clock clock, SessionService sessions) {
         this.keys = keys;
         this.tickets = tickets;
         this.routes = routes;
@@ -131,6 +133,7 @@ public final class DelegatedAuthority {
         this.identity = identity;
         this.issuer = issuer;
         this.clock = clock;
+        this.sessions = Objects.requireNonNull(sessions, "sessions");
     }
 
     /** {@code operation=authorize}：返回一条 {@code assertion}（决策断言），决策同时进 {@link DecisionStore}。 */
@@ -1391,6 +1394,7 @@ public final class DelegatedAuthority {
         if (subjectClient != null && !subjectClient.isBlank() && !subjectClient.equals(text(claims, "client_id"))) {
             throw AuthorityException.denied("SUBJECT_CLIENT");
         }
+        sessions.requireCurrentIdentity(text(claims, "tenant_id"), text(claims, "sub"));
         return claims;
     }
 

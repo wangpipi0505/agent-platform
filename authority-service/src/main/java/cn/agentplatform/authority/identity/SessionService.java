@@ -6,7 +6,12 @@ import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,6 +22,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -44,6 +50,8 @@ public final class SessionService {
     private static final int MAX_BODY_BYTES = 8 * 1024;
     private static final int MAX_IDENTITY_BYTES = 64 * 1024;
     private static final String TYPE = "at+jwt";
+    private static final Logger log = LoggerFactory.getLogger(SessionService.class);
+    private static final Set<String> LOCAL_PROFILES = Set.of("test", "dev");
     /**
      * 委派天花板维度：必须与 {@code DelegatedAuthority.ATTRIBUTE_KEYS} 同集合。
      *
@@ -60,15 +68,52 @@ public final class SessionService {
     private final IdentityProperties properties;
     private final HttpClient http;
 
-    public SessionService(KeyRing keys, IssuerResolver issuerResolver, Clock clock, IdentityProperties properties) {
+    private final String subjectLookupKey;
+    private final String subjectLookupPath;
+
+    public SessionService(KeyRing keys, IssuerResolver issuerResolver, Clock clock, IdentityProperties properties,
+                          Environment environment,
+                          @Value("${agent.authority.identity.subject-lookup-key-ref:}") String subjectLookupKeyRef,
+                          @Value("${agent.authority.identity.subject-lookup-path:/system/apikeys/identity/}")
+                          String subjectLookupPath) {
         this.keys = keys;
         this.issuerResolver = issuerResolver;
         this.clock = clock;
         this.properties = properties;
+        this.subjectLookupKey = configureSubjectLookup(environment, subjectLookupKeyRef, subjectLookupPath);
+        this.subjectLookupPath = subjectLookupPath;
         this.http = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofMillis(properties.connectTimeoutMs()))
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
+    }
+
+    private String configureSubjectLookup(Environment environment, String reference, String path) {
+        if (reference.isBlank()) {
+            if (properties.enabled()) {
+                log.warn("已启用会话签发，但缺少 subject-lookup-key-ref，门户换票将拒绝");
+            }
+            String[] profiles = environment.getActiveProfiles();
+            if (profiles.length == 0 || !Arrays.stream(profiles).allMatch(LOCAL_PROFILES::contains)) {
+                throw new IllegalStateException("AUTHORITY_IDENTITY_INVALID: 必须配置 subject-lookup-key-ref");
+            }
+            return null;
+        }
+        if (!reference.matches("env:[A-Za-z_][A-Za-z0-9_]{0,127}")) {
+            throw new IllegalStateException("AUTHORITY_IDENTITY_INVALID: subject-lookup-key-ref 必须使用 env:NAME");
+        }
+        if (!path.matches("/(?:[A-Za-z0-9_-]+/)+")) {
+            throw new IllegalStateException("AUTHORITY_IDENTITY_INVALID: subject-lookup-path 格式非法");
+        }
+        properties.validateDirectory();
+        String key = System.getenv(reference.substring(4));
+        if (validKey(key)) {
+            return key;
+        }
+        if (properties.enabled()) {
+            log.warn("已启用会话签发，但代查密钥引用没有可用凭据，门户换票将拒绝");
+        }
+        return null;
     }
 
     /** 解析请求体里的 {@code operation}；不属于本服务时返回 null，由调用方走原路径。 */
@@ -100,7 +145,7 @@ public final class SessionService {
         }
         Map<String, Object> request = parse(body);
         String apiKey = resolveApiKey(request);
-        Map<String, Object> identity = fetchIdentity(apiKey);
+        Map<String, Object> identity = fetchIdentity(apiKey, properties.identityPath());
         if (!admissible(identity)) {
             // 不存在/停用/无角色都归一到同一个 403：否则错误码本身就是账号枚举接口。
             throw AuthorityException.denied("user-mgmt 身份不可用或已停用");
@@ -123,6 +168,32 @@ public final class SessionService {
         response.put("expires_in", properties.sessionSeconds());
         response.put("session", session);
         return response;
+    }
+
+    /** 使用已验证的租户和主体代查当前状态，再签发新的门户委派票据。 */
+    public void requireCurrentIdentity(String tenant, String subject) {
+        if (subjectLookupKey == null) {
+            throw new AuthorityException(503, "IAM_IDENTITY_UNAVAILABLE", "身份代查凭据不可用", "api_key_ref_missing");
+        }
+        if (!properties.tenant().equals(tenant) || subject == null
+                || subject.isBlank() || subject.length() > 128 || subject.equals(".") || subject.equals("..")
+                || subject.indexOf('/') >= 0 || subject.indexOf('\\') >= 0)
+            throw inactiveSubject();
+        try {
+            String path = subjectLookupPath + UriUtils.encodePathSegment(subject, StandardCharsets.UTF_8);
+            var identity = fetchIdentity(subjectLookupKey, path);
+            requireTenant(identity);
+            if (!admissible(identity) || !subject.equals(mappedText(identity, "userName")))
+                throw inactiveSubject();
+        } catch (AuthorityException error) {
+            // USER_MGMT reports absent users through a non-success business envelope.
+            if (error.status() == 403) throw inactiveSubject();
+            throw error;
+        }
+    }
+
+    private static AuthorityException inactiveSubject() {
+        return new AuthorityException(401, "SYS-AUTH-401", "当前身份不可用", "identity_subject_unavailable");
     }
 
     private Map<String, Object> claims(String userName, List<String> roles, Map<String, Object> attributes) {
@@ -303,17 +374,22 @@ public final class SessionService {
     }
 
     private static String requireKey(String value) {
-        if (value == null || value.isBlank() || value.length() > 256 || value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0) {
+        if (!validKey(value)) {
             throw AuthorityException.invalidRequest("API-Key 形状非法", "api_key_invalid");
         }
         return value;
     }
 
+    private static boolean validKey(String value) {
+        return value != null && !value.isBlank() && value.length() <= 256
+                && value.indexOf('\r') < 0 && value.indexOf('\n') < 0;
+    }
+
     @SuppressWarnings("unchecked")
-    private Map<String, Object> fetchIdentity(String apiKey) {
+    private Map<String, Object> fetchIdentity(String apiKey, String path) {
         HttpRequest request;
         try {
-            request = HttpRequest.newBuilder(URI.create(properties.url() + properties.identityPath()))
+            request = HttpRequest.newBuilder(URI.create(properties.url() + path))
                     .timeout(Duration.ofMillis(properties.readTimeoutMs()))
                     .header("Accept", "application/json")
                     .header("X-API-Key", apiKey)
