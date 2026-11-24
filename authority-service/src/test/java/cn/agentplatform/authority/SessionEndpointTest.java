@@ -260,13 +260,13 @@ class SessionEndpointTest extends AuthorityTestSupport {
             String tenant = index == 0 ? "r38-tenant-a" : "r38-tenant-b";
             String otherTenant = index == 0 ? "r38-tenant-b" : "r38-tenant-a";
             var properties = new cn.agentplatform.authority.identity.IdentityProperties(
-                    true, "http://127.0.0.1:" + (18072 + index), null, "/system/apikeys/identity/self",
+                    false, "http://127.0.0.1:" + (18072 + index), null, "/system/apikeys/identity/self",
                     tenant, ISSUER, AUDIENCE, GATEWAY, "platform.access", "agent-platform",
                     2000, 2000, SESSION_SECONDS, null, "USER_MGMT", null, "0", null);
             var directory = new cn.agentplatform.authority.identity.SessionService(
-                    null, null, java.time.Clock.systemUTC(), properties);
-            org.springframework.test.util.ReflectionTestUtils.setField(
-                    directory, "subjectLookupKeyRef", "env:AGENT_R38_LIVE_SUBJECT_KEY");
+                    null, null, java.time.Clock.systemUTC(), properties,
+                    new org.springframework.mock.env.MockEnvironment(),
+                    "env:AGENT_R38_LIVE_SUBJECT_KEY", "/system/apikeys/identity/");
             directory.requireCurrentIdentity(tenant, "operatorA");
             org.assertj.core.api.Assertions.assertThatThrownBy(
                     () -> directory.requireCurrentIdentity(otherTenant, "operatorA"))

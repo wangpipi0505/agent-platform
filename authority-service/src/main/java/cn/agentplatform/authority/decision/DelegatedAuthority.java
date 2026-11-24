@@ -123,13 +123,6 @@ public final class DelegatedAuthority {
 
     public DelegatedAuthority(KeyRing keys, TicketService tickets, RouteDirectory routes, DecisionStore decisions,
                               DelegationProperties delegation, AuthorityServiceProperties properties,
-                              IdentityProperties identity, IssuerResolver issuer, Clock clock) {
-        this(keys, tickets, routes, decisions, delegation, properties, identity, issuer, clock, null);
-    }
-
-    @org.springframework.beans.factory.annotation.Autowired
-    public DelegatedAuthority(KeyRing keys, TicketService tickets, RouteDirectory routes, DecisionStore decisions,
-                              DelegationProperties delegation, AuthorityServiceProperties properties,
                               IdentityProperties identity, IssuerResolver issuer, Clock clock, SessionService sessions) {
         this.keys = keys;
         this.tickets = tickets;
@@ -140,7 +133,7 @@ public final class DelegatedAuthority {
         this.identity = identity;
         this.issuer = issuer;
         this.clock = clock;
-        this.sessions = sessions;
+        this.sessions = Objects.requireNonNull(sessions, "sessions");
     }
 
     /** {@code operation=authorize}：返回一条 {@code assertion}（决策断言），决策同时进 {@link DecisionStore}。 */
@@ -1401,7 +1394,7 @@ public final class DelegatedAuthority {
         if (subjectClient != null && !subjectClient.isBlank() && !subjectClient.equals(text(claims, "client_id"))) {
             throw AuthorityException.denied("SUBJECT_CLIENT");
         }
-        if (sessions != null) sessions.requireCurrentIdentity(text(claims, "tenant_id"), text(claims, "sub"));
+        sessions.requireCurrentIdentity(text(claims, "tenant_id"), text(claims, "sub"));
         return claims;
     }
 
