@@ -1,0 +1,7 @@
+# R-35 门户运行入口
+
+IAM 网关只接受已验证、含 `platform.access` 的门户票。允许 GET 和 POST 访问 `/v1/apps/{code}/sessions`、`/v1/apps/{code}/tasks`、`/v1/apps/{code}/memories` 三个集合。应用编码沿用路由登记的字符范围。会话与记忆沿用引擎接口，应用任务列表沿用 `/v1/tasks` 的列表信封、归属规则和分页，应用范围固定取路径中的 `code`。
+
+入口证明绑定到实际 MVC handler、请求方法、路径和查询串，消费一次。网关按服务能力目录换发给 engine 的短时委派票。运行入口票绑定应用编码，引擎核对 URL 中的应用编码后再处理请求。人、租户与角色来自已验票据，资源归属及数据范围由引擎继续判定。需要 authority 启用既有 delegation 配置。
+
+仅接受 Authorization Bearer 票据。请求查询串不能带票，客户端身份、租户及角色声明头一律拒绝。其他运行面路径保持各自的入口和权限规则。
