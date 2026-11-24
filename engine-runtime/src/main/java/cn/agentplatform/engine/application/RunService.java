@@ -255,6 +255,14 @@ public class RunService {
                 code, req, trigger, actor, null, null, false, null, false, resolveConfig(code, req, actor));
     }
 
+    private record TaskEntry(java.util.function.LongConsumer attach, Set<String> allowedTools) {}
+
+    void createForTask(String code, JsonNode inputs, Set<String> allowedTools, Actor actor,
+            java.util.function.LongConsumer attach) {
+        createInternal(code, Json.tree(Map.of("inputs", inputs)), "TASK", actor, null, null,
+                false, null, false, null, new TaskEntry(attach, allowedTools));
+    }
+
     /**
      * 服务端解析配置版本：客户端只能提议 releaseId，摘要、环境与绑定修订全部取自 app 的
      * 激活配置投影。未声明 configReleaseId 返回 null（旧客户端原行为）。
@@ -669,6 +677,14 @@ public class RunService {
             RunScheduler.Admission suppliedTicket,
             boolean acceptedReservation,
             ConfigReference config) {
+        return createInternal(code, req, trigger, actor, trustedSnapshot, controlledDraftId,
+                recordedReplay, suppliedTicket, acceptedReservation, config, null);
+    }
+
+    private Map<String, Object> createInternal(
+            String code, JsonNode req, String trigger, Actor actor, JsonNode trustedSnapshot,
+            Long controlledDraftId, boolean recordedReplay, RunScheduler.Admission suppliedTicket,
+            boolean acceptedReservation, ConfigReference config, TaskEntry taskEntry) {
         // REQUIRED can join an ambient transaction. Reject it before any refresh/app I/O so
         // this admission owns the real outer commit boundary (Spring 6.2.7 TransactionTemplate).
         final boolean protectedAdmission = iamEnabled();
@@ -687,7 +703,7 @@ public class RunService {
         if (req.has("versionNo") && req.path("versionNo").asInt() < 1)
             throw new PlatformException(400, "VERSION_INVALID", "版本号必须大于零");
         final RetainedAuthorization opening =
-                admissions.opening(code, actor, protectedAdmission);
+                admissions.opening(code, actor, protectedAdmission, taskEntry != null);
         if (trigger.equals("DEBUG")) actor.requireRole("EDITOR");
         if (trigger.equals("EVALUATION") && trustedSnapshot != null && trustedSnapshot.has("evaluationConversation"))
             ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId","evt_"+Digest.sha256(Json.canonical(Map.of(
@@ -747,6 +763,8 @@ public class RunService {
                                     : protectedAdmission
                                             ? clients.published(code, opening)
                                             : clients.get("app", path, actor);
+            if (taskEntry != null && !"CHAT".equals(source.path("type").asText()))
+                throw new PlatformException(409, "CHAT_REQUIRED", "单步 AGENT 任务需要已发布的对话应用");
             final boolean firstChat = protectedAdmission && "CHAT".equals(source.path("type").asText());
             if (firstChat) requireFirstChat(source, req.path("inputs"));
             else if (protectedAdmission) requirePublishedFlow(source);
@@ -771,6 +789,8 @@ public class RunService {
             // must fail before model binding, run/attempt creation or any paid dispatch.
             // Previously accepted requestIds above keep their original idempotent read semantics.
             validateCapabilitySnapshot(snapshot);
+            if (taskEntry != null && taskEntry.allowedTools() != null)
+                restrictTaskTools(snapshot, taskEntry.allowedTools(), firstChat);
             InputDeclarations.validate(snapshot, req.path("inputs"));
             // 新运行必须冻结对象与精确参数；旧run仍按原快照核验，缺绑定只会是UNKNOWN。
             cn.agentplatform.common.goal.GoalContract.requireBindings(snapshot.path("config"));
@@ -824,7 +844,7 @@ public class RunService {
             // admission 槽位由外层 finally 释放。开关关闭（默认）或夹具未装配时旁路。
             if (runQuota != null) runQuota.requireRunAdmission(actor, code, frozen);
             final RetainedAuthorization admissionProof =
-                    admissions.bind(code, actor, protectedAdmission);
+                    admissions.bind(code, actor, protectedAdmission, taskEntry != null);
             if (protectedAdmission) admissions.requireInitialCoverage(admissionProof);
             final var created = new java.util.concurrent.atomic.AtomicBoolean(!protectedAdmission);
             String id =
@@ -1019,6 +1039,7 @@ public class RunService {
                                                                 + " engine.node_instance(run_id,step_seq,node_type,status,definition)"
                                                                 + " values(?,1,'AGENT','READY','{\"type\":\"AGENT\"}'::jsonb)",
                                                             rid);
+                                        if (taskEntry != null) taskEntry.attach().accept(rid);
                                         if (protectedAdmission) {
                                             AuthorityContext.requireBound(admissionProof);
                                             admissions.requireInitialCoverage(admissionProof);
@@ -1049,6 +1070,7 @@ public class RunService {
             if (protectedAdmission) AuthorityContext.requireBound(admissionProof);
             scheduler.created(run, admission);
             if (protectedAdmission) AuthorityContext.requireBound(admissionProof);
+            if (taskEntry != null) return Map.of("runId", publicId);
             return protectedAdmission
                     ? composeStatus(publicId, actor, store.statusPublished(publicId, actor))
                     : status(publicId, actor);
@@ -1196,6 +1218,27 @@ public class RunService {
 
     private JsonNode prepareSnapshot(JsonNode original, Actor actor) {
         return snapshots.prepareSnapshot(original, actor);
+    }
+
+    private static void restrictTaskTools(JsonNode snapshot, Set<String> requested, boolean firstChat) {
+        var config = (com.fasterxml.jackson.databind.node.ObjectNode) snapshot.path("config");
+        var allowed = Json.mapper().createArrayNode();
+        var matched = new HashSet<String>();
+        for (var tool : config.path("tools")) {
+            String code = tool.path("code").asText();
+            for (var ref : config.path("skillRefs")) {
+                if (!code.equals(ref.path("code").asText()) || ref.path("version").asInt() < 1) continue;
+                String versioned = code + "@" + ref.path("version").asInt();
+                if (requested.contains(versioned)) {
+                    matched.add(versioned);
+                    allowed.add(tool);
+                    break;
+                }
+            }
+        }
+        if (!matched.containsAll(requested))
+            throw new PlatformException(403, "SYS-AUTH-403", "任务工具不在已授权的发布范围内");
+        if (!firstChat) config.set("tools", allowed);
     }
 
     private JsonNode prepareSnapshot(JsonNode original, Actor actor, Long controlledDraftId) {

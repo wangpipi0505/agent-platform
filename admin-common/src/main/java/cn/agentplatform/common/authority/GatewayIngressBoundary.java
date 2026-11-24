@@ -230,13 +230,27 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
         }
     }
 
-    public static String claimRuntime(HttpServletRequest request) {
+    public static final class PortalRuntimeRequest {
+        private final String sourceToken;
+        private final SubjectKey subject;
+
+        private PortalRuntimeRequest(Proof captured) {
+            sourceToken = captured.source;
+            subject = captured.subject;
+        }
+
+        public String sourceToken() { return sourceToken; }
+        public SubjectKey subject() { return subject; }
+        @Override public String toString() { return "PortalRuntimeRequest[private-capture]"; }
+    }
+
+    public static PortalRuntimeRequest claimRuntime(HttpServletRequest request) {
         var captured = proof(request);
         synchronized (captured) {
             captured.check(request);
             if (!captured.ready || captured.purpose != Purpose.RUNTIME) throw denied();
             captured.claimed = true;
-            return captured.source;
+            return new PortalRuntimeRequest(captured);
         }
     }
     public static final class PortalSessionRequest {

@@ -54,6 +54,7 @@ public class Tasks {
    * （受理回退占位降级口径，与 T2-2 交付说明一致）。
    */
   private final cn.agentplatform.engine.infra.RuntimeClients clients;
+  private final TaskAgentExecution agentExecution;
 
   // T2-11：活动任务事件 SSE 观察流（每连接一个泵；closeTaskStreams/@PreDestroy 收口）。
   private final Set<TaskEventPump> taskStreams = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -73,10 +74,17 @@ public class Tasks {
   public Tasks(
       TraceStore store,
       SubagentPlanning planning,
-      cn.agentplatform.engine.infra.RuntimeClients clients) {
+      cn.agentplatform.engine.infra.RuntimeClients clients,
+      TaskAgentExecution agentExecution) {
     this.store = store;
     this.planning = planning;
     this.clients = clients;
+    this.agentExecution = agentExecution;
+  }
+
+  public Tasks(TraceStore store, SubagentPlanning planning,
+               cn.agentplatform.engine.infra.RuntimeClients clients) {
+    this(store, planning, clients, null);
   }
 
   /** 测试/降级组装：无发布快照来源时受理按占位降级口径钉住（R-19 如实登记）。 */
@@ -119,6 +127,12 @@ public class Tasks {
             Digest.canonicalRequestDigest(mode, goal, inputs, req.path("sessionId"), toolPolicy);
     // T2-6：依赖登记入参（受理事务内校验与落库——重放分支在上方，依赖只在首次受理登记一次）
     JsonNode dependencies = req.path("dependencies").isArray() ? req.path("dependencies") : null;
+    boolean direct = agentExecution != null && "AGENT".equals(mode)
+            && req.path("sessionId").asText("").isBlank()
+            && (dependencies == null || dependencies.isEmpty());
+    Set<String> allowedTools = direct ? allowedTaskTools(toolPolicy) : null;
+    JsonNode executionInputs = direct && inputs.isEmpty()
+            ? Json.tree(Map.of("message", goal)) : inputs;
 
     // 幂等：同号同参重放原任务；同号异参 409 REQUEST_REPLAY（UNIQUE 兜底并发）。
     var prior =
@@ -130,9 +144,12 @@ public class Tasks {
                             requestId);
     if (!prior.isEmpty()) {
       var task = prior.getFirst();
-      if (!Digest.sha256(digest).equals(String.valueOf(task.get("request_digest"))))
+      if (!code.equals(task.get("app_code"))
+              || !Digest.sha256(digest).equals(String.valueOf(task.get("request_digest"))))
         throw new PlatformException(409, "REQUEST_REPLAY", "同一 requestId 已用于不同参数的任务");
-      return detail(TraceStore.number(task, "id"), actor);
+      long id = TraceStore.number(task, "id");
+      if (direct) agentExecution.start(id, code, executionInputs, allowedTools, actor);
+      return detail(id, actor);
     }
 
     // TASK_INTERNAL 根会话（主方案 §5.5）：无用户会话的 PLAN 任务显式启用规划子代理时，
@@ -171,12 +188,13 @@ public class Tasks {
     }
     store.atomic(
             () -> {
-              store.db()
+              int inserted = store.db()
                       .update(
                               "insert into engine.task(public_id,tenant_id,principal_id,app_code,"
                                   + "config_release_id,config_digest,mode,purpose,goal,input_ref,input_digest,"
                                   + "session_id,session_cursor,state,request_id,request_digest,tool_policy)"
-                                  + " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                  + " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?::jsonb)"
+                                  + (direct ? " on conflict (tenant_id,principal_id,request_id) do nothing" : ""),
                               publicId,
                               actor.tenantId(),
                               actor.principalId(),
@@ -196,6 +214,7 @@ public class Tasks {
                               requestId,
                               Digest.sha256(digest),
                               toolPolicy == null ? null : Json.write(toolPolicy));
+              if (inserted == 0) return null;
               long taskId =
                       store.db()
                               .queryForObject(
@@ -266,9 +285,28 @@ public class Tasks {
               }
               return null;
             });
-    long id =
-            store.db().queryForObject("select id from engine.task where public_id=?", Long.class, publicId);
+    var accepted = store.db().queryForMap(
+            "select id,app_code,request_digest from engine.task where tenant_id=? and principal_id=? and request_id=?",
+            actor.tenantId(), actor.principalId(), requestId);
+    if (!code.equals(accepted.get("app_code")) || !Digest.sha256(digest).equals(accepted.get("request_digest")))
+      throw new PlatformException(409, "REQUEST_REPLAY", "同一 requestId 已用于不同参数的任务");
+    long id = TraceStore.number(accepted, "id");
+    if (direct) agentExecution.start(id, code, executionInputs, allowedTools, actor);
     return detail(id, actor);
+  }
+
+  private static Set<String> allowedTaskTools(JsonNode policy) {
+    if (policy == null || policy.isNull()) return null;
+    JsonNode refs = policy.path("allowedToolRefs");
+    if (!refs.isArray())
+      throw new PlatformException(400, "TASK_REQUEST_INVALID", "toolPolicy.allowedToolRefs 必须是数组");
+    var allowed = new HashSet<String>();
+    for (JsonNode ref : refs) {
+      if (!ref.isTextual() || ref.asText().isBlank())
+        throw new PlatformException(400, "TASK_REQUEST_INVALID", "工具引用必须为非空字符串");
+      allowed.add(ref.asText());
+    }
+    return Set.copyOf(allowed);
   }
 
   // ------------------------------------------------------------------
@@ -771,12 +809,13 @@ public class Tasks {
 
   /** 取消：运行/等待态→CANCELLED（CAS state_version）；终态幂等返回原状。 */
   public Map<String, Object> cancel(long taskId, JsonNode req, Actor actor) {
-    var task = ownedTask(taskId, actor);
-    String state = String.valueOf(task.get("state"));
-    if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state))
-      return detail(taskId, actor); // 终态幂等
-    int version = ((Number) task.get("state_version")).intValue();
-    int changed =
+    store.atomic(() -> {
+      var task = ownedTask(taskId, actor, true);
+      String state = String.valueOf(task.get("state"));
+      if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state)) return null;
+      if (agentExecution != null && !agentExecution.cancel(taskId)) return null;
+      int version = ((Number) task.get("state_version")).intValue();
+      int changed =
             store.db()
                     .update(
                             "update engine.task set state='CANCELLED',state_version=state_version+1,"
@@ -784,8 +823,11 @@ public class Tasks {
                             taskId,
                             state,
                             version);
-    if (changed == 1)
-      appendTaskEvent(taskId, "TASK_FINISHED", Json.tree(Map.of("state", "CANCELLED", "by", actor.principalId())));
+      if (changed == 1) {
+        appendTaskEvent(taskId, "TASK_FINISHED", Json.tree(Map.of("state", "CANCELLED", "by", actor.principalId())));
+      }
+      return null;
+    });
     return detail(taskId, actor);
   }
 
@@ -933,9 +975,7 @@ public class Tasks {
    * result 投影）。形状 {@code {taskId,state,result?,resultSummary?,artifacts?}}：
    *
    * <ul>
-   *   <li><b>result</b>：任务最终输出读回。<b>T2-13 结果读回接线前的首版恒为 null</b>——T2-13
-   *       验收口径（无附件结果返回完整输出）接通后由此字段承载：无附件任务返回完整输出，
-   *       有附件任务返回 resultSummary + artifacts 引用；本首版如实返回 null，不伪造输出。</li>
+   *   <li><b>result</b>：单步 AGENT 任务成功后返回已提交的入口运行输出，未形成输出时返回 null。</li>
    *   <li><b>resultSummary</b>：goal 摘要——首版取受理 goal（≤200 字截断），无输出时不缺省。</li>
    *   <li><b>artifacts</b>：产物引用——首版恒为空列表；产物下载复用既有运行级二进制路径
    *       （GET /v1/runs/{runId}/artifacts/{id}/download，integrationAllowed=true 行），
@@ -952,8 +992,16 @@ public class Tasks {
     var view = new LinkedHashMap<String, Object>();
     view.put("taskId", task.get("public_id"));
     view.put("state", String.valueOf(task.get("state")));
-    // T2-13 结果读回接线前恒为 null（见方法 javadoc——首版口径，不伪造输出）。
-    view.put("result", null);
+    JsonNode output = null;
+    if ("SUCCEEDED".equals(task.get("state")) && task.get("result_ref") != null) {
+      var rows = store.db().queryForList(
+          "select r.output::text from engine.task_step s join engine.run r on r.id=s.run_id"
+              + " where s.task_id=? and s.step_id=? and r.tenant_id=? and r.principal_id=?"
+              + " and r.status='SUCCEEDED' and r.output is not null",
+          String.class, taskId, StepExecutionMapping.ENTRY, actor.tenantId(), actor.principalId());
+      if (!rows.isEmpty()) output = Json.read(rows.getFirst());
+    }
+    view.put("result", output);
     view.put("resultSummary", goal.length() <= 200 ? goal : goal.substring(0, 200));
     view.put("artifacts", List.of());
     return view;
@@ -986,10 +1034,15 @@ public class Tasks {
   }
 
   private Map<String, Object> ownedTask(long taskId, Actor actor) {
+    return ownedTask(taskId, actor, false);
+  }
+
+  private Map<String, Object> ownedTask(long taskId, Actor actor, boolean lock) {
     var rows =
             store.db()
                     .queryForList(
-                            "select * from engine.task where id=? and tenant_id=? and principal_id=?",
+                            "select * from engine.task where id=? and tenant_id=? and principal_id=?"
+                                + (lock ? " for update" : ""),
                             taskId,
                             actor.tenantId(),
                             actor.principalId());

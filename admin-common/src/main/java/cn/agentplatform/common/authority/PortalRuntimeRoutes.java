@@ -40,4 +40,12 @@ public final class PortalRuntimeRoutes {
                 "proxy.engine.post.TaskController.create", "proxy.engine.get.MemoryController.list",
                 "proxy.engine.post.MemoryController.create").contains(action);
     }
+
+    public static boolean isPinnedTaskCall(ServiceCall call, String code) {
+        var resource = call.resource();
+        return "proxy.engine.post.TaskController.create".equals(call.action()) && resource != null
+                && "app-version".equals(resource.kind())
+                && resource.id().matches(Pattern.quote(code) + "@[1-9][0-9]*")
+                && resource.versionDigest().matches("[0-9a-f]{64}");
+    }
 }

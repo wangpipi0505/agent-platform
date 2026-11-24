@@ -2,6 +2,7 @@ package cn.agentplatform.engine.application;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformErrors;
@@ -48,7 +49,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * R-5（返工卡）：SSE 非 ASCII 字节级验证——真实端口（Tomcat 真启动，非 MockMvc）逐字节比对。
@@ -118,6 +124,7 @@ class TaskEventsSseRealPortTest {
      */
     @TestConfiguration
     @EnableWebMvc
+    @org.springframework.scheduling.annotation.EnableScheduling
     @Import(Utf8StringMessageConvertersConfiguration.class)
     static class SseUtf8Fixture implements WebMvcConfigurer {
         static final String TENANT = "h212-t";
@@ -186,8 +193,68 @@ class TaskEventsSseRealPortTest {
         }
 
         @Bean
-        Tasks tasks(TraceStore store) throws Exception {
-            var tasks = new Tasks(store);
+        cn.agentplatform.engine.infra.RuntimeClients clients() {
+            var entry = Json.tree(Map.of("modelEntryId", 1));
+            var snapshot = Json.tree(Map.of(
+                    "appCode", "h212-app", "type", "CHAT", "versionNo", 1, "appVersionId", 1,
+                    "candidateSha256", Digest.sha256("r36-published-fixture"),
+                    "config", Map.of("modelEntryId", 1),
+                    "dependencyVersions", Map.of("modelRefs", List.of(Map.of(
+                            "modelEntryId", 1, "entry", entry, "modelBindingRef",
+                            Map.of("bindingId", 1, "sha256", Digest.sha256(Json.canonical(entry))))))));
+            return new cn.agentplatform.engine.infra.RuntimeClients() {
+                @Override
+                public JsonNode get(String service, String path, Actor actor) {
+                    return snapshot;
+                }
+
+                @Override
+                public JsonNode post(String service, String path, Object body, Actor actor) {
+                    return Json.read("{\"inputTokens\":100,\"contextWindow\":10000,"
+                            + "\"maxOutputTokens\":2048,\"tokenizer\":\"fixture\",\"exact\":false}");
+                }
+
+                @Override
+                public JsonNode chatStream(Object body, Actor actor, java.util.function.Consumer<String> chunk) {
+                    MODEL_CALLS.incrementAndGet();
+                    var block = MODEL_BLOCK;
+                    if (block != null) {
+                        block.started().countDown();
+                        try {
+                            if (!block.release().await(5, TimeUnit.SECONDS))
+                                throw new IllegalStateException("model fixture timed out");
+                        } catch (InterruptedException interrupted) {
+                            Thread.currentThread().interrupt();
+                            throw new IllegalStateException(interrupted);
+                        }
+                    }
+                    return Json.tree(Map.of("text", "report", "toolCalls", List.of(), "usage", Map.of("totalTokens", 10)));
+                }
+            };
+        }
+
+        @Bean
+        RunScheduler scheduler(TraceStore store) {
+            return new RunScheduler(store);
+        }
+
+        @Bean
+        RunService runs(TraceStore store, cn.agentplatform.engine.infra.RuntimeClients clients,
+                        RunScheduler scheduler) {
+            var agent = new AgentDriver(store, clients, new ContextAssembler());
+            return new RunService(store, clients, new FlowDriver(store, agent), agent, scheduler);
+        }
+
+        @Bean
+        TaskDispatcher taskDispatcher(TraceStore store) {
+            return new TaskDispatcher(store);
+        }
+
+        @Bean
+        Tasks tasks(TraceStore store, RunService runs, cn.agentplatform.engine.infra.RuntimeClients clients,
+                    TaskDispatcher dispatcher) throws Exception {
+            var execution = new TaskAgentExecution(store, runs, new StepExecutionMapping(store), dispatcher);
+            var tasks = new Tasks(store, new SubagentPlanning(store), clients, execution);
             // 心跳改短照 TaskEventsSseTest 反射先例（同类包内字段可见，直接赋值等价）。
             var field = Tasks.class.getDeclaredField("taskHeartbeatMillis");
             field.setAccessible(true);
@@ -210,6 +277,10 @@ class TaskEventsSseRealPortTest {
             configurer.setDefaultTimeout(60000);
         }
     }
+
+    private static final AtomicInteger MODEL_CALLS = new AtomicInteger();
+    private record ModelBlock(CountDownLatch started, CountDownLatch release) {}
+    private static volatile ModelBlock MODEL_BLOCK;
 
     /** 任务夹具（h212_ 前缀）：中文标题任务。 */
     private long task(String goal) {
@@ -245,6 +316,99 @@ class TaskEventsSseRealPortTest {
             return i;
         }
         return -1;
+    }
+
+    @Test
+    void acceptedAgentRequestCreatesAnEntryDispatch() throws Exception {
+        String requestId = "r36-" + UUID.randomUUID();
+        try (var context = new AnnotationConfigServletWebServerApplicationContext(SseUtf8Fixture.class);
+                var client = java.net.http.HttpClient.newHttpClient()) {
+            var uri = java.net.URI.create("http://127.0.0.1:" + context.getWebServer().getPort()
+                    + "/v1/apps/h212-app/tasks");
+            var request = java.net.http.HttpRequest.newBuilder(uri)
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(Json.write(Map.of(
+                            "requestId", requestId, "mode", "AGENT", "goal", "Generate report",
+                            "inputs", Map.of("message", "Generate report")))))
+                    .build();
+            var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode(), response.body());
+            var task = Json.read(response.body()).path("data");
+            assertEquals(1, db.queryForObject(
+                    "select count(*) from engine.task_dispatch d join engine.task t on t.id=d.task_id"
+                            + " where t.public_id=?",
+                    Integer.class, task.path("taskId").asText()),
+                    "accepted state=" + task.path("state").asText());
+            String taskId = task.path("taskId").asText();
+            String state = "";
+            for (int attempt = 0; attempt < 150; attempt++) {
+                state = db.queryForObject("select state from engine.task where public_id=?", String.class, taskId);
+                if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state)) break;
+                Thread.sleep(30);
+            }
+            assertEquals("SUCCEEDED", state);
+            assertEquals("DONE", db.queryForObject(
+                    "select d.state from engine.task_dispatch d join engine.task t on t.id=d.task_id where t.public_id=?",
+                    String.class, taskId));
+            assertEquals(1, db.queryForObject(
+                    "select count(*) from engine.task_event e join engine.task t on t.id=e.task_id"
+                            + " where t.public_id=? and e.type='TASK_FINISHED'",
+                    Integer.class, taskId));
+            assertEquals(0, db.queryForObject(
+                    "select count(*) from engine.run_event e join engine.task_step s on s.run_id=e.run_id"
+                            + " join engine.task t on t.id=s.task_id where t.public_id=? and e.type='NODE_FAILED'",
+                    Integer.class, taskId));
+            var resultUri = uri.resolve("/v1/tasks/" + taskId + "/result");
+            var result = client.send(java.net.http.HttpRequest.newBuilder(resultUri).GET().build(),
+                    java.net.http.HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, result.statusCode(), result.body());
+            assertTrue(Json.read(result.body()).path("data").path("result").toString().contains("report"));
+            int calls = MODEL_CALLS.get();
+            assertTrue(calls > 0);
+            var replay = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, replay.statusCode(), replay.body());
+            assertEquals(taskId, Json.read(replay.body()).path("data").path("taskId").asText());
+            assertEquals(calls, MODEL_CALLS.get());
+        }
+    }
+
+    @Test
+    void cancellingAgentTaskFencesTheInFlightRunAndPreventsReplayExecution() throws Exception {
+        var block = new ModelBlock(new CountDownLatch(1), new CountDownLatch(1));
+        MODEL_BLOCK = block;
+        try (var context = new AnnotationConfigServletWebServerApplicationContext(SseUtf8Fixture.class);
+                var client = java.net.http.HttpClient.newHttpClient()) {
+            try {
+                String base = "http://127.0.0.1:" + context.getWebServer().getPort();
+                var post = java.net.http.HttpRequest.newBuilder(java.net.URI.create(base + "/v1/apps/h212-app/tasks"))
+                        .header("Content-Type", "application/json")
+                        .POST(java.net.http.HttpRequest.BodyPublishers.ofString(Json.write(Map.of(
+                                "requestId", "r36-cancel-" + UUID.randomUUID(), "mode", "AGENT", "goal", "Generate report",
+                                "toolPolicy", Map.of("allowedToolRefs", List.of())))))
+                        .build();
+                var response = client.send(post, java.net.http.HttpResponse.BodyHandlers.ofString());
+                assertEquals(200, response.statusCode(), response.body());
+                var taskId = Json.read(response.body()).path("data").path("taskId").asText();
+                assertTrue(block.started().await(5, TimeUnit.SECONDS));
+                int calls = MODEL_CALLS.get();
+                var cancel = java.net.http.HttpRequest.newBuilder(java.net.URI.create(base + "/v1/tasks/" + taskId + "/cancel"))
+                        .POST(java.net.http.HttpRequest.BodyPublishers.noBody()).build();
+                var cancelled = client.send(cancel, java.net.http.HttpResponse.BodyHandlers.ofString());
+                assertEquals(200, cancelled.statusCode(), cancelled.body());
+                assertEquals("CANCELLED", Json.read(cancelled.body()).path("data").path("state").asText());
+                block.release().countDown();
+                var replay = client.send(post, java.net.http.HttpResponse.BodyHandlers.ofString());
+                assertEquals("CANCELLED", Json.read(replay.body()).path("data").path("state").asText());
+                assertEquals("CANCELLED", db.queryForObject(
+                        "select r.status from engine.run r join engine.task_step s on s.run_id=r.id"
+                                + " join engine.task t on t.id=s.task_id where t.public_id=?",
+                        String.class, taskId));
+                assertEquals(calls, MODEL_CALLS.get());
+            } finally {
+                block.release().countDown();
+                MODEL_BLOCK = null;
+            }
+        }
     }
 
     /**

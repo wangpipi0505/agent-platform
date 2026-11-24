@@ -321,7 +321,10 @@ public class RuntimeClients implements AutoCloseable {
 
     public JsonNode publishedForRuntime(String code, Actor actor) {
         if (!iam) return get("app", "/internal/apps/" + code + "/published", actor);
-        var retained = AuthorityContext.requireInitialFor(actor, PortalRuntimeRoutes.appResource(code));
+        var current = AuthorityContext.current();
+        var resource = PortalRuntimeRoutes.isPinnedTaskCall(current.call(), code)
+                ? current.call().resource() : PortalRuntimeRoutes.appResource(code);
+        var retained = AuthorityContext.requireInitialFor(actor, resource);
         return published(code, retained);
     }
 
@@ -333,9 +336,10 @@ public class RuntimeClients implements AutoCloseable {
         var root = current.call().resource();
         boolean runtimeRead = PortalRuntimeRoutes.permitsPublishedRead(current.call().action())
                 && PortalRuntimeRoutes.appResource(code).equals(root);
-        boolean runRead = "proxy.engine.post.RunController.run".equals(current.call().action())
+        boolean runRead = ("proxy.engine.post.RunController.run".equals(current.call().action())
                 && "app-version".equals(root.kind())
-                && root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*");
+                && root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*"))
+                || PortalRuntimeRoutes.isPinnedTaskCall(current.call(), code);
         if (!"gateway".equals(current.caller())
                 || !"engine".equals(current.call().target())
                 || !(runtimeRead || runRead)

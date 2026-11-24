@@ -2,9 +2,12 @@ package cn.agentplatform.gateway.infra;
 
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Digest;
+import cn.agentplatform.common.ApiResponse;
+import cn.agentplatform.common.Json;
 import cn.agentplatform.common.authority.CoverageGate;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.LoopbackAuthority;
+import cn.agentplatform.common.authority.MetadataSelectors;
 import cn.agentplatform.common.authority.ResourceBinding;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
@@ -54,6 +57,7 @@ class GatewayIamPortalHttpTest {
     private static LoopbackAuthority iam;
     private static ServletWebServerApplicationContext app;
     private static HttpServer engine;
+    private static final String VERSION_SHA = Digest.sha256("r36-published-version");
     private static String base;
 
     @BeforeAll
@@ -63,6 +67,7 @@ class GatewayIamPortalHttpTest {
                 Map.of("region", Set.of("A"), "dataLabels", Set.of("confidential"))));
         engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
+        engine.createContext("/internal/apps/ops/published-metadata", GatewayIamPortalHttpTest::respondAsApp);
         engine.start();
         var deployment = properties();
         app = (ServletWebServerApplicationContext)
@@ -123,6 +128,7 @@ class GatewayIamPortalHttpTest {
         values.put("agent.security.portal.client-id", "portal-web");
         values.put("agent.security.portal.role-allowlist", "ADMIN,EDITOR,USER");
         values.put("agent.services.engine", "http://127.0.0.1:" + engine.getAddress().getPort());
+        values.put("agent.services.app", "http://127.0.0.1:" + engine.getAddress().getPort());
         // attribute-value-allowlist 是 Map<String,Set<String>>：没有 String→Map 的转换器，而方括号/
         // 点号记法都会被适配成小写键（datalabels），与 camelCase 白名单键集不再相等并报未绑定。
         // 因此键名只留在 application.yml（YAML 保留大小写），测试与生产一样只注入取值。
@@ -373,13 +379,29 @@ class GatewayIamPortalHttpTest {
             String template = path.replace("/ops/", "/{code}/");
             var registered = new ServiceRoutePolicy().require("gateway", "engine", method, template);
             var call = new ServiceCall(registered.target(), registered.action(),
-                    new ResourceBinding("app-runtime", "ops", Digest.sha256("portal-runtime.v1:ops")));
+                    "proxy.engine.post.TaskController.create".equals(registered.action())
+                            ? new ResourceBinding("app-version", "ops@1", VERSION_SHA)
+                            : new ResourceBinding("app-runtime", "ops", Digest.sha256("portal-runtime.v1:ops")));
             String bearer = request.getRequestHeaders().getFirst("Authorization");
             var verified = authority.authorize(bearer.substring("Bearer ".length()), call);
             var actor = verified.actor();
             String body = new String(request.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             var bytes = (actor.tenantId() + "/" + actor.principalId() + " " + method + " "
                     + request.getRequestURI() + " " + body).getBytes(StandardCharsets.UTF_8);
+            request.sendResponseHeaders(200, bytes.length);
+            request.getResponseBody().write(bytes);
+        }
+    }
+
+    private static void respondAsApp(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {
+        try (request; var authority = iam.client("app")) {
+            String bearer = request.getRequestHeaders().getFirst("Authorization");
+            var call = new ServiceCall("app", MetadataSelectors.ACTION, MetadataSelectors.published("tenant-a", "ops"));
+            authority.authorize(bearer.substring("Bearer ".length()), call);
+            byte[] bytes = Json.write(ApiResponse.ok(Map.of(
+                    "appCode", "ops", "versionId", 1, "versionNo", 1, "versionSha256", VERSION_SHA)))
+                    .getBytes(StandardCharsets.UTF_8);
+            request.getResponseHeaders().set("Content-Type", "application/json");
             request.sendResponseHeaders(200, bytes.length);
             request.getResponseBody().write(bytes);
         }

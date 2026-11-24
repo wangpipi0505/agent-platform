@@ -116,6 +116,10 @@ public class RunAdmissionService {
 
     /** 开票：校验网关代理入口的精确形状并换取本次运行的初始授权上限。 */
     RetainedAuthorization opening(String code, Actor actor, boolean protectedAdmission) {
+        return opening(code, actor, protectedAdmission, false);
+    }
+
+    RetainedAuthorization opening(String code, Actor actor, boolean protectedAdmission, boolean taskEntry) {
         if (!protectedAdmission) return null;
         if (admissionStore == null || runAuthority == null)
             throw new PlatformException(403, "IAM_ADMISSION_UNAVAILABLE", "受理授权尚未装配");
@@ -124,7 +128,8 @@ public class RunAdmissionService {
         var root = current.call().resource();
         if (!"gateway".equals(current.caller())
                 || !"engine".equals(current.call().target())
-                || !"proxy.engine.post.RunController.run".equals(current.call().action())
+                || !(taskEntry ? "proxy.engine.post.TaskController.create" : "proxy.engine.post.RunController.run")
+                        .equals(current.call().action())
                 || !"PORTAL".equals(current.operation().sourceKind())
                 || !"PORTAL".equals(current.operation().originKind())
                 || !"app-version".equals(root.kind())
@@ -220,8 +225,8 @@ public class RunAdmissionService {
     }
 
     /** 入库前最终授权：重新开票并复核初始覆盖，防止长内容读取期间授权被收紧。 */
-    RetainedAuthorization bind(String code, Actor actor, boolean protectedAdmission) {
-        RetainedAuthorization proof = opening(code, actor, protectedAdmission);
+    RetainedAuthorization bind(String code, Actor actor, boolean protectedAdmission, boolean taskEntry) {
+        RetainedAuthorization proof = opening(code, actor, protectedAdmission, taskEntry);
         if (protectedAdmission) requireInitialCoverage(proof);
         return proof;
     }

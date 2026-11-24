@@ -213,7 +213,11 @@ public final class RunAuthorityStore {
     static void requirePurpose(VerifiedAuthority a,boolean localOnly){
         if(a==null||a.call()==null||a.operation()==null||a.call().resource()==null)throw denied();
         boolean local=ServiceRoutePolicy.localRunAdvance(a.caller(),a.call(),"delegated",a.operation().sourceKind(),a.operation().originKind());
-        boolean main="gateway".equals(a.caller())&&"engine".equals(a.call().target())&&"proxy.engine.post.RunController.run".equals(a.call().action())&&"app-version".equals(a.call().resource().kind())&&"PORTAL".equals(a.operation().sourceKind())&&"PORTAL".equals(a.operation().originKind());
+        boolean main = "gateway".equals(a.caller()) && "engine".equals(a.call().target())
+                && Set.of("proxy.engine.post.RunController.run", "proxy.engine.post.TaskController.create")
+                        .contains(a.call().action())
+                && "app-version".equals(a.call().resource().kind())
+                && "PORTAL".equals(a.operation().sourceKind()) && "PORTAL".equals(a.operation().originKind());
         if(localOnly?!local:!main)throw denied();same(a.call().resource(),a.operation().resource());
     }
     static void requireWrite(DataSource source){

@@ -116,7 +116,10 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         if ("engine".equals(serviceId) && "gateway".equals(jwt.getClaimAsString("caller"))
                 && "PORTAL".equals(operation.path("origin_kind").asText())
                 && PortalRuntimeRoutes.ownsTemplate(template)) {
-            AuthorityProtocol.same(PortalRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI()), call);
+            var expected = PortalRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI());
+            if (!PortalRuntimeRoutes.isPinnedTaskCall(call, expected.resource().id()))
+                AuthorityProtocol.same(expected, call);
+            else AuthorityProtocol.same(expected.action(), call.action());
         }
         return routes.routes().stream().filter(row->mode.equals(row.mode())
             &&Objects.equals(jwt.getClaimAsString("caller"),row.caller())&&serviceId.equals(row.target())

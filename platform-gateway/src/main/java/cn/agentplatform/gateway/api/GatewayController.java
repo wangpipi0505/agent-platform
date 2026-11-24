@@ -5,9 +5,11 @@ import cn.agentplatform.common.authority.AuthorityProperties;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.GatewayIngressBoundary;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
+import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.gateway.application.IntegrationAccess;
 import cn.agentplatform.gateway.application.PublishedRunProxy;
+import cn.agentplatform.gateway.application.PublishedMetadataClient;
 import cn.agentplatform.gateway.application.RunStatusProxy;
 import cn.agentplatform.gateway.application.RunEventsProxy;
 import cn.agentplatform.gateway.domain.Routes;
@@ -15,6 +17,7 @@ import cn.agentplatform.gateway.domain.Routes;
 import jakarta.servlet.http.*;
 
 import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +40,7 @@ public class GatewayController {
     private final Optional<RunStatusProxy> status;
     private final Optional<RunEventsProxy> events;
     private final Optional<CurrentAuthorityClient> authority;
+    private final ObjectProvider<PublishedMetadataClient> taskMetadata;
     private final ServiceRoutePolicy serviceRoutes = new ServiceRoutePolicy();
 
     public GatewayController(
@@ -54,13 +58,13 @@ public class GatewayController {
 
     public GatewayController(Environment env,IntegrationAccess integration,AuthorityProperties deployment,
             Optional<PublishedRunProxy> published,Optional<RunStatusProxy> status,Optional<RunEventsProxy> events) {
-        this(env, integration, deployment, published, status, events, Optional.empty());
+        this(env, integration, deployment, published, status, events, Optional.empty(), null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public GatewayController(Environment env, IntegrationAccess integration, AuthorityProperties deployment,
             Optional<PublishedRunProxy> published, Optional<RunStatusProxy> status, Optional<RunEventsProxy> events,
-            Optional<CurrentAuthorityClient> authority) {
+            Optional<CurrentAuthorityClient> authority, ObjectProvider<PublishedMetadataClient> taskMetadata) {
         this.env = env;
         this.integration = integration;
         this.deployment = Objects.requireNonNull(deployment);
@@ -68,6 +72,7 @@ public class GatewayController {
         this.status=Objects.requireNonNull(status);
         this.events=Objects.requireNonNull(events);
         this.authority = Objects.requireNonNull(authority);
+        this.taskMetadata = taskMetadata;
     }
 
     private String base(String service) {
@@ -78,10 +83,18 @@ public class GatewayController {
     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
         if ("iam".equals(deployment.mode())) {
             if (PortalRuntimeRoutes.matches(req.getMethod(), req.getRequestURI())) {
-                String source = GatewayIngressBoundary.claimRuntime(req);
+                var source = GatewayIngressBoundary.claimRuntime(req);
                 var call = PortalRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());
+                if ("proxy.engine.post.TaskController.create".equals(call.action())) {
+                    var metadata = taskMetadata == null ? null : taskMetadata.getIfAvailable();
+                    if (metadata == null)
+                        throw new PlatformException(503, "DEPENDENCY_UNAVAILABLE", "应用发布查询暂不可用");
+                    var version = metadata.lookup(source.sourceToken(), source.subject(), call.resource().id());
+                    call = new ServiceCall(call.target(), call.action(), version.resource());
+                }
                 var ticket = authority.orElseThrow(() -> new PlatformException(
-                        503, "DEPENDENCY_UNAVAILABLE", "门户运行授权服务暂不可用")).exchange(source, call);
+                        503, "DEPENDENCY_UNAVAILABLE", "门户运行授权服务暂不可用"))
+                        .exchange(source.sourceToken(), call);
                 forward(req, res, call.target(), ticket.value());
                 return;
             }

@@ -27,12 +27,42 @@ import java.util.*;
  */
 @Service
 public class StepExecutionMapping {
+  static final String ENTRY = "entry";
 
   private final TraceStore store;
 
   public StepExecutionMapping(TraceStore store) {
     this.store = store;
   }
+
+  /** Runs inside the real run's admission transaction, before the scheduler can see it. */
+  void admit(long taskId, long runId, Actor actor) {
+    var rows = store.db().queryForList(
+        "select state,app_code,config_release_id,config_digest from engine.task"
+            + " where id=? and tenant_id=? and principal_id=? for update",
+        taskId, actor.tenantId(), actor.principalId());
+    if (rows.isEmpty() || !"ACCEPTED".equals(rows.getFirst().get("state")))
+      throw new EntryAlreadySettled();
+    var task = rows.getFirst();
+    var run = store.db().queryForMap(
+        "select public_id,app_code,app_version_id,snapshot->>'candidateSha256' as digest"
+            + " from engine.run where id=? and tenant_id=? and principal_id=?",
+        runId, actor.tenantId(), actor.principalId());
+    if (!Objects.equals(task.get("app_code"), run.get("app_code"))
+        || !Objects.equals(task.get("config_release_id"), "appver-" + run.get("app_version_id"))
+        || !Objects.equals(task.get("config_digest"), run.get("digest")))
+      throw new PlatformException(409, "APP_PUBLICATION_CHANGED", "任务受理后发布版本已变化");
+    store.db().update("insert into engine.task_step(task_id,step_id,state,run_id) values(?,?,'READY',?)",
+        taskId, ENTRY, runId);
+    store.db().update("insert into engine.task_dispatch(task_id,step_id,dispatch_key,state,run_id,available_at)"
+            + " values(?,?,?,'PENDING',?,now())",
+        taskId, ENTRY, dispatchKey(taskId, ENTRY), runId);
+    store.db().update("update engine.task set state='QUEUED',state_version=state_version+1,"
+            + " updated_at=now() where id=?", taskId);
+    appendTaskEvent(taskId, "STEP_READY", Json.tree(Map.of("stepId", ENTRY, "runId", run.get("public_id"))));
+  }
+
+  static final class EntryAlreadySettled extends RuntimeException {}
 
   /** 五 kind 枚举（contracts/task-states.md plan_step.kind）。 */
   public static final Set<String> KINDS = Set.of("SKILL", "FLOW", "AGENT", "MODEL", "CONDITION");

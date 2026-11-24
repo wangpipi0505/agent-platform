@@ -62,6 +62,14 @@ import java.util.Objects;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "agent.security.mode", havingValue = "iam")
 public class GatewayIamPortalConfiguration {
+    @Bean(destroyMethod = "close")
+    @org.springframework.context.annotation.Lazy
+    cn.agentplatform.gateway.application.PublishedMetadataClient taskPublishedMetadata(
+            CurrentAuthorityClient authority, Environment environment) {
+        return new cn.agentplatform.gateway.application.PublishedMetadataClient(
+                java.net.URI.create(environment.getRequiredProperty("agent.services.app")),
+                authority, testProfile(environment));
+    }
 
     /**
      * The deployment clock. Authority proof windows, ticket expiry and the ingress capture all read

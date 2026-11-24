@@ -56,10 +56,114 @@ import java.util.*;
 @Service
 public class TaskDispatcher {
 
+  private static final int ENTRY_BATCH_SIZE = 32;
+  private static final int ENTRY_LEASE_SECONDS = 30;
+  private static final Set<String> TERMINAL = Set.of("SUCCEEDED", "FAILED", "CANCELLED");
   private final TraceStore store;
+  private final String entryOwner = "task-" + UUID.randomUUID();
 
   public TaskDispatcher(TraceStore store) {
     this.store = store;
+  }
+
+  @org.springframework.scheduling.annotation.Scheduled(fixedDelayString = "${agent.task.dispatch.poll-millis:500}")
+  public void pollEntries() {
+    var entries = store.db().queryForList(
+        "select d.task_id from engine.task_dispatch d join engine.task t on t.id=d.task_id"
+            + " join engine.run r on r.id=d.run_id"
+            + " where d.step_id=? and t.state in ('QUEUED','RUNNING') and r.trigger_type in ('CHAT','TASK')"
+            + " and d.available_at<=now() and (d.state='PENDING' or (d.state='LEASED' and"
+            + " (d.lease_until<=now() or (d.lease_owner=? and r.status in ('SUCCEEDED','FAILED','CANCELLED')))))"
+            + " order by d.available_at,d.task_id limit ?",
+        Long.class, StepExecutionMapping.ENTRY, entryOwner, ENTRY_BATCH_SIZE);
+    for (long taskId : entries) {
+      try {
+        store.atomic(() -> {
+          settleEntry(taskId);
+          return null;
+        });
+      } catch (RuntimeException failure) {
+        org.slf4j.LoggerFactory.getLogger(TaskDispatcher.class)
+            .warn("Task dispatch retry taskId={} cause={}", taskId, failure.getClass().getSimpleName());
+      }
+    }
+  }
+
+  private void settleEntry(long taskId) {
+    var tasks = store.db().queryForList("select state from engine.task where id=? for update",
+        String.class, taskId);
+    if (tasks.isEmpty() || TERMINAL.contains(tasks.getFirst())) return;
+    var row = store.db().queryForMap(
+        "select d.state,d.lease_owner,d.generation,d.lease_until>now() as live,"
+            + " r.status,r.public_id,r.output::text as output from engine.task_dispatch d"
+            + " join engine.run r on r.id=d.run_id where d.task_id=? and d.step_id=?",
+        taskId, StepExecutionMapping.ENTRY);
+    if ("DONE".equals(row.get("state"))) return;
+    int generation;
+    if (entryOwner.equals(row.get("lease_owner")) && Boolean.TRUE.equals(row.get("live"))) {
+      generation = ((Number) row.get("generation")).intValue();
+    } else {
+      var receipt = claim(taskId, StepExecutionMapping.ENTRY, entryOwner, ENTRY_LEASE_SECONDS);
+      if (receipt == null) return;
+      generation = ((Number) receipt.get("generation")).intValue();
+      store.db().update("update engine.task set state='RUNNING',state_version=state_version+1,"
+          + " updated_at=now() where id=? and state='QUEUED'", taskId);
+    }
+    String terminal = row.get("status").toString();
+    if (!TERMINAL.contains(terminal)) return;
+
+    String resultDigest = null;
+    String resultRef = null;
+    if ("SUCCEEDED".equals(terminal)) {
+      resultDigest = Digest.sha256(Json.canonical(TraceStore.json(row.get("output"))));
+      resultRef = "pg:run/" + row.get("public_id") + "/output";
+      complete(taskId, StepExecutionMapping.ENTRY, entryOwner, generation, resultDigest);
+    } else {
+      int finished = store.db().update("update engine.task_dispatch set state='DONE',updated_at=now()"
+              + " where task_id=? and step_id=? and state='LEASED' and generation=? and lease_owner=?"
+              + " and lease_until>now()", taskId, StepExecutionMapping.ENTRY, generation, entryOwner);
+      if (finished == 0) return;
+      store.db().update("update engine.task_step set state=?, state_version=state_version+1,"
+              + " updated_at=now() where task_id=? and step_id=?", terminal, taskId, StepExecutionMapping.ENTRY);
+      appendTaskEvent(taskId, "STEP_FINISHED", Json.tree(Map.of("stepId", StepExecutionMapping.ENTRY, "state", terminal)));
+    }
+    store.db().update("update engine.task set state=?,state_version=state_version+1,"
+        + " result_ref=?,result_digest=?,updated_at=now() where id=?", terminal, resultRef, resultDigest, taskId);
+    appendTaskEvent(taskId, "TASK_FINISHED", Json.tree(Map.of("state", terminal, "runId", row.get("public_id"))));
+  }
+
+  void rejectEntry(long taskId, String reason) {
+    store.atomic(() -> {
+      int changed = store.db().update("update engine.task set state='FAILED',state_version=state_version+1,"
+          + " updated_at=now() where id=? and state='ACCEPTED'", taskId);
+      if (changed == 1) appendTaskEvent(taskId, "TASK_FINISHED",
+          Json.tree(Map.of("state", "FAILED", "reasonCode", reason)));
+      return null;
+    });
+  }
+
+  boolean cancelEntry(long taskId) {
+    var linked = store.db().queryForList(
+        "select d.run_id from engine.task_dispatch d join engine.run r on r.id=d.run_id"
+            + " where d.task_id=? and d.step_id=? and r.trigger_type in ('CHAT','TASK')",
+        Long.class, taskId, StepExecutionMapping.ENTRY);
+    if (linked.isEmpty()) return true;
+    long runId = linked.getFirst();
+    int cancelled = store.db().update("update engine.run set status='CANCELLED',stop_reason='USER_CANCEL',"
+            + " ended_at=now() where id=? and status not in ('SUCCEEDED','FAILED','CANCELLED')", runId);
+    if (cancelled == 0) return false;
+    // The run row serializes cancellation with new tool admission and dispatch.
+    store.db().update("update engine.node_instance set status='CANCELLED',ended_at=now() where run_id=?"
+        + " and status not in ('SUCCEEDED','FAILED','SKIPPED','ABANDONED','CANCELLED')", runId);
+    store.db().update("update engine.tool_call set status='ABANDONED' where run_id=?"
+        + " and status in ('REGISTERED','EXECUTING')", runId);
+    store.event(runId, "RUN_FINISHED", Map.of("status", "CANCELLED"));
+    store.db().update("update engine.task_step set state='CANCELLED',state_version=state_version+1,"
+        + " updated_at=now() where task_id=? and step_id=? and state not in ('SUCCEEDED','FAILED','CANCELLED')",
+        taskId, StepExecutionMapping.ENTRY);
+    store.db().update("update engine.task_dispatch set state='DONE',updated_at=now()"
+        + " where task_id=? and step_id=? and state<>'DONE'", taskId, StepExecutionMapping.ENTRY);
+    return true;
   }
 
   /**
