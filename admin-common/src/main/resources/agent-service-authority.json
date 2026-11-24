@@ -37,6 +37,30 @@
  },
  {
   "method": "GET",
+  "template": "/internal/platform-authorization/session",
+  "caller": "skill",
+  "target": "app",
+  "action": "platform.authorization.session",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/PlatformAuthorizationController.java::session",
+  "callerSource": "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java::buildActor",
+  "reason": "R-39 接收端按照同一门户授权复核技能和插件权限"
+ },
+ {
+  "method": "GET",
+  "template": "/internal/platform-authorization/session",
+  "caller": "monitor",
+  "target": "app",
+  "action": "platform.authorization.session",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/PlatformAuthorizationController.java::session",
+  "callerSource": "admin-common/src/main/java/cn/agentplatform/common/authority/ServiceAuthorization.java::buildActor",
+  "reason": "R-39 运行审计接收端复核平台 audit.read"
+ },
+ {
+  "method": "GET",
   "template": "/admin/platform-authorization/users",
   "caller": "gateway",
   "target": "app",
@@ -670,6 +694,17 @@
   "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java:47",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/application/IntegrationAccess.java:77",
   "reason": ""
+ },
+ {
+  "method": "POST",
+  "template": "/internal/integration-credentials/{id}/verify",
+  "caller": "gateway",
+  "target": "app",
+  "action": "integration.credential.verify",
+  "mode": "workload",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/IntegrationController.java::verify",
+  "reason": "R-40 按凭据档案及摘要核验 ApiKey，响应不携带密钥材料"
  },
  {
   "method": "GET",
@@ -3037,7 +3072,7 @@
  },
  {
   "method": "POST",
-  "template": "/admin/skills/{}/versions/{}/rebind-evidence",
+  "template": "/admin/skills/{code}/versions/{version}/rebind-evidence",
   "caller": "gateway",
   "target": "skill",
   "action": "proxy.skill.post.SkillEvidenceController.rebind",
@@ -3049,7 +3084,7 @@
  },
  {
   "method": "POST",
-  "template": "/admin/skills/{}/versions/{}/service-probe",
+  "template": "/admin/skills/{code}/versions/{version}/service-probe",
   "caller": "gateway",
   "target": "skill",
   "action": "proxy.skill.post.SkillController.serviceProbe",

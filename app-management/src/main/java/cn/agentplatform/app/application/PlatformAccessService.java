@@ -34,16 +34,18 @@ public class PlatformAccessService {
     public SessionAccess session(Actor identity) {
         var rows = access(identity);
         var roles = new TreeSet<String>();
+        var globalRoles = new TreeSet<String>();
         var capabilities = new TreeSet<String>();
         var pages = new TreeSet<String>();
         for (var row : rows) {
             roles.add(row.role());
+            if (row.applications().isEmpty()) globalRoles.add(row.role());
             if (row.capability() == null || (!row.capability().startsWith("agent.") && !row.applications().isEmpty()))
                 continue;
             capabilities.add(row.capability());
             if (row.page() != null) pages.add(row.page());
         }
-        return new SessionAccess(identity.tenantId(), identity.principalId(), roles, capabilities, pages);
+        return new SessionAccess(identity.tenantId(), identity.principalId(), roles, globalRoles, capabilities, pages);
     }
 
     public ApplicationScope scope(Actor identity, String capability) {
@@ -75,10 +77,11 @@ public class PlatformAccessService {
 
     private record AccessRow(String role, List<String> applications, String capability, String page) {}
 
-    public record SessionAccess(String tenantId, String principalId, Set<String> roles,
+    public record SessionAccess(String tenantId, String principalId, Set<String> roles, Set<String> globalRoles,
                                 Set<String> capabilities, Set<String> pages) {
         public SessionAccess {
             roles = Set.copyOf(roles);
+            globalRoles = Set.copyOf(globalRoles);
             capabilities = Set.copyOf(capabilities);
             pages = Set.copyOf(pages);
         }

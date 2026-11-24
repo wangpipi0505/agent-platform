@@ -3,6 +3,7 @@ package cn.agentplatform.monitor.infra;
 import java.time.Clock;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,7 @@ import cn.agentplatform.common.SecurityConfiguration;
 import cn.agentplatform.common.authority.AuthorityProperties;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.HttpCurrentAuthorityClient;
+import cn.agentplatform.common.authority.PlatformAccessClient;
 import cn.agentplatform.common.authority.ServiceAuthorization;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.common.authority.ServiceTrustChain;
@@ -55,12 +57,13 @@ public class ServiceTrustChainConfiguration implements WebMvcConfigurer {
 
     @Bean
     ServiceAuthorization serviceAuthorization(AuthorityProperties deployment,
-            ObjectProvider<CurrentAuthorityClient> authority) {
+            ObjectProvider<CurrentAuthorityClient> authority, @Value("${agent.services.app}") String appOrigin) {
         if (!SERVICE_ID.equals(deployment.serviceId())) {
             throw new IllegalStateException(
                     "IAM_SERVICE_ID_MISMATCH: expected " + SERVICE_ID + " but deployment is " + deployment.serviceId());
         }
-        return new ServiceAuthorization(SERVICE_ID, new ServiceRoutePolicy(), authority.getObject());
+        return ServiceAuthorization.forBuildService(SERVICE_ID, new ServiceRoutePolicy(), authority.getObject(),
+                new PlatformAccessClient(appOrigin));
     }
 
     @Bean(destroyMethod = "close")

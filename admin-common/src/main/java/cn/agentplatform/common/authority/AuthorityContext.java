@@ -16,16 +16,18 @@ public final class AuthorityContext implements AutoCloseable {
     private final RetainedAuthorization firstMapping;
     private boolean portalEventsClaimed;
     private final Supplier<RetainedAuthorization> refresh;
+    private final Actor buildActor;
     private boolean closed;
     private boolean invalidated;
-    private AuthorityContext(RetainedAuthorization mapping, Supplier<RetainedAuthorization> refresh) {
+    private AuthorityContext(RetainedAuthorization mapping, Supplier<RetainedAuthorization> refresh, Actor buildActor) {
         this.mapping = Objects.requireNonNull(mapping);
         this.firstMapping = mapping;
         this.refresh = refresh;
+        this.buildActor = buildActor;
         previous = CURRENT.get();
         CURRENT.set(this);
     }
-    public static AuthorityContext bind(VerifiedAuthority value){return new AuthorityContext(RetainedAuthorization.currentOnly(value),null);}
+    public static AuthorityContext bind(VerifiedAuthority value){return new AuthorityContext(RetainedAuthorization.currentOnly(value),null,null);}
     public static VerifiedAuthority current(){
         var frame=frame();
         try{if(frame.mapping.hasInitialProof())frame.mapping.requireVerified();return frame.mapping.current();}
@@ -35,7 +37,16 @@ public final class AuthorityContext implements AutoCloseable {
         Objects.requireNonNull(refresh);return bindRetained(RetainedAuthorization.currentOnly(value),()->RetainedAuthorization.currentOnly(refresh.get()));
     }
     static AuthorityContext bindRetained(RetainedAuthorization mapping,Supplier<RetainedAuthorization> refresh){
-        return new AuthorityContext(mapping,Objects.requireNonNull(refresh));
+        return bindRetained(mapping, refresh, null);
+    }
+    static AuthorityContext bindRetained(RetainedAuthorization mapping, Supplier<RetainedAuthorization> refresh,
+            Actor buildActor) {
+        return new AuthorityContext(mapping, Objects.requireNonNull(refresh), buildActor);
+    }
+    public static Actor requestActor() {
+        var verified = current();
+        var buildActor = frame().buildActor;
+        return buildActor == null ? verified.actor() : buildActor;
     }
     public static VerifiedAuthority requireFor(Actor actor,ResourceBinding resource){
         return refresh(actor,resource,false).current();

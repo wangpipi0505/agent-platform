@@ -4,9 +4,12 @@ import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.AuthorityContext;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.EvaluationCandidateBinding;
+import cn.agentplatform.common.authority.PlatformBuildRoutes;
 import cn.agentplatform.common.authority.ResourceBinding;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
+import cn.agentplatform.common.authority.SubjectKey;
+import cn.agentplatform.common.authority.VerifiedAuthority;
 import cn.agentplatform.monitor.domain.EvaluationAssertions;
 import cn.agentplatform.monitor.domain.EvaluationRules;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -134,6 +137,11 @@ public class EvaluationService {
     private Object callRaw(String method, String url, Map<String, Object> body) {
         boolean iam = "iam".equals(securityMode);
         String delegated = iam ? evaluationTicket(method, URI.create(url), body) : null;
+        return callRaw(method, url, body, delegated);
+    }
+
+    private Object callRaw(String method, String url, Map<String, Object> body, String delegated) {
+        boolean iam = delegated != null;
         RestClient transport = iam ? delegatedHttp : http;
         try {
             String bearer = "Bearer " + (iam ? delegated : ServiceTokens.issue(Actor.current()));
@@ -202,12 +210,16 @@ public class EvaluationService {
                 || current.operation() == null || !"PORTAL".equals(current.operation().originKind())
                 || !expected.equals(current.call().resource()))
             throw evaluationDenied();
-        var verified = AuthorityContext.requireFor(current.actor(), expected);
+        var call = routes.require("monitor", target, method, template);
+        return forward(current, new ServiceCall(target, call.action(), expected));
+    }
+
+    private String forward(VerifiedAuthority current, ServiceCall call) {
+        var verified = AuthorityContext.requireFor(current.actor(), call.resource());
         var client = authority == null ? null : authority.getIfAvailable();
         if (client == null)
             throw fail(503, "DEPENDENCY_UNAVAILABLE", "评测服务授权暂不可用");
-        var call = routes.require("monitor", target, method, template);
-        var ticket = client.forward(verified, new ServiceCall(target, call.action(), expected));
+        var ticket = client.forward(verified, call);
         if (ticket == null || !verified.operation().equals(ticket.operation())
                 || ticket.expiresAt() == null || !ticket.expiresAt().isAfter(Instant.now())
                 || ticket.value() == null || ticket.value().isBlank()) throw evaluationDenied();
@@ -875,6 +887,12 @@ public class EvaluationService {
         if (!Set.of("approvals", "statistics", "audit").contains(kind))
             throw fail(400, "INVALID_PROJECTION", "不支持的投影");
         if (kind.equals("statistics")) Actor.current().requireRole("ADMIN");
+        if (iamEnabled() && kind.equals("audit")) {
+            var current = AuthorityContext.current();
+            var subject = new SubjectKey(current.actor().tenantId(), current.actor().principalId());
+            var call = PlatformBuildRoutes.runAudit(routes, subject);
+            return callRaw("GET", engineUrl + PlatformBuildRoutes.RUN_AUDIT, Map.of(), forward(current, call));
+        }
         return callRaw("GET", engineUrl + "/internal/" + kind, Map.of());
     }
 

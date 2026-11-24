@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Service
@@ -73,13 +75,42 @@ public class IntegrationService {
     /** 认证专用例外：首次opaque凭据尚无用户租户，只能由网关专用身份用全局id解析权威归属，绝不采信body租户。 */
     public Map<String, Object> authenticate(long id) {
         gatewayIdentity();
+        var credential = credential(id);
+        credential.remove("secretSha256");
+        return credential;
+    }
+
+    /** Called after the gateway workload and its concrete credential binding have been verified. */
+    public Map<String, Object> verifyApiKey(long id, String secret) {
+        if (secret == null || secret.isEmpty() || secret.length() > 256) throw invalidApiKey();
+        Map<String, Object> credential;
+        try {
+            credential = credential(id);
+        } catch (PlatformException error) {
+            if (error.status() == 404) throw invalidApiKey();
+            throw error;
+        }
+        String stored = (String) credential.remove("secretSha256");
+        if (!MessageDigest.isEqual(stored.getBytes(StandardCharsets.US_ASCII),
+                Digest.sha256(secret).getBytes(StandardCharsets.US_ASCII))
+                || !"ACTIVE".equals(credential.get("status"))) throw invalidApiKey();
+        credential.put("policyDigest", IntegrationClaims.digest(Json.tree(credential)));
+        credential.remove("secretRef");
+        return credential;
+    }
+
+    private static PlatformException invalidApiKey() {
+        return error(401, "INVALID_CREDENTIAL", "集成凭据无效");
+    }
+
+    private Map<String, Object> credential(long id) {
         var rows =
                 db.query(
                         "select"
-                            + " id,tenant_id,app_code,biz_system_code,status,secret_ref,claim_limits,allowed_origins,role_mapping"
+                            + " id,tenant_id,app_code,biz_system_code,status,secret_ref,secret_sha256,claim_limits,allowed_origins,role_mapping"
                             + " from app.integration_credential where id=?",
                         (r, n) ->
-                                Map.<String, Object>of(
+                                new LinkedHashMap<>(Map.<String, Object>of(
                                         "id",
                                         r.getLong("id"),
                                         "tenantId",
@@ -92,12 +123,14 @@ public class IntegrationService {
                                         r.getString("status"),
                                         "secretRef",
                                         r.getString("secret_ref"),
+                                        "secretSha256",
+                                        r.getString("secret_sha256"),
                                         "claimLimits",
                                         Json.read(r.getString("claim_limits"), Object.class),
                                         "allowedOrigins",
                                         Json.read(r.getString("allowed_origins"), Object.class),
                                         "roleMapping",
-                                        Json.read(r.getString("role_mapping"), Object.class)),
+                                        Json.read(r.getString("role_mapping"), Object.class))),
                         id);
         if (rows.isEmpty()) throw error(404, "INTEGRATION_NOT_FOUND", "集成凭据不存在");
         return rows.getFirst();
@@ -114,6 +147,10 @@ public class IntegrationService {
     /** CORS首次预检没有用户租户；专用网关身份只能查询全局ACTIVE来源是否存在，不能读取租户记录。 */
     public Map<String, Object> origins(String origin) {
         gatewayIdentity();
+        return checkOrigin(origin);
+    }
+
+    public Map<String, Object> checkOrigin(String origin) {
         try {
             IntegrationRules.origins(List.of(origin));
         } catch (Exception ex) {

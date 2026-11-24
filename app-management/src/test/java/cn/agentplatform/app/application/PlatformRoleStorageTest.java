@@ -101,6 +101,8 @@ class PlatformRoleStorageTest {
             db.update("insert into app.platform_user_role(tenant_id,subject,platform_role,app_scope,granted_by)"
                     + " values('tenant-a',?,'BUILDER','[\"app-a\"]','fixture')", subject);
             assertThat(access.session(Actor.current()).roles()).containsExactly("BUILDER");
+            assertThat(access.session(Actor.current()).globalRoles()).isEmpty();
+            assertThat(access.session(Actor.current()).capabilities()).doesNotContain("skill.manage", "plugin.manage");
             assertThat(access.scope(Actor.current(), PlatformAccessService.VIEW).codes())
                     .containsExactly("app-a");
             controller.metadata("app-a", body);

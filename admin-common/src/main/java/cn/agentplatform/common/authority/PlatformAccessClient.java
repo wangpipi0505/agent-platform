@@ -1,20 +1,15 @@
-package cn.agentplatform.gateway.infra;
+package cn.agentplatform.common.authority;
 
 import cn.agentplatform.common.PlatformException;
-import cn.agentplatform.common.authority.PlatformBuildRoutes;
-import cn.agentplatform.common.authority.ServiceTicket;
-import cn.agentplatform.common.authority.SubjectKey;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
 
-@Component
 public final class PlatformAccessClient {
     private final RestClient app;
 
@@ -45,9 +40,26 @@ public final class PlatformAccessClient {
     }
 
     public void require(ServiceTicket ticket, SubjectKey subject, String capability) {
-        for (var assigned : session(ticket, subject).path("capabilities"))
-            if (assigned.isTextual() && capability.equals(assigned.textValue())) return;
+        requireCapability(session(ticket, subject), capability);
+    }
+
+    boolean isGlobalAdministrator(ServiceTicket ticket, SubjectKey subject, String capability) {
+        var access = session(ticket, subject);
+        requireCapability(access, capability);
+        var roles = access.path("globalRoles");
+        if (!roles.isArray()) throw unavailable();
+        return contains(roles, "ADMIN");
+    }
+
+    private static void requireCapability(JsonNode access, String capability) {
+        if (contains(access.path("capabilities"), capability)) return;
         throw new PlatformException(403, "PLATFORM_CAPABILITY_DENIED", "当前平台授权不允许此操作");
+    }
+
+    private static boolean contains(JsonNode values, String expected) {
+        for (var value : values)
+            if (value.isTextual() && expected.equals(value.textValue())) return true;
+        return false;
     }
 
     private static PlatformException unavailable() {

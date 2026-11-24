@@ -29,7 +29,7 @@ public record Actor(
         if ("workload".equals(jwt.getClaims().get("authority_mode")))
             throw new PlatformException(403, "SYS-AUTH-403", "机器能力不能映射为用户身份");
         if ("delegated".equals(jwt.getClaimAsString("authority_mode"))) {
-            var current = cn.agentplatform.common.authority.AuthorityContext.current().actor();
+            var current = cn.agentplatform.common.authority.AuthorityContext.requestActor();
             if (!current.tenantId().equals(jwt.getClaimAsString("tenant_id"))
                     || !current.principalId().equals(jwt.getSubject()))
                 throw new PlatformException(403, "SYS-AUTH-403", "当前授权主体不一致");

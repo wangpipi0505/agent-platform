@@ -2,7 +2,6 @@ package cn.agentplatform.gateway.api;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
-import cn.agentplatform.gateway.infra.PlatformAccessClient;
 import jakarta.servlet.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;

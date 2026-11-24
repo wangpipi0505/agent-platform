@@ -6,6 +6,7 @@ import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 import cn.agentplatform.common.authority.GatewayIngressBoundary;
 import cn.agentplatform.common.authority.PlatformBuildRoutes;
+import cn.agentplatform.common.authority.PlatformAccessClient;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
@@ -46,7 +47,7 @@ public class GatewayController {
     private final Optional<RunEventsProxy> events;
     private final Optional<CurrentAuthorityClient> authority;
     private final ObjectProvider<PublishedMetadataClient> taskMetadata;
-    private cn.agentplatform.gateway.infra.PlatformAccessClient platformAccess;
+    private PlatformAccessClient platformAccess;
     private final ServiceRoutePolicy serviceRoutes = new ServiceRoutePolicy();
 
     public GatewayController(
@@ -86,7 +87,7 @@ public class GatewayController {
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    void platformAccess(cn.agentplatform.gateway.infra.PlatformAccessClient client) {
+    void platformAccess(PlatformAccessClient client) {
         this.platformAccess = client;
     }
 
