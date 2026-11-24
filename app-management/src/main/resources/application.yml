@@ -18,6 +18,8 @@ spring:
     schemas: app
     locations: classpath:db/migration
     create-schemas: true
+    # Business migrations stay below V901, including on databases that already recorded the demo seed.
+    out-of-order: true
 agent:
   security:
     jwt-secret: ${AGENT_JWT_SECRET}

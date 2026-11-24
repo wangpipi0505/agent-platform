@@ -23,7 +23,7 @@ class PlatformRoleStorageTest {
         assertThat(db.queryForObject("select current_database()", String.class))
                 .isEqualTo("agent_platform_role_storage_test");
         Flyway.configure().dataSource(source).schemas("app").defaultSchema("app")
-                .locations("classpath:db/migration").load().migrate();
+                .locations("classpath:db/migration").outOfOrder(true).load().migrate();
 
         String subject = UUID.randomUUID().toString();
         String insert = "insert into app.platform_user_role(tenant_id,subject,platform_role,granted_by)"
