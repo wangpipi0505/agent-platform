@@ -193,7 +193,8 @@ class DecisionStoreGrantRetentionTest extends DelegatedTestSupport {
     }
 
     private DelegatedAuthority authority(DecisionStore store, Clock clock) {
-        return new DelegatedAuthority(keys, tickets, routes, store, delegation, properties, identity, issuer, clock);
+        return new DelegatedAuthority(keys, tickets, routes, store, delegation, properties, identity, issuer, clock,
+                sessions);
     }
 
     private static AuthorityRequest resumeRequest(String grantRef, String nonce) {

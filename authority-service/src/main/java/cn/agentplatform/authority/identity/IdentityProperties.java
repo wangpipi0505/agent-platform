@@ -24,7 +24,7 @@ import java.util.Set;
  * environment 是接入档案声明的部署环境，只作为会话展示/诊断属性，不进入签名面
  * （签进去的 {@code attributes} 只能是委派天花板维度，见 {@code SessionService.CEILING_KEYS}）。
  *
- * @param enabled        是否启用 {@code operation=session}；默认关，保证既有部署行为不变
+ * @param enabled        是否启用 {@code operation=session}，默认关闭
  * @param url            user-mgmt 基地址（只允许 http/https，不允许携带 userinfo 或片段）
  * @param apiKeyRef      默认取哪个 API-Key（{@code env:NAME}），请求体可覆盖
  * @param identityPath   身份查询路径，默认为 user-mgmt 的 {@code /system/apikeys/identity/self}
@@ -76,47 +76,19 @@ public record IdentityProperties(
         roleDenylist =
                 roleDenylist == null ? Set.of("SERVICE", "GATEWAY_AUTH") : Set.copyOf(roleDenylist);
         if (enabled) {
-            requireText(url, "url");
-            requireText(tenant, "tenant");
+            validateDirectory(url, tenant, protocol, activeStatus, connectTimeoutMs, readTimeoutMs);
             requireText(issuer, "issuer");
             requireText(audience, "audience");
             requireText(clientId, "clientId");
             requireText(scope, "scope");
             requireText(bizSystemCode, "bizSystemCode");
             requireText(identityPath, "identityPath");
-            requireText(protocol, "protocol");
-            requireText(activeStatus, "activeStatus");
-            if (!PROTOCOL_USER_MGMT.equals(protocol)) {
-                throw new IllegalStateException(
-                        "AUTHORITY_IDENTITY_INVALID: 身份源协议 "
-                                + protocol
-                                + " 尚未实现（当前仅支持 USER_MGMT）；其它协议必须先登记为平台适配器，"
-                                + "不得用脚本或任意表达式替代");
-            }
             if (!identityPath.startsWith("/")) {
                 throw new IllegalStateException(
                         "AUTHORITY_IDENTITY_INVALID: identity-path 必须以 / 开头");
             }
-            String lower = url.toLowerCase(Locale.ROOT);
-            if (!(lower.startsWith("http://") || lower.startsWith("https://"))
-                    || url.indexOf('@') >= 0
-                    || url.indexOf('#') >= 0
-                    || url.endsWith("/")) {
-                throw new IllegalStateException(
-                        "AUTHORITY_IDENTITY_INVALID: url 必须是 http(s) 基地址且不含 userinfo/片段/尾斜杠");
-            }
-            if (connectTimeoutMs < 100
-                    || connectTimeoutMs > 10_000
-                    || readTimeoutMs < 100
-                    || readTimeoutMs > 10_000) {
-                throw new IllegalStateException("AUTHORITY_IDENTITY_INVALID: 超时必须在 100..10000ms");
-            }
             if (sessionSeconds < 60 || sessionSeconds > 3600) {
                 throw new IllegalStateException("AUTHORITY_IDENTITY_INVALID: session-seconds 必须在 60..3600");
-            }
-            if (activeStatus.length() > 16) {
-                throw new IllegalStateException(
-                        "AUTHORITY_IDENTITY_INVALID: active-status 最长 16 个字符");
             }
             if (environment != null && !environment.isBlank() && !ENVIRONMENT.matcher(environment).matches()) {
                 throw new IllegalStateException(
@@ -126,10 +98,44 @@ public record IdentityProperties(
         mapping = IdentityMapping.normalize(enabled, mapping);
     }
 
+    void validateDirectory() {
+        validateDirectory(url, tenant, protocol, activeStatus, connectTimeoutMs, readTimeoutMs);
+    }
+
+    private static void validateDirectory(String url, String tenant, String protocol, String activeStatus,
+                                          int connectTimeoutMs, int readTimeoutMs) {
+        requireText(url, "url");
+        requireText(tenant, "tenant");
+        requireText(protocol, "protocol");
+        requireText(activeStatus, "activeStatus");
+        if (!PROTOCOL_USER_MGMT.equals(protocol)) {
+            throw new IllegalStateException(
+                    "AUTHORITY_IDENTITY_INVALID: 身份源协议 "
+                            + protocol
+                            + " 尚未实现（当前仅支持 USER_MGMT）；其它协议必须先登记为平台适配器，"
+                            + "不得用脚本或任意表达式替代");
+        }
+        String lower = url.toLowerCase(Locale.ROOT);
+        if (!(lower.startsWith("http://") || lower.startsWith("https://"))
+                || url.indexOf('@') >= 0
+                || url.indexOf('#') >= 0
+                || url.indexOf('?') >= 0
+                || url.endsWith("/")) {
+            throw new IllegalStateException(
+                    "AUTHORITY_IDENTITY_INVALID: url 必须是 http(s) 基地址且不含 userinfo/查询参数/片段/尾斜杠");
+        }
+        if (connectTimeoutMs < 100 || connectTimeoutMs > 10_000 || readTimeoutMs < 100 || readTimeoutMs > 10_000) {
+            throw new IllegalStateException("AUTHORITY_IDENTITY_INVALID: 超时必须在 100..10000ms");
+        }
+        if (activeStatus.length() > 16) {
+            throw new IllegalStateException("AUTHORITY_IDENTITY_INVALID: active-status 最长 16 个字符");
+        }
+    }
+
     private static void requireText(String value, String name) {
         if (value == null || value.isBlank()) {
             throw new IllegalStateException(
-                    "AUTHORITY_IDENTITY_INVALID: 启用人身份会话时必须配置 " + name);
+                    "AUTHORITY_IDENTITY_INVALID: 必须配置 " + name);
         }
     }
 

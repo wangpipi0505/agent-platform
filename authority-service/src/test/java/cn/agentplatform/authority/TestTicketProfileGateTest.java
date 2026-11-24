@@ -26,7 +26,9 @@ import static org.assertj.core.api.Assertions.assertThat;
                 AuthorityTestSupport.P_KEY,
                 AuthorityTestSupport.P_GATEWAY,
                 AuthorityTestSupport.P_APP,
-                "agent.authority.test-ticket.enabled=true"})
+                "agent.authority.test-ticket.enabled=true",
+                "agent.authority.identity.url=http://127.0.0.1",
+                "agent.authority.identity.subject-lookup-key-ref=env:AGENT_R38_TEST_LOOKUP_KEY"})
 class TestTicketProfileGateTest {
 
     @Autowired

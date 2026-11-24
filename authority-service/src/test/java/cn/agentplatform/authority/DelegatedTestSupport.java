@@ -1,5 +1,6 @@
 package cn.agentplatform.authority;
 
+import cn.agentplatform.authority.identity.SessionService;
 import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.authority.ResourceBinding;
@@ -8,16 +9,20 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 
 /**
  * EX-42 两条 operation 的测试支撑：固定 <em>gateway → engine → skill</em> 这条真实目录链
@@ -41,6 +46,14 @@ public abstract class DelegatedTestSupport extends AuthorityTestSupport {
 
     @Autowired
     protected KeyRing keys;
+
+    @MockitoSpyBean
+    protected SessionService sessions;
+
+    @BeforeEach
+    void acceptSyntheticPortalSubjects() {
+        doNothing().when(sessions).requireCurrentIdentity(anyString(), anyString());
+    }
 
     protected static ServiceCall call(String target, String action) {
         return new ServiceCall(target, action, new ResourceBinding("run", RUN_ID, DIGEST));

@@ -43,6 +43,15 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <environmentVariables>
+            <AGENT_R38_TEST_LOOKUP_KEY>user-mgmt-fixture-directory-key</AGENT_R38_TEST_LOOKUP_KEY>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
