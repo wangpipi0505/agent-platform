@@ -6,7 +6,9 @@ import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -60,6 +62,12 @@ public final class SessionService {
     private final IdentityProperties properties;
     private final HttpClient http;
 
+    @Value("${agent.authority.identity.subject-lookup-key-ref:}")
+    private String subjectLookupKeyRef = "";
+
+    @Value("${agent.authority.identity.subject-lookup-path:/system/apikeys/identity/}")
+    private String subjectLookupPath = "/system/apikeys/identity/";
+
     public SessionService(KeyRing keys, IssuerResolver issuerResolver, Clock clock, IdentityProperties properties) {
         this.keys = keys;
         this.issuerResolver = issuerResolver;
@@ -100,7 +108,7 @@ public final class SessionService {
         }
         Map<String, Object> request = parse(body);
         String apiKey = resolveApiKey(request);
-        Map<String, Object> identity = fetchIdentity(apiKey);
+        Map<String, Object> identity = fetchIdentity(apiKey, properties.identityPath());
         if (!admissible(identity)) {
             // 不存在/停用/无角色都归一到同一个 403：否则错误码本身就是账号枚举接口。
             throw AuthorityException.denied("user-mgmt 身份不可用或已停用");
@@ -123,6 +131,34 @@ public final class SessionService {
         response.put("expires_in", properties.sessionSeconds());
         response.put("session", session);
         return response;
+    }
+
+    /** Check the verified ticket's principal against the live directory before issuing a new delegation. */
+    public void requireCurrentIdentity(String tenant, String subject) {
+        if (subjectLookupKeyRef.isBlank()) return;
+        if (!properties.enabled() || !properties.tenant().equals(tenant) || subject == null
+                || subject.isBlank() || subject.length() > 128 || subject.equals(".") || subject.equals("..")
+                || subject.indexOf('/') >= 0 || subject.indexOf('\\') >= 0)
+            throw inactiveSubject();
+        if (!subjectLookupPath.matches("/(?:[A-Za-z0-9_-]+/)+"))
+            throw new AuthorityException(503, "IAM_IDENTITY_UNAVAILABLE",
+                    "身份查询配置不可用", "identity_subject_path");
+
+        String key = resolveApiKey(Map.of("api_key_ref", subjectLookupKeyRef));
+        try {
+            var identity = fetchIdentity(key, subjectLookupPath + UriUtils.encodePathSegment(subject, StandardCharsets.UTF_8));
+            requireTenant(identity);
+            if (!admissible(identity) || !subject.equals(mappedText(identity, "userName")))
+                throw inactiveSubject();
+        } catch (AuthorityException error) {
+            // USER_MGMT reports absent users through a non-success business envelope.
+            if (error.status() == 403) throw inactiveSubject();
+            throw error;
+        }
+    }
+
+    private static AuthorityException inactiveSubject() {
+        return new AuthorityException(401, "SYS-AUTH-401", "当前身份不可用", "identity_subject_unavailable");
     }
 
     private Map<String, Object> claims(String userName, List<String> roles, Map<String, Object> attributes) {
@@ -310,10 +346,10 @@ public final class SessionService {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> fetchIdentity(String apiKey) {
+    private Map<String, Object> fetchIdentity(String apiKey, String path) {
         HttpRequest request;
         try {
-            request = HttpRequest.newBuilder(URI.create(properties.url() + properties.identityPath()))
+            request = HttpRequest.newBuilder(URI.create(properties.url() + path))
                     .timeout(Duration.ofMillis(properties.readTimeoutMs()))
                     .header("Accept", "application/json")
                     .header("X-API-Key", apiKey)

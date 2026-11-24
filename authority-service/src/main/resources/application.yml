@@ -46,6 +46,9 @@ agent:
       url: ${AGENT_AUTHORITY_IDENTITY_URL:}
       api-key-ref: ${AGENT_AUTHORITY_IDENTITY_KEY_REF:}
       identity-path: ${AGENT_AUTHORITY_IDENTITY_PATH:/system/apikeys/identity/self}
+      # A separately configured directory key is required for non-self subject lookups.
+      subject-lookup-key-ref: ${AGENT_AUTHORITY_IDENTITY_SUBJECT_KEY_REF:}
+      subject-lookup-path: ${AGENT_AUTHORITY_IDENTITY_SUBJECT_PATH:/system/apikeys/identity/}
       tenant: ${AGENT_AUTHORITY_IDENTITY_TENANT:local-v12}
       issuer: ${AGENT_AUTHORITY_IDENTITY_ISSUER:${AGENT_AUTHORITY_ISSUER:}}
       audience: ${AGENT_AUTHORITY_IDENTITY_AUDIENCE:agent-platform-portal}

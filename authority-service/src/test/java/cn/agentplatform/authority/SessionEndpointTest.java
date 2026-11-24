@@ -41,7 +41,9 @@ import static org.assertj.core.api.Assertions.assertThat;
                 AuthorityTestSupport.P_KID,
                 AuthorityTestSupport.P_KEY,
                 AuthorityTestSupport.P_GATEWAY,
-                AuthorityTestSupport.P_APP})
+                AuthorityTestSupport.P_APP,
+                DelegatedTestSupport.P_DELEGATION_ON,
+                "agent.authority.identity.subject-lookup-key-ref=env:AGENT_R38_TEST_LOOKUP_KEY"})
 class SessionEndpointTest extends AuthorityTestSupport {
 
     private static final String AUDIENCE = "agent-platform-portal";
@@ -51,12 +53,14 @@ class SessionEndpointTest extends AuthorityTestSupport {
     private static HttpServer identity;
     private static final AtomicReference<String> MODE = new AtomicReference<>("ok");
     private static final AtomicReference<String> LAST_API_KEY = new AtomicReference<>();
+    private static final AtomicReference<String> LAST_LOOKUP_PATH = new AtomicReference<>();
 
     @BeforeAll
     static void startIdentity() throws IOException {
         identity = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        identity.createContext("/system/apikeys/identity/self", exchange -> {
+        identity.createContext("/system/apikeys/identity/", exchange -> {
             LAST_API_KEY.set(exchange.getRequestHeaders().getFirst("X-API-Key"));
+            LAST_LOOKUP_PATH.set(exchange.getRequestURI().getPath());
             String mode = MODE.get();
             int status = 200;
             String body;
@@ -68,6 +72,7 @@ class SessionEndpointTest extends AuthorityTestSupport {
                 case "disabled" -> body = envelope(identity("wangwu", "1", List.of(role("common_user", "5"))));
                 case "no-roles" -> body = envelope(identity("nobody", "0", List.<Map<String, Object>>of()));
                 case "deny-code" -> body = "{\"code\":403,\"msg\":\"nope\"}";
+                case "missing" -> body = "{\"code\":500,\"msg\":\"账号不存在或已删除\"}";
                 default -> body = envelope(identity("admin", "0",
                         List.of(role("admin", "1"), role("SERVICE", "1"))));
             }
@@ -104,6 +109,7 @@ class SessionEndpointTest extends AuthorityTestSupport {
     void resetStub() {
         MODE.set("ok");
         LAST_API_KEY.set(null);
+        LAST_LOOKUP_PATH.set(null);
     }
 
     @Test
@@ -218,6 +224,57 @@ class SessionEndpointTest extends AuthorityTestSupport {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(LAST_API_KEY.get()).as("被拒时不得先去打身份服务").isNull();
+    }
+
+    @Test
+    void verifiedPortalSubjectIsQueriedAgainBeforeDelegating() {
+        var issued = postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET), sessionBody("ak-admin-test"));
+        assertThat(issued.getStatusCode()).isEqualTo(HttpStatus.OK);
+        String token = issued.getBody().path("access_token").asText();
+        assertThat(exchangeSubject(token, "r38-active").getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        MODE.set("disabled");
+        var disabled = exchangeSubject(token, "r38-disabled");
+        assertThat(disabled.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(disabled.getBody().has("ticket")).isFalse();
+        assertThat(LAST_LOOKUP_PATH.get()).isEqualTo("/system/apikeys/identity/admin");
+        assertThat(LAST_API_KEY.get()).isEqualTo(System.getenv("AGENT_R38_TEST_LOOKUP_KEY"));
+        MODE.set("missing");
+        assertThat(exchangeSubject(token, "r38-missing").getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        MODE.set("server-error");
+        assertThat(exchangeSubject(token, "r38-outage").getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    private ResponseEntity<JsonNode> exchangeSubject(String token, String nonce) {
+        return postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET),
+                DelegatedTestSupport.body("exchange",
+                        DelegatedTestSupport.call("app", "proxy.app.get.AppController.list"), nonce,
+                        Map.of("subject_token", token)));
+    }
+
+    @Test
+    @org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(
+            named = "AGENT_R38_LIVE_SUBJECT_KEY", matches = ".+")
+    void queriesBothIsolatedLiveDirectoriesWithoutTrustingRequestTenant() {
+        for (int index = 0; index < 2; index++) {
+            String tenant = index == 0 ? "r38-tenant-a" : "r38-tenant-b";
+            String otherTenant = index == 0 ? "r38-tenant-b" : "r38-tenant-a";
+            var properties = new cn.agentplatform.authority.identity.IdentityProperties(
+                    true, "http://127.0.0.1:" + (18072 + index), null, "/system/apikeys/identity/self",
+                    tenant, ISSUER, AUDIENCE, GATEWAY, "platform.access", "agent-platform",
+                    2000, 2000, SESSION_SECONDS, null, "USER_MGMT", null, "0", null);
+            var directory = new cn.agentplatform.authority.identity.SessionService(
+                    null, null, java.time.Clock.systemUTC(), properties);
+            org.springframework.test.util.ReflectionTestUtils.setField(
+                    directory, "subjectLookupKeyRef", "env:AGENT_R38_LIVE_SUBJECT_KEY");
+            directory.requireCurrentIdentity(tenant, "operatorA");
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> directory.requireCurrentIdentity(otherTenant, "operatorA"))
+                    .isInstanceOfSatisfying(AuthorityException.class, error -> assertThat(error.status()).isEqualTo(401));
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> directory.requireCurrentIdentity(tenant, "r38-subject-missing"))
+                    .isInstanceOfSatisfying(AuthorityException.class, error -> assertThat(error.status()).isEqualTo(401));
+        }
     }
 
     @Test
