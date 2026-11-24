@@ -113,6 +113,11 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         if(!(attributes instanceof ServletRequestAttributes servlet))throw AuthorityProtocol.denied();
         var request=servlet.getRequest();
         Object template=request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        if ("engine".equals(serviceId) && "gateway".equals(jwt.getClaimAsString("caller"))
+                && "PORTAL".equals(operation.path("origin_kind").asText())
+                && PortalRuntimeRoutes.ownsTemplate(template)) {
+            AuthorityProtocol.same(PortalRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI()), call);
+        }
         return routes.routes().stream().filter(row->mode.equals(row.mode())
             &&Objects.equals(jwt.getClaimAsString("caller"),row.caller())&&serviceId.equals(row.target())
             &&request.getMethod().equals(row.method())&&Objects.equals(template,row.template())

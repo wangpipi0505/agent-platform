@@ -453,7 +453,7 @@ public class Tasks {
     if (clients == null) return null;
     JsonNode published;
     try {
-      published = clients.get("app", "/internal/apps/" + code + "/published", actor);
+      published = clients.publishedForRuntime(code, actor);
     } catch (RuntimeException unavailable) {
       // 未发布/停用/版本切换竞态/服务不可达：占位降级口径（T2-2 交付说明），不阻塞受理。
       return null;

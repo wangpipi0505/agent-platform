@@ -126,7 +126,7 @@ public class Memories {
     protected JsonNode publishedSnapshot(String code, Actor actor) {
         if (clients == null) return null;
         try {
-            return clients.get("app", "/internal/apps/" + code + "/published", actor);
+            return clients.publishedForRuntime(code, actor);
         } catch (PlatformException unavailable) {
             // 未发布/停用/版本切换竞态：按无策略收窄，撤销权等归属操作不受阻（§5.4 策略收窄行）。
             return null;

@@ -485,22 +485,28 @@ public class AppService {
         if (!"engine".equals(current.caller())
                 || !"app".equals(current.call().target())
                 || !"app.published.read".equals(current.call().action())
-                || !"app-version".equals(current.call().resource().kind())
                 || current.operation() == null
                 || !"PORTAL".equals(current.operation().originKind())
                 || !Set.of("PORTAL", "DELEGATED").contains(current.operation().sourceKind()))
             throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布读取能力不匹配");
         MetadataSelectors.code(code);
+        var received = current.call().resource();
+        boolean runtimeRead = "app-runtime".equals(received.kind());
+        if (runtimeRead && !cn.agentplatform.common.authority.PortalRuntimeRoutes.appResource(code).equals(received))
+            throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布资源与授权不匹配");
         var observed = publishedMetadata(actor.tenantId(), code);
         if (observed == null) throw error(404, "APP_NOT_FOUND", "应用不存在");
         requirePublishedAvailable(observed);
-        var root = new ResourceBinding("app-version", code + "@" + observed.versionNo(), observed.sha());
-        var received = current.call().resource();
+        // Runtime collections ask for the active publication. Run admission keeps its exact
+        // immutable version binding and the conflict response when the active pointer moves.
+        var root = runtimeRead
+                ? received
+                : new ResourceBinding("app-version", code + "@" + observed.versionNo(), observed.sha());
         if (!root.equals(received)) {
             // An old positive version for this code is a publication conflict; do not silently
             // exchange/retarget to the newer pointer. Wrong code/kind/current SHA is forbidden.
             String prefix = code + "@";
-            if (received.id().startsWith(prefix)
+            if ("app-version".equals(received.kind()) && received.id().startsWith(prefix)
                     && !root.id().equals(received.id())
                     && received.id().substring(prefix.length()).matches("[1-9][0-9]*"))
                 throw error(409, "APP_PUBLICATION_CHANGED", "应用发布版本已变化，请重新发起请求");

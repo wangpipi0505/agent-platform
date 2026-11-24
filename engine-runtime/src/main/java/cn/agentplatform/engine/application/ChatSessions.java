@@ -57,7 +57,7 @@ public class ChatSessions {
      * 未提议时保持旧行为（配置列保持 null，轮次不绑定配置版本）。
      */
     public Map<String, Object> create(String code, JsonNode body, Actor actor) {
-        JsonNode snapshot = clients.get("app", "/internal/apps/" + code + "/published", actor);
+        JsonNode snapshot = clients.publishedForRuntime(code, actor);
         if (!snapshot.path("type").asText().equals("CHAT"))
             throw new PlatformException(409, "CHAT_REQUIRED", "只有已发布对话应用可创建会话");
         maxTurns(snapshot);

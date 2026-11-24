@@ -2,7 +2,10 @@ package cn.agentplatform.gateway.api;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.AuthorityProperties;
+import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.GatewayIngressBoundary;
+import cn.agentplatform.common.authority.PortalRuntimeRoutes;
+import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.gateway.application.IntegrationAccess;
 import cn.agentplatform.gateway.application.PublishedRunProxy;
 import cn.agentplatform.gateway.application.RunStatusProxy;
@@ -33,6 +36,8 @@ public class GatewayController {
     private final Optional<PublishedRunProxy> published;
     private final Optional<RunStatusProxy> status;
     private final Optional<RunEventsProxy> events;
+    private final Optional<CurrentAuthorityClient> authority;
+    private final ServiceRoutePolicy serviceRoutes = new ServiceRoutePolicy();
 
     public GatewayController(
             Environment env,
@@ -47,15 +52,22 @@ public class GatewayController {
         this(env,integration,deployment,published,status,Optional.empty());
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
     public GatewayController(Environment env,IntegrationAccess integration,AuthorityProperties deployment,
             Optional<PublishedRunProxy> published,Optional<RunStatusProxy> status,Optional<RunEventsProxy> events) {
+        this(env, integration, deployment, published, status, events, Optional.empty());
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public GatewayController(Environment env, IntegrationAccess integration, AuthorityProperties deployment,
+            Optional<PublishedRunProxy> published, Optional<RunStatusProxy> status, Optional<RunEventsProxy> events,
+            Optional<CurrentAuthorityClient> authority) {
         this.env = env;
         this.integration = integration;
         this.deployment = Objects.requireNonNull(deployment);
         this.published = Objects.requireNonNull(published);
         this.status=Objects.requireNonNull(status);
         this.events=Objects.requireNonNull(events);
+        this.authority = Objects.requireNonNull(authority);
     }
 
     private String base(String service) {
@@ -65,6 +77,14 @@ public class GatewayController {
     @RequestMapping({"/admin/**", "/v1/**"})
     public void proxy(HttpServletRequest req, HttpServletResponse res) throws IOException {
         if ("iam".equals(deployment.mode())) {
+            if (PortalRuntimeRoutes.matches(req.getMethod(), req.getRequestURI())) {
+                String source = GatewayIngressBoundary.claimRuntime(req);
+                var call = PortalRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());
+                var ticket = authority.orElseThrow(() -> new PlatformException(
+                        503, "DEPENDENCY_UNAVAILABLE", "门户运行授权服务暂不可用")).exchange(source, call);
+                forward(req, res, call.target(), ticket.value());
+                return;
+            }
             if("GET".equals(req.getMethod())&&req.getRequestURI().matches("/admin/runs/r_[0-9a-f]{32}/events")){
                 var source=GatewayIngressBoundary.claimEvents(req,res);
                 events.orElseThrow(()->new PlatformException(503,"RUN_EVENTS_UNAVAILABLE","运行事件暂不可用")).forward(req,res,source);
@@ -92,6 +112,11 @@ public class GatewayController {
         }
         Actor actor = Actor.current();
         integration.check(req, actor);
+        forward(req, res, service, ServiceTokens.issue(actor));
+    }
+
+    private void forward(HttpServletRequest req, HttpServletResponse res, String service, String token)
+            throws IOException {
         String query = req.getQueryString();
         String target = base(service) + req.getRequestURI() + (query == null ? "" : "?" + query);
         // R-9③④：转发核心由 HttpURLConnection 换 java.net.http.HttpClient——前者
@@ -103,7 +128,7 @@ public class GatewayController {
         boolean hasBody = !Set.of("GET", "HEAD", "OPTIONS", "TRACE").contains(method);
         HttpRequest.Builder outbound =
                 HttpRequest.newBuilder(URI.create(target))
-                        .header("Authorization", "Bearer " + ServiceTokens.issue(actor))
+                        .header("Authorization", "Bearer " + token)
                         .header(TraceContextFilter.HEADER, TraceContextFilter.current());
         if (req.getContentType() != null) outbound.header("Content-Type", req.getContentType());
         String cursor = req.getHeader("Last-Event-ID");

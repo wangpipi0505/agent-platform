@@ -94,6 +94,11 @@ class ServiceAuthorizationTest {
             Actor.current().requireRole(requiredRole);business.incrementAndGet();byResource.computeIfAbsent(id,k->new AtomicInteger()).incrementAndGet();return Actor.current();
         }
         @PostMapping("/internal/tool-calls/register") Object disabled(){business.incrementAndGet();return "forbidden";}
+        @GetMapping("/v1/apps/{code}/tasks")
+        String appTasks(@PathVariable String code) {
+            business.incrementAndGet();
+            return Actor.current().tenantId() + "/" + Actor.current().principalId() + "/" + code;
+        }
         @PostMapping({"/v1/runs/{id}/cancel","/admin/runs/{id}/cancel","/admin/debug-runs/{id}/cancel"})
         Object cancel(@PathVariable String id){
             assertThat(id).isEqualTo(RUN);authorization.requireResource(CANCEL_RESOURCE);
@@ -123,6 +128,24 @@ class ServiceAuthorizationTest {
         change.accept(claims);return fixture.sign(claims,fixture.key,"at+jwt");
     }
     @BeforeEach void reset(){service="engine";requiredRole="EDITOR";business.set(0);beforeResource=a->{};checkResource=true;async=false;cleaned.set(0);asyncMissing.set(0);servletFailures.set(0);arrived=null;release=null;byResource.clear();}
+
+    @Test
+    void portalRuntimeTicketCannotChangeApplicationOnTheReceiver() throws Exception {
+        try (var iam = new LoopbackAuthority()) {
+            fixture = iam;
+            try (var app = start(Receiver.class); var gateway = iam.client("gateway")) {
+                String path = "/v1/apps/ops/tasks";
+                var call = PortalRuntimeRoutes.call(policy(), "GET", path);
+                String ticket = gateway.exchange(iam.portal(), call).value();
+                expect(app, "/v1/apps/other/tasks", ticket, 403);
+                expect(app, "/v1/apps/o%70s/tasks", ticket, 403);
+                assertThat(business.get()).isZero();
+                var accepted = request(app, path, ticket, "GET");
+                assertThat(accepted.statusCode()).as(accepted.body()).isEqualTo(200);
+                assertThat(accepted.body()).isEqualTo("tenant-a/alice/ops");
+            }
+        }
+    }
     @Test void signedOldAdminCannotOverrideOnlineEditorInRealController()throws Exception {
         try(var f=new LoopbackAuthority()){
             // A stale wider ticket must still fit its immutable signed initial ceiling. Keep

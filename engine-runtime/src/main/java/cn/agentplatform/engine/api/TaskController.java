@@ -45,6 +45,15 @@ public class TaskController {
     return ApiResponse.ok(tasks.create(code, req, Actor.current()));
   }
 
+  @GetMapping("/v1/apps/{code}/tasks")
+  public Object listForApp(
+          @PathVariable("code") String code,
+          @RequestParam(value = "state", required = false) String state,
+          @RequestParam(value = "page", required = false) String page,
+          @RequestParam(value = "pageSize", required = false) String pageSize) {
+    return ApiResponse.ok(tasks.list(state, code, null, null, null, page, pageSize, Actor.current()));
+  }
+
   /**
    * B4-1（台账 §7.5）：GET /v1/tasks 任务列表（接口稿 §5.7）——state/appCode/from/to/principalId
    * 过滤+分页；confirmableBy=me 时切换为确认中心"计划确认"投影（以修订为单位，仅无有效凭据

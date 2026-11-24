@@ -155,6 +155,20 @@ class PublishedPayloadHttpTest {
         assertThat(statements.stream().skip(1)).allSatisfy(s->{assertThat(s.transaction).isTrue();assertThat(s.autoCommit).isFalse();assertThat(s.isolation).isEqualTo(java.sql.Connection.TRANSACTION_READ_COMMITTED);assertThat(s.readOnly).isFalse();});assertThat(commits).hasValue(1);
     }
     @Test void secondCurrentDenialDoesNotTouchPayload()throws Exception{String t=ticket();beforeCurrent=()->fixture.revoked(true);denied(read(t),403);assertThat(currents).hasValue(2);assertThat(count("payload")).isZero();}
+
+    @Test
+    void runtimeSessionGrantReadsCurrentPublicationOnlyForBoundApplication() throws Exception {
+        try (var gateway = fixture.client("gateway"); var engine = fixture.client("engine")) {
+            var call = PortalRuntimeRoutes.call(new ServiceRoutePolicy(), "POST",
+                    "/v1/apps/" + CODE + "/sessions");
+            var opening = engine.authorizeRetained(gateway.exchange(source, call).value(), call);
+            String delegated = engine.forward(opening.current(), payload(call.resource())).value();
+            denied(request("GET", path("other"), delegated), 403);
+            assertThat(count("initial-metadata")).isZero();
+            assertThat(count("payload")).isZero();
+            success(read(delegated), 1, versionId, SHA);
+        }
+    }
     @Test void secondCurrentOutageDoesNotTouchPayload()throws Exception{String t=ticket();beforeCurrent=()->fixture.unavailable(true);denied(read(t),503);assertThat(currents).hasValue(2);assertThat(count("payload")).isZero();}
     @Test void secondCurrentExpirationDoesNotTouchPayload()throws Exception{String t=ticket();beforeCurrent=()->fixture.advanceClock(Duration.ofSeconds(41));denied(read(t),403);assertThat(currents).hasValue(2);assertThat(count("payload")).isZero();}
     @Test void authorizedNarrowerCurrentProjectionStillReadsPayload()throws Exception{String t=ticket();fixture.narrowAdminAtResourceCheck();success(read(t),1,versionId,SHA);assertThat(currents).hasValue(2);}

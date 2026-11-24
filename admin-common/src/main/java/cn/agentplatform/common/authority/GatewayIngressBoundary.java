@@ -33,7 +33,7 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
     private final Object controller;
     private final Method method;
     private static final String SESSION_CONTROLLER="cn.agentplatform.gateway.api.PortalSessionController";
-    private enum Purpose { RUN, SESSION, STATUS, EVENTS }
+    private enum Purpose { RUN, SESSION, STATUS, EVENTS, RUNTIME }
     private final boolean statusInstalled,eventsInstalled;
     private final Object sessionController;
     private final Method sessionMethod;
@@ -106,6 +106,8 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
     }
 
     private Purpose route(HttpServletRequest r) {
+        if (r.getDispatcherType() == DispatcherType.REQUEST && r.getContextPath().isEmpty()
+                && PortalRuntimeRoutes.matches(r.getMethod(), r.getRequestURI())) return Purpose.RUNTIME;
         if(eventsInstalled&&r.getDispatcherType()==DispatcherType.REQUEST&&"GET".equals(r.getMethod())
                 &&r.getRequestURI().matches("/admin/runs/r_[0-9a-f]{32}/events")&&r.getContextPath().isEmpty())return Purpose.EVENTS;
         if(statusInstalled&&r.getDispatcherType()==DispatcherType.REQUEST&&"GET".equals(r.getMethod())
@@ -124,7 +126,7 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
     private static final class Proof {
         final GatewayIngressBoundary owner;
         final HttpServletRequest anchor;
-        final String path, source, query;
+        final String path, source, query, requestMethod;
         final long cursor;
         HttpServletRequest eventsRequest;
         HttpServletResponse eventsResponse;
@@ -151,14 +153,18 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
             this.expires = expires;
             sourceBudget=remaining(owner.clock.instant(),expires);
             path = anchor.getRequestURI();
+            requestMethod = anchor.getMethod();
             query=anchor.getQueryString();this.cursor=cursor;
             purpose=owner.route(anchor);
         }
 
         void check(HttpServletRequest request) {
             if(owner.route(request)!=purpose)throw denied();
-            if(!expires.isAfter(owner.clock.instant())&&(purpose==Purpose.SESSION||purpose==Purpose.STATUS||purpose==Purpose.EVENTS))throw new PlatformException(401,"PORTAL_TOKEN_INVALID","门户身份已失效");
+            if(!expires.isAfter(owner.clock.instant())&&purpose!=Purpose.RUN)throw new PlatformException(401,"PORTAL_TOKEN_INVALID","门户身份已失效");
             if(purpose==Purpose.EVENTS&&(Thread.currentThread()!=thread||!Objects.equals(query,request.getQueryString())))throw denied();
+            if (purpose == Purpose.RUNTIME && (Thread.currentThread() != thread
+                    || !requestMethod.equals(request.getMethod())
+                    || !Objects.equals(query, request.getQueryString()))) throw denied();
             if (invalid
                     || claimed
                     || !path.equals(request.getRequestURI())
@@ -221,6 +227,16 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
             if (!p.ready||p.purpose!=Purpose.RUN) throw denied();
             p.claimed = true;
             return new PortalRequest(p);
+        }
+    }
+
+    public static String claimRuntime(HttpServletRequest request) {
+        var captured = proof(request);
+        synchronized (captured) {
+            captured.check(request);
+            if (!captured.ready || captured.purpose != Purpose.RUNTIME) throw denied();
+            captured.claimed = true;
+            return captured.source;
         }
     }
     public static final class PortalSessionRequest {
@@ -387,14 +403,17 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
                 if (r.getAttribute(KEY) != null
                         || r.getHeader("X-Api-Key") != null
                         || r.getHeader("Cookie") != null) throw denied();
-                if(purpose==Purpose.SESSION||purpose==Purpose.STATUS||purpose==Purpose.EVENTS){
+                if (purpose != Purpose.RUN) {
                     var names=Collections.list(r.getHeaderNames());
                     for(String name:names){String lower=name.toLowerCase(Locale.ROOT);
                         if(lower.startsWith("x-user-")||lower.startsWith("x-tenant")||lower.startsWith("x-principal")||lower.equals("apikey")||lower.equals("api-key")||lower.equals("proxy-authorization")||lower.startsWith("x-auth-")||lower.equals("x-subject")||lower.equals("x-resource")||lower.equals("x-target")||lower.equals("x-action"))throw denied();
                         if(Set.of("tenant","tenant-id","principal","principal-id","subject","resource","target","action","actor","roles","attributes","access-token","service-token").contains(lower)
                                 ||List.of("x-actor","x-role","x-attribute","x-identity","x-credential","x-access-token","x-service-token","x-forwarded-user","x-forwarded-tenant").stream().anyMatch(lower::startsWith))throw denied();
                     }
-                    if(r.getContentLengthLong()>0||r.getHeader("Transfer-Encoding")!=null||r.getInputStream().read()!=-1)throw denied();
+                    if (purpose != Purpose.RUNTIME || "GET".equals(r.getMethod())) {
+                        if (r.getContentLengthLong() > 0 || r.getHeader("Transfer-Encoding") != null
+                                || r.getInputStream().read() != -1) throw denied();
+                    }
                 }
                 var headers = Collections.list(r.getHeaders("Authorization"));
                 if (headers.size() != 1 || !headers.getFirst().startsWith("Bearer "))

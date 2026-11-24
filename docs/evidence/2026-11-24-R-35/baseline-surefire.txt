@@ -1,0 +1,23 @@
+-------------------------------------------------------------------------------
+Test set: cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest
+-------------------------------------------------------------------------------
+Tests run: 19, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 4.186 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest
+cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest.portalTicketOnV1AppsSessionsPreservesQueryAndExchangesForEngineTicket -- Time elapsed: 0.016 s <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+[{"code":"SYS-AUTH-403","message":"入口未获授权","data":null,"traceId":null}]
+expected: 200
+ but was: 403
+	at cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest.portalTicketOnV1AppsSessionsPreservesQueryAndExchangesForEngineTicket(GatewayIamPortalHttpTest.java:321)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest.userTicketReachesAllRegisteredRuntimeCollections -- Time elapsed: 0.020 s <<< FAILURE!
+org.opentest4j.AssertionFailedError:
+[/v1/apps/ops/sessions: {"code":"SYS-AUTH-403","message":"入口未获授权","data":null,"traceId":null}]
+expected: 200
+ but was: 403
+	at cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest.userTicketReachesAllRegisteredRuntimeCollections(GatewayIamPortalHttpTest.java:330)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)

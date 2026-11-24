@@ -319,20 +319,29 @@ public class RuntimeClients implements AutoCloseable {
         return iam;
     }
 
+    public JsonNode publishedForRuntime(String code, Actor actor) {
+        if (!iam) return get("app", "/internal/apps/" + code + "/published", actor);
+        var retained = AuthorityContext.requireInitialFor(actor, PortalRuntimeRoutes.appResource(code));
+        return published(code, retained);
+    }
+
     public JsonNode published(String code, RetainedAuthorization retained) {
         if (!iam || publishedHttp == null || publishedExecutor.isShutdown()) throw unavailable();
         AuthorityContext.requireBound(retained);
         MetadataSelectors.code(code);
         var current = retained.current();
         var root = current.call().resource();
+        boolean runtimeRead = PortalRuntimeRoutes.permitsPublishedRead(current.call().action())
+                && PortalRuntimeRoutes.appResource(code).equals(root);
+        boolean runRead = "proxy.engine.post.RunController.run".equals(current.call().action())
+                && "app-version".equals(root.kind())
+                && root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*");
         if (!"gateway".equals(current.caller())
                 || !"engine".equals(current.call().target())
-                || !"proxy.engine.post.RunController.run".equals(current.call().action())
+                || !(runtimeRead || runRead)
                 || !"PORTAL".equals(current.operation().sourceKind())
                 || !"PORTAL".equals(current.operation().originKind())
-                || !"app-version".equals(root.kind())
-                || !root.equals(current.operation().resource())
-                || !root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*"))
+                || !root.equals(current.operation().resource()))
             throw RunAuthorityStore.denied();
         // Forward the bound main operation/grant. No portal source, retarget, resume or actor
         // ticket.
@@ -445,9 +454,10 @@ public class RuntimeClients implements AutoCloseable {
                     || !alias.isIntegralNumber()
                     || !alias.canConvertToLong()
                     || alias.longValue() != id.longValue()
-                    || !root.id().equals(code + "@" + no.longValue())
-                    || !root.id().equals(value.path("appVersionKey").asText())
-                    || !root.versionDigest().equals(value.path("candidateSha256").asText()))
+                    || !(code + "@" + no.longValue()).equals(value.path("appVersionKey").asText())
+                    || !value.path("candidateSha256").asText().matches("[0-9a-f]{64}")
+                    || (runRead && (!root.id().equals(value.path("appVersionKey").asText())
+                            || !root.versionDigest().equals(value.path("candidateSha256").asText()))))
                 throw unavailable();
             AuthorityContext.requireBound(retained);
             return value;

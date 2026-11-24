@@ -1,12 +1,16 @@
 package cn.agentplatform.gateway.infra;
 
 import cn.agentplatform.common.Actor;
+import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.authority.CoverageGate;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.LoopbackAuthority;
+import cn.agentplatform.common.authority.ResourceBinding;
+import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.common.authority.ServiceTrustChain;
 import cn.agentplatform.gateway.GatewayApplication;
+import com.sun.net.httpserver.HttpServer;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,6 +27,8 @@ import org.springframework.web.servlet.handler.MappedInterceptor;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 
 import java.net.URI;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -47,11 +53,17 @@ class GatewayIamPortalHttpTest {
 
     private static LoopbackAuthority iam;
     private static ServletWebServerApplicationContext app;
+    private static HttpServer engine;
     private static String base;
 
     @BeforeAll
     static void boot() throws Exception {
         iam = new LoopbackAuthority();
+        iam.portalActor(new Actor("tenant-a", "alice", Set.of("USER"),
+                Map.of("region", Set.of("A"), "dataLabels", Set.of("confidential"))));
+        engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
+        engine.start();
         var deployment = properties();
         app = (ServletWebServerApplicationContext)
                 new SpringApplicationBuilder(TestAuthorityClient.class, GatewayApplication.class)
@@ -70,6 +82,7 @@ class GatewayIamPortalHttpTest {
     @AfterAll
     static void shutdown() {
         if (app != null) app.close();
+        if (engine != null) engine.stop(0);
         if (iam != null) iam.close();
     }
 
@@ -108,7 +121,8 @@ class GatewayIamPortalHttpTest {
         values.put("agent.security.portal.jwks-uri", iam.issuer() + "/portal-jwks");
         values.put("agent.security.portal.audience", "portal-gateway");
         values.put("agent.security.portal.client-id", "portal-web");
-        values.put("agent.security.portal.role-allowlist", "ADMIN,EDITOR");
+        values.put("agent.security.portal.role-allowlist", "ADMIN,EDITOR,USER");
+        values.put("agent.services.engine", "http://127.0.0.1:" + engine.getAddress().getPort());
         // attribute-value-allowlist 是 Map<String,Set<String>>：没有 String→Map 的转换器，而方括号/
         // 点号记法都会被适配成小写键（datalabels），与 camelCase 白名单键集不再相等并报未绑定。
         // 因此键名只留在 application.yml（YAML 保留大小写），测试与生产一样只注入取值。
@@ -301,19 +315,74 @@ class GatewayIamPortalHttpTest {
         assertThat(response.body()).contains("SYS-AUTH-401");
     }
 
-    /**
-     * R-34 诚实钉子（R-26 §5-1 残余缺口）：ingress 注册形状扩到 /v1/apps/* 后，门户票在请求形状层
-     * 已进入边界，但 {@code GatewayIngressBoundary.route()}（admin-common）仍只承认 RUN/SESSION/
-     * STATUS/EVENTS 四种受管形状，{@code GatewayController.proxy} 的 iam 分支对一切 /v1/** 走
-     * claim（要求 Purpose.RUN）——因此门户票 GET /v1/apps/... 仍是 403（与票据有效性无关）。
-     * 本断言钉住形状卡之后的真实现状：用户面 200 翻转需要后续卡的 route()/claim() 配套改动，
-     * 那张卡落地时把本断言翻成 200。
-     */
     @Test
-    void portalTicketOnV1AppsUserPlaneRemainsDeniedByTheBoundaryRoutePendingTheFlipCard() throws Exception {
+    void portalTicketOnV1AppsSessionsPreservesQueryAndExchangesForEngineTicket() throws Exception {
         var response = get("/v1/apps/ops/sessions?mine=true", iam.portal());
-        assertThat(response.statusCode()).as(response.body()).isEqualTo(403);
-        assertThat(response.body()).contains("SYS-AUTH-403");
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+        assertThat(response.body()).isEqualTo("tenant-a/alice GET /v1/apps/ops/sessions?mine=true ");
+    }
+
+    @Test
+    void userTicketReachesAllRegisteredRuntimeCollections() throws Exception {
+        for (String collection : List.of("sessions", "tasks", "memories")) {
+            String path = "/v1/apps/ops/" + collection;
+            var list = get(path, iam.portal());
+            assertThat(list.statusCode()).as(path + ": " + list.body()).isEqualTo(200);
+            assertThat(list.body()).isEqualTo("tenant-a/alice GET " + path + " ");
+            var create = send(HttpRequest.newBuilder(URI.create(base + path))
+                    .header("Authorization", "Bearer " + iam.portal())
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString("{\"requestId\":\"r35\"}")));
+            assertThat(create.statusCode()).as(path + ": " + create.body()).isEqualTo(200);
+            assertThat(create.body()).isEqualTo("tenant-a/alice POST " + path + " {\"requestId\":\"r35\"}");
+        }
+    }
+
+    @Test
+    void userRuntimeEntryPreservesCredentialAndPathBoundaries() throws Exception {
+        String path = "/v1/apps/ops/tasks";
+        assertThat(get(path, null).statusCode()).isEqualTo(401);
+        assertThat(get(path, iam.portal(-20)).statusCode()).isEqualTo(401);
+        assertThat(get(path, "forged.token.value").statusCode()).isEqualTo(401);
+        var service = iam.base("service", "urn:agent-platform:service:app", 60);
+        service.put("sub", "app");
+        assertThat(get(path, iam.sign(service, iam.authoritySigningKey(), "at+jwt")).statusCode())
+                .isBetween(401, 403);
+        for (String header : List.of("X-User-Id", "X-User-Roles", "X-User-Attributes", "X-User-Tenant")) {
+            var response = send(HttpRequest.newBuilder(URI.create(base + path))
+                    .header("Authorization", "Bearer " + iam.portal())
+                    .header(header, "override")
+                    .GET());
+            assertThat(response.statusCode()).as(header + ": " + response.body()).isEqualTo(403);
+        }
+        for (String unavailable : List.of("/v1/apps/ops/runs", "/v1/apps/ops/tasks/detail",
+                "/v1/deploy/resource-manifest", "/v1/runs/r_0123456789abcdef0123456789abcdef",
+                "/v1/sessions/session-1")) {
+            assertThat(get(unavailable, iam.portal()).statusCode()).as(unavailable).isEqualTo(403);
+        }
+        var write = send(HttpRequest.newBuilder(URI.create(base + "/admin/apps"))
+                .header("Authorization", "Bearer " + iam.portal())
+                .POST(HttpRequest.BodyPublishers.ofString("{}")));
+        assertThat(write.statusCode()).as(write.body()).isEqualTo(403);
+    }
+
+    private static void respondAsEngine(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {
+        try (request; var authority = iam.client("engine")) {
+            String method = request.getRequestMethod();
+            String path = request.getRequestURI().getPath();
+            String template = path.replace("/ops/", "/{code}/");
+            var registered = new ServiceRoutePolicy().require("gateway", "engine", method, template);
+            var call = new ServiceCall(registered.target(), registered.action(),
+                    new ResourceBinding("app-runtime", "ops", Digest.sha256("portal-runtime.v1:ops")));
+            String bearer = request.getRequestHeaders().getFirst("Authorization");
+            var verified = authority.authorize(bearer.substring("Bearer ".length()), call);
+            var actor = verified.actor();
+            String body = new String(request.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            var bytes = (actor.tenantId() + "/" + actor.principalId() + " " + method + " "
+                    + request.getRequestURI() + " " + body).getBytes(StandardCharsets.UTF_8);
+            request.sendResponseHeaders(200, bytes.length);
+            request.getResponseBody().write(bytes);
+        }
     }
 
     // ---- helpers ---------------------------------------------------------------------------------
