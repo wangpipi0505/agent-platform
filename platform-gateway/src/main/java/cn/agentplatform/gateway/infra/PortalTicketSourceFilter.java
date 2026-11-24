@@ -25,9 +25,10 @@ import java.io.IOException;
  * the caller could not tell "wrong carrier" from "invalid ticket". Running first also means the
  * parameter is never parsed by anything downstream.
  *
- * <p>Scope is the portal surface only ({@code /admin/**} and {@code /auth/session}); every other route
- * never reached this boundary before either. The {@code 400} status is deliberate: the request itself
- * is malformed, not unauthorised, and {@code 401} stays reserved for "no usable ticket".
+ * <p>Scope is the portal surface only ({@code /admin/**}, {@code /auth/session} and the user-plane
+ * {@code /v1/apps/**}); every other route never reached this boundary before either. The {@code 400}
+ * status is deliberate: the request itself is malformed, not unauthorised, and {@code 401} stays
+ * reserved for "no usable ticket".
  */
 final class PortalTicketSourceFilter extends OncePerRequestFilter {
     /** Only the header is a supported credential carrier; this name is rejected, never read. */
@@ -38,7 +39,8 @@ final class PortalTicketSourceFilter extends OncePerRequestFilter {
 
     /** The gateway ingress boundary owns the portal surface and nothing else. */
     static boolean portalSurface(String path) {
-        return path != null && (path.startsWith("/admin/") || path.equals("/auth/session"));
+        return path != null
+                && (path.startsWith("/admin/") || path.equals("/auth/session") || path.startsWith("/v1/apps/"));
     }
 
     @Override
