@@ -88,18 +88,19 @@ public final class ModelInputMaterialStore {
     var b = binding(runId);
     RunAuthorityStore.strict(b, proof);
     localBinding(b, proof);
+    boolean evaluation = firstChat && EvaluationCandidateBinding.KIND.equals(b.root().kind());
     var control =
         db.queryForMap(
             "select trigger_type,mode,budget->>'deadline' as deadline,(debug_snapshot is not null"
-                + " or eval_candidate is not null or controlled_draft_skill_version_id is not null"
+                + " or (eval_candidate is not null and not ?) or controlled_draft_skill_version_id is not null"
                 + " or controlled_draft_skill_digest is not null or"
                 + " controlled_skill_test_version_id is not null or controlled_skill_test_digest is"
                 + " not null) as unsupported,exists(select 1 from engine.model_invocation where"
-                + " run_id=r.id) as invoked,exists(select 1 from engine.chat_turn where"
-                + " run_public_id=r.public_id) as history,exists(select 1 from engine.tool_call"
+                + " run_id=r.id) as invoked,(not ? and exists(select 1 from engine.chat_turn where"
+                + " run_public_id=r.public_id)) as history,exists(select 1 from engine.tool_call"
                 + " where run_id=r.id) as tools from engine.run r where id=?",
-            runId);
-    eq(firstChat ? "CHAT" : "TASK", control.get("trigger_type"));
+            evaluation, evaluation, runId);
+    eq(evaluation ? "EVALUATION" : firstChat ? "CHAT" : "TASK", control.get("trigger_type"));
     eq("FULL", control.get("mode"));
     for (String k : List.of("unsupported", "invoked", "history", "tools"))
       eq(false, control.get(k));
@@ -152,18 +153,10 @@ public final class ModelInputMaterialStore {
       values.add(new AuthorizedMaterial(value, scope));
     }
     var snapshot = (JsonNode) values.get(0).payload();
-    if (firstChat) cn.agentplatform.engine.domain.InitialChatRules.requireSources(snapshot, (JsonNode) values.get(1).payload());
+    if (evaluation) cn.agentplatform.engine.domain.InitialChatRules.requireEvaluationSources(snapshot, (JsonNode) values.get(1).payload());
+    else if (firstChat) cn.agentplatform.engine.domain.InitialChatRules.requireSources(snapshot, (JsonNode) values.get(1).payload());
     var refs = (JsonNode) values.get(2).payload();
-    eq(b.root().id(), text(snapshot, "appCode") + "@" + positive(snapshot.path("versionNo")));
-    eq(b.root().versionDigest(), text(snapshot, "candidateSha256"));
-    eq(
-        b.appVersionId(),
-        positive(
-            snapshot.has("appVersionId")
-                ? snapshot.path("appVersionId")
-                : snapshot.path("versionId")));
-    if (snapshot.has("versionId")) eq(b.appVersionId(), positive(snapshot.path("versionId")));
-    eq(b.appVersionNo(), positive(refs.path("appVer")));
+    TraceStore.requireSnapshotRelations(b, snapshot, refs);
     var ids =
         db.queryForList(
             "select material_id from engine.model_input_snapshot where run_id=?",
@@ -660,6 +653,7 @@ public final class ModelInputMaterialStore {
     eq(b.owner(), a.operation().subject());
     eq(b.initial(), proof.requireInitialCeiling());
     eq(b.originId(), proof.requireOriginAuthenticationId());
+    if (EvaluationCandidateBinding.KIND.equals(b.root().kind())) eq(b.delegation(), a.delegation());
     for (var p : b.scopes()) MaterialAuthorization.require(p, a, clock);
   }
 
@@ -670,7 +664,7 @@ public final class ModelInputMaterialStore {
     if (!"model".equals(a.caller())
         || !"engine".equals(a.call().target())
         || !"material.scope.read".equals(a.call().action())
-        || !"app-version".equals(a.call().resource().kind())
+        || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(a.call().resource().kind())
         || !"DELEGATED".equals(a.operation().sourceKind())
         || !"PORTAL".equals(a.operation().originKind())) throw missing();
     eq(a.call().resource(), a.operation().resource());

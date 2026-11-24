@@ -59,10 +59,19 @@ public final class InitialModelInputVerifier implements AutoCloseable {
     this(authority, engineOrigin, Clock.systemUTC());
   }
 
+  public InitialModelInputVerifier(HttpCurrentAuthorityClient authority, URI engineOrigin, boolean testLoopback) {
+    this(authority, engineOrigin, Clock.systemUTC(), testLoopback);
+  }
+
   InitialModelInputVerifier(HttpCurrentAuthorityClient authority, URI engineOrigin, Clock clock) {
+    this(authority, engineOrigin, clock, false);
+  }
+
+  private InitialModelInputVerifier(HttpCurrentAuthorityClient authority, URI engineOrigin, Clock clock,
+      boolean testLoopback) {
     this.authority = Objects.requireNonNull(authority, "AUTHORITY_REQUIRED");
     this.clock = Objects.requireNonNull(clock);
-    transport = new EngineModelInputManifestClient(engineOrigin);
+    transport = new EngineModelInputManifestClient(engineOrigin, testLoopback);
   }
 
   public VerifiedInitialModelInput verify(
@@ -138,7 +147,7 @@ public final class InitialModelInputVerifier implements AutoCloseable {
     if (!"engine".equals(a.caller())
         || !"model".equals(a.call().target())
         || !"model.chat-stream".equals(a.call().action())
-        || !"app-version".equals(root.kind())
+        || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(root.kind())
         || !"DELEGATED".equals(a.operation().sourceKind())
         || !"PORTAL".equals(a.operation().originKind())) throw changed();
     same(root, a.operation().resource());
@@ -350,7 +359,8 @@ public final class InitialModelInputVerifier implements AutoCloseable {
         "modelBindingRef",
         "invocationRef");
     positive(n.get("modelEntryId"));
-    sameText(n.get("callKind"), "FORMAL");
+    boolean evaluation = EvaluationCandidateBinding.KIND.equals(root.kind());
+    sameText(n.get("callKind"), evaluation ? "EVALUATION" : "FORMAL");
     sameText(n.get("invocationRef"), "material:" + id + ":MAIN");
     if (!text(n.get("runId")).matches("r_[0-9a-f]{32}")
         || !root.id().startsWith(text(n.get("appCode")) + "@")) throw bad();
@@ -358,10 +368,11 @@ public final class InitialModelInputVerifier implements AutoCloseable {
     positive(n.get("modelBindingRef").get("bindingId"));
     hash(n.get("modelBindingRef").get("sha256"));
     var messages = n.get("messages");
-    if (!messages.isArray() || messages.size() != 2) throw bad();
-    for (int i = 0; i < 2; i++) {
+    if (!messages.isArray() || messages.size() < 2 || messages.size() > 400 || messages.size() % 2 != 0
+        || !evaluation && messages.size() != 2) throw bad();
+    for (int i = 0; i < messages.size(); i++) {
       fields(messages.get(i), "role", "content");
-      sameText(messages.get(i).get("role"), i == 0 ? "system" : "user");
+      sameText(messages.get(i).get("role"), i == 0 ? "system" : i % 2 == 1 ? "user" : "assistant");
       if (!messages.get(i).get("content").isTextual()) throw bad();
     }
     if (!n.get("toolDefinitions").isArray() || !n.get("toolDefinitions").isEmpty()) throw bad();
@@ -382,7 +393,7 @@ public final class InitialModelInputVerifier implements AutoCloseable {
                     List.of(
                         "PREPARE", "RENDER", "MESSAGES", "ACCOUNT", "TRIM", "VALIDATE", "FREEZE")))
         || !diagnostic.get("currentUserIndex").isIntegralNumber()
-        || diagnostic.get("currentUserIndex").intValue() != 1
+        || diagnostic.get("currentUserIndex").intValue() != messages.size() - 1
         || !diagnostic.get("estimatedTokens").isIntegralNumber()
         || diagnostic.get("estimatedTokens").longValue() < 0
         || !diagnostic.get("tokenCountExact").isBoolean()

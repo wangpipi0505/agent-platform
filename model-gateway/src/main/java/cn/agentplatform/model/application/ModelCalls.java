@@ -47,14 +47,14 @@ public class ModelCalls {
     private final FrozenModelBindingVerifier initialBindings;
     private final TransactionTemplate initialTransaction;
 
-    @Autowired
     public ModelCalls(ModelStore store, ModelQuota quota) {
-        this.store = store;
-        this.quota = quota;
-        this.circuits = new ModelCircuits(store);
-        this.initialInputs = null;
-        this.initialBindings = null;
-        this.initialTransaction = null;
+        this(store, quota, null, null, null);
+    }
+
+    @Autowired
+    public ModelCalls(ModelStore store, ModelQuota quota,
+            org.springframework.beans.factory.ObjectProvider<InitialModelInputVerifier> verifier, DataSource dataSource) {
+        this(store, quota, verifier.getIfAvailable(), new FrozenModelBindingVerifier(dataSource), dataSource);
     }
 
     /** Explicit initial-only component assembly; all supplied dependencies are borrowed. */
@@ -62,10 +62,11 @@ public class ModelCalls {
             FrozenModelBindingVerifier bindings, DataSource dataSource) {
         this.store = Objects.requireNonNull(store);
         this.quota = Objects.requireNonNull(quota);
-        this.initialInputs = Objects.requireNonNull(inputs);
-        this.initialBindings = Objects.requireNonNull(bindings);
-        this.initialTransaction = new TransactionTemplate(new DataSourceTransactionManager(Objects.requireNonNull(dataSource)));
-        this.initialTransaction.setTimeout(3);
+        this.initialInputs = inputs;
+        this.initialBindings = inputs == null ? null : Objects.requireNonNull(bindings);
+        this.initialTransaction = inputs == null ? null
+                : new TransactionTemplate(new DataSourceTransactionManager(Objects.requireNonNull(dataSource)));
+        if (initialTransaction != null) initialTransaction.setTimeout(3);
         this.circuits = new ModelCircuits(store);
     }
 
@@ -79,7 +80,8 @@ public class ModelCalls {
         var a = AuthorityContext.current();
         var root = a.call().resource();
         if (!"engine".equals(a.caller()) || !"model".equals(a.call().target())
-                || !"model.chat-stream".equals(a.call().action()) || !"app-version".equals(root.kind())
+                || !"model.chat-stream".equals(a.call().action())
+                || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(root.kind())
                 || !"DELEGATED".equals(a.operation().sourceKind()) || !"PORTAL".equals(a.operation().originKind())
                 || !root.equals(a.operation().resource())
                 || !new SubjectKey(a.actor().tenantId(), a.actor().principalId()).equals(a.operation().subject()))
@@ -999,7 +1001,8 @@ public class ModelCalls {
                         ((Number)limits.get("tpm")).intValue(), ((Number)limits.get("rpm")).intValue(),
                         ((Number)limits.get("daily_tokens")).intValue(), ((Number)limits.get("user_daily_tokens")).intValue(),
                         ((Number)limits.get("user_concurrency")).intValue(), ((Number)limits.get("app_concurrency")).intValue(),
-                        false, 10000, prepared -> { store.reserveQuota(actor, request, entry, prepared); receipt.set(prepared); }));
+                        "EVALUATION".equals(request.path("callKind").asText()), 10000,
+                        prepared -> { store.reserveQuota(actor, request, entry, prepared); receipt.set(prepared); }));
                 var finalBinding = refreshInitial(accepted, materialRef, identity, manifestSha);
                 FrozenInitialWireGuard.require(finalBinding, accepted, body);
                 initialOwner(owner, deadline);

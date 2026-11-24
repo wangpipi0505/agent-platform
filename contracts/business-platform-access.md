@@ -16,7 +16,7 @@
 
 1. 业务服务配置 `AGENT_SECURITY_MODE=iam` 及各自的服务凭据。网关统一入口使用 TLS，平台服务通过受信网络访问 authority 的 token、decision 和 JWKS 地址。
 2. authority 开启 `AGENT_AUTHORITY_DELEGATION_ENABLED=true`。门户票的 issuer、audience 和 client ID 与网关验签配置逐字匹配。主体代查配置 `AGENT_AUTHORITY_IDENTITY_URL`、绑定租户及 `AGENT_AUTHORITY_IDENTITY_SUBJECT_KEY_REF`。由 authority 提供登录会话时，同时配置会话签发和身份源档案。
-3. 网关为精确登记的入口建立用户委派。服务按动作、资源和来源核验委派，再执行平台能力检查。异步运行保存原委托引用和资源绑定，调度时用同一引用重取当前授权。原授权过期或当前决策拒绝时停止推进。门户重试时重新核验身份及平台应用授权。
+3. 网关为精确登记的入口建立用户委派。服务按动作、资源和来源核验委派，再执行平台能力检查。异步运行保存委托引用和资源绑定，调度时用当前代次重取授权。评测委派过期后，门户恢复会重新核验身份和平台应用权限，并按评测契约记录授权换代。
 4. 使用期短票的 IAM 交付由 R-40 验证。平台侧需接通 authority 的集成换票处理及网关的运行入口。对接方以部署清单所列已开放能力为准，宿主可以先按本契约准备后端与调用代码。
 
 ## 联验标准

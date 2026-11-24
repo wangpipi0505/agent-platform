@@ -46,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 AuthorityTestSupport.P_KEY,
                 AuthorityTestSupport.P_GATEWAY,
                 "agent.authority.clients.monitor=test-monitor-secret",
+                "agent.authority.clients.model=test-model-secret",
                 DelegatedTestSupport.P_ENGINE,
                 DelegatedTestSupport.P_DELEGATION_ON})
 class ExchangeContractTest extends DelegatedTestSupport {
@@ -87,6 +88,28 @@ class ExchangeContractTest extends DelegatedTestSupport {
         assertThat(proof.path("grant_ref").asText()).isEqualTo(grant);
         assertThat(proof.path("operation").path("source_kind").asText()).isEqualTo("DELEGATED");
         assertThat(proof.path("resource").path("id").asText()).isEqualTo("ops@7");
+
+        var current = postJson("/internal/authorize", engineAuth, callBody("authorize", advance,
+                "r37-advance-check", Map.of("service_ticket", renewed.getBody().path("ticket").asText())));
+        assertThat(current.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var invoke = new ServiceCall("model", "model.chat-stream", root);
+        var modelTicket = postJson("/oauth/token", engineAuth, callBody("forward", invoke,
+                "r37-model-call", forwardFields(TestJwt.claims(current.getBody().path("assertion").asText()))));
+        assertThat(modelTicket.getStatusCode()).isEqualTo(HttpStatus.OK);
+        String modelAuth = basic("model", "test-model-secret");
+        var model = postJson("/internal/authorize", modelAuth, callBody("authorize", invoke,
+                "r37-model-check", Map.of("service_ticket", modelTicket.getBody().path("ticket").asText())));
+        assertThat(model.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var material = new ServiceCall(ENGINE, "material.scope.read", root);
+        var materialTicket = postJson("/oauth/token", modelAuth, callBody("forward", material,
+                "r37-model-material", forwardFields(TestJwt.claims(model.getBody().path("assertion").asText()))));
+        assertThat(materialTicket.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var read = postJson("/internal/authorize", engineAuth, callBody("authorize", material,
+                "r37-engine-material", Map.of("service_ticket", materialTicket.getBody().path("ticket").asText())));
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var afterRead = postJson("/oauth/token", engineAuth,
+                callBody("resume", advance, "r37-advance-after-read", Map.of("grant_ref", grant)));
+        assertThat(afterRead.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         var other = new ServiceCall(ENGINE, "run.advance", EvaluationCandidateBinding.of("ops", 8, DIGEST));
         var denied = postJson("/oauth/token", engineAuth,

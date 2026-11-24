@@ -697,7 +697,7 @@ public final class LoopbackAuthority implements AutoCloseable {
                     || !grant.resource.equals(call.resource())
                     || decisions.values().stream().noneMatch(decision -> decision.operation.grant.id.equals(grant.id)
                             && "engine".equals(decision.call.target())
-                            && "evaluation.run".equals(decision.call.action()))) throw AuthorityProtocol.denied();
+                            && Set.of("evaluation.run", "evaluation.turn").contains(decision.call.action()))) throw AuthorityProtocol.denied();
             return;
         }
         if(!ServiceRoutePolicy.localRunAdvance(caller,call,"delegated","DELEGATED",grant.origin)

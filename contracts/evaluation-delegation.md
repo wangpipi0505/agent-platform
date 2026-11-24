@@ -8,6 +8,8 @@
 
 - 已接通纯 FLOW 的受理、调度和重放。engine 从评测请求复核候选正文，用 `evaluation-candidate` 根入库，同时保存委托引用与材料范围。worker 通过现有 authority 的 `resume` 重取同一候选的 `run.advance`。用例以报告和用例 ID 幂等。同一请求号下改输入返回 409。
 - `GET /admin/evaluations` 与单报告查询按当前门户主体读取。 `POST /admin/evaluations/{id}/resume` 携带 `appCode`、`draftRev`、`candidateSha256`。monitor 与原报告逐项比对，再让 app 按冻结候选的应用复核当前构建权限。恢复沿用已持久化的报告和候选。
-- CHAT 多轮要在同一评测根上保存会话、报告、用例、轮次和前轮结果范围。engine 从已提交且同归属的前轮生成历史材料，固定输入摘要和模型引用后再执行。授权换代以相同租户、原主体、候选和当前平台权限为前提，并保留旧代记录。该材料链需要联验后启用。
+- CHAT 多轮的会话固定租户、主体、候选、报告、用例和数据集。engine 按顺序读取已成功前轮的受保护输入及输出，保存两份材料范围摘要及信任标签，由冻结的模型输入清单送出。每轮只执行一个主模型调用。工具、数据源和未确认模型结果的重复发送保持拒绝。
+- 原 grant 过期时，用户从门户恢复报告。monitor 先向 app 复核当前构建能力，engine 再匹配原主体、候选、数据集和输入，验证新委派覆盖原材料。V233 追加授权代次并原子切换运行使用的 grant，保留原授权。当前实现要求新委派的初始权限快照与原 run 一致。授权明确拒绝时保留拒绝状态。
+- 本地联合验证使用真实 authority-service、用户目录、五个业务服务、PostgreSQL、Redis 和回环模型测试端。两轮均已成功，monitor 生成 `ACCEPTED` 报告，app 发布预检对相同证据摘要返回通过。
 
 业务软件接入和 IAM 配置见 [统一授权通道](business-platform-access.md)。

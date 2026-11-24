@@ -143,7 +143,7 @@ public final class FrozenModelBindingVerifier {
     var owner = new SubjectKey(a.actor().tenantId(), a.actor().principalId());
     if (!"engine".equals(a.caller()) || !"model".equals(a.call().target())
         || !"model.chat-stream".equals(a.call().action())
-        || !"app-version".equals(a.call().resource().kind())
+        || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(a.call().resource().kind())
         || a.operation() == null || !"DELEGATED".equals(a.operation().sourceKind())
         || !"PORTAL".equals(a.operation().originKind())) throw missing();
     same(a.call().resource(), a.operation().resource());

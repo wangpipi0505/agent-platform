@@ -3,6 +3,7 @@ package cn.agentplatform.engine.infra;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.*;
 import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.RetainedAuthorization;
+import cn.agentplatform.engine.domain.InitialChatRules;
 import cn.agentplatform.engine.domain.RunObservationMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.sql.*;
@@ -32,7 +33,7 @@ public final class RunAuthorityStore {
                                  JsonNode refs, JsonNode budget) {
         object(request);
         return create(admission, snapshot, request.path("inputs"), refs, budget, "FULL",
-                text(request, "requestId"), Set.of(), false, request);
+                text(request, "requestId"), InitialChatRules.evaluationLabels(snapshot), false, request);
     }
     private long create(RetainedAuthorization admission,JsonNode snapshot,JsonNode inputs,JsonNode refs,
             JsonNode budget,String mode,String requestId,Set<String> labels,boolean firstChat,JsonNode evaluation){
@@ -66,8 +67,10 @@ public final class RunAuthorityStore {
             root = new ResourceBinding("app-version", code + "@" + no, candidate);
             if (snapshot.has("appVersionKey")) same(root.id(), text(snapshot, "appVersionKey"));
         } else {
-            cn.agentplatform.engine.domain.GraphRules.requirePublishedFlow(snapshot);
-            same("evaluation.run", current.call().action());
+            if ("CHAT".equals(text(snapshot,"type"))) InitialChatRules.requireEvaluationSources(snapshot, inputs);
+            else cn.agentplatform.engine.domain.GraphRules.requirePublishedFlow(snapshot);
+            same(evaluation.has("turnNo") ? "evaluation.turn" : "evaluation.run", current.call().action());
+            same(evaluation.has("turnNo"), snapshot.has("chatSession"));
             revision = positive(snapshot.get("draftRev"));
             root = EvaluationCandidateBinding.of(code, revision, candidate);
             same(root, EvaluationCandidateBinding.from(evaluation));
@@ -191,7 +194,16 @@ public final class RunAuthorityStore {
         }catch(DateTimeException invalid){throw denied();}
     }
     static Binding load(JdbcTemplate db,long runId,boolean complete){
-        var rows=db.queryForList("select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,r.app_code,r.app_version_id as run_version,r.trigger_type,r.eval_candidate::text,a.* from engine.run r join engine.run_authority a on a.run_id=r.id where r.id=?",runId);
+        var rows=db.queryForList("""
+                select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,
+                    r.app_code,r.app_version_id as run_version,r.trigger_type,r.eval_candidate::text,a.*,
+                    coalesce(g.grant_ref,a.grant_ref) as active_grant_ref,
+                    coalesce(g.grant_expires_at,a.grant_expires_at) as active_grant_expires_at,
+                    coalesce(g.origin_authentication_id,a.origin_authentication_id) as active_origin_id
+                from engine.run r join engine.run_authority a on a.run_id=r.id
+                left join engine.evaluation_grant_generation g on g.run_id=a.run_id and g.generation=a.active_generation
+                where r.id=?
+                """,runId);
         if(rows.size()!=1)throw denied();var r=rows.getFirst();
         Actor initial=parseInitial(Json.read(r.get("initial_ceiling").toString()));
         var owner=new SubjectKey(str(r,"tenant_id"),str(r,"principal_id"));same(owner,new SubjectKey(initial.tenantId(),initial.principalId()));
@@ -214,11 +226,57 @@ public final class RunAuthorityStore {
             same("app-version",kind);
             same(str(r,"app_code")+"@"+no,root.id());
         }
-        var b=new Binding(runId,str(r,"public_id"),owner,new DelegationRef(str(r,"grant_ref"),owner,instant(r,"grant_expires_at")),initial,
-            root,version,no,initialSha,snapshotSha,str(r,"origin_authentication_id"),str(r,"admission_decision_id"),str(r,"authorization_version"),str(r,"operation_id"),((Number)r.get("check_version")).longValue(),(String)r.get("blocked_reason"),instant(r,"retry_not_before"),List.of());
+        var b=new Binding(runId,str(r,"public_id"),owner,new DelegationRef(str(r,"active_grant_ref"),owner,instant(r,"active_grant_expires_at")),initial,
+            root,version,no,initialSha,snapshotSha,str(r,"active_origin_id"),str(r,"admission_decision_id"),str(r,"authorization_version"),str(r,"operation_id"),((Number)r.get("check_version")).longValue(),(String)r.get("blocked_reason"),instant(r,"retry_not_before"),List.of());
         if(!complete)return b;
         var scopes=MaterialScopeStore.scopes(db,b);
         return new Binding(b.runId,b.publicId,b.owner,b.delegation,b.initial,b.root,b.appVersionId,b.appVersionNo,b.initialSha,b.snapshotSha,b.originId,b.admissionDecision,b.authorizationVersion,b.operationId,b.checkVersion,b.blockedReason,b.retryNotBefore,scopes);
+    }
+
+    /** Called only after replay matches the frozen request. Preserve the original material ceiling. */
+    public boolean renewEvaluation(long runId, RetainedAuthorization proof) {
+        AuthorityContext.requireBound(proof);
+        var current = proof.current();
+        requirePurpose(current, false);
+        same(EvaluationCandidateBinding.KIND, current.call().resource().kind());
+        if (TransactionSynchronizationManager.isActualTransactionActive()) throw denied();
+        var tx = new TransactionTemplate(new DataSourceTransactionManager(source));
+        return Boolean.TRUE.equals(tx.execute(status -> {
+            String state = db.queryForObject("select status from engine.run where id=? for update", String.class, runId);
+            if (!Set.of("PENDING", "RUNNING").contains(state)) return false;
+            long generation = db.queryForObject(
+                    "select coalesce(active_generation,0) from engine.run_authority where run_id=? for update",
+                    Long.class, runId);
+            var binding = load(db, runId, true);
+            var now = clock.instant();
+            if (binding.delegation().expiresAt().isAfter(now)) return false;
+            same(binding.root(), current.call().resource());
+            same(binding.owner(), current.delegation().subject());
+            same(binding.initial(), proof.requireInitialCeiling());
+            if ("AUTHORITY_DENIED".equals(binding.blockedReason())
+                    || binding.delegation().value().equals(current.delegation().value())
+                    || !current.delegation().expiresAt().isAfter(now)) throw denied();
+            new MaterialScopeStore(source, clock).currentScopes(binding)
+                    .forEach(scope -> MaterialAuthorization.require(scope, current, clock));
+            AuthorityContext.requireBound(proof);
+            db.update("""
+                    insert into engine.evaluation_grant_generation
+                      (run_id,generation,grant_ref,grant_expires_at,origin_authentication_id,
+                       decision_id,authorization_version,operation_id,recorded_at)
+                    values (?,?,?,?,?,?,?,?,?)
+                    """, runId, generation + 1, current.delegation().value(),
+                    Timestamp.from(current.delegation().expiresAt()), proof.requireOriginAuthenticationId(),
+                    current.decisionId(), current.authorizationVersion(), current.operation().operationId(), Timestamp.from(now));
+            int updated = db.update("""
+                    update engine.run_authority set active_generation=?,last_decision_id=null,last_checked_at=null,
+                        blocked_reason=null,retry_not_before=null,check_version=check_version+1
+                    where run_id=? and check_version=?
+                    """, generation + 1, runId, binding.checkVersion());
+            if (updated != 1) throw denied();
+            db.update("update engine.run set dispatch_next_at=clock_timestamp() where id=?", runId);
+            AuthorityContext.requireBound(proof);
+            return true;
+        }));
     }
     /** Result is usable only if this short CAS wins. Network calls must not hold a PG transaction. */
     public boolean recordCheck(Binding before,RetainedAuthorization proof,String blocked,Duration backoff){
@@ -254,7 +312,7 @@ public final class RunAuthorityStore {
                 && "app-version".equals(a.call().resource().kind())
                 && "PORTAL".equals(a.operation().sourceKind()) && "PORTAL".equals(a.operation().originKind());
         boolean evaluation = "monitor".equals(a.caller()) && "engine".equals(a.call().target())
-                && "evaluation.run".equals(a.call().action())
+                && Set.of("evaluation.run", "evaluation.turn").contains(a.call().action())
                 && EvaluationCandidateBinding.KIND.equals(a.call().resource().kind())
                 && "PORTAL".equals(a.operation().sourceKind()) && "PORTAL".equals(a.operation().originKind());
         if(localOnly ? !local : !(main || evaluation))throw denied();

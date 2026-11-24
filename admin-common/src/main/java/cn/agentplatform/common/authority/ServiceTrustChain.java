@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.core.Ordered;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.util.List;
 import java.util.Objects;
@@ -21,14 +22,20 @@ public final class ServiceTrustChain implements SecurityFilterChain, Ordered {
     public static final int ORDER = -100;
 
     private final SecurityFilterChain delegate;
+    private final RequestMatcher additional;
 
     public ServiceTrustChain(SecurityFilterChain delegate) {
+        this(delegate, request -> false);
+    }
+
+    public ServiceTrustChain(SecurityFilterChain delegate, RequestMatcher additional) {
         this.delegate = Objects.requireNonNull(delegate, "delegate");
+        this.additional = Objects.requireNonNull(additional, "additional");
     }
 
     @Override
     public boolean matches(HttpServletRequest request) {
-        return delegate.matches(request);
+        return delegate.matches(request) || additional.matches(request);
     }
 
     @Override

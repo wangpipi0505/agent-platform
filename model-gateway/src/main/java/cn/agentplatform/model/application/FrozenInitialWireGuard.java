@@ -42,10 +42,11 @@ final class FrozenInitialWireGuard {
       for(int i=0;i<stop.size();i++)textValue(stop.get(i),options.getStop().get(i));
     }
     JsonNode messages=body.get("messages");required(messages);if(!messages.isArray())throw invalid();
-    if(messages.size()!=2 || expected.getInstructions().size()!=2)throw changed();
-    for(int i=0;i<2;i++){
+    if(messages.size()!=expected.getInstructions().size())throw changed();
+    for(int i=0;i<messages.size();i++){
       JsonNode message=messages.get(i);object(message);keys(message,Set.of("role","content"));
-      text(message,"role",i==0?"system":"user");text(message,"content",expected.getInstructions().get(i).getText());
+      var expectedMessage=expected.getInstructions().get(i);
+      text(message,"role",expectedMessage.getMessageType().getValue());text(message,"content",expectedMessage.getText());
     }
     var format=options.getResponseFormat();JsonNode actualFormat=body.get("response_format");
     if(format==null){absent(actualFormat);}else{

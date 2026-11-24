@@ -30,6 +30,8 @@ spring:
     schemas: engine
     locations: classpath:db/migration
     create-schemas: true
+    # 样例 V901 可能已在升级库执行，后续引擎结构迁移仍使用引擎版本段。
+    out-of-order: true
 agent:
   scheduler:
     # Local worker slots; distributed model/tool/assembly permits remain separate gates.

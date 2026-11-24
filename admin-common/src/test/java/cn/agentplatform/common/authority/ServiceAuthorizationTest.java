@@ -25,6 +25,26 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMappi
 import static org.assertj.core.api.Assertions.*;
 
 class ServiceAuthorizationTest {
+    @Test
+    void selectsTheServiceTrustChainForExactPortalDelegates() {
+        var routes = new ServiceRoutePolicy();
+        var authority = org.mockito.Mockito.mock(CurrentAuthorityClient.class);
+        var app = new ServiceAuthorization("app", routes, authority);
+        var monitor = new ServiceAuthorization("monitor", routes, authority);
+        var request = new org.springframework.mock.web.MockHttpServletRequest(
+                "POST", "/admin/apps/ops/publish/precheck");
+        assertThat(app.delegatedPortalRequest(request)).isTrue();
+        assertThat(monitor.delegatedPortalRequest(request)).isFalse();
+        request.setRequestURI("/admin/evaluations");
+        assertThat(monitor.delegatedPortalRequest(request)).isTrue();
+        assertThat(app.delegatedPortalRequest(request)).isFalse();
+        request.setMethod("PUT");
+        assertThat(monitor.delegatedPortalRequest(request)).isFalse();
+        request.setMethod("POST");
+        request.setRequestURI("/admin/evaluations/extra");
+        assertThat(monitor.delegatedPortalRequest(request)).isFalse();
+    }
+
     static final String RUN="r_11111111111111111111111111111111",OTHER_RUN="r_22222222222222222222222222222222";
     static final String ACCEPTED_SHA=Digest.sha256("snapshot-v1"),OTHER_SHA=Digest.sha256("other-snapshot");
     static final ResourceBinding RESOURCE=RunObservationSelectors.status(RUN,ACCEPTED_SHA);

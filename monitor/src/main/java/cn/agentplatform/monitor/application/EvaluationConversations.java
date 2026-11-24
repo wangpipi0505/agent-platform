@@ -120,10 +120,12 @@ final class EvaluationConversations {
                     var evidence=object(checkpoint.get("sourceEvidence"));
                     var runSource=Json.tree(run.get("sourceEvidence"));
                     String mode=runSource.path("environment").asText("UNKNOWN");
-                    boolean consistent=!Boolean.TRUE.equals(evidence.get("invalid")) && !runId.isBlank() && dataset.equals(run.get("datasetVersion"))
-                            && sources.test(runId,run)
+                    boolean unfinished=PENDING.contains(runState);
+                    boolean consistent=!Boolean.TRUE.equals(evidence.get("invalid")) && !runId.isBlank()
+                            && dataset.equals(run.get("datasetVersion"))
+                            && (evidence.get("runId")==null || runId.equals(evidence.get("runId")));
+                    if (!unfinished) consistent &= sources.test(runId,run)
                             && ("REAL".equals(run.get("environment"))&&Boolean.FALSE.equals(run.get("demoMode")) || "DEMO".equals(run.get("environment"))&&Boolean.TRUE.equals(run.get("demoMode")))
-                            && (evidence.get("runId")==null || runId.equals(evidence.get("runId")))
                             && ("UNKNOWN".equals(evidence.get("environment")) || mode.equals(evidence.get("environment")));
                     if(conversation){
                         String session=Objects.toString(run.get("conversationId"),"");
@@ -132,7 +134,10 @@ final class EvaluationConversations {
                                 && code.equals(run.get("appCode")) && hash.equals(run.get("candidateSha256")) && run.get("draftRev") instanceof Number number && number.longValue()==rev;
                         if(result.get("conversationId")==null && !session.isBlank()) result.put("conversationId",session);
                     }
-                    evidence.put("environment",consistent?mode:"UNKNOWN"); if(consistent)evidence.put("runSource",runSource); if(!consistent)evidence.put("invalid",true); if(!runId.isBlank())evidence.put("runId",runId);
+                    evidence.put("environment",consistent && !unfinished ? mode : "UNKNOWN");
+                    if(consistent && !unfinished)evidence.put("runSource",runSource);
+                    if(!consistent)evidence.put("invalid",true);
+                    if(!runId.isBlank())evidence.put("runId",runId);
                     var comparison="SUCCEEDED".equals(runState)?EvaluationAssertions.compare(EvaluationAssertions.MODEL_CONFIGURABLE.equals(assertionModel)?turn.get("assertion"):null,turn.get("expected"),run.get("output")):new EvaluationAssertions.CompareResult(false,"ASSERTION_EXECUTION_NOT_SUCCEEDED","轮次尚未成功完成");
                     checkpoint.put("status",runState); checkpoint.put("runId",runId); checkpoint.put("actual",run.get("output")); checkpoint.put("expected",turn.get("expected"));
                     checkpoint.put("passed",consistent && "SUCCEEDED".equals(runState) && comparison.pass());

@@ -37,4 +37,19 @@ npm exec -- vitest run tests/evaluation-observer.test.ts tests/portal-auth.test.
 
 Java 58 例和前端 53 例通过。 [输出摘录](iam-candidate-result.txt)。
 
-部署级验收需用实际门户票串起真实评测报告的 `ACCEPTED` 与发布预检。CHAT 多轮的历史材料持久授权绑定及授权换代方案见 [评测委派契约](../../../contracts/evaluation-delegation.md)。
+## CHAT 两轮与授权换代
+
+- V233 在原运行上追加授权代次。隔离 PostgreSQL 回归证明 grant 到期后，变更输入重放返回 409，原请求重放保留 runId，原授权仍在，活跃代次更新后运行达 `SUCCEEDED`。
+- 两轮 PostgreSQL 回归验证会话与原候选绑定、第二轮模型材料包含已成功第一轮的输入和回答及来源摘要、重放返回同一 runId。实际 authority HTTP 验证模型读材料后，engine 仍可依据同一 grant 的执行决策继续推进。
+- 本机运行 authority、gateway、app、monitor、engine 和 model 的 Spring Boot 服务，使用 PostgreSQL 16.15、Redis 8.8.0、已有 user-mgmt 18072 主体代查及 authority 测试档 RS256 门户票。模型响应由独立回环测试端按收到的请求生成。未部署 E2，未执行发布提交。
+- 应用 `r37chat61c680a6` 走 `POST /admin/evaluations` 和报告恢复。两轮均达 `SUCCEEDED`，报告达 `ACCEPTED`。走网关发布预检返回 `passed=true`，同报告的评测门禁和评测环境均为 `PASS`，证据摘要一致。 [联合验证结果](joined-http-result.txt)
+
+```powershell
+# JDK 21，分别配置 AGENT_R37_ENGINE_DB_URL 和 AGENT_DB_URL 到隔离 PostgreSQL 测试库。
+mvn -B -ntp -pl authority-service,platform-gateway,app-management,engine-runtime,model-gateway,monitor -am '-Dtest=EvaluationRunAuthorityTest,EvaluationRunPostgresTest,ExchangeContractTest,EvaluationEnvironmentGateTest,GatewayIamPortalHttpTest,EvaluationDelegationTest,EvaluationRulesTest,EvaluationAssertionsTest,ServiceAuthorizationTest#selectsTheServiceTrustChainForExactPortalDelegates' '-Dsurefire.failIfNoSpecifiedTests=false' test
+docker compose -f deploy/compose-test.yaml config --no-interpolate --quiet
+```
+
+本机 HTTP 联验的响应链依次为 `GET /auth/session`、`GET /admin/apps/{code}`、`POST /admin/evaluations`、`POST /admin/evaluations/{id}/resume`、`POST /admin/apps/{code}/publish/precheck`。联合测试使用的环境、请求脚本和原始日志保存在本工作区 `.local/r37-joined/`、`.local/r37-*.ps1` 及本证据目录的 `raw-r37-*.log`。
+
+最终定向回归通过 54 例，另有应用发布环境门禁 2 例通过。Compose 配置检查通过。

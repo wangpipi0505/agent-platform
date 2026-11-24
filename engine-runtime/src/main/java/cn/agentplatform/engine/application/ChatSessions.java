@@ -1,6 +1,7 @@
 package cn.agentplatform.engine.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.engine.domain.InitialChatRules;
 import cn.agentplatform.engine.domain.InputDeclarations;
 import cn.agentplatform.engine.domain.RunAdmissionRejected;
 import cn.agentplatform.engine.infra.*;
@@ -846,8 +847,8 @@ public class ChatSessions {
 
     /** 仅已验内部评测主体；固定候选会话不读取published，也不走TASK/FULL受理。 */
     public Map<String,Object> evaluationTurn(JsonNode req,Actor actor) {
-        if (!actor.roles().contains("SERVICE")) throw new PlatformException(403,"EVALUATION_SERVICE_REQUIRED","仅内部评测调用可受理候选轮次");
-        if (runs.iamEnabled()) throw new PlatformException(403,"IAM_ADMISSION_ROUTE_DENIED","IAM候选会话受理尚未迁移");
+        boolean iam = runs.iamEnabled();
+        if (!iam && !actor.roles().contains("SERVICE")) throw new PlatformException(403,"EVALUATION_SERVICE_REQUIRED","仅内部评测调用可受理候选轮次");
         String code=req.path("appCode").asText(), report=req.path("evalReportId").asText(), caseId=req.path("caseId").asText();
         if (!code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}") || report.isBlank() || report.length()>128 || caseId.isBlank() || caseId.length()>128
                 || !req.path("turnNo").isIntegralNumber() || !req.path("turnNo").canConvertToInt() || req.path("turnNo").intValue()<1
@@ -855,8 +856,13 @@ public class ChatSessions {
             throw new PlatformException(400,"EVALUATION_TURN_INVALID","评测轮次参数无效");
         int turn=req.path("turnNo").intValue();
         var candidate=req.path("frozenCandidate");
+        var authorization = iam ? runs.requireEvaluationSessionTurn(code, req, actor) : null;
         if (!"CHAT".equals(candidate.path("type").asText()) || candidate.has("chatSession") || candidate.has("evaluationConversation"))
             throw new PlatformException(400,"EVALUATION_CHAT_REQUIRED","候选会话仅支持显式CHAT，历史指针由服务器创建");
+        if (iam) {
+            if (candidate.has("evaluationHistory")) throw RunAuthorityStore.denied();
+            InitialChatRules.requireEvaluationSources(candidate, req.path("inputs"));
+        }
         Map<String,Object> content=new LinkedHashMap<>();
         for(String key:List.of("appCode","type","name","description","domain","bizCategory","tags","config","definition")) content.put(key,candidate.path(key));
         String sha=Digest.sha256(Json.canonical(content));
@@ -892,7 +898,7 @@ public class ChatSessions {
                 var previous=store.db().queryForList("select r.status from engine.chat_turn t left join engine.run r on r.public_id=t.run_public_id where t.session_id=? and t.turn_no=?",id,turn-1);
                 if(previous.isEmpty() || !"SUCCEEDED".equals(previous.getFirst().get("status")))
                     throw new PlatformException(409,"CHAT_TURN_ACTIVE","前轮尚未成功完成，不能发起下一轮");
-                ChatHistory.checkScope(store,id,code,actor);
+                if (!iam) ChatHistory.checkScope(store,id,code,actor);
             }
             InputDeclarations.validate(candidate,req.path("inputs"));
             store.db().update("insert into engine.chat_turn(session_id,turn_no,request_id,inputs) values(?,?,?,?::jsonb)",id,turn,"turn:"+turn,Json.write(req.path("inputs")));
@@ -900,12 +906,14 @@ public class ChatSessions {
             return store.db().queryForMap("select * from engine.chat_turn where session_id=? and turn_no=?",id,turn);
         });
         Map<String,Object> result;
-        if(reservation.get("run_public_id")!=null) result=runs.status(reservation.get("run_public_id").toString(),actor);
+        if(!iam && reservation.get("run_public_id")!=null) result=runs.status(reservation.get("run_public_id").toString(),actor);
         else{
             var source=(com.fasterxml.jackson.databind.node.ObjectNode)fixed.deepCopy();
             source.set("chatSession",Json.tree(Map.of("sessionId",id,"turnNo",turn)));
+            if (iam && reservation.get("run_public_id") == null)
+                source.set("evaluationHistory", store.evaluationHistory(id, turn, source, authorization));
             result=runs.createEvaluationSessionTurn(code,req,source,actor);
-            store.db().update("update engine.chat_turn set run_public_id=? where session_id=? and turn_no=? and run_public_id is null",result.get("runId"),id,turn);
+            if (!iam) store.db().update("update engine.chat_turn set run_public_id=? where session_id=? and turn_no=? and run_public_id is null",result.get("runId"),id,turn);
         }
         var response=new LinkedHashMap<String,Object>(result);
         response.putAll(binding); response.put("conversationId",id); response.put("turnNo",turn);

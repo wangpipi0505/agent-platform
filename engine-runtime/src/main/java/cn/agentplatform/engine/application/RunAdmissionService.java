@@ -139,7 +139,7 @@ public class RunAdmissionService {
         return AuthorityContext.requireInitialFor(actor, root);
     }
 
-    RetainedAuthorization evaluationOpening(String code, JsonNode request, Actor actor) {
+    RetainedAuthorization evaluationOpening(String code, JsonNode request, Actor actor, boolean turn) {
         if (!wired()) {
             throw new PlatformException(403, "IAM_ADMISSION_UNAVAILABLE", "受理授权尚未装配");
         }
@@ -154,15 +154,23 @@ public class RunAdmissionService {
             throw RunAuthorityStore.denied();
         }
         var fields = request.fieldNames();
-        Set<String> allowed = Set.of("appCode", "draftRev", "candidateSha256", "frozenCandidate",
-                "evalReportId", "caseId", "datasetVersion", "inputs", "requestId");
+        Set<String> allowed = new HashSet<>(Set.of("appCode", "draftRev", "candidateSha256", "frozenCandidate",
+                "evalReportId", "caseId", "datasetVersion", "inputs", "requestId"));
+        if (turn) {
+            allowed.addAll(Set.of("turnNo", "conversationId"));
+            if (!request.path("turnNo").isIntegralNumber() || !request.path("turnNo").canConvertToInt()
+                    || request.path("turnNo").intValue() < 1
+                    || !"CHAT".equals(request.path("frozenCandidate").path("type").asText())) {
+                throw RunAuthorityStore.denied();
+            }
+        }
         while (fields.hasNext()) {
             if (!allowed.contains(fields.next())) throw RunAuthorityStore.denied();
         }
         var root = EvaluationCandidateBinding.from(request);
         var current = AuthorityContext.current();
         if (!"monitor".equals(current.caller())
-                || !new ServiceCall("engine", "evaluation.run", root).equals(current.call())
+                || !new ServiceCall("engine", turn ? "evaluation.turn" : "evaluation.run", root).equals(current.call())
                 || current.operation() == null || !"PORTAL".equals(current.operation().sourceKind())
                 || !"PORTAL".equals(current.operation().originKind()) || !root.equals(current.operation().resource())) {
             throw RunAuthorityStore.denied();

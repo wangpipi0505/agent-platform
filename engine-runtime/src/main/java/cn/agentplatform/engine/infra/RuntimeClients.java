@@ -43,8 +43,10 @@ public class RuntimeClients implements AutoCloseable {
             AuthorityProperties properties,
             ObjectProvider<CurrentAuthorityClient> capability,
             @Value("${agent.services.app:http://127.0.0.1:18081}") String origin,
+            @Value("${agent.services.model:http://127.0.0.1:18084}") String modelOrigin,
             org.springframework.core.env.Environment environment) {
         this(properties, capability.getIfAvailable(), origin, java.util.Arrays.asList(environment.getActiveProfiles()).contains("test"));
+        if (iam) configureInitial(modelOrigin, environment.acceptsProfiles(org.springframework.core.env.Profiles.of("test")));
     }
 
     /**
@@ -59,10 +61,14 @@ public class RuntimeClients implements AutoCloseable {
         this(properties, capability, origin, isolatedLoopback, (java.util.concurrent.ExecutorService) null);
     }
 
-    /** Explicit component assembly only. Default Spring/legacy constructors cannot send this profile. */
+    /** Explicit component assembly for isolated tests. */
     public RuntimeClients(AuthorityProperties properties, CurrentAuthorityClient capability,
             String appOrigin, boolean isolatedLoopback, String modelOrigin) {
         this(properties, capability, appOrigin, isolatedLoopback);
+        configureInitial(modelOrigin, isolatedLoopback);
+    }
+
+    private void configureInitial(String modelOrigin, boolean isolatedLoopback) {
         org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager manager = null;
         try {
             if (!iam) throw new IllegalArgumentException("INITIAL_IAM_REQUIRED");

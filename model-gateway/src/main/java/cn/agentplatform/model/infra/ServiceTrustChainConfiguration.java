@@ -78,4 +78,12 @@ public class ServiceTrustChainConfiguration implements WebMvcConfigurer {
             ServiceAuthorization serviceAuthorization) throws Exception {
         return SecurityConfiguration.serviceTrustChain(http, jwtDecoder, serviceAuthorization);
     }
+
+    @Bean(destroyMethod = "close")
+    cn.agentplatform.model.application.InitialModelInputVerifier initialModelInputVerifier(
+            HttpCurrentAuthorityClient authority, Environment environment,
+            @org.springframework.beans.factory.annotation.Value("${agent.services.engine:http://127.0.0.1:18082}") String engine) {
+        return new cn.agentplatform.model.application.InitialModelInputVerifier(authority, java.net.URI.create(engine),
+                environment.acceptsProfiles(Profiles.of("test")));
+    }
 }

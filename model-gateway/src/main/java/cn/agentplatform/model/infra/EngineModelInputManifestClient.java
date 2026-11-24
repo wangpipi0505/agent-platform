@@ -54,8 +54,14 @@ public final class EngineModelInputManifestClient implements AutoCloseable {
   private volatile boolean closed;
 
   public EngineModelInputManifestClient(URI origin) {
+    this(origin, false);
+  }
+
+  public EngineModelInputManifestClient(URI origin, boolean testLoopback) {
+    boolean loopback = testLoopback && origin != null && "http".equals(origin.getScheme())
+        && "127.0.0.1".equals(origin.getHost());
     if (origin == null
-        || !"https".equals(origin.getScheme())
+        || !("https".equals(origin.getScheme()) || loopback)
         || origin.getHost() == null
         || origin.getUserInfo() != null
         || origin.getRawQuery() != null
@@ -66,7 +72,7 @@ public final class EngineModelInputManifestClient implements AutoCloseable {
         || origin.getRawAuthority().endsWith(":"))
       throw new IllegalArgumentException("ENGINE_ORIGIN_INVALID");
     try {
-      this.origin = new URI("https", null, origin.getHost(), origin.getPort(), null, null, null);
+      this.origin = new URI(origin.getScheme(), null, origin.getHost(), origin.getPort(), null, null, null);
     } catch (URISyntaxException invalid) {
       throw new IllegalArgumentException("ENGINE_ORIGIN_INVALID");
     }

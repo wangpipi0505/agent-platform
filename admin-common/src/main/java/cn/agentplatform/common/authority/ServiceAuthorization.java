@@ -39,6 +39,17 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         return new org.springframework.web.servlet.handler.MappedInterceptor(null,this);
     }
     boolean guards(String localService){return serviceId.equals(localService);}
+
+    /** Select the service-ticket decoder for gateway-owned delegates before MVC resolves the action. */
+    public boolean delegatedPortalRequest(HttpServletRequest request) {
+        String method = request.getMethod();
+        String path = request.getRequestURI();
+        return switch (serviceId) {
+            case "app" -> PlatformBuildRoutes.template(method, path) != null;
+            case "monitor" -> EvaluationCandidateBinding.portalTemplate(method, path) != null;
+            default -> false;
+        };
+    }
     @Override public boolean preHandle(HttpServletRequest request,HttpServletResponse response,Object handler) {
         // Nested servlet forwards/includes must not overwrite the outer dispatch's close handle.
         // Async redispatch is separate: afterConcurrentHandlingStarted already retired its frame.

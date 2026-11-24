@@ -601,7 +601,9 @@ public final class MaterialScopeStore {
         return m;
     }
     private static void requireInitialRequest(Binding b,cn.agentplatform.engine.domain.ModelInputManifest m,JsonNode request){
-        same("material:"+m.material().id()+":MAIN",request.path("invocationRef").asText());same(b.publicId(),request.path("runId").asText());same("FORMAL",request.path("callKind").asText());
+        same("material:"+m.material().id()+":MAIN",request.path("invocationRef").asText());
+        same(b.publicId(),request.path("runId").asText());
+        same(EvaluationCandidateBinding.KIND.equals(b.root().kind()) ? "EVALUATION" : "FORMAL", request.path("callKind").asText());
         same(m.modelEntryId(),positive(request.path("modelEntryId")));same(m.modelBindingRef(),request.path("modelBindingRef"));
     }
     private static void requireInitialBinding(cn.agentplatform.engine.domain.ModelInputManifest m,JsonNode snapshot){

@@ -87,6 +87,7 @@ public class RunService {
     }
 
     private final ModelInputMaterials initialMaterials;
+    private final boolean publishedInitialEnabled;
     private final ChunkBus initialChunks;
     /**
      * SEM-08：终态后的目标读回核验。字段级可选注入，保持既有构造签名与直接 new 的测试可用；
@@ -120,7 +121,6 @@ public class RunService {
      * 生产装配：快照协作对象由容器注入（RunSnapshotService 是 @Service），保证门面与快照准备
      * 共用同一实例和同一组配置；显式必填，构造期缺依赖即失败。
      */
-    @Autowired
     public RunService(
             TraceStore s,
             RuntimeClients c,
@@ -131,7 +131,18 @@ public class RunService {
             RunAdmissionService admissions,
             RunRecoveryCoordinator recovery) {
         this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots, admissions,
-                recovery);
+                recovery, false);
+    }
+
+    @Autowired
+    public RunService(TraceStore store, RuntimeClients clients, FlowDriver flow, AgentDriver agent,
+            RunScheduler scheduler, RunSnapshotService snapshots, RunAdmissionService admissions,
+            RunRecoveryCoordinator recovery, org.springframework.beans.factory.ObjectProvider<RunAuthority> authority,
+            org.springframework.beans.factory.ObjectProvider<RunAuthorityStore> admissionStore,
+            ModelInputMaterials materials, ChunkBus chunks) {
+        this(store, clients, flow, agent, scheduler, authority.getIfAvailable(), admissionStore.getIfAvailable(),
+                Clock.systemUTC(), clients.iamEnabled() ? materials : null,
+                clients.iamEnabled() ? chunks : null, snapshots, admissions, recovery, false);
     }
 
     /**
@@ -146,7 +157,7 @@ public class RunService {
             RunScheduler scheduler,
             RunSnapshotService snapshots) {
         this(s, c, f, a, scheduler, null, null, Clock.systemUTC(), null, null, snapshots,
-                new RunAdmissionService(s, scheduler), null);
+                new RunAdmissionService(s, scheduler), null, false);
     }
 
     /** Explicit owned-worker assembly; legacy admission remains explicit in RuntimeClients. */
@@ -180,17 +191,18 @@ public class RunService {
             RunScheduler scheduler, RunAuthority authority, RunAuthorityStore admissionStore,
             Clock clock, ModelInputMaterials initialMaterials, ChunkBus initialChunks) {
         this(s, c, f, a, scheduler, authority, admissionStore, clock, initialMaterials, initialChunks,
-                new RunSnapshotService(c, clock), new RunAdmissionService(s, scheduler), null);
+                new RunSnapshotService(c, clock), new RunAdmissionService(s, scheduler), null, initialMaterials != null);
     }
 
     private RunService(TraceStore s, RuntimeClients c, FlowDriver f, AgentDriver a,
             RunScheduler scheduler, RunAuthority authority, RunAuthorityStore admissionStore,
             Clock clock, ModelInputMaterials initialMaterials, ChunkBus initialChunks,
             RunSnapshotService snapshots, RunAdmissionService admissions,
-            RunRecoveryCoordinator recovery) {
+            RunRecoveryCoordinator recovery, boolean publishedInitialEnabled) {
         if (initialMaterials != null && (authority == null || initialChunks == null))
             throw new IllegalArgumentException("INITIAL_COMPONENT_DEPENDENCIES_REQUIRED");
         this.initialMaterials = initialMaterials;
+        this.publishedInitialEnabled = publishedInitialEnabled;
         this.initialChunks = initialChunks;
         this.admissionStore = admissionStore;
         this.clock = Objects.requireNonNull(clock);
@@ -242,11 +254,15 @@ public class RunService {
                 code, request, "TASK", actor, snapshot, null, false, ticket, true, config);
     }
 
-    /** 只供本地已核归属的评测会话调用；保留EVALUATION副作用限制，IAM未迁移时明确拒绝。 */
-    public Map<String,Object> createEvaluationSessionTurn(String code,JsonNode request,JsonNode trustedSnapshot,Actor actor) {
-        if (!actor.roles().contains("SERVICE") || iamEnabled())
+    /** 只供本地已核归属的评测会话调用；保留 EVALUATION 的运行及模型用量分类。 */
+    Map<String,Object> createEvaluationSessionTurn(String code,JsonNode request,JsonNode trustedSnapshot,Actor actor) {
+        if (!iamEnabled() && !actor.roles().contains("SERVICE"))
             throw new PlatformException(403,"IAM_ADMISSION_ROUTE_DENIED","当前候选会话受理未获授权");
         return createInternal(code,request,"EVALUATION",actor,trustedSnapshot,null);
+    }
+
+    RetainedAuthorization requireEvaluationSessionTurn(String code, JsonNode request, Actor actor) {
+        return admissions.evaluationOpening(code, request, actor, true);
     }
 
     public Map<String, Object> create(String code, JsonNode req, String trigger, Actor actor) {
@@ -519,7 +535,7 @@ public class RunService {
     private void requirePublishedFlow(JsonNode snapshot) { GraphRules.requirePublishedFlow(snapshot); }
 
     private void requireFirstChat(JsonNode snapshot, JsonNode inputs) {
-        if (initialMaterials == null || initialChunks == null) throw RunAuthorityStore.denied();
+        if (!publishedInitialEnabled || initialMaterials == null || initialChunks == null) throw RunAuthorityStore.denied();
         InitialChatRules.requireSources(snapshot, inputs);
         ModelInputMaterials.initialOutputPolicy(snapshot.path("config").path("output"));
         FrozenModels.reference(snapshot, InitialChatRules.entryId(snapshot));
@@ -536,7 +552,7 @@ public class RunService {
         String id = metadata.get("public_id").toString();
         boolean evaluation = "EVALUATION".equals(trigger) && "EVALUATION".equals(metadata.get("trigger_type"));
         if (!(evaluation || "TASK".equals(metadata.get("trigger_type"))
-                || initialMaterials != null && "CHAT".equals(metadata.get("trigger_type")))
+                || publishedInitialEnabled && "CHAT".equals(metadata.get("trigger_type")))
                 || !"FULL".equals(metadata.get("mode"))
                 || !code.equals(metadata.get("app_code"))
                 || !actor.tenantId().equals(metadata.get("tenant_id"))
@@ -546,6 +562,14 @@ public class RunService {
         if (!metadata.get("trigger_type").equals(view.run().get("trigger_type"))
                 || !"FULL".equals(view.run().get("mode"))) throw RunAuthorityStore.denied();
         admissions.verifyReplay(view.run(), code, request, trigger);
+        if (evaluation && !TraceStore.json(view.run().get("snapshot")).path("runtime").path("datasetVersion")
+                .equals(request.path("datasetVersion"))) {
+            throw new PlatformException(409, "REQUEST_CONFLICT", "请求号已绑定其他数据集版本");
+        }
+        if (evaluation && admissionStore.renewEvaluation(((Number) metadata.get("id")).longValue(),
+                view.proof())) {
+            scheduler.created(((Number) metadata.get("id")).longValue(), null);
+        }
         return composeStatus(id, actor, view);
     }
 
@@ -691,6 +715,7 @@ public class RunService {
         // this admission owns the real outer commit boundary (Spring 6.2.7 TransactionTemplate).
         final boolean protectedAdmission = iamEnabled();
         final boolean candidateAdmission = protectedAdmission && "EVALUATION".equals(trigger);
+        final boolean evaluationTurn = candidateAdmission && trustedSnapshot != null;
         admissions.requireNoAmbientTransaction(protectedAdmission);
         if (protectedAdmission && !candidateAdmission)
             RunAdmissionService.requirePublishedRequest(
@@ -706,12 +731,15 @@ public class RunService {
         if (req.has("versionNo") && req.path("versionNo").asInt() < 1)
             throw new PlatformException(400, "VERSION_INVALID", "版本号必须大于零");
         final RetainedAuthorization opening =
-                candidateAdmission ? admissions.evaluationOpening(code, req, actor)
+                candidateAdmission ? admissions.evaluationOpening(code, req, actor, evaluationTurn)
                         : admissions.opening(code, actor, protectedAdmission, taskEntry != null);
         if (trigger.equals("DEBUG")) actor.requireRole("EDITOR");
         if (candidateAdmission) {
-            ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId", "evaluation-" + Digest.sha256(
-                    Json.canonical(List.of(req.path("evalReportId"), req.path("caseId")))));
+            if (!evaluationTurn) verifyCandidate(req.path("frozenCandidate"), req, code);
+            var identity = new ArrayList<>(List.of(req.path("evalReportId"), req.path("caseId")));
+            if (evaluationTurn) identity.add(req.path("turnNo"));
+            ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId",
+                    "evaluation-" + Digest.sha256(Json.canonical(identity)));
         } else if (trigger.equals("EVALUATION") && trustedSnapshot != null && trustedSnapshot.has("evaluationConversation"))
             ((com.fasterxml.jackson.databind.node.ObjectNode) req).put("requestId","evt_"+Digest.sha256(Json.canonical(Map.of(
                     "tenant",actor.tenantId(),"principal",actor.principalId(),"binding",trustedSnapshot.path("evaluationConversation"),
@@ -772,8 +800,15 @@ public class RunService {
                                             : clients.get("app", path, actor);
             if (taskEntry != null && !"CHAT".equals(source.path("type").asText()))
                 throw new PlatformException(409, "CHAT_REQUIRED", "单步 AGENT 任务需要已发布的对话应用");
-            final boolean firstChat = protectedAdmission && !candidateAdmission && "CHAT".equals(source.path("type").asText());
-            if (firstChat) requireFirstChat(source, req.path("inputs"));
+            final boolean firstChat = protectedAdmission && "CHAT".equals(source.path("type").asText());
+            if (firstChat && candidateAdmission) {
+                if (initialMaterials == null) throw RunAuthorityStore.denied();
+                if (!evaluationTurn && (source.has("chatSession") || source.has("evaluationConversation")
+                        || source.has("evaluationHistory"))) throw RunAuthorityStore.denied();
+                InitialChatRules.requireEvaluationSources(source, req.path("inputs"));
+                FrozenModels.reference(source, InitialChatRules.entryId(source));
+                ModelInputMaterials.initialOutputPolicy(source.path("config").path("output"));
+            } else if (firstChat) requireFirstChat(source, req.path("inputs"));
             else if (protectedAdmission) requirePublishedFlow(source);
             final String actualTrigger =
                     trigger.equals("TASK") && source.path("type").asText().equals("CHAT")
@@ -851,7 +886,7 @@ public class RunService {
             // admission 槽位由外层 finally 释放。开关关闭（默认）或夹具未装配时旁路。
             if (runQuota != null) runQuota.requireRunAdmission(actor, code, frozen);
             final RetainedAuthorization admissionProof =
-                    candidateAdmission ? admissions.evaluationOpening(code, req, actor)
+                    candidateAdmission ? admissions.evaluationOpening(code, req, actor, evaluationTurn)
                             : admissions.bind(code, actor, protectedAdmission, taskEntry != null);
             if (protectedAdmission) admissions.requireInitialCoverage(admissionProof);
             final var created = new java.util.concurrent.atomic.AtomicBoolean(!protectedAdmission);
@@ -1051,6 +1086,7 @@ public class RunService {
                                                                 + " engine.node_instance(run_id,step_seq,node_type,status,definition)"
                                                                 + " values(?,1,'AGENT','READY','{\"type\":\"AGENT\"}'::jsonb)",
                                                             rid);
+                                        if (evaluationTurn) store.attachEvaluationTurn(rid, frozen, admissionProof);
                                         if (taskEntry != null) taskEntry.attach().accept(rid);
                                         if (protectedAdmission) {
                                             AuthorityContext.requireBound(admissionProof);
@@ -2485,7 +2521,7 @@ public class RunService {
         try {
             if (!store.hasInitialPreparation(dispatch, runAuthority.currentRetained(id))) {
                 String lifecycle = store.ownedInitialTrigger(dispatch, runAuthority.currentRetained(id));
-                if (lifecycle.equals("CHAT")) initialMaterials.prepareFirstChat(id);
+                if (lifecycle.equals("CHAT") || lifecycle.equals("EVALUATION")) initialMaterials.prepareFirstChat(id);
                 else initialMaterials.prepareInitial(id);
             }
             var proof = runAuthority.currentRetained(id);

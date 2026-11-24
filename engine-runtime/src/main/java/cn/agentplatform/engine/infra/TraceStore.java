@@ -383,6 +383,78 @@ public class TraceStore {
         view.requireCurrent();return view;
     }
 
+    /** Read only completed turns of this evaluation, through the same protected material store. */
+    public JsonNode evaluationHistory(String session, int turn, JsonNode snapshot, RetainedAuthorization proof) {
+        AuthorityContext.requireBound(proof);
+        var current = proof.current();
+        same("evaluation.turn", current.call().action());
+        same(EvaluationCandidateBinding.from(snapshot), current.call().resource());
+        var owner = current.delegation().subject();
+        return MaterialScopeStore.snapshot(source, () -> {
+            var rows = db.queryForList("""
+                    select t.turn_no,r.id from engine.chat_turn t
+                    join engine.chat_session s on s.public_id=t.session_id
+                    join engine.run r on r.public_id=t.run_public_id
+                    where s.public_id=? and s.tenant_id=? and s.principal_id=? and s.app_code=?
+                      and t.turn_no<? and r.status='SUCCEEDED' order by t.turn_no
+                    """, session, owner.tenantId(), owner.principalId(), snapshot.path("appCode").asText(), turn);
+            if (rows.size() != turn - 1) throw denied();
+            var prior = new ArrayList<Map<String, String>>();
+            var labels = new TreeSet<String>();
+            long bytes = 0;
+            for (var row : rows) {
+                int previousTurn = prior.size() + 1;
+                same((long) previousTurn, number(row, "turn_no"));
+                var binding = RunAuthorityStore.load(db, number(row, "id"), true);
+                materials.requireReader(binding, current);
+                var scopes = materials.currentScopes(binding);
+                var frozen = evaluationMaterial(binding, scopes, "run-snapshot", proof).payload();
+                same(Json.canonical(snapshot.path("evaluationConversation")), Json.canonical(frozen.path("evaluationConversation")));
+                same(Json.canonical(snapshot.path("dependencyVersions")), Json.canonical(frozen.path("dependencyVersions")));
+                same(session, frozen.path("chatSession").path("sessionId").asText());
+                same(previousTurn, frozen.path("chatSession").path("turnNo").asInt());
+                var input = evaluationMaterial(binding, scopes, "run-inputs", proof);
+                var output = evaluationMaterial(binding, scopes, "run-output", proof);
+                var answer = output.payload().path("text");
+                if (!answer.isTextual()) throw denied();
+                String user = input.payload().has("message") ? input.payload().path("message").asText() : Json.write(input.payload());
+                var fact = Map.of("runId", binding.publicId(), "inputScopeSha256", input.scope().scopeSha256(),
+                        "outputScopeSha256", output.scope().scopeSha256(), "user", user, "assistant", answer.textValue());
+                bytes += Json.canonical(fact).getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+                if (bytes > 512 * 1024) throw new PlatformException(413, "EVALUATION_HISTORY_SIZE", "评测会话历史超过授权材料大小");
+                labels.addAll(input.scope().requiredDataLabels());
+                labels.addAll(output.scope().requiredDataLabels());
+                prior.add(fact);
+            }
+            AuthorityContext.requireBound(proof);
+            return Json.tree(Map.of("priorTurns", prior, "requiredLabels", labels));
+        });
+    }
+
+    private record EvaluationMaterial(JsonNode payload, MaterialScopeV1 scope) {}
+
+    private EvaluationMaterial evaluationMaterial(Binding binding, List<MaterialScopeV1> scopes,
+            String kind, RetainedAuthorization proof) {
+        var scope = scopes.stream().filter(value -> kind.equals(value.material().kind())
+                && binding.publicId().equals(value.material().id())).findFirst().orElseThrow(RunAuthorityStore::denied);
+        var payload = materials.readCurrentValue(binding, scope, proof);
+        if (payload.sqlNull() || !payload.value().isObject()) throw denied();
+        return new EvaluationMaterial(payload.value(), scope);
+    }
+
+    public void attachEvaluationTurn(long run, JsonNode snapshot, RetainedAuthorization proof) {
+        AuthorityContext.requireBound(proof);
+        var pointer = snapshot.path("chatSession");
+        int count = db.update("""
+                update engine.chat_turn t set run_public_id=r.public_id
+                from engine.chat_session s,engine.run r
+                where r.id=? and r.tenant_id=s.tenant_id and r.principal_id=s.principal_id and r.app_code=s.app_code
+                  and t.session_id=s.public_id and t.session_id=? and t.turn_no=? and t.run_public_id is null
+                  and s.snapshot->'evaluationConversation'=r.snapshot->'evaluationConversation' and t.inputs=r.inputs
+                """, run, pointer.path("sessionId").asText(), pointer.path("turnNo").intValue());
+        if (count != 1) throw denied();
+    }
+
     /** Only this class can mint a status read capability, after live M and real PG preflight. */
     static final class StatusReadProof {
         private final RetainedAuthorization retained;
@@ -1114,7 +1186,9 @@ public class TraceStore {
 
     private long initialNode(WriteView view) {
         var run = flowRun(view);
-        boolean firstChat = "CHAT".equals(run.get("trigger_type"));
+        boolean evaluation = EvaluationCandidateBinding.KIND.equals(view.binding().root().kind())
+                && "EVALUATION".equals(run.get("trigger_type"));
+        boolean firstChat = evaluation || "CHAT".equals(run.get("trigger_type"));
         if (!(firstChat || "TASK".equals(run.get("trigger_type"))) || !"FULL".equals(run.get("mode"))
                 || !"CHAT".equals(json(run.get("snapshot")).path("type").asText())) throw denied();
         var nodes = flowNodes(view);
@@ -1123,17 +1197,18 @@ public class TraceStore {
         long id = number(nodes.getFirst(), "id");
         var definition = json(nodes.getFirst().get("definition"));
         if (firstChat) {
-            InitialChatRules.requireSources(json(run.get("snapshot")),json(run.get("inputs")));
+            if (evaluation) InitialChatRules.requireEvaluationSources(json(run.get("snapshot")), json(run.get("inputs")));
+            else InitialChatRules.requireSources(json(run.get("snapshot")),json(run.get("inputs")));
             InitialChatRules.requireAgent(definition,nodes.getFirst().get("node_def_id"),nodes.getFirst().get("node_type"),number(nodes.getFirst(),"step_seq"));
         } else if (!"LLM".equals(nodes.getFirst().get("node_type")) || !definition.equals(Json.tree(Map.of("id", "initial", "type", "LLM")))
                 || !"initial".equals(nodes.getFirst().get("node_def_id"))) throw denied();
         if (db.queryForObject("select count(*) from engine.run r where id=? and"
-                + " (debug_snapshot is not null or eval_candidate is not null or"
+                + " (debug_snapshot is not null or (eval_candidate is not null and not ?) or"
                 + " controlled_draft_skill_version_id is not null or controlled_draft_skill_digest is not null"
                 + " or controlled_skill_test_version_id is not null or controlled_skill_test_digest is not null"
-                + " or exists(select 1 from engine.chat_turn where run_public_id=r.public_id)"
+                + " or (not ? and exists(select 1 from engine.chat_turn where run_public_id=r.public_id))"
                 + " or exists(select 1 from engine.tool_call where run_id=r.id))", Integer.class,
-                view.binding().runId()) != 0) throw denied();
+                view.binding().runId(), evaluation, evaluation) != 0) throw denied();
         var invocations = db.queryForList("select node_instance_id,round_no,kind,output_attempt_no"
                 + " from engine.model_invocation where run_id=?", view.binding().runId());
         if (invocations.size() > 1) throw denied();

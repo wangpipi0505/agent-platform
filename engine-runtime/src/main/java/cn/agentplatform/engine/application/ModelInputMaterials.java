@@ -183,12 +183,13 @@ public class ModelInputMaterials {
     var inputs = (JsonNode) source.inputs().payload();
     var declaredConfig = snapshot.path("config");
     var config = cn.agentplatform.engine.domain.InitialChatRules.promptConfig(snapshot);
+    boolean evaluation = EvaluationCandidateBinding.KIND.equals(source.binding().root().kind());
     if (!"CHAT".equals(snapshot.path("type").asText()) || !config.isObject() || !inputs.isObject())
       throw missing();
     for (String key :
         List.of(
             "materialRefs", "historyRefs", "history", "sessionId", "chatSession", "chatTurn", "sessionHistory"))
-      if (inputs.has(key) || snapshot.hasNonNull(key)) throw missing();
+      if (inputs.has(key) || snapshot.hasNonNull(key) && !(evaluation && "chatSession".equals(key))) throw missing();
     var allowed =
         Set.of(
             "modelEntryId",
@@ -280,10 +281,12 @@ public class ModelInputMaterials {
     }
     if (labels.size() > 256) throw missing();
     guardPromptExpansion(config, inputs);
-    var request = new ContextAssembler().assemble(config, inputs, List.of(), List.of(), List.of());
+    var history = evaluation ? cn.agentplatform.engine.domain.InitialChatRules.evaluationMessages(snapshot)
+            : List.<Map<String, Object>>of();
+    var request = new ContextAssembler().assemble(config, inputs, List.of(), List.of(), history);
     request.put("appCode", snapshot.path("appCode").textValue());
     request.put("runId", source.binding().publicId());
-    request.put("callKind", "FORMAL");
+    request.put("callKind", evaluation ? "EVALUATION" : "FORMAL");
     request.put("modelBindingRef", binding);
     request.put("invocationRef", "material:" + source.materialId() + ":MAIN");
     request.put("requiredLabels", labels);

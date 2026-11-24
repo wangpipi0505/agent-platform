@@ -454,16 +454,18 @@ public class EvaluationService {
                 var runSource = Json.tree(run.get("sourceEvidence"));
                 String environment = runSource.path("environment").asText("UNKNOWN");
                 String runId = Objects.toString(run.get("runId"), "");
+                boolean unfinished = Set.of("PENDING", "CREATED", "READY", "RUNNING", "WAITING_APPROVAL",
+                        "WAITING_STEP", "WAITING_EXTERNAL").contains(runStatus);
                 boolean consistent = sourceProtocol && !prior.path("invalid").asBoolean(false) && !runId.isBlank()
-                        && dataset.equals(run.get("datasetVersion"))
-                        && validRunSource(runSource, runId, run)
+                        && dataset.equals(run.get("datasetVersion"));
+                if (!unfinished) consistent &= validRunSource(runSource, runId, run)
                         && ("REAL".equals(run.get("environment")) && Boolean.FALSE.equals(run.get("demoMode"))
                             || "DEMO".equals(run.get("environment")) && Boolean.TRUE.equals(run.get("demoMode")));
                 if (prior.hasNonNull("runId") && !runId.equals(prior.path("runId").asText())) consistent = false;
                 if (!"UNKNOWN".equals(prior.path("environment").asText("UNKNOWN"))
                         && !environment.equals(prior.path("environment").asText())) consistent = false;
-                source.put("environment", consistent ? environment : "UNKNOWN");
-                if (consistent) source.put("runSource", runSource);
+                source.put("environment", consistent && !unfinished ? environment : "UNKNOWN");
+                if (consistent && !unfinished) source.put("runSource", runSource);
                 if (!consistent && !runId.isBlank()) source.put("invalid", true);
                 if (!runId.isBlank()) source.put("runId", runId);
                 // A queued run or a submitted external job is unfinished, not a failed

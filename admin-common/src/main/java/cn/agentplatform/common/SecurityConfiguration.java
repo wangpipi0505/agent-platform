@@ -307,7 +307,7 @@ public class SecurityConfiguration {
     }
 
     /**
-     * EX-43 §3.1 chain 1, scoped to {@code /internal/**} only. Kept separate from
+     * EX-43 §3.1 chain 1 for internal and explicitly delegated gateway routes. Kept separate from
      * {@link #serviceSecurity} so existing single-chain assemblies keep their exact behaviour: this
      * entry is the one that narrows the match and wraps the chain in {@link ServiceTrustChain}, whose
      * order guarantees chain 1 is consulted before the application chain regardless of bean
@@ -316,7 +316,7 @@ public class SecurityConfiguration {
     public static ServiceTrustChain serviceTrustChain(
             HttpSecurity http, JwtDecoder decoder, ServiceAuthorization receiver) throws Exception {
         http.securityMatcher("/internal/**");
-        return new ServiceTrustChain(serviceSecurity(http, decoder, receiver));
+        return new ServiceTrustChain(serviceSecurity(http, decoder, receiver), receiver::delegatedPortalRequest);
     }
 
     /**

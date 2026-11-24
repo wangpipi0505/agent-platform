@@ -53,7 +53,8 @@ public class RunScheduleRepository {
                                                 + " r.id,r.public_id,r.status,r.trigger_type,r.dispatch_generation,(a.run_id"
                                                 + " is not null) as protected from engine.run r"
                                                 + " left join engine.run_authority a on"
-                                                + " a.run_id=r.id where r.status in"
+                                                + " a.run_id=r.id left join engine.evaluation_grant_generation g on"
+                                                + " g.run_id=a.run_id and g.generation=a.active_generation where r.status in"
                                                 + " ('PENDING','RUNNING') and "
                                                     + kind
                                                     + " and "
@@ -67,7 +68,7 @@ public class RunScheduleRepository {
                                                     + (protectedOnly
                                                             ? "a.run_id is not null and "
                                                             : "")
-                                                    + " (a.run_id is null or (a.grant_expires_at>?"
+                                                    + " (a.run_id is null or (coalesce(g.grant_expires_at,a.grant_expires_at)>?"
                                                     + " and (a.blocked_reason is null or"
                                                     + " (a.blocked_reason='AUTHORITY_UNAVAILABLE'"
                                                     + " and a.retry_not_before<=?)))) and"

@@ -12,6 +12,7 @@ import cn.agentplatform.authority.route.RouteDirectory;
 import cn.agentplatform.authority.sign.KeyRing;
 import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.Json;
+import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 import cn.agentplatform.common.authority.OperationBinding;
 import cn.agentplatform.common.authority.PortalEventsBinding;
 import cn.agentplatform.common.authority.ResourceBinding;
@@ -309,7 +310,14 @@ public final class DelegatedAuthority {
         if (matched.isEmpty()) {
             throw AuthorityException.denied("RESUME_ESCALATION");
         }
-        DecisionStore.Decision original = matched.get(0);
+        boolean evaluationAdvance = "run.advance".equals(request.call().action())
+                && EvaluationCandidateBinding.KIND.equals(request.call().resource().kind());
+        // The model can register a material read on the same candidate and grant. Select an
+        // execution decision before checking its lifetime, independent of registry iteration order.
+        DecisionStore.Decision original = evaluationAdvance
+                ? matched.stream().filter(value -> Set.of("evaluation.run", "evaluation.turn", "run.advance")
+                        .contains(value.action())).findFirst().orElseThrow(() -> AuthorityException.denied("RESUME_ACTION"))
+                : matched.getFirst();
         if (original.consumedAt() != null) {
             // 仓库没有撤销 API；一次性消费标记是既有的"这份委托已作废"信号（与 S1 的 opening 消费同源）。
             throw AuthorityException.denied("RESUME_REVOKED");
@@ -318,11 +326,6 @@ public final class DelegatedAuthority {
             // 这里用 403 而不是 forward 路径的 409：resume 的调用方需要的是"重判权"这个动作，
             // 而不是"换一跳"；平台客户端 RunAuthority 也只识别 403/503，409 会被原样上抛。
             throw new AuthorityException(403, "AUTHORITY_EXPIRED", "原委托已过期", "RESUME_GRANT_EXPIRED");
-        }
-        if ("run.advance".equals(request.call().action())
-                && "evaluation-candidate".equals(request.call().resource().kind())
-                && !Set.of("evaluation.run", "evaluation.turn", "run.advance").contains(original.action())) {
-            throw AuthorityException.denied("RESUME_ACTION");
         }
         if (!request.call().action().equals(original.action())
                 && !ServiceRoutePolicy.localRunAdvance(clientId, request.call(), MODE, "DELEGATED",

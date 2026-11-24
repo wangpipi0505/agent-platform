@@ -16,10 +16,21 @@ public final class InitialChatRules {
             "history","historyRefs","materialRefs","tools","toolDefinitions","dataSources","frozenPrompts",
             "modelOverride","overrides","summary","summarizer","retry","compressedMaterials");
     public static void requireSources(JsonNode snapshot,JsonNode inputs) {
+        requireSources(snapshot, inputs, false);
+    }
+
+    public static void requireEvaluationSources(JsonNode snapshot, JsonNode inputs) {
+        requireSources(snapshot, inputs, true);
+        evaluationMessages(snapshot);
+    }
+
+    private static void requireSources(JsonNode snapshot, JsonNode inputs, boolean evaluation) {
         if(!snapshot.isObject()||!"CHAT".equals(snapshot.path("type").asText())||!inputs.isObject())throw denied();
         for(String key:List.of("debugSnapshot","evalCandidate","controlledDraftId","controlledReplay","reexecution",
                 "debugControls","controlledSkillVersion","guard","sessionId","chatSession","chatTurn","sessionHistory","history","historyRefs","materialRefs"))
-            if(snapshot.has(key)||inputs.has(key))throw denied();
+            if ((snapshot.has(key) && !(evaluation && key.equals("chatSession"))) || inputs.has(key)) throw denied();
+        for (String key : List.of("evaluationConversation", "evaluationHistory"))
+            if ((!evaluation && snapshot.has(key)) || inputs.has(key)) throw denied();
         if(snapshot.has("definition")&&!snapshot.path("definition").isNull()&&!snapshot.path("definition").isEmpty())throw denied();
         var config=snapshot.path("config");if(!config.isObject())throw denied();
         promptConfig(snapshot);
@@ -46,16 +57,51 @@ public final class InitialChatRules {
         }
         if(config.has("requiredLabels")){var labels=config.path("requiredLabels");if(!labels.isArray()||labels.size()>256)throw denied();for(var label:labels)if(!label.isTextual()||label.textValue().isBlank()||label.textValue().length()>256)throw denied();}
         var dependencies=snapshot.path("dependencyVersions");if(!dependencies.isObject()||!dependencies.path("modelRefs").isArray()||dependencies.path("modelRefs").size()!=1)throw denied();
-        boolean template=config.has("promptSource");
+        boolean template="TEMPLATE".equals(config.path("promptSource").asText());
+        if (config.has("promptSource") && !template && !evaluation) throw promptMismatch();
         dependencies.fieldNames().forEachRemaining(k->{
             if(k.equals("modelRefs"))return;
             if(template&&k.equals("frozenPrompts"))return;
-            if(template&&k.equals("skillRefs")&&dependencies.path(k).isArray()&&dependencies.path(k).isEmpty())return;
+            if((template||evaluation)&&k.equals("skillRefs")&&dependencies.path(k).isArray()&&dependencies.path(k).isEmpty())return;
             throw denied();
         });
         if(positive(dependencies.path("modelRefs").get(0).path("modelEntryId"))!=entry)throw denied();
         var output=new OutputPolicy(config.path("output"));
         if(output.onInvalid().equals("RETRY")||(config.path("output").has("maxRetries")&&output.maxRetries()!=0))throw denied();
+    }
+
+    /** Only the candidate admission path can write this protected snapshot material. */
+    public static List<Map<String, Object>> evaluationMessages(JsonNode snapshot) {
+        boolean session = snapshot.has("chatSession");
+        if (session != snapshot.has("evaluationConversation") || session != snapshot.has("evaluationHistory"))
+            throw denied();
+        if (!session) return List.of();
+        var pointer = snapshot.path("chatSession");
+        long turn = positive(pointer.path("turnNo"));
+        var history = snapshot.path("evaluationHistory").path("priorTurns");
+        if (turn > 200 || !pointer.path("sessionId").asText().matches("es_[a-f0-9]{48}")
+                || !history.isArray() || history.size() != turn - 1) throw denied();
+        var messages = new ArrayList<Map<String, Object>>(2 * history.size());
+        for (var item : history) {
+            if (!item.path("runId").asText().matches("r_[0-9a-f]{32}")
+                    || !item.path("inputScopeSha256").asText().matches("[a-f0-9]{64}")
+                    || !item.path("outputScopeSha256").asText().matches("[a-f0-9]{64}")
+                    || !item.path("user").isTextual() || !item.path("assistant").isTextual()) throw denied();
+            messages.add(Map.of("role", "user", "content", item.path("user").textValue()));
+            messages.add(Map.of("role", "assistant", "content", item.path("assistant").textValue()));
+        }
+        return List.copyOf(messages);
+    }
+
+    public static Set<String> evaluationLabels(JsonNode snapshot) {
+        if (!snapshot.has("evaluationHistory")) return Set.of();
+        var labels = snapshot.path("evaluationHistory").path("requiredLabels");
+        if (!labels.isArray() || labels.size() > 256) throw denied();
+        var result = new TreeSet<String>();
+        for (var label : labels)
+            if (!label.isTextual() || label.textValue().isBlank() || label.textValue().length() > 256
+                    || !result.add(label.textValue())) throw denied();
+        return Set.copyOf(result);
     }
     public static long entryId(JsonNode snapshot){var c=snapshot.path("config");return positive(c.has("modelEntryId")?c.path("modelEntryId"):c.path("modelBinding").path("modelEntryId"));}
 
@@ -63,6 +109,7 @@ public final class InitialChatRules {
     public static JsonNode promptConfig(JsonNode snapshot) {
         var config=snapshot.path("config");
         if(!config.has("promptSource"))return config;
+        if ("DIRECT".equals(config.path("promptSource").asText()) && !config.has("promptRefs")) return config;
         var refs=config.path("promptRefs");
         var frozen=snapshot.path("dependencyVersions").path("frozenPrompts");
         if(!"TEMPLATE".equals(config.path("promptSource").asText())||config.has("frozenPrompts")
