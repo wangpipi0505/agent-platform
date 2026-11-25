@@ -150,7 +150,8 @@ public final class HttpCurrentAuthorityClient implements CurrentAuthorityClient,
         if (origin != null) fields.put("request_origin", origin);
         var decision = query("exchange_integration", call, fields, true);
         AuthorityProtocol.same(AuthorityProtocol.digest(token), AuthorityProtocol.text(decision, "subject_token_sha256"));
-        for (String key : List.of("tenant_id", "sub", "app_code", "biz_system_code", "user_id", "credential_id", "policy_digest"))
+        for (String key : List.of("tenant_id", "sub", "app_code", "biz_system_code", "user_id", "credential_id",
+                "policy_digest", "policy_version"))
             if (!input.has(key) || !Objects.equals(input.get(key), decision.get(key))) throw AuthorityProtocol.denied();
         var result = ticket(decision, call, "delegated", null, null);
         if (!"INTEGRATION".equals(result.operation().sourceKind())

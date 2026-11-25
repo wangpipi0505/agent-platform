@@ -68,8 +68,10 @@ public final class IntegrationPolicyClient {
         app = RestClient.builder().requestFactory(factory).build();
     }
 
-    public String require(JsonNode identity, String origin, String expectedVersion) {
+    public void require(JsonNode identity, String origin) {
         if (endpoint == null) throw unavailable();
+        String expectedVersion = identity.path("policy_version").textValue();
+        if (expectedVersion == null) throw denied();
         String nonce = UUID.randomUUID().toString();
         var request = new LinkedHashMap<String, Object>();
         request.put("schemaVersion", 1);
@@ -117,9 +119,7 @@ public final class IntegrationPolicyClient {
             if (!identity.path(field.getValue()).equals(response.path(field.getKey()))) throw denied();
         }
 
-        String version = response.path("policyVersion").asText();
-        if (!version.matches(identity.path("credential_id").asText() + ":[1-9][0-9]{0,18}")
-                || (expectedVersion != null && !expectedVersion.equals(version))
+        if (!expectedVersion.equals(response.path("policyVersion").textValue())
                 || !response.path("active").isBoolean() || !response.path("active").booleanValue()
                 || !response.path("subjectAllowed").isBoolean() || !response.path("subjectAllowed").booleanValue()
                 || !strings(response.path("roleCeiling")).containsAll(strings(identity.path("roles")))
@@ -131,7 +131,6 @@ public final class IntegrationPolicyClient {
                     ? response.path("dataLabels") : attributeCeiling.path(field.getKey());
             if (!strings(ceiling).containsAll(strings(field.getValue()))) throw denied();
         });
-        return version;
     }
 
     private static Set<String> strings(JsonNode array) {

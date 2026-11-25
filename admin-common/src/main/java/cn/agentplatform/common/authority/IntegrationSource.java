@@ -18,7 +18,7 @@ public final class IntegrationSource {
     public static final String TYPE = "agent-integration+jwt";
     public static final String AUDIENCE = "agent-platform-embed";
     private static final Set<String> FIELDS = Set.of("tenant_id", "sub", "app_code", "biz_system_code",
-            "user_id", "credential_id", "policy_digest", "roles", "attributes");
+            "user_id", "credential_id", "policy_digest", "policy_version", "roles", "attributes");
     // The current-decision assertion embeds the service ticket and each carries the subject ceiling.
     private static final int MAX_IDENTITY_BYTES = 2048;
 
@@ -28,11 +28,12 @@ public final class IntegrationSource {
         @Override public String toString() { return "IntegrationSource.Ticket[redacted]"; }
     }
 
-    public static Map<String, Object> claims(long id, String app, String biz, String user, String digest, Actor actor) {
+    public static Map<String, Object> claims(long id, String app, String biz, String user, String digest,
+            String policyVersion, Actor actor) {
         var roles = new TreeSet<>(actor.roles());
         roles.retainAll(IntegrationClaims.RUNTIME_ROLES);
         Map<String, Object> claims = Map.of("credential_id", id, "app_code", app, "biz_system_code", biz, "user_id", user,
-                "policy_digest", digest, "tenant_id", actor.tenantId(), "sub", actor.principalId(),
+                "policy_digest", digest, "policy_version", policyVersion, "tenant_id", actor.tenantId(), "sub", actor.principalId(),
                 "roles", roles, "attributes", actor.attributes());
         if (tooLarge(Json.tree(claims)))
             throw new PlatformException(400, "CLAIMS_TOO_LARGE", "集成身份声明超过短票上限");
@@ -52,6 +53,9 @@ public final class IntegrationSource {
         String tenant = AuthorityProtocol.text(claims, "tenant_id");
         if (user.length() > 128 || tenant.length() > 128 || !claims.path("credential_id").isIntegralNumber()
                 || !claims.path("credential_id").canConvertToLong() || claims.path("credential_id").longValue() <= 0)
+            throw AuthorityProtocol.denied();
+        if (!AuthorityProtocol.text(claims, "policy_version")
+                .matches(claims.path("credential_id").asText() + ":[1-9][0-9]{0,18}"))
             throw AuthorityProtocol.denied();
         AuthorityProtocol.same(IntegrationClaims.principal(biz, user), AuthorityProtocol.text(claims, "sub"));
         var actor = AuthorityProtocol.actor(claims);

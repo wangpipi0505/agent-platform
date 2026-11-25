@@ -32,7 +32,7 @@ class TokenEndpointTest extends AuthorityTestSupport {
     void issuesIntegrationSourceOnlyFromAppAndKeepsItOutsideServiceDomain() {
         var identity = Map.of("tenant_id", "tenant-a", "sub", "software-a:member", "app_code", "app-a",
                 "biz_system_code", "software-a", "user_id", "member", "credential_id", 7,
-                "policy_digest", DIGEST, "roles", List.of("AGENT_VIEWER"),
+                "policy_digest", DIGEST, "policy_version", "7:3", "roles", List.of("AGENT_VIEWER"),
                 "attributes", Map.of("bizSystemCode", List.of("software-a"), "userId", List.of("member")));
         var wire = Map.of("operation", "issue_integration", "target", "gateway",
                 "action", "integration.source.issue", "nonce", "integration-issue-1",
@@ -40,6 +40,12 @@ class TokenEndpointTest extends AuthorityTestSupport {
                 "integration_claims", identity);
         String request = Json.write(wire);
         assertThat(postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET), request).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+        var wrongIdentity = new java.util.HashMap<>(identity);
+        wrongIdentity.put("policy_version", "8:3");
+        var wrongBinding = new java.util.HashMap<>(wire);
+        wrongBinding.put("integration_claims", wrongIdentity);
+        assertThat(postJson("/oauth/token", basic(APP, APP_SECRET), Json.write(wrongBinding)).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
         var issued = postJson("/oauth/token", basic(APP, APP_SECRET), request);
         assertThat(issued.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -49,6 +55,7 @@ class TokenEndpointTest extends AuthorityTestSupport {
         assertThat(token.path("aud").asText()).isEqualTo("agent-platform-embed");
         assertThat(token.path("roles").get(0).asText()).isEqualTo("AGENT_VIEWER");
         assertThat(token.path("credential_id").asLong()).isEqualTo(7L);
+        assertThat(token.path("policy_version").asText()).isEqualTo("7:3");
         assertThat(token.path("biz_system_code").asText()).isEqualTo("software-a");
         assertThat(token.has("authority_mode")).isFalse();
         assertThat(token.path("exp").asLong() - token.path("iat").asLong()).isBetween(1L, 60L);

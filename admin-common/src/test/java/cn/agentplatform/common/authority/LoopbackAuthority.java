@@ -151,7 +151,7 @@ public final class LoopbackAuthority implements AutoCloseable {
     }
     public Map<String,Object> integrationClaims(){
         var c=base("integration","agent-platform-embed",20);c.put("sub","alice");c.put("tenant_id","tenant-a");
-        c.put("app_code","app-a");c.put("biz_system_code","biz-a");c.put("user_id","alice");c.put("credential_id",7L);c.put("policy_digest",Digest.sha256("policy-v1"));c.put("origin","https://embed.example.invalid");
+        c.put("app_code","app-a");c.put("biz_system_code","biz-a");c.put("user_id","alice");c.put("credential_id",7L);c.put("policy_digest",Digest.sha256("policy-v1"));c.put("policy_version","7:1");c.put("origin","https://embed.example.invalid");
         return c;
     }
     String integration(){return integration(integrationClaims());}
@@ -287,7 +287,7 @@ public final class LoopbackAuthority implements AutoCloseable {
             // decisions query with this persisted grant version, never with caller-supplied overrides.
             if(actual==null)current(grant);else if(revoked||!scopeAllowed)throw AuthorityProtocol.denied();
             grants.put(grant.id,grant);op=operation(grant,grant.origin,session?earlier(grant.sourceExpires,grant.expires):grant.sourceExpires);
-            if(integration){for(String k:List.of("tenant_id","sub","app_code","biz_system_code","user_id","credential_id","policy_digest"))reply.put(k,subject.get(k));reply.put("subject_token_sha256",AuthorityProtocol.digest(token));}
+            if(integration){for(String k:List.of("tenant_id","sub","app_code","biz_system_code","user_id","credential_id","policy_digest","policy_version"))reply.put(k,subject.get(k));reply.put("subject_token_sha256",AuthorityProtocol.digest(token));}
         }else if(type.equals("resume")){
             var grant=grants.get(AuthorityProtocol.text(request,"grant_ref"));if(grant==null||!operationPolicy)throw AuthorityProtocol.denied();
             if(local)requireLocalGrant(caller,call,grant);
@@ -378,7 +378,7 @@ public final class LoopbackAuthority implements AutoCloseable {
             var first=Json.tree(original.integration);
             // Same identity may only be another representation, never another binding, lifetime
             // or source ceiling. Actor parsing compares role/attribute sets independent of JSON order.
-            for(String k:List.of("iss","jti","tenant_id","sub","credential_id","app_code","biz_system_code","user_id","origin","policy_digest","token_use","aud","iat","nbf","exp"))AuthorityProtocol.same(first.get(k),subject.get(k));
+            for(String k:List.of("iss","jti","tenant_id","sub","credential_id","app_code","biz_system_code","user_id","origin","policy_digest","policy_version","token_use","aud","iat","nbf","exp"))AuthorityProtocol.same(first.get(k),subject.get(k));
             if(original.origin.equals("INTEGRATION")&&externalPolicy!=null)AuthorityProtocol.same(sourceIntegrationActor(first),sourceIntegrationActor(subject));
             else if(first.has("roles")||first.has("attributes")||subject.has("roles")||subject.has("attributes"))
                 AuthorityProtocol.same(AuthorityProtocol.actor(first),AuthorityProtocol.actor(subject));

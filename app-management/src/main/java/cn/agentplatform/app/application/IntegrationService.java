@@ -126,7 +126,8 @@ public class IntegrationService {
             throw error(403, "APP_BINDING_DENIED", "凭据不属于此应用");
         var actor = IntegrationClaimPolicy.clip(credential, requested);
         return IntegrationSource.claims(id, app, credential.path("bizSystemCode").asText(),
-                actor.attributes().get("userId").iterator().next(), credential.path("policyDigest").asText(), actor);
+                actor.attributes().get("userId").iterator().next(), credential.path("policyDigest").asText(),
+                credential.path("policyVersion").asText(), actor);
     }
 
     private static PlatformException invalidApiKey() {
@@ -137,30 +138,21 @@ public class IntegrationService {
         var rows =
                 db.query(
                         "select"
-                            + " id,tenant_id,app_code,biz_system_code,status,secret_ref,secret_sha256,claim_limits,allowed_origins,role_mapping"
+                            + " id,tenant_id,app_code,biz_system_code,status,secret_ref,secret_sha256,claim_limits,"
+                            + "allowed_origins,role_mapping,policy_revision"
                             + " from app.integration_credential where id=?",
-                        (r, n) ->
-                                new LinkedHashMap<>(Map.<String, Object>of(
-                                        "id",
-                                        r.getLong("id"),
-                                        "tenantId",
-                                        r.getString("tenant_id"),
-                                        "appCode",
-                                        r.getString("app_code"),
-                                        "bizSystemCode",
-                                        r.getString("biz_system_code"),
-                                        "status",
-                                        r.getString("status"),
-                                        "secretRef",
-                                        r.getString("secret_ref"),
-                                        "secretSha256",
-                                        r.getString("secret_sha256"),
-                                        "claimLimits",
-                                        Json.read(r.getString("claim_limits"), Object.class),
-                                        "allowedOrigins",
-                                        Json.read(r.getString("allowed_origins"), Object.class),
-                                        "roleMapping",
-                                        Json.read(r.getString("role_mapping"), Object.class))),
+                        (r, n) -> new LinkedHashMap<>(Map.<String, Object>ofEntries(
+                                Map.entry("id", r.getLong("id")),
+                                Map.entry("tenantId", r.getString("tenant_id")),
+                                Map.entry("appCode", r.getString("app_code")),
+                                Map.entry("bizSystemCode", r.getString("biz_system_code")),
+                                Map.entry("status", r.getString("status")),
+                                Map.entry("secretRef", r.getString("secret_ref")),
+                                Map.entry("secretSha256", r.getString("secret_sha256")),
+                                Map.entry("claimLimits", Json.read(r.getString("claim_limits"), Object.class)),
+                                Map.entry("allowedOrigins", Json.read(r.getString("allowed_origins"), Object.class)),
+                                Map.entry("roleMapping", Json.read(r.getString("role_mapping"), Object.class)),
+                                Map.entry("policyVersion", id + ":" + r.getLong("policy_revision")))),
                         id);
         if (rows.isEmpty()) throw error(404, "INTEGRATION_NOT_FOUND", "集成凭据不存在");
         return rows.getFirst();

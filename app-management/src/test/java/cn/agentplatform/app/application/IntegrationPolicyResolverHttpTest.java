@@ -47,7 +47,7 @@ class IntegrationPolicyResolverHttpTest {
     static final String LONG_USER="u".repeat(90);
     static Map<String,Object> policy(String user){return Map.of("claimLimits",Map.of("principalIds",List.of(user,LONG_USER),"roles",List.of("reader","ADMIN","EDITOR","SERVICE"),"attributes",Map.of("region",List.of("A"),"dataLabels",List.of("restricted"))),"allowedOrigins",List.of("https://embed.example.invalid"));}
     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity @EnableTransactionManagement
-    @Import({PolicyResolverSecurity.class,IntegrationPolicyResolverController.class,IntegrationController.class,IntegrationService.class,IntegrationPolicyResolver.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
+    @Import({PolicyResolverSecurity.class,IntegrationPolicyResolverController.class,IntegrationController.class,IntegrationService.class,IntegrationPolicyResolver.class,PlatformAccessService.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
     static class Receiver {
         @Bean TestDatabaseErrors databaseErrors(){return new TestDatabaseErrors();}
         @Bean cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingSourcesRepository(JdbcTemplate jdbc,DataSourceTransactionManager tx){return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(jdbc,tx);}

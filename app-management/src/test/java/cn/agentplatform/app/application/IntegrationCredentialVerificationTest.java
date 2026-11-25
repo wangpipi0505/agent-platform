@@ -41,6 +41,7 @@ class IntegrationCredentialVerificationTest {
         var verified = service.verifyApiKey(id, secret);
         assertThat(verified).containsEntry("tenantId", tenant).containsEntry("appCode", "bound-app")
                 .containsEntry("bizSystemCode", "software-a")
+                .containsEntry("policyVersion", id + ":1")
                 .containsKeys("claimLimits", "allowedOrigins", "roleMapping", "policyDigest")
                 .doesNotContainKeys("secretRef", "secretSha256");
         assertThatThrownBy(() -> service.verifyApiKey(id, "wrong-key"))
@@ -49,6 +50,9 @@ class IntegrationCredentialVerificationTest {
         db.update("insert into app.platform_user_role(tenant_id,subject,platform_role,granted_by)"
                 + " values(?,'integration-user','ADMIN','fixture')", tenant);
         assertThat(service.verifyApiKey(id, secret)).isEqualTo(verified);
+        db.update("update app.integration_credential set policy_revision=policy_revision+1 where id=?", id);
+        assertThat(service.verifyApiKey(id, secret)).containsEntry("policyVersion", id + ":2")
+                .containsEntry("policyDigest", verified.get("policyDigest"));
         db.update("update app.integration_credential set status='REVOKED',revoked_at=now() where id=?", id);
         assertThatThrownBy(() -> service.verifyApiKey(id, secret))
                 .isInstanceOfSatisfying(PlatformException.class, error -> assertThat(error.status()).isEqualTo(401));

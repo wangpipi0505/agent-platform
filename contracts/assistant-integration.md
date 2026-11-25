@@ -18,6 +18,8 @@
 | 技能协议 | HTTP/MCP/ALGORITHM/PROCESS 四 kind 声明层枚举 + 运行层适配器注册表（skill-invocation §15） | 批准连接受控引用（INT-02，`approved-connection-reference` 信封，另文 Schema） |
 | 当前主体 | `current-identity-mapping.md`：当前已验 Actor 登记/反查、快照变化拒绝 | 不变；外部 subject 对应关系属可信身份源+明确协议（SEM-11 另建），不并入本标准 |
 
+IAM 集成短票由 authority-service 签发，绑定接入凭据的策略摘要与策略版本。策略修订后，即使策略内容相同，旧票的换票和服务侧复核仍会被拒。宿主可按现有 `POST /embed/ticket` 契约获取当前短票。
+
 ## 2. 业务源码免改分级（L0～L3）
 
 | 等级 | 平台交付与用户操作 | 宿主前提 | 可否称业务源码免改 |

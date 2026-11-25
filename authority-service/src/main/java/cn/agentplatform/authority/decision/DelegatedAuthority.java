@@ -247,7 +247,8 @@ public final class DelegatedAuthority {
         if (roles.isEmpty()) throw AuthorityException.denied("INTEGRATION_RUNTIME_READ_DENIED");
 
         String origin = text(request.raw(), "request_origin");
-        String version = integrationPolicy.require(identity, origin, null);
+        integrationPolicy.require(identity, origin);
+        String version = required(identity, "policy_version");
         var issued = Instant.ofEpochSecond(now());
         var expires = earlier(issued.plusSeconds(delegation.grantSeconds()), Instant.ofEpochSecond(signed.path("exp").longValue()));
         if (!expires.isAfter(issued)) throw AuthorityException.denied("INTEGRATION_SOURCE_EXPIRY");
@@ -273,7 +274,8 @@ public final class DelegatedAuthority {
         var recorded = decision.withTicketJti(ticket.jti());
         decisions.put(recorded);
         var claims = authorityClaims(recorded, request, issued.getEpochSecond());
-        for (String field : List.of("app_code", "biz_system_code", "user_id", "credential_id", "policy_digest")) {
+        for (String field : List.of("app_code", "biz_system_code", "user_id", "credential_id", "policy_digest",
+                "policy_version")) {
             claims.put(field, identity.get(field));
         }
         claims.put("subject_token_sha256", sourceHash);
@@ -1632,7 +1634,9 @@ public final class DelegatedAuthority {
             if (!routes.permitsIntegration(upstream, call.target(), call.action())
                     || !IntegrationRuntimeRoutes.permits(call, required(identity, "app_code")))
                 throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
-            integrationPolicy.require(identity, text(operationNode, "request_origin"), required(operationNode, "policy_version"));
+            if (!required(identity, "policy_version").equals(required(operationNode, "policy_version")))
+                throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
+            integrationPolicy.require(identity, text(operationNode, "request_origin"));
         }
         Map<String, Object> operation = toMap(operationNode);
         String grantRef = required(claims, "grant_ref");
