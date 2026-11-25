@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "../../shared/api";
 import { PAGE_ACTIONS_TARGET, pageChrome } from "./page-chrome";
 import { navMenus } from "./router";
-import { accessDecisionByKey, MENU_GROUP_ORDER, type MenuGroup } from "./page-access";
+import { accessDecisionByKey, MENU_GROUP_ORDER, roleAllows, type MenuGroup } from "./page-access";
 import { canReadCapabilityPackages } from "../../shared/capability-package";
 import {
   fetchConfirmationCounts,
@@ -123,14 +123,24 @@ function onMobileChange(e: MediaQueryListEvent) {
 // —— 待办角标：15s 轮询真实端点 GET /admin/confirmation-center/counts（B4-1，M5-2 切真实 API），
 // 角标渲染在确认中心菜单项上显示 total。 ——
 const counts = ref<ServerConfirmationCounts | null>(null);
+const canReadConfirmationCounts = computed(
+  () => visibleMenus.value.some((item) => item.key === "approvals")
+    && (roleAllows("builder", auth.roles) || roleAllows("approve", auth.roles)),
+);
 let pollTimer: number | undefined;
 function loadCounts() {
+  if (!canReadConfirmationCounts.value) {
+    counts.value = null;
+    return;
+  }
+  const session = auth.snapshot();
   fetchConfirmationCounts()
     .then((data) => {
-      counts.value = data;
+      if (session.current() && canReadConfirmationCounts.value) counts.value = data;
     })
     .catch(() => {});
 }
+watch(canReadConfirmationCounts, loadCounts);
 
 onMounted(() => {
   loadCounts();

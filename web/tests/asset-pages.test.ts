@@ -507,6 +507,8 @@ describe('确认中心四类待办矩阵（前端稿 §5.9）', () => {
     // AppShell：订阅角标变更（处置后不等 15s 轮询立即重读）
     const shellSrc = read('admin/src/AppShell.vue');
     expect(shellSrc).toContain('onConfirmationCountsChanged');
+    expect(shellSrc).toContain('if (!canReadConfirmationCounts.value)');
+    expect(shellSrc).toContain('watch(canReadConfirmationCounts, loadCounts)');
   });
 
   it('注册锚点：四路由+四 page-access 条目追加式（§3.1 分组：规则→构建资产，其余→集成与治理）', () => {
