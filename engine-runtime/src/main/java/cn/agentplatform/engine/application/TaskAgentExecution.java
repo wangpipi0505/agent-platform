@@ -41,4 +41,9 @@ public class TaskAgentExecution {
     boolean cancel(long taskId) {
         return dispatcher.cancelEntry(taskId);
     }
+
+    void startIntegration(String code, JsonNode inputs, Actor actor, java.util.function.LongUnaryOperator createTask) {
+        runs.createForTask(code, inputs, Set.of(), actor,
+                runId -> steps.admit(createTask.applyAsLong(runId), runId, actor));
+    }
 }

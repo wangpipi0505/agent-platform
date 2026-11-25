@@ -49,3 +49,18 @@ Flyway 执行 V235，使用本地真实网关、authority-service、应用管理
 JDK 21 定向回归 81 条全过，零跳过。首次运行复用旧引擎库触发 Flyway V235 乱序，使用新建专用库复跑通过。策略解析夹具改用现行元数据动作和平台凭据签发授权后，原登记的 7 条异常全部消除，`IntegrationPolicyResolverHttpTest` 20 条和真实库迁移 1 条全部通过。完整命令输出位于本地 `.local/r40-control-package.log`、`.local/r40-control-gateway-normalize.log`、`.local/r40-policy-resolver-full.log`。
 
 集成任务提交、受理时归属落库和执行续权仍待接入。当前中断功能通过已有关联运行与接入归属的任务联验。
+
+## 集成任务提交至终态
+
+独立 PostgreSQL 执行 Flyway V236。启动本机正式网关、authority-service、应用管理、引擎、model-gateway、monitor 和 skill-registry，门户登录使用本地身份目录夹具，模型使用经回环 HTTP 提供的 OpenAI 兼容夹具。经评测、发布预检及发布后，使用接入档案 `software-a` 的真实 RS256 集成票提交新任务。数据库中的任务、运行、接入凭据归属和派发来自实际提交，无预置任务。
+
+| 断言 | 实测 |
+| --- | --- |
+| AGENT_VIEWER 提交及跨应用提交 | 两次 403 |
+| 提交 PLAN 或申请工具授权 | 两次 403，工具请求返回 INTEGRATION_PATH_FORBIDDEN |
+| 并发相同请求，使用同一请求号改变目标 | 两次 200 且同任务，一次 409 REQUEST_REPLAY |
+| 发布版本绑定、任务与运行终态、派发回执 | 一条任务及一条运行，均为 SUCCEEDED，INTEGRATION/software-a，派发 DONE |
+| 任务详情、增量事件、终态结果 | 三次 200，结果包含非空模型回复 |
+| 引擎在原授权期限内重取调度票 | 策略同版 200，递增 policy revision 后 403，旧短票读结果 403 |
+
+端到端联验首次在模型输入材料读取阶段被拒。冻结输入证明的导出入口仅识别门户来源。补上已验集成来源与存储侧授权同源检查后复跑，保留门户路径与材料约束。JDK 21 定向回归和七服务构建共 86 条用例通过。最后一处材料读取修复后，重新运行引擎及共享模块 28 条，零失败、零跳过。模型冻结绑定另用隔离 PostgreSQL 与本地 TLS 夹具复跑 19 条，全过。联验终端记录见 `task-admission-http.txt`，本地构建日志见 `.local/r40-admission-package-final.log`、`.local/r40-admission-engine-final.log` 与 `.local/r40-admission-model-tls.log`。正式 E2 与真实外部宿主的联验由 R-22、R-23 跟踪。

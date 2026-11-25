@@ -135,7 +135,11 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         AuthorityProtocol.same(call,result.call());
         // Origin survives a DELEGATED resume. Checking only sourceKind would launder integration
         // grants into admin aliases that deliberately share their action with the public v1 route.
-        if("INTEGRATION".equals(result.operation().originKind())&&!route.integrationAllowed())throw AuthorityProtocol.denied();
+        if ("INTEGRATION".equals(result.operation().originKind()) && !route.integrationAllowed()) {
+            var op = Json.tree(jwt.getClaims().get("operation"));
+            if (!op.path(IntegrationTaskRoutes.TASK_MARKER).asBoolean(false)
+                    || !IntegrationTaskRoutes.downstream(result.caller(), call)) throw AuthorityProtocol.denied();
+        }
         return retained;
     }
     public WorkloadAuthority requireWorkload(ServiceCall call) {
@@ -176,8 +180,10 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
             AuthorityProtocol.same(IntegrationRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI()), call);
         }
         boolean integration = "INTEGRATION".equals(operation.path("origin_kind").textValue());
+        String integrationApp = IntegrationTaskRoutes.application(request.getMethod(), request.getRequestURI());
         if (IntegrationRuntimeRoutes.isTaskSelector(call.resource())
                 || ("engine".equals(serviceId) && integration
+                        && integrationApp == null
                         && IntegrationRuntimeRoutes.supported(request.getMethod(), request.getRequestURI()))) {
             AuthorityProtocol.same("delegated", mode);
             AuthorityProtocol.same("gateway", jwt.getClaimAsString("caller"));
@@ -186,6 +192,15 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
             var expected = IntegrationRuntimeRoutes.taskCall(routes, request.getMethod(), request.getRequestURI(),
                     identity.path("app_code").textValue());
             AuthorityProtocol.same(expected, call);
+            IntegrationRuntimeRoutes.requireTaskQuery(request.getRequestURI(), request.getQueryString());
+        }
+        if ("engine".equals(serviceId) && integration && integrationApp != null) {
+            AuthorityProtocol.same("delegated", mode);
+            AuthorityProtocol.same("gateway", jwt.getClaimAsString("caller"));
+            AuthorityProtocol.same(true, operation.path(IntegrationTaskRoutes.TASK_MARKER).asBoolean(false));
+            var identity = IntegrationSource.decisionIdentity(operation.get("integration_credential"), Json.tree(jwt.getClaims()));
+            AuthorityProtocol.same(integrationApp, identity.path("app_code").textValue());
+            AuthorityProtocol.same(IntegrationTaskRoutes.startCall(integrationApp, call.resource()), call);
             IntegrationRuntimeRoutes.requireTaskQuery(request.getRequestURI(), request.getQueryString());
         }
         boolean runAudit = "engine".equals(serviceId) && PlatformBuildRoutes.RUN_AUDIT.equals(template);

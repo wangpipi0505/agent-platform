@@ -3,6 +3,7 @@ package cn.agentplatform.app.api;
 import cn.agentplatform.app.application.PublishedMetadataService;
 import cn.agentplatform.app.domain.PublishedMetadata;
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
@@ -14,5 +15,12 @@ public class PublishedMetadataController {
     public ApiResponse<PublishedMetadata> published(@PathVariable String code,@RequestParam Map<String,String> parameters){
         if(!parameters.isEmpty())throw new PlatformException(400,"INVALID_METADATA_QUERY","元数据查询不接受额外参数");
         return ApiResponse.ok(metadata.published(code));
+    }
+
+    @GetMapping(IntegrationTaskRoutes.METADATA_PATH)
+    public ApiResponse<PublishedMetadata> integrationPublished(@PathVariable String code,
+            @RequestParam Map<String, String> parameters) {
+        if (!parameters.isEmpty()) throw new PlatformException(400, "INVALID_METADATA_QUERY", "元数据查询不接受额外参数");
+        return ApiResponse.ok(metadata.integrationPublished(code));
     }
 }

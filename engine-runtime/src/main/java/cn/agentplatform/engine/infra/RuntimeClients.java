@@ -346,11 +346,13 @@ public class RuntimeClients implements AutoCloseable {
                 && "app-version".equals(root.kind())
                 && root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*"))
                 || PortalRuntimeRoutes.isPinnedTaskCall(current.call(), code);
+        boolean portal = "PORTAL".equals(current.operation().sourceKind()) && "PORTAL".equals(current.operation().originKind());
+        boolean integrated = IntegrationTaskRoutes.starts(current.call(), code)
+                && "INTEGRATION".equals(current.operation().sourceKind()) && "INTEGRATION".equals(current.operation().originKind());
         if (!"gateway".equals(current.caller())
                 || !"engine".equals(current.call().target())
                 || !(runtimeRead || runRead)
-                || !"PORTAL".equals(current.operation().sourceKind())
-                || !"PORTAL".equals(current.operation().originKind())
+                || !(portal || integrated)
                 || !root.equals(current.operation().resource()))
             throw RunAuthorityStore.denied();
         // Forward the bound main operation/grant. No portal source, retarget, resume or actor

@@ -211,6 +211,7 @@ public final class MaterialScopeStore {
                         current.operation().sourceKind(),
                         current.operation().originKind());
         requirePurpose(current, local);
+        same(b.sourceKind(), current.operation().originKind());
         same(b.owner(), new SubjectKey(current.actor().tenantId(), current.actor().principalId()));
         same(b.root(), current.call().resource());
     }
@@ -237,6 +238,7 @@ public final class MaterialScopeStore {
         if (admission) {
             AuthorityContext.requireBound(proof);
             requirePurpose(proof.current(), false);
+            same(b.sourceKind(), proof.current().operation().originKind());
             same(b.root(), proof.current().call().resource());
             same(b.delegation(), proof.current().delegation());
             same(b.initial(), proof.requireInitialCeiling());
@@ -650,7 +652,7 @@ public final class MaterialScopeStore {
         if(scopes.size()!=3||scopes.stream().map(s->s.material().kind()).distinct().count()!=3)throw denied();
         var snapshot=scopes.stream().filter(s->s.material().kind().equals("run-snapshot")).findFirst().orElseThrow(RunAuthorityStore::denied);
         for(var s:scopes){validate(s,b);same(s.parentScopeSha256(),s.material().kind().equals("run-version-refs")?List.of(snapshot.scopeSha256()):List.of());if(s.material().kind().equals("run-version-refs")&&!s.requiredDataLabels().containsAll(snapshot.requiredDataLabels()))throw denied();}
-        return new Binding(b.runId(),b.publicId(),b.owner(),b.delegation(),b.initial(),b.root(),b.appVersionId(),b.appVersionNo(),b.initialSha(),b.snapshotSha(),b.originId(),b.admissionDecision(),b.authorizationVersion(),b.operationId(),b.checkVersion(),b.blockedReason(),b.retryNotBefore(),scopes);
+        return new Binding(b.runId(),b.publicId(),b.owner(),b.delegation(),b.initial(),b.root(),b.appVersionId(),b.appVersionNo(),b.initialSha(),b.snapshotSha(),b.originId(),b.admissionDecision(),b.authorizationVersion(),b.operationId(),b.checkVersion(),b.blockedReason(),b.retryNotBefore(),b.sourceKind(),scopes);
     }
     static void requireObservedFloor(MaterialScopeV1 s,Binding b,List<MaterialScopeV1> parents){requireFloor(s,b,parents);}
     static void requireObservedLocator(RunEventReader.Work w,Binding b,ObservedRow row){

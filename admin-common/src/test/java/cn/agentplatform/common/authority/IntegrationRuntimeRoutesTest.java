@@ -60,4 +60,17 @@ class IntegrationRuntimeRoutesTest {
         assertThat(IntegrationRuntimeRoutes.permitsRoles(call, java.util.Set.of("AGENT_ADMIN"))).isTrue();
         assertThat(IntegrationRuntimeRoutes.permitsRoles(call, java.util.Set.of("AGENT_VIEWER", "ADMIN"))).isFalse();
     }
+
+    @Test
+    void taskAdmissionPinsTheApplicationAndCannotSendAnIntegrationGrantToSkills() {
+        var root = new ResourceBinding("app-version", "app-a@7", "f".repeat(64));
+        var call = IntegrationTaskRoutes.startCall("app-a", root);
+        assertThat(IntegrationRuntimeRoutes.permits(call, "app-a")).isTrue();
+        assertThat(IntegrationRuntimeRoutes.permits(call, "app-b")).isFalse();
+        assertThat(IntegrationRuntimeRoutes.permitsRoles(call, java.util.Set.of("AGENT_OPERATOR"))).isTrue();
+        assertThat(IntegrationRuntimeRoutes.permitsRoles(call, java.util.Set.of("AGENT_VIEWER", "ADMIN"))).isFalse();
+        assertThat(IntegrationTaskRoutes.downstream("engine", new ServiceCall("model", "model.chat-stream", root))).isTrue();
+        assertThat(IntegrationTaskRoutes.downstream("engine", new ServiceCall("skill", "skill.invoke", root))).isFalse();
+        assertThat(IntegrationTaskRoutes.downstream("model", new ServiceCall("model", "model.chat-stream", root))).isFalse();
+    }
 }

@@ -149,7 +149,8 @@ public final class InitialModelInputVerifier implements AutoCloseable {
         || !"model.chat-stream".equals(a.call().action())
         || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(root.kind())
         || !"DELEGATED".equals(a.operation().sourceKind())
-        || !"PORTAL".equals(a.operation().originKind())) throw changed();
+        || !("PORTAL".equals(a.operation().originKind())
+            || cn.agentplatform.common.authority.IntegrationTaskRoutes.modelExecution(a))) throw changed();
     same(root, a.operation().resource());
     same(owner, a.operation().subject());
     same(

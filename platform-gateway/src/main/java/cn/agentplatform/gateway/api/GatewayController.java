@@ -8,6 +8,8 @@ import cn.agentplatform.common.authority.GatewayIngressBoundary;
 import cn.agentplatform.common.authority.PlatformBuildRoutes;
 import cn.agentplatform.common.authority.PlatformAccessClient;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
+import cn.agentplatform.common.authority.IntegrationTaskRoutes;
+import cn.agentplatform.common.authority.SubjectKey;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
@@ -102,6 +104,20 @@ public class GatewayController {
                 return;
             }
             var integrationSource = IntegrationRuntimeRoutes.currentSource();
+            String integrationApp = IntegrationTaskRoutes.application(req.getMethod(), req.getRequestURI());
+            if (integrationSource != null && integrationApp != null) {
+                var metadata = taskMetadata == null ? null : taskMetadata.getIfAvailable();
+                if (metadata == null)
+                    throw new PlatformException(503, "DEPENDENCY_UNAVAILABLE", "应用发布查询暂不可用");
+                var subject = new SubjectKey(integrationSource.getClaimAsString("tenant_id"), integrationSource.getSubject());
+                var version = metadata.lookupIntegration(integrationSource.getTokenValue(), subject,
+                        integrationApp, req.getHeader("Origin"));
+                var call = IntegrationTaskRoutes.startCall(integrationApp, version.resource());
+                var ticket = integration.exchangeRuntime(req, call);
+                res.setHeader("Cache-Control", "no-store");
+                forward(req, res, call.target(), ticket.value());
+                return;
+            }
             boolean cancelIntegration = integrationSource != null
                     && IntegrationRuntimeRoutes.taskCancel(req.getMethod(), req.getRequestURI());
             if (integrationSource != null && (cancelIntegration

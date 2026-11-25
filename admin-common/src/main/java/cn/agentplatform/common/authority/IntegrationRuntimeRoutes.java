@@ -45,7 +45,8 @@ public final class IntegrationRuntimeRoutes {
     }
 
     public static boolean supported(String method, String path) {
-        return read(method, path) || taskCancel(method, path);
+        return read(method, path) || taskCancel(method, path)
+                || IntegrationTaskRoutes.application(method, path) != null;
     }
 
     public static ServiceCall call(ServiceRoutePolicy routes, String method, String path) {
@@ -95,6 +96,8 @@ public final class IntegrationRuntimeRoutes {
     }
 
     public static boolean permits(ServiceCall call, String credentialApp) {
+        if (IntegrationTaskRoutes.starts(call, credentialApp)
+                || IntegrationTaskRoutes.metadataCall(credentialApp).equals(call)) return true;
         if ("engine".equals(call.target())
                 && (TASK_READ_ACTIONS.contains(call.action()) || CANCEL_ACTION.equals(call.action()))
                 && isTaskSelector(call.resource())) {
@@ -112,6 +115,8 @@ public final class IntegrationRuntimeRoutes {
     }
 
     public static boolean permitsRoles(ServiceCall call, Set<String> roles) {
+        if (IntegrationTaskRoutes.CREATE.equals(call.action()) || IntegrationTaskRoutes.METADATA.equals(call.action()))
+            return IntegrationTaskRoutes.submitRoles(roles);
         return CANCEL_ACTION.equals(call.action()) ? roles.contains("AGENT_ADMIN") : !roles.isEmpty();
     }
 
@@ -119,17 +124,31 @@ public final class IntegrationRuntimeRoutes {
 
     /** Only the mapped receiver's current, verified integration service ticket can supply this scope. */
     public static TaskScope currentTaskScope(String publicId) {
+        return currentScope(publicId, null);
+    }
+
+    public static TaskScope currentStartScope(String appCode) {
+        return currentScope(null, appCode);
+    }
+
+    private static TaskScope currentScope(String publicId, String appCode) {
         var jwt = currentJwt();
         if (jwt == null || !"service".equals(jwt.getClaimAsString("token_use"))) return null;
         var claims = Json.tree(jwt.getClaims());
         var operation = claims.path("operation");
         if (!"INTEGRATION".equals(operation.path("origin_kind").textValue())) return null;
         var verified = AuthorityContext.current();
-        if (!"INTEGRATION".equals(verified.operation().originKind()) || !isTaskSelector(verified.call().resource()))
+        if (!"INTEGRATION".equals(verified.operation().originKind()))
             throw AuthorityProtocol.denied();
         var identity = IntegrationSource.decisionIdentity(operation.get("integration_credential"), claims);
         String app = identity.path("app_code").textValue();
-        AuthorityProtocol.same(task(app, publicId), verified.call().resource());
+        if (appCode != null) {
+            AuthorityProtocol.same(app, appCode);
+            if (!IntegrationTaskRoutes.starts(verified.call(), app)
+                    || !IntegrationTaskRoutes.submitRoles(verified.actor().roles())) throw AuthorityProtocol.denied();
+        } else {
+            AuthorityProtocol.same(task(app, publicId), verified.call().resource());
+        }
         return new TaskScope(app, identity.path("biz_system_code").textValue(),
                 verified.actor().attributes().getOrDefault("dataLabels", Set.of()),
                 identity.path("credential_id").longValue());

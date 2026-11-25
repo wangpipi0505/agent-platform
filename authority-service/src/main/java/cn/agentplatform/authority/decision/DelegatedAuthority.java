@@ -15,6 +15,7 @@ import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.common.authority.EvaluationCandidateBinding;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
+import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import cn.agentplatform.common.authority.IntegrationSource;
 import cn.agentplatform.common.authority.OperationBinding;
 import cn.agentplatform.common.authority.PortalEventsBinding;
@@ -187,9 +188,6 @@ public final class DelegatedAuthority {
             if (!clientId.equals(decision.caller())) {
                 throw AuthorityException.denied("FORWARD_CALLER");
             }
-            if ("INTEGRATION".equals(decision.operation().get("origin_kind"))) {
-                throw AuthorityException.denied("INTEGRATION_METADATA_FORWARD_FORBIDDEN");
-            }
             if (!grantRef.equals(decision.grantRef())
                     || !operationId.equals(Objects.toString(decision.operation().get("operation_id"), null))) {
                 throw AuthorityException.denied("FORWARD_GRANT");
@@ -201,6 +199,18 @@ public final class DelegatedAuthority {
             if (!routes.permits(clientId, request.call().target(), request.call().action(), RouteDirectory.DELEGATED)) {
                 // 目录里没有 caller->新 target 的 delegated 行：跨目标转发到这里必须停住。
                 throw AuthorityException.denied("FORWARD_ESCALATION");
+            }
+            if ("INTEGRATION".equals(decision.operation().get("origin_kind"))) {
+                String next = request.call().action();
+                boolean exactHop = switch (decision.action()) {
+                    case IntegrationTaskRoutes.CREATE -> "app.published.read".equals(next);
+                    case "run.advance" -> "model.chat-stream".equals(next);
+                    case "model.chat-stream" -> "material.scope.read".equals(next);
+                    default -> false;
+                };
+                if (!exactHop || !IntegrationTaskRoutes.downstream(clientId, request.call()))
+                    throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
+                requireIntegratedTask(decision);
             }
             IssuedTicket ticket = ticket(decision, clientId, request.call(), now);
             DecisionStore.Decision hop = new DecisionStore.Decision(
@@ -264,10 +274,16 @@ public final class DelegatedAuthority {
         operation.put("integration_credential", IntegrationSource.credentialBinding(identity));
         operation.put("policy_version", version);
         if (origin != null) operation.put("request_origin", origin);
+        boolean startsTask = IntegrationTaskRoutes.starts(request.call(), required(identity, "app_code"));
+        String originId = null;
+        if (startsTask) {
+            operation.put(IntegrationTaskRoutes.TASK_MARKER, true);
+            originId = "oa1:" + Digest.sha256("integration-task:" + required(signed, "jti")).substring(0, 32);
+        }
         String sourceHash = Digest.sha256(Json.canonical(request.subjectToken()));
         var decision = new DecisionStore.Decision(newId("dec"), clientId, request.call().target(),
                 request.call().action(), resourceOf(request.call()), actor, actor, operation, grant, expires,
-                PORTAL_CALLER, null, null, "integration:" + version,
+                PORTAL_CALLER, null, originId, "integration:" + version,
                 earlier(issued.plusSeconds(delegation.decisionSeconds()), expires),
                 null, sourceHash, request.nonce(), Digest.sha256(Json.canonical(request.raw())),
                 null, null, null, null, null, null, null);
@@ -282,6 +298,27 @@ public final class DelegatedAuthority {
         claims.put("subject_token_sha256", sourceHash);
         claims.put("ticket", ticket.value());
         return Map.of("assertion", keys.sign(TicketService.ASSERTION_TYPE, claims), "ticket", ticket.value());
+    }
+
+    private void requireIntegratedTask(DecisionStore.Decision decision) {
+        var op = decision.operation();
+        if (!Boolean.TRUE.equals(op.get(IntegrationTaskRoutes.TASK_MARKER)))
+            throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
+        var identity = authorizedIntegrationIdentity(Json.tree(op), Json.tree(decision.actor()));
+        if (!IntegrationTaskRoutes.submitRoles(rolesOf(identity.get("roles"))))
+            throw AuthorityException.denied("INTEGRATION_RUNTIME_ROLE_DENIED");
+        integrationPolicy.require(identity, text(Json.tree(op), "request_origin"));
+    }
+
+    private static JsonNode authorizedIntegrationIdentity(JsonNode operation, JsonNode claims) {
+        try {
+            var identity = IntegrationSource.decisionIdentity(operation.get("integration_credential"), claims);
+            if (!required(identity, "policy_version").equals(required(operation, "policy_version")))
+                throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
+            return identity;
+        } catch (PlatformException denied) {
+            throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
+        }
     }
 
     private static void requireIntegrationExchangeShape(AuthorityRequest request) {
@@ -341,6 +378,11 @@ public final class DelegatedAuthority {
                     original.grantRef(), operationText(originalOperation, "tenant_id"),
                     operationText(originalOperation, "sub"), request.call(), ceilingSha,
                     "DELEGATED", originKind);
+            if ("INTEGRATION".equals(originKind)) {
+                requireIntegratedTask(original);
+                for (String field : List.of(IntegrationTaskRoutes.TASK_MARKER, "integration_credential", "policy_version", "request_origin"))
+                    if (originalOperation.containsKey(field)) operation.put(field, originalOperation.get(field));
+            }
             DecisionStore.Decision resumed = new DecisionStore.Decision(newId("dec"), clientId,
                     request.call().target(), request.call().action(), resourceOf(request.call()),
                     original.actor(), original.ceiling(), operation, original.grantRef(), grantExpiresAt,
@@ -397,7 +439,13 @@ public final class DelegatedAuthority {
                 && EvaluationCandidateBinding.KIND.equals(request.call().resource().kind());
         // The model can register a material read on the same candidate and grant. Select an
         // execution decision before checking its lifetime, independent of registry iteration order.
-        DecisionStore.Decision original = evaluationAdvance
+        boolean integrationAdvance = "run.advance".equals(request.call().action())
+                && matched.stream().anyMatch(value -> "INTEGRATION".equals(value.operation().get("origin_kind")));
+        DecisionStore.Decision original = integrationAdvance
+                ? matched.stream().filter(value -> IntegrationTaskRoutes.CREATE.equals(value.action())
+                        && Boolean.TRUE.equals(value.operation().get(IntegrationTaskRoutes.TASK_MARKER)))
+                        .findFirst().orElseThrow(() -> AuthorityException.denied("RESUME_ACTION"))
+                : evaluationAdvance
                 ? matched.stream().filter(value -> Set.of("evaluation.run", "evaluation.turn", "run.advance")
                         .contains(value.action())).findFirst().orElseThrow(() -> AuthorityException.denied("RESUME_ACTION"))
                 : matched.getFirst();
@@ -1626,18 +1674,20 @@ public final class DelegatedAuthority {
             throw AuthorityException.denied("TICKET_OPERATION");
         }
         if ("INTEGRATION".equals(routeOriginKind)) {
-            JsonNode identity;
-            try {
-                identity = IntegrationSource.decisionIdentity(operationNode.get("integration_credential"), claims);
-            } catch (PlatformException denied) {
-                throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
-            }
-            if (!routes.permitsIntegration(upstream, call.target(), call.action())
-                    || !IntegrationRuntimeRoutes.permits(call, required(identity, "app_code"))
-                    || !IntegrationRuntimeRoutes.permitsRoles(call, roles))
-                throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
-            if (!required(identity, "policy_version").equals(required(operationNode, "policy_version")))
-                throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
+            var identity = authorizedIntegrationIdentity(operationNode, claims);
+            String app = required(identity, "app_code");
+            String source = required(operationNode, "source_kind");
+            boolean markedTask = operationNode.path(IntegrationTaskRoutes.TASK_MARKER).asBoolean(false);
+            boolean initial = routes.permitsIntegration(upstream, call.target(), call.action())
+                    && IntegrationRuntimeRoutes.permits(call, app) && IntegrationRuntimeRoutes.permitsRoles(call, roles)
+                    && "INTEGRATION".equals(source)
+                    && (markedTask == IntegrationTaskRoutes.starts(call, app));
+            boolean taskHop = markedTask && IntegrationTaskRoutes.submitRoles(roles)
+                    && IntegrationTaskRoutes.versionRoot(call.resource()) && call.resource().id().startsWith(app + "@")
+                    && ((IntegrationTaskRoutes.downstream(upstream, call)
+                            && ("app".equals(call.target()) ? "INTEGRATION" : "DELEGATED").equals(source))
+                        || ServiceRoutePolicy.localRunAdvance(upstream, call, MODE, source, routeOriginKind));
+            if (!initial && !taskHop) throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
             integrationPolicy.require(identity, text(operationNode, "request_origin"));
         }
         Map<String, Object> operation = toMap(operationNode);

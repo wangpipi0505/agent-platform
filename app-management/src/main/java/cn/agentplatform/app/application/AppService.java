@@ -496,8 +496,11 @@ public class AppService {
                 || !"app".equals(current.call().target())
                 || !"app.published.read".equals(current.call().action())
                 || current.operation() == null
-                || !"PORTAL".equals(current.operation().originKind())
-                || !Set.of("PORTAL", "DELEGATED").contains(current.operation().sourceKind()))
+                || !("PORTAL".equals(current.operation().originKind())
+                        && Set.of("PORTAL", "DELEGATED").contains(current.operation().sourceKind())
+                    || "INTEGRATION".equals(current.operation().originKind())
+                        && "INTEGRATION".equals(current.operation().sourceKind())
+                        && IntegrationTaskRoutes.versionRoot(current.call().resource())))
             throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布读取能力不匹配");
         MetadataSelectors.code(code);
         var received = current.call().resource();

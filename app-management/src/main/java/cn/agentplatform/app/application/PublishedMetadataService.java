@@ -19,6 +19,16 @@ public class PublishedMetadataService {
         return read(actor.tenantId(),code);
     }
 
+    public PublishedMetadata integrationPublished(String code) {
+        var expected = IntegrationTaskRoutes.metadataCall(code);
+        var current = AuthorityContext.requireFor(Actor.current(), expected.resource());
+        if (!expected.equals(current.call()) || !"gateway".equals(current.caller())
+                || !"INTEGRATION".equals(current.operation().originKind())
+                || !IntegrationTaskRoutes.submitRoles(current.actor().roles()))
+            throw new PlatformException(403, "APP_BINDING_DENIED", "当前授权不允许查询接入应用版本");
+        return read(current.actor().tenantId(), code);
+    }
+
     /**
      * 组合用的一份发布元数据：读同一行、同一不可变版本，但不走 PORTAL 选择器。
      * 调用方是应用侧的公开读投影（{@code GET /v1/apps/{code}/experience}），已由路由目录与租户门禁授权，

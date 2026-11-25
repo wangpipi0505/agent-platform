@@ -126,12 +126,15 @@ public class RunAdmissionService {
         MetadataSelectors.code(code);
         var current = AuthorityContext.current();
         var root = current.call().resource();
+        boolean portal = "PORTAL".equals(current.operation().sourceKind()) && "PORTAL".equals(current.operation().originKind());
+        boolean integrated = taskEntry && IntegrationTaskRoutes.starts(current.call(), code)
+                && "INTEGRATION".equals(current.operation().sourceKind()) && "INTEGRATION".equals(current.operation().originKind())
+                && IntegrationTaskRoutes.submitRoles(current.actor().roles());
         if (!"gateway".equals(current.caller())
                 || !"engine".equals(current.call().target())
                 || !(taskEntry ? "proxy.engine.post.TaskController.create" : "proxy.engine.post.RunController.run")
                         .equals(current.call().action())
-                || !"PORTAL".equals(current.operation().sourceKind())
-                || !"PORTAL".equals(current.operation().originKind())
+                || !(portal || integrated)
                 || !"app-version".equals(root.kind())
                 || !root.equals(current.operation().resource())
                 || !root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*"))

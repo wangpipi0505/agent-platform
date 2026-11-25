@@ -40,9 +40,10 @@ public final class RunAuthority {
     public HttpCurrentAuthorityClient.RetainedAuthorization currentRetained(long runId,ServiceCall call){
         if (TransactionSynchronizationManager.isActualTransactionActive())
             throw new IllegalStateException("CURRENT_NETWORK_REQUIRES_NO_TRANSACTION");
-        if (!ServiceRoutePolicy.localRunAdvance("engine", call, "delegated", "DELEGATED", "PORTAL"))
+        var binding = store.load(runId);
+        if (!ServiceRoutePolicy.localRunAdvance("engine", call, "delegated", "DELEGATED", binding.sourceKind()))
             throw RunAuthorityStore.denied();
-        var binding=store.load(runId);if(!binding.root().equals(call.resource()))throw RunAuthorityStore.denied();
+        if(!binding.root().equals(call.resource()))throw RunAuthorityStore.denied();
         if(binding.blockedReason()!=null&&!"AUTHORITY_UNAVAILABLE".equals(binding.blockedReason()))throw RunAuthorityStore.denied();
         if(binding.retryNotBefore()!=null&&binding.retryNotBefore().isAfter(clock.instant()))throw unavailable();
         if (!binding.delegation().expiresAt().isAfter(clock.instant())) {

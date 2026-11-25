@@ -20,6 +20,10 @@
 
 IAM 集成短票由 authority-service 签发，绑定接入凭据的策略摘要与策略版本。策略修订后，即使策略内容相同，旧票的换票和服务侧复核仍会被拒。宿主可按现有 `POST /embed/ticket` 契约获取当前短票。
 
+集成 `AGENT_OPERATOR` 或 `AGENT_ADMIN` 可通过 `POST /v1/apps/{code}/tasks` 在凭据绑定的应用上提交任务。请求包含 `mode: "AGENT"`、`requestId` 和 `goal`，可选对象 `inputs`。省略或传空 `inputs` 时以 `goal` 作为对话输入。首期支持已发布的单步 CHAT 应用。可省略 `toolPolicy`，或明确传入 `{"allowedToolRefs":[]}`。请求工具授权返回 403 `INTEGRATION_PATH_FORBIDDEN`。
+
+受理时锁定应用当前发布版本，在同一事务内写入任务、运行、凭据归属、数据标签和调度记录。相同租户、主体、软件及应用下，同一 `requestId` 与相同请求重放返回原任务。异参重放返回 409 `REQUEST_REPLAY`。执行委派仅开放当前运行所需的发布元数据、模型和材料操作，调度续权在原授权有效期内复核当前凭据及策略版本。
+
 任务详情、增量事件与结果读取使用任务业务号。读取要求当前验签凭据与任务的租户、应用、业务系统相符，主体为任务所有者，且当前标签覆盖任务受理时记录的标签。事件增量可传 `afterSeq` 和 `limit`，每项至多一次。任务存量缺接入归属、身份跨边界或标签不足时统一返回 403 `APP_BINDING_DENIED`。平台授权行不参与此判断。
 
 集成 `AGENT_ADMIN` 可通过 `POST /v1/tasks/{taskId}/cancel` 中断同租户、同应用及同业务系统的任务运行。请求可省略正文或传空 JSON 对象。响应只有任务号和状态。仍在途而关联运行不可中断时返回 409 `TASK_NOT_RUNNING`。中断与业务审计同事务提交，跨边界拒绝也记录审计，台账约定的 `audit.read` 可经 `GET /admin/audit` 查询。

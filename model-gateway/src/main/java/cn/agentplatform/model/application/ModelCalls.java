@@ -82,7 +82,8 @@ public class ModelCalls {
         if (!"engine".equals(a.caller()) || !"model".equals(a.call().target())
                 || !"model.chat-stream".equals(a.call().action())
                 || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(root.kind())
-                || !"DELEGATED".equals(a.operation().sourceKind()) || !"PORTAL".equals(a.operation().originKind())
+                || !"DELEGATED".equals(a.operation().sourceKind())
+                || !("PORTAL".equals(a.operation().originKind()) || IntegrationTaskRoutes.modelExecution(a))
                 || !root.equals(a.operation().resource())
                 || !new SubjectKey(a.actor().tenantId(), a.actor().principalId()).equals(a.operation().subject()))
             throw promptMissing();

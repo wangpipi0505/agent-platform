@@ -653,7 +653,9 @@ public final class ModelInputMaterialStore {
     eq(b.owner(), a.operation().subject());
     eq(b.initial(), proof.requireInitialCeiling());
     eq(b.originId(), proof.requireOriginAuthenticationId());
-    if (EvaluationCandidateBinding.KIND.equals(b.root().kind())) eq(b.delegation(), a.delegation());
+    eq(b.sourceKind(), a.operation().originKind());
+    if (EvaluationCandidateBinding.KIND.equals(b.root().kind()) || "INTEGRATION".equals(b.sourceKind()))
+      eq(b.delegation(), a.delegation());
     for (var p : b.scopes()) MaterialAuthorization.require(p, a, clock);
   }
 
@@ -666,7 +668,10 @@ public final class ModelInputMaterialStore {
         || !"material.scope.read".equals(a.call().action())
         || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(a.call().resource().kind())
         || !"DELEGATED".equals(a.operation().sourceKind())
-        || !"PORTAL".equals(a.operation().originKind())) throw missing();
+        || !("PORTAL".equals(a.operation().originKind())
+            || "INTEGRATION".equals(a.operation().originKind())
+                && cn.agentplatform.common.authority.IntegrationTaskRoutes.downstream(a.caller(), a.call())))
+      throw missing();
     eq(a.call().resource(), a.operation().resource());
     proof.requireInitialCeiling();
     proof.requireOriginAuthenticationId();

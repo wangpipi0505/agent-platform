@@ -2556,6 +2556,18 @@
  },
  {
   "method": "GET",
+  "template": "/internal/apps/{code}/integration-published-metadata",
+  "caller": "gateway",
+  "target": "app",
+  "action": "app.integration.published.metadata.read",
+  "mode": "delegated",
+  "integrationAllowed": true,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/PublishedMetadataController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/application/PublishedMetadataClient.java",
+  "reason": "Credential-bound metadata for a single integration task admission"
+ },
+ {
+  "method": "GET",
   "template": "/internal/runs/{id}/observation-metadata",
   "caller": "gateway",
   "target": "engine",

@@ -89,8 +89,8 @@ public final class RunAuthorityStore {
         long id=db.queryForObject("insert into engine.run(public_id,app_code,app_version_id,trigger_type,status,principal_id,tenant_id,input_ref,version_refs,guard_ctx,budget,snapshot,inputs,mode,request_id,eval_candidate) values(?,?,?,?,'PENDING',?,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb,?::jsonb,?,?,?::jsonb) returning id",Long.class,
             publicId,code,version,trigger,initial.principalId(),initial.tenantId(),"pg:run/"+publicId+"/input",Json.write(refs),Json.write(Map.of("tenantId",initial.tenantId(),"principalId",initial.principalId(),"roles",current.actor().roles(),"attributes",current.actor().attributes(),"snapshotAt",clock.instant().toString())),Json.write(budget),Json.write(snapshot),Json.write(inputs),mode,requestId,candidateRef);
         String snapshotSha=MaterialScopeStore.payloadDigest(db,"run-snapshot",id);
-        db.update("insert into engine.run_authority(run_id,tenant_id,principal_id,grant_ref,grant_expires_at,initial_ceiling,resource_digest,source_kind,origin_authentication_id,app_version_id,app_version_no,root_kind,root_id,initial_ceiling_sha256,accepted_snapshot_sha256,admission_decision_id,authorization_version,operation_id,candidate_rev) values(?,?,?,?,?,?::jsonb,?,'PORTAL',?,?,?,?,?,?,?,?,?,?,?)",
-            id,initial.tenantId(),initial.principalId(),current.delegation().value(),Timestamp.from(current.delegation().expiresAt()),Json.write(initial),candidate,origin,version,no,root.kind(),root.id(),MaterialAuthorization.ceilingSha256(initial),snapshotSha,current.decisionId(),current.authorizationVersion(),current.operation().operationId(),revision);
+        db.update("insert into engine.run_authority(run_id,tenant_id,principal_id,grant_ref,grant_expires_at,initial_ceiling,resource_digest,source_kind,origin_authentication_id,app_version_id,app_version_no,root_kind,root_id,initial_ceiling_sha256,accepted_snapshot_sha256,admission_decision_id,authorization_version,operation_id,candidate_rev) values(?,?,?,?,?,?::jsonb,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            id,initial.tenantId(),initial.principalId(),current.delegation().value(),Timestamp.from(current.delegation().expiresAt()),Json.write(initial),candidate,current.operation().originKind(),origin,version,no,root.kind(),root.id(),MaterialAuthorization.ceilingSha256(initial),snapshotSha,current.decisionId(),current.authorizationVersion(),current.operation().operationId(),revision);
         var materialStore=new MaterialScopeStore(source,clock);
         var entitlements=new TreeMap<>(initial.attributes());entitlements.remove("dataLabels");
         var obligations=new TreeSet<>(initial.attributes().getOrDefault("dataLabels",Set.of()));obligations.addAll(current.actor().attributes().getOrDefault("dataLabels",Set.of()));obligations.addAll(labels);
@@ -111,7 +111,7 @@ public final class RunAuthorityStore {
     public record Binding(long runId,String publicId,SubjectKey owner,DelegationRef delegation,Actor initial,
         ResourceBinding root,long appVersionId,long appVersionNo,String initialSha,String snapshotSha,String originId,
         String admissionDecision,String authorizationVersion,String operationId,long checkVersion,String blockedReason,
-        Instant retryNotBefore,List<MaterialScopeV1> scopes) {
+        Instant retryNotBefore,String sourceKind,List<MaterialScopeV1> scopes) {
         public Binding {scopes=List.copyOf(scopes);}
     }
     public Binding load(long runId){return MaterialScopeStore.snapshot(source,()->load(db,runId,true));}
@@ -189,7 +189,7 @@ public final class RunAuthorityStore {
         String initialSha=text(c,"initial_ceiling_sha256"),snapshotSha=text(c,"accepted_snapshot_sha256"),candidate=text(c,"resource_digest");hash(initialSha);hash(snapshotSha);hash(candidate);same(initialSha,w.ceiling(initial,initialBytes));
         if(!c.path("check_version").isIntegralNumber()||!c.path("check_version").canConvertToLong()||c.path("check_version").longValue()<0)throw denied();
         try{
-            var binding=new Binding(run,publicId,owner,new DelegationRef(text(c,"grant_ref"),owner,Instant.parse(text(c,"grant_expires_at"))),initial,new ResourceBinding("app-version",text(c,"root_id"),candidate),version,no,initialSha,snapshotSha,text(c,"origin_authentication_id"),text(c,"admission_decision_id"),text(c,"authorization_version"),text(c,"operation_id"),c.path("check_version").longValue(),c.path("blocked_reason").isNull()?null:text(c,"blocked_reason"),c.path("retry_not_before").isNull()?null:Instant.parse(text(c,"retry_not_before")),List.of());
+            var binding=new Binding(run,publicId,owner,new DelegationRef(text(c,"grant_ref"),owner,Instant.parse(text(c,"grant_expires_at"))),initial,new ResourceBinding("app-version",text(c,"root_id"),candidate),version,no,initialSha,snapshotSha,text(c,"origin_authentication_id"),text(c,"admission_decision_id"),text(c,"authorization_version"),text(c,"operation_id"),c.path("check_version").longValue(),c.path("blocked_reason").isNull()?null:text(c,"blocked_reason"),c.path("retry_not_before").isNull()?null:Instant.parse(text(c,"retry_not_before")),"PORTAL",List.of());
             w.live();return binding;
         }catch(DateTimeException invalid){throw denied();}
     }
@@ -210,7 +210,11 @@ public final class RunAuthorityStore {
         same(owner,new SubjectKey(str(r,"run_tenant"),str(r,"run_principal")));
         long version=0,no=0;
         String kind = str(r, "root_kind");
-        same("PORTAL",str(r,"source_kind"));
+        String sourceKind = str(r, "source_kind");
+        if ("INTEGRATION".equals(sourceKind)) {
+            same("app-version", kind);
+            same("CHAT", str(r, "trigger_type"));
+        } else same("PORTAL", sourceKind);
         String initialSha=str(r,"initial_ceiling_sha256"),snapshotSha=str(r,"accepted_snapshot_sha256"),candidate=str(r,"resource_digest");
         hash(initialSha);hash(snapshotSha);hash(candidate);same(initialSha,MaterialAuthorization.ceilingSha256(initial));
         var root = new ResourceBinding(kind, str(r, "root_id"), candidate);
@@ -227,10 +231,10 @@ public final class RunAuthorityStore {
             same(str(r,"app_code")+"@"+no,root.id());
         }
         var b=new Binding(runId,str(r,"public_id"),owner,new DelegationRef(str(r,"active_grant_ref"),owner,instant(r,"active_grant_expires_at")),initial,
-            root,version,no,initialSha,snapshotSha,str(r,"active_origin_id"),str(r,"admission_decision_id"),str(r,"authorization_version"),str(r,"operation_id"),((Number)r.get("check_version")).longValue(),(String)r.get("blocked_reason"),instant(r,"retry_not_before"),List.of());
+            root,version,no,initialSha,snapshotSha,str(r,"active_origin_id"),str(r,"admission_decision_id"),str(r,"authorization_version"),str(r,"operation_id"),((Number)r.get("check_version")).longValue(),(String)r.get("blocked_reason"),instant(r,"retry_not_before"),sourceKind,List.of());
         if(!complete)return b;
         var scopes=MaterialScopeStore.scopes(db,b);
-        return new Binding(b.runId,b.publicId,b.owner,b.delegation,b.initial,b.root,b.appVersionId,b.appVersionNo,b.initialSha,b.snapshotSha,b.originId,b.admissionDecision,b.authorizationVersion,b.operationId,b.checkVersion,b.blockedReason,b.retryNotBefore,scopes);
+        return new Binding(b.runId,b.publicId,b.owner,b.delegation,b.initial,b.root,b.appVersionId,b.appVersionNo,b.initialSha,b.snapshotSha,b.originId,b.admissionDecision,b.authorizationVersion,b.operationId,b.checkVersion,b.blockedReason,b.retryNotBefore,b.sourceKind,scopes);
     }
 
     /** Called only after replay matches the frozen request. Preserve the original material ceiling. */
@@ -301,6 +305,7 @@ public final class RunAuthorityStore {
     }
     public static void strict(Binding b,RetainedAuthorization proof){
         proof.requireVerified();var a=proof.current();requirePurpose(a,true);same(b.root,a.call().resource());same(b.delegation,a.delegation());
+        same(b.sourceKind, a.operation().originKind());
         same(b.initial,proof.requireInitialCeiling());same(b.initialSha,MaterialAuthorization.ceilingSha256(proof.requireInitialCeiling()));same(b.originId,proof.requireOriginAuthenticationId());
     }
     static void requirePurpose(VerifiedAuthority a,boolean localOnly){
@@ -315,7 +320,11 @@ public final class RunAuthorityStore {
                 && Set.of("evaluation.run", "evaluation.turn").contains(a.call().action())
                 && EvaluationCandidateBinding.KIND.equals(a.call().resource().kind())
                 && "PORTAL".equals(a.operation().sourceKind()) && "PORTAL".equals(a.operation().originKind());
-        if(localOnly ? !local : !(main || evaluation))throw denied();
+        boolean integrated = "gateway".equals(a.caller()) && "engine".equals(a.call().target())
+                && IntegrationTaskRoutes.CREATE.equals(a.call().action()) && IntegrationTaskRoutes.versionRoot(a.call().resource())
+                && "INTEGRATION".equals(a.operation().sourceKind()) && "INTEGRATION".equals(a.operation().originKind())
+                && IntegrationTaskRoutes.submitRoles(a.actor().roles());
+        if(localOnly ? !local : !(main || evaluation || integrated))throw denied();
         same(a.call().resource(),a.operation().resource());
     }
     static void requireWrite(DataSource source){

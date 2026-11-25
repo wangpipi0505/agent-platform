@@ -85,9 +85,26 @@ public final class PublishedMetadataClient implements AutoCloseable {
         var operation=ticket.operation();
         if(operation==null||!verifiedSubject.equals(operation.subject())||!resource.equals(operation.resource())
                 ||!"PORTAL".equals(operation.sourceKind())||!"PORTAL".equals(operation.originKind()))throw denied();
+        return read(code, "published-metadata", ticket, deadline, cancellation);
+    }
+
+    public PublishedVersion lookupIntegration(String token, SubjectKey subject, String code, String requestOrigin) {
+        if (closed) throw unavailable();
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(DEADLINE_MS);
+        var call = IntegrationTaskRoutes.metadataCall(code);
+        var ticket = authority.exchangeIntegration(token, call, requestOrigin);
+        var operation = ticket.operation();
+        if (operation == null || !subject.equals(operation.subject()) || !call.resource().equals(operation.resource())
+                || !"INTEGRATION".equals(operation.sourceKind()) || !"INTEGRATION".equals(operation.originKind()))
+            throw denied();
+        return read(code, "integration-published-metadata", ticket, deadline, new PublishedRunHttp.Cancellation());
+    }
+
+    private PublishedVersion read(String code, String segment, ServiceTicket ticket, long deadline,
+            PublishedRunHttp.Cancellation cancellation) {
         var response =
                 http.get(
-                        origin.resolve("/internal/apps/" + code + "/published-metadata"),
+                        origin.resolve("/internal/apps/" + code + "/" + segment),
                         ticket.value(),
                         MAX_BYTES,
                         deadline,

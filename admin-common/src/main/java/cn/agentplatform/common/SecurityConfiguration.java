@@ -285,9 +285,8 @@ public class SecurityConfiguration {
                                         request.getMethod(), request.getRequestURI()))
                                         .access((auth, context) -> new AuthorizationDecision(
                                                 IntegrationRuntimeRoutes.currentSource() != null));
-                                x.requestMatchers(request -> IntegrationRuntimeRoutes.taskRead(
-                                        request.getMethod(), request.getRequestURI())
-                                        || IntegrationRuntimeRoutes.taskCancel(request.getMethod(), request.getRequestURI()))
+                                x.requestMatchers(request -> IntegrationRuntimeRoutes.supported(
+                                        request.getMethod(), request.getRequestURI()))
                                         .access((auth, context) -> new AuthorizationDecision(
                                                 IntegrationRuntimeRoutes.currentSource() != null || portalScope(auth.get())));
                             }

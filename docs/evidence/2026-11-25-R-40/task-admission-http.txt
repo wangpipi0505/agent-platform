@@ -1,0 +1,16 @@
+# 2026-11-25 本地联验终端记录。凭据、主体与响应正文不归档。
+{"app":"r40agent215fb5a7ca","modelEntryId":2,"version":1,"reportId":"er_832fb9a4-5d21-4f27-a642-81bb71f3ce74","precheckId":"pc_ee9cb205-c349-49c9-8f8c-9bd467198ac7","candidateSha256":"c33a77f143d6823a70bcce3dde00aac1cd9e07a391dcd07fe3121995651ebf79","modelRefs":1}
+POST /v1/apps/r40agent215fb5a7ca/tasks 403 IAM_AUTHORITY_FORBIDDEN
+POST /v1/apps/unbound-app/tasks 403 IAM_AUTHORITY_FORBIDDEN
+POST /v1/apps/r40agent215fb5a7ca/tasks 403 SERVICE_AGENT_ONLY
+POST /v1/apps/r40agent215fb5a7ca/tasks 403 INTEGRATION_PATH_FORBIDDEN
+Concurrent submit 200/200 task=task-3270740de9bf461f97da
+POST /v1/apps/r40agent215fb5a7ca/tasks 409 REQUEST_REPLAY
+Task and run state SUCCEEDED/SUCCEEDED/INTEGRATION/software-a/DONE
+GET /v1/tasks/task-3270740de9bf461f97da 200 OK
+GET /v1/tasks/task-3270740de9bf461f97da/events?afterSeq=0&limit=20 200 OK
+GET /v1/tasks/task-3270740de9bf461f97da/result 200 OK
+Authority local resume 200
+Authority local resume 403
+GET /v1/tasks/task-3270740de9bf461f97da/result 403 IAM_AUTHORITY_FORBIDDEN
+PASS task=task-3270740de9bf461f97da run=r_87f3dd5bad564676994358f093f95647 scope, idempotency, result and policy-bound continuation

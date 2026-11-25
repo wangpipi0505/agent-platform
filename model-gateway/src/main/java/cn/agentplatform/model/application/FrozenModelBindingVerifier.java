@@ -145,7 +145,8 @@ public final class FrozenModelBindingVerifier {
         || !"model.chat-stream".equals(a.call().action())
         || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(a.call().resource().kind())
         || a.operation() == null || !"DELEGATED".equals(a.operation().sourceKind())
-        || !"PORTAL".equals(a.operation().originKind())) throw missing();
+        || !("PORTAL".equals(a.operation().originKind())
+            || cn.agentplatform.common.authority.IntegrationTaskRoutes.modelExecution(a))) throw missing();
     same(a.call().resource(), a.operation().resource());
     same(owner, a.operation().subject());
     same(owner, new SubjectKey(proof.requireInitialCeiling().tenantId(),proof.requireInitialCeiling().principalId()));

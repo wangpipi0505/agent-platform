@@ -4,6 +4,8 @@ import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.common.Roles;
+import cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope;
+import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import cn.agentplatform.engine.infra.TraceStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -91,6 +93,85 @@ public class Tasks {
   public Tasks(TraceStore store) {
     this(store, new SubagentPlanning(store), null);
   }
+
+  /** The task, credential provenance and dispatch commit in the real run admission transaction. */
+  public Map<String, Object> createIntegration(String code, JsonNode request, Actor actor, TaskScope scope) {
+    if (!code.equals(scope.appCode()) || !IntegrationTaskRoutes.submitRoles(actor.roles()) || agentExecution == null)
+      throw new PlatformException(403, "APP_BINDING_DENIED", "集成票无权提交此应用任务");
+    if (!request.isObject())
+      throw new PlatformException(400, "TASK_REQUEST_INVALID", "任务请求必须是 JSON 对象");
+    if (!"AGENT".equals(request.path("mode").textValue()))
+      throw new PlatformException(403, "SERVICE_AGENT_ONLY", "集成方仅可提交 AGENT 任务");
+    request.fieldNames().forEachRemaining(field -> {
+      if (!Set.of("mode", "requestId", "goal", "inputs", "toolPolicy").contains(field))
+        throw new PlatformException(400, "TASK_REQUEST_INVALID", "集成任务包含未登记字段");
+    });
+    var tools = request.path("toolPolicy");
+    if (!tools.isMissingNode() && !(tools.isObject() && tools.size() == 1
+            && tools.path("allowedToolRefs").isArray() && tools.path("allowedToolRefs").isEmpty())) {
+      org.slf4j.LoggerFactory.getLogger("agent.integration.audit").warn(
+              "AUDIT INTEGRATION_PATH_FORBIDDEN credential={} app={} traceId={}", scope.credentialId(), code,
+              cn.agentplatform.common.TraceContextFilter.current());
+      throw new PlatformException(403, "INTEGRATION_PATH_FORBIDDEN", "集成任务暂不接受工具授权");
+    }
+    String requestId = request.path("requestId").textValue();
+    String goal = request.path("goal").textValue();
+    var requestedInputs = request.path("inputs");
+    if (requestId == null || requestId.isBlank() || requestId.length() > 128 || goal == null || goal.isBlank()
+            || (!requestedInputs.isMissingNode() && !requestedInputs.isObject()))
+      throw new PlatformException(400, "TASK_REQUEST_INVALID", "任务需要 requestId、goal 和对象形式的 inputs");
+    var inputs = requestedInputs.isEmpty() ? Json.tree(Map.of("message", goal)) : requestedInputs;
+    String key = "integration-" + Digest.sha256(Json.canonical(List.of(scope.bizSystemCode(), code, requestId)));
+    String digest = Digest.sha256(Json.canonical(request));
+    var existing = integrationReplay(actor, scope, key, digest);
+    if (existing != null) return existing;
+    try {
+      agentExecution.startIntegration(code, inputs, actor,
+              runId -> insertIntegrationTask(runId, actor, scope, key, digest, goal, inputs));
+    } catch (IntegrationTaskReplay concurrent) {
+      // A competing insert won. The losing run and its scopes rolled back with the task insert.
+    }
+    existing = integrationReplay(actor, scope, key, digest);
+    if (existing == null) throw new IllegalStateException("INTEGRATION_TASK_ADMISSION_MISSING");
+    return existing;
+  }
+
+  private Map<String, Object> integrationReplay(Actor actor, TaskScope scope, String key, String digest) {
+    var matches = store.db().queryForList("""
+            select public_id,request_digest from engine.task
+             where tenant_id=? and principal_id=? and request_id=?
+            """, actor.tenantId(), actor.principalId(), key);
+    if (matches.isEmpty()) return null;
+    var prior = matches.getFirst();
+    long id = resolveIntegrationTask((String) prior.get("public_id"), actor, scope);
+    if (!digest.equals(prior.get("request_digest")))
+      throw new PlatformException(409, "REQUEST_REPLAY", "同一 requestId 已用于不同参数的任务");
+    return detail(id, actor);
+  }
+
+  private long insertIntegrationTask(long runId, Actor actor, TaskScope scope, String key, String digest,
+          String goal, JsonNode inputs) {
+    String publicId = "task-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+    var inserted = store.db().queryForList("""
+            insert into engine.task(public_id,tenant_id,principal_id,app_code,config_release_id,config_digest,
+                mode,purpose,goal,input_ref,input_digest,state,request_id,request_digest)
+            select ?,r.tenant_id,r.principal_id,r.app_code,'appver-'||r.app_version_id,r.snapshot->>'candidateSha256',
+                'AGENT','EXECUTE',?,?,?,'ACCEPTED',?,?
+              from engine.run r where r.id=? and r.tenant_id=? and r.principal_id=? and r.app_code=?
+            on conflict (tenant_id,principal_id,request_id) do nothing returning id
+            """, Long.class, publicId, goal, "task-input/" + publicId, Digest.sha256(Json.canonical(inputs)), key,
+            digest, runId, actor.tenantId(), actor.principalId(), scope.appCode());
+    if (inserted.isEmpty()) throw new IntegrationTaskReplay();
+    long id = inserted.getFirst();
+    store.db().update("""
+            insert into engine.task_integration_scope(task_id,credential_id,biz_system_code,data_labels)
+            values(?,?,?,?::jsonb)
+            """, id, scope.credentialId(), scope.bizSystemCode(), Json.write(scope.dataLabels()));
+    appendTaskEvent(id, "TASK_ACCEPTED", Json.tree(Map.of("mode", "AGENT", "goal", goal)));
+    return id;
+  }
+
+  private static final class IntegrationTaskReplay extends RuntimeException {}
 
   /** 受理：返回任务详情（首版 state=ACCEPTED；AGENT 直接受理入 QUEUED 由 T2-5 步骤映射接续）。 */
   public Map<String, Object> create(String code, JsonNode req, Actor actor) {

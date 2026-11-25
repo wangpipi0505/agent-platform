@@ -48,7 +48,10 @@ public class TaskController {
   @PostMapping("/v1/apps/{code}/tasks")
   public Object create(
           @PathVariable("code") String code, @RequestBody JsonNode req) {
-    return ApiResponse.ok(tasks.create(code, req, Actor.current()));
+    var actor = Actor.current();
+    var scope = IntegrationRuntimeRoutes.currentStartScope(code);
+    return ApiResponse.ok(scope == null ? tasks.create(code, req, actor)
+            : tasks.createIntegration(code, req, actor, scope));
   }
 
   @GetMapping("/v1/apps/{code}/tasks")
