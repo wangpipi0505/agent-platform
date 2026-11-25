@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/** Exact integration reads and their credential-bound selectors. */
+/** Exact integration runtime actions and their credential-bound selectors. */
 public final class IntegrationRuntimeRoutes {
     private static final Pattern METADATA =
             Pattern.compile("/v1/apps/([A-Za-z][A-Za-z0-9_-]{0,63})/(input-schema|experience)");
@@ -21,6 +21,8 @@ public final class IntegrationRuntimeRoutes {
     private static final String TASK_KIND = "integration-task";
     private static final String TASK_CODE = "task-[0-9a-f]{20}";
     private static final Pattern TASK = Pattern.compile("/v1/tasks/(" + TASK_CODE + ")(/events|/result)?");
+    private static final Pattern TASK_CANCEL = Pattern.compile("/v1/tasks/(" + TASK_CODE + ")/cancel");
+    private static final String CANCEL_ACTION = "proxy.engine.post.TaskController.cancel";
     private static final Set<String> TASK_READ_ACTIONS = Set.of("proxy.engine.get.TaskController.detail",
             "proxy.engine.get.TaskController.events", "proxy.engine.get.TaskController.result");
 
@@ -38,6 +40,14 @@ public final class IntegrationRuntimeRoutes {
         return metadata(method, path) || taskRead(method, path);
     }
 
+    public static boolean taskCancel(String method, String path) {
+        return "POST".equals(method) && TASK_CANCEL.matcher(path).matches();
+    }
+
+    public static boolean supported(String method, String path) {
+        return read(method, path) || taskCancel(method, path);
+    }
+
     public static ServiceCall call(ServiceRoutePolicy routes, String method, String path) {
         var match = METADATA.matcher(path);
         if (!"GET".equals(method) || !match.matches()) throw AuthorityProtocol.denied();
@@ -46,6 +56,11 @@ public final class IntegrationRuntimeRoutes {
     }
 
     public static ServiceCall taskCall(ServiceRoutePolicy routes, String method, String path, String app) {
+        var cancel = TASK_CANCEL.matcher(path);
+        if ("POST".equals(method) && cancel.matches()) {
+            var route = routes.require("gateway", "engine", method, "/v1/tasks/{taskId}/cancel");
+            return new ServiceCall(route.target(), route.action(), task(app, cancel.group(1)));
+        }
         var match = TASK.matcher(path);
         if (!"GET".equals(method) || !match.matches()) throw AuthorityProtocol.denied();
         String suffix = match.group(2) == null ? "" : match.group(2);
@@ -80,7 +95,8 @@ public final class IntegrationRuntimeRoutes {
     }
 
     public static boolean permits(ServiceCall call, String credentialApp) {
-        if ("engine".equals(call.target()) && TASK_READ_ACTIONS.contains(call.action())
+        if ("engine".equals(call.target())
+                && (TASK_READ_ACTIONS.contains(call.action()) || CANCEL_ACTION.equals(call.action()))
                 && isTaskSelector(call.resource())) {
             String prefix = credentialApp + ":";
             String id = call.resource().id();
@@ -95,7 +111,11 @@ public final class IntegrationRuntimeRoutes {
         return resource != null && TASK_KIND.equals(resource.kind());
     }
 
-    public record TaskScope(String appCode, String bizSystemCode, Set<String> dataLabels) {}
+    public static boolean permitsRoles(ServiceCall call, Set<String> roles) {
+        return CANCEL_ACTION.equals(call.action()) ? roles.contains("AGENT_ADMIN") : !roles.isEmpty();
+    }
+
+    public record TaskScope(String appCode, String bizSystemCode, Set<String> dataLabels, long credentialId) {}
 
     /** Only the mapped receiver's current, verified integration service ticket can supply this scope. */
     public static TaskScope currentTaskScope(String publicId) {
@@ -111,7 +131,8 @@ public final class IntegrationRuntimeRoutes {
         String app = identity.path("app_code").textValue();
         AuthorityProtocol.same(task(app, publicId), verified.call().resource());
         return new TaskScope(app, identity.path("biz_system_code").textValue(),
-                verified.actor().attributes().getOrDefault("dataLabels", Set.of()));
+                verified.actor().attributes().getOrDefault("dataLabels", Set.of()),
+                identity.path("credential_id").longValue());
     }
 
     public static Jwt currentSource() {

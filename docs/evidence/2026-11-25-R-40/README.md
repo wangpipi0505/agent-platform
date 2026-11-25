@@ -30,3 +30,22 @@ JDK 21 在 admin-common、platform-gateway、app-management 和 authority-servic
 三个读取动作签入同一凭据应用和精确任务业务号。引擎按验签后的租户、主体、应用、业务系统和标签检查 PostgreSQL 归属。JDK 21 定向回归执行 66 条，零失败、零跳过，首次混合 JVM 运行触发 IAM 与开发票模式冲突，按测试类隔离进程复跑通过。
 
 导出输出见本地 `.local/r40-task-read-live.log` 与 `.local/r40-task-read-package.log`。本批验证读取链及权限拒绝。集成提交时写入归属、启动和续权、同软件中断与业务审计仍待接入。
+
+## 同软件管理员中断及业务审计
+
+Flyway 执行 V235，使用本地真实网关、authority-service、应用管理、引擎、monitor 与独立 PostgreSQL。任务与运行预置为 RUNNING，接入归属来自夹具。平台审计门户票使用本地身份目录夹具验证，集成票通过现有 ApiKey 出票和实时策略复核。
+
+| 断言 | 实测 |
+| --- | --- |
+| AGENT_VIEWER 同时有平台 ADMIN | 中断 403 |
+| 跨应用、跨租户、跨软件且直传伪造软件属性 | 三次中断 403，运行保持 RUNNING |
+| 同软件 AGENT_ADMIN 中断他人运行及重复请求 | 两次 200，响应仅任务号、状态 |
+| 中断后读取他人任务与请求恢复 | 两次 403 |
+| PostgreSQL 终态 | 任务、运行、步骤均 CANCELLED，派发 DONE |
+| 审计接口 | 有 audit.read 返回 200，可查成功和跨软件拒绝。无权限返回 403 |
+
+任务 `task-86fcd50414294f5e9143`，运行 `r_86fcd50414294f5e9143457694124597`。成功中断与业务审计同事务提交，重复调用后成功审计仍仅一条。原始响应状态见 `task-control-http.txt`。
+
+JDK 21 定向回归 81 条全过，零跳过。首次运行复用旧引擎库触发 Flyway V235 乱序，使用新建专用库复跑通过。策略解析夹具改用现行元数据动作和平台凭据签发授权后，原登记的 7 条异常全部消除，`IntegrationPolicyResolverHttpTest` 20 条和真实库迁移 1 条全部通过。完整命令输出位于本地 `.local/r40-control-package.log`、`.local/r40-control-gateway-normalize.log`、`.local/r40-policy-resolver-full.log`。
+
+集成任务提交、受理时归属落库和执行续权仍待接入。当前中断功能通过已有关联运行与接入归属的任务联验。

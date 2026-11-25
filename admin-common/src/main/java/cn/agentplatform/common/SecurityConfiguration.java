@@ -213,7 +213,7 @@ public class SecurityConfiguration {
                                 throws ServletException, IOException {
                             String header = request.getHeader("Authorization");
                             if ((trusted ? Boolean.TRUE.equals(deployment.allowEmbed())
-                                    && IntegrationRuntimeRoutes.read(
+                                    && IntegrationRuntimeRoutes.supported(
                                             request.getMethod(), request.getRequestURI())
                                     : request.getRequestURI().startsWith("/v1/"))
                                     && header != null
@@ -286,7 +286,8 @@ public class SecurityConfiguration {
                                         .access((auth, context) -> new AuthorizationDecision(
                                                 IntegrationRuntimeRoutes.currentSource() != null));
                                 x.requestMatchers(request -> IntegrationRuntimeRoutes.taskRead(
-                                        request.getMethod(), request.getRequestURI()))
+                                        request.getMethod(), request.getRequestURI())
+                                        || IntegrationRuntimeRoutes.taskCancel(request.getMethod(), request.getRequestURI()))
                                         .access((auth, context) -> new AuthorizationDecision(
                                                 IntegrationRuntimeRoutes.currentSource() != null || portalScope(auth.get())));
                             }

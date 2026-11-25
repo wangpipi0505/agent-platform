@@ -814,21 +814,76 @@ public class Tasks {
       String state = String.valueOf(task.get("state"));
       if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state)) return null;
       if (agentExecution != null && !agentExecution.cancel(taskId)) return null;
-      int version = ((Number) task.get("state_version")).intValue();
-      int changed =
-            store.db()
-                    .update(
-                            "update engine.task set state='CANCELLED',state_version=state_version+1,"
-                                + "cancel_requested_at=now(),updated_at=now() where id=? and state=? and state_version=?",
-                            taskId,
-                            state,
-                            version);
-      if (changed == 1) {
-        appendTaskEvent(taskId, "TASK_FINISHED", Json.tree(Map.of("state", "CANCELLED", "by", actor.principalId())));
-      }
+      markCancelled(taskId, state, ((Number) task.get("state_version")).intValue(), actor);
       return null;
     });
     return detail(taskId, actor);
+  }
+
+  /** Control is scoped to the same credential application and business system, with a metadata-only reply. */
+  public Map<String, Object> cancelIntegration(String publicId, JsonNode request, Actor actor,
+          cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope scope) {
+    if (!actor.roles().contains("AGENT_ADMIN"))
+      throw new PlatformException(403, "APP_BINDING_DENIED", "集成票无权中断任务");
+    if (request != null && (!request.isObject() || !request.isEmpty()))
+      throw new PlatformException(400, "TASK_REQUEST_INVALID", "集成任务中断不接受额外字段");
+    var result = store.<Map<String, Object>>atomic(() -> {
+      var rows = store.db().queryForList("""
+              select t.id,t.state,t.state_version,t.app_code,s.biz_system_code,r.public_id as run_public_id
+                from engine.task t
+                left join engine.task_integration_scope s on s.task_id=t.id
+                left join engine.task_dispatch d on d.task_id=t.id and d.step_id=?
+                left join engine.run r on r.id=d.run_id and r.tenant_id=t.tenant_id
+                  and r.principal_id=t.principal_id and r.app_code=t.app_code and r.trigger_type in ('CHAT','TASK')
+               where t.public_id=? and t.tenant_id=?
+               for update of t
+              """, StepExecutionMapping.ENTRY, publicId, actor.tenantId());
+      var task = rows.isEmpty() ? Map.<String, Object>of() : rows.getFirst();
+      String targetSoftware = (String) task.get("biz_system_code");
+      if (!scope.appCode().equals(task.get("app_code")) || !scope.bizSystemCode().equals(targetSoftware)) {
+        recordIntegrationControl(actor, scope, publicId, targetSoftware, null, "DENIED");
+        return null;
+      }
+      String state = (String) task.get("state");
+      if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state))
+        return Map.of("taskId", publicId, "state", state);
+      String run = (String) task.get("run_public_id");
+      if (run == null || agentExecution == null)
+        throw new PlatformException(409, "TASK_NOT_RUNNING", "任务尚无可中断的运行");
+      long taskId = ((Number) task.get("id")).longValue();
+      if (!agentExecution.cancel(taskId))
+        throw new PlatformException(409, "TASK_NOT_RUNNING", "关联运行已结束");
+      if (!markCancelled(taskId, state, ((Number) task.get("state_version")).intValue(), actor))
+        throw new IllegalStateException("TASK_CANCEL_STATE_CHANGED");
+      recordIntegrationControl(actor, scope, publicId, targetSoftware, run, "CANCELLED");
+      return Map.of("taskId", publicId, "state", "CANCELLED");
+    });
+    if (result == null)
+      throw new PlatformException(403, "APP_BINDING_DENIED", "集成票无权中断此任务");
+    return result;
+  }
+
+  private boolean markCancelled(long taskId, String state, int version, Actor actor) {
+    int changed = store.db().update("""
+            update engine.task set state='CANCELLED',state_version=state_version+1,
+              cancel_requested_at=now(),updated_at=now() where id=? and state=? and state_version=?
+            """, taskId, state, version);
+    if (changed == 1)
+      appendTaskEvent(taskId, "TASK_FINISHED", Json.tree(Map.of("state", "CANCELLED", "by", actor.principalId())));
+    return changed == 1;
+  }
+
+  private void recordIntegrationControl(Actor actor,
+          cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope scope,
+          String publicId, String targetSoftware, String run, String outcome) {
+    store.db().update("""
+            insert into engine.integration_task_control_audit
+              (tenant_id,principal_id,credential_id,app_code,source_software,target_software,
+               task_public_id,run_public_id,outcome,trace_id)
+            values(?,?,?,?,?,?,?,?,?,?)
+            """, actor.tenantId(), actor.principalId(), scope.credentialId(), scope.appCode(),
+            scope.bizSystemCode(), targetSoftware, publicId, run, outcome,
+            cn.agentplatform.common.TraceContextFilter.current());
   }
 
   /** 恢复：写 TASK_RESUMED（负载=恢复事实三出口），状态 CAS 回 RUNNING；手动/自动同入口先到先得。 */

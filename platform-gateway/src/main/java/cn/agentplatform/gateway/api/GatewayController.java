@@ -102,12 +102,16 @@ public class GatewayController {
                 return;
             }
             var integrationSource = IntegrationRuntimeRoutes.currentSource();
-            if (integrationSource != null && IntegrationRuntimeRoutes.taskRead(req.getMethod(), req.getRequestURI())) {
+            boolean cancelIntegration = integrationSource != null
+                    && IntegrationRuntimeRoutes.taskCancel(req.getMethod(), req.getRequestURI());
+            if (integrationSource != null && (cancelIntegration
+                    || IntegrationRuntimeRoutes.taskRead(req.getMethod(), req.getRequestURI()))) {
                 var call = IntegrationRuntimeRoutes.taskCall(serviceRoutes, req.getMethod(), req.getRequestURI(),
                         integrationSource.getClaimAsString("app_code"));
+                byte[] body = cancelIntegration ? integrationCancelBody(req) : null;
                 var ticket = integration.exchangeRuntime(req, call);
                 res.setHeader("Cache-Control", "no-store");
-                forward(req, res, call.target(), ticket.value());
+                forward(req, res, call.target(), ticket.value(), body);
                 return;
             }
             String evaluationTemplate = EvaluationCandidateBinding.portalTemplate(req.getMethod(), req.getRequestURI());
@@ -186,6 +190,15 @@ public class GatewayController {
         forward(req, res, service, token, null);
     }
 
+    private static byte[] integrationCancelBody(HttpServletRequest request) throws IOException {
+        byte[] body = request.getInputStream().readNBytes(65);
+        if (body.length > 64 || (body.length != 0
+                && !new String(body, java.nio.charset.StandardCharsets.UTF_8).matches("\\s*\\{\\s*}\\s*"))) {
+            throw new PlatformException(400, "TASK_REQUEST_INVALID", "集成任务中断仅接受空正文或空对象");
+        }
+        return new byte[]{'{', '}'};
+    }
+
     private void evaluate(HttpServletRequest req, HttpServletResponse res, String template) throws IOException {
         String source = GatewayIngressBoundary.claimEvaluation(req);
         var route = serviceRoutes.require("gateway", "monitor", req.getMethod(), template);
@@ -237,7 +250,9 @@ public class GatewayController {
                 HttpRequest.newBuilder(URI.create(target))
                         .header("Authorization", "Bearer " + token)
                         .header(TraceContextFilter.HEADER, TraceContextFilter.current());
-        if (req.getContentType() != null) outbound.header("Content-Type", req.getContentType());
+        if (capturedBody != null && IntegrationRuntimeRoutes.taskCancel(method, req.getRequestURI()))
+            outbound.header("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        else if (req.getContentType() != null) outbound.header("Content-Type", req.getContentType());
         String cursor = req.getHeader("Last-Event-ID");
         if (cursor != null) outbound.header("Last-Event-ID", cursor);
         outbound.timeout(Duration.ofMillis(650000));

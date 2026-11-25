@@ -821,7 +821,7 @@
   "target": "engine",
   "action": "proxy.engine.post.TaskController.cancel",
   "mode": "delegated",
-  "integrationAllowed": false,
+  "integrationAllowed": true,
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:63",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
   "reason": "T2-2 任务取消（T2-15 不入外部白名单：网关 403 并记审计）"

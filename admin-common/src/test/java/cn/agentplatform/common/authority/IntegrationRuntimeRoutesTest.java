@@ -47,4 +47,17 @@ class IntegrationRuntimeRoutesTest {
         assertThatThrownBy(() -> IntegrationRuntimeRoutes.requireTaskQuery(path + "/result", "limit=1"))
                 .isInstanceOf(PlatformException.class);
     }
+
+    @Test
+    void cancelIsBoundToOneApplicationAndRequiresAnIntegrationAdministrator() {
+        String path = "/v1/tasks/" + TASK + "/cancel";
+        assertThat(IntegrationRuntimeRoutes.taskCancel("POST", path)).isTrue();
+        assertThat(IntegrationRuntimeRoutes.taskCancel("GET", path)).isFalse();
+        assertThat(IntegrationRuntimeRoutes.taskCancel("POST", "/v1/tasks/123/cancel")).isFalse();
+        var call = IntegrationRuntimeRoutes.taskCall(routes, "POST", path, "app-a");
+        assertThat(IntegrationRuntimeRoutes.permits(call, "app-a")).isTrue();
+        assertThat(IntegrationRuntimeRoutes.permits(call, "app-b")).isFalse();
+        assertThat(IntegrationRuntimeRoutes.permitsRoles(call, java.util.Set.of("AGENT_ADMIN"))).isTrue();
+        assertThat(IntegrationRuntimeRoutes.permitsRoles(call, java.util.Set.of("AGENT_VIEWER", "ADMIN"))).isFalse();
+    }
 }

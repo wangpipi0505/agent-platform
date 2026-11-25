@@ -59,7 +59,8 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         String path = request.getRequestURI();
         return switch (serviceId) {
             case "app" -> PlatformBuildRoutes.serves(serviceId, method, path) || IntegrationRuntimeRoutes.metadata(method, path);
-            case "engine" -> PortalRuntimeRoutes.matches(method, path) || IntegrationRuntimeRoutes.taskRead(method, path);
+            case "engine" -> PortalRuntimeRoutes.matches(method, path) || IntegrationRuntimeRoutes.taskRead(method, path)
+                    || IntegrationRuntimeRoutes.taskCancel(method, path);
             case "model", "skill" -> PlatformBuildRoutes.serves(serviceId, method, path);
             case "monitor" -> EvaluationCandidateBinding.portalTemplate(method, path) != null
                     || PlatformBuildRoutes.serves(serviceId, method, path);
@@ -177,7 +178,7 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         boolean integration = "INTEGRATION".equals(operation.path("origin_kind").textValue());
         if (IntegrationRuntimeRoutes.isTaskSelector(call.resource())
                 || ("engine".equals(serviceId) && integration
-                        && IntegrationRuntimeRoutes.taskRead(request.getMethod(), request.getRequestURI()))) {
+                        && IntegrationRuntimeRoutes.supported(request.getMethod(), request.getRequestURI()))) {
             AuthorityProtocol.same("delegated", mode);
             AuthorityProtocol.same("gateway", jwt.getClaimAsString("caller"));
             AuthorityProtocol.same("INTEGRATION", operation.path("origin_kind").textValue());

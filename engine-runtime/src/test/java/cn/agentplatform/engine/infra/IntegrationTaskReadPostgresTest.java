@@ -31,7 +31,7 @@ class IntegrationTaskReadPostgresTest {
         var tm = new DataSourceTransactionManager(source);
         var tasks = new Tasks(new TraceStore(db, tm));
         var actor = new Actor("r40-task-read-test", "software-a:alice", Set.of("AGENT_VIEWER"), Map.of());
-        var scope = new TaskScope("app-a", "software-a", Set.of("sensitive", "public"));
+        var scope = new TaskScope("app-a", "software-a", Set.of("sensitive", "public"), 1);
         new TransactionTemplate(tm).executeWithoutResult(tx -> {
             tx.setRollbackOnly();
             String task = "task-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
@@ -48,11 +48,11 @@ class IntegrationTaskReadPostgresTest {
                     """, id);
             assertThat(tasks.resolveIntegrationTask(task, actor, scope)).isEqualTo(id);
             assertDenied(() -> tasks.resolveIntegrationTask(task, actor,
-                    new TaskScope("app-b", "software-a", scope.dataLabels())));
+                    new TaskScope("app-b", "software-a", scope.dataLabels(), 1)));
             assertDenied(() -> tasks.resolveIntegrationTask(task, actor,
-                    new TaskScope("app-a", "software-b", scope.dataLabels())));
+                    new TaskScope("app-a", "software-b", scope.dataLabels(), 1)));
             assertDenied(() -> tasks.resolveIntegrationTask(task, actor,
-                    new TaskScope("app-a", "software-a", Set.of("public"))));
+                    new TaskScope("app-a", "software-a", Set.of("public"), 1)));
             assertDenied(() -> tasks.resolveIntegrationTask(task,
                     new Actor(actor.tenantId(), "software-a:bob", Set.of("AGENT_ADMIN"), Map.of()), scope));
             assertDenied(() -> tasks.resolveIntegrationTask(task,

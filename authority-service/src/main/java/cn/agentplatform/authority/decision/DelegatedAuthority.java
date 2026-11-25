@@ -244,7 +244,8 @@ public final class DelegatedAuthority {
         if (!IntegrationRuntimeRoutes.permits(request.call(), required(identity, "app_code")))
             throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
         Set<String> roles = rolesOf(identity.get("roles"));
-        if (roles.isEmpty()) throw AuthorityException.denied("INTEGRATION_RUNTIME_READ_DENIED");
+        if (!IntegrationRuntimeRoutes.permitsRoles(request.call(), roles))
+            throw AuthorityException.denied("INTEGRATION_RUNTIME_ROLE_DENIED");
 
         String origin = text(request.raw(), "request_origin");
         integrationPolicy.require(identity, origin);
@@ -1632,7 +1633,8 @@ public final class DelegatedAuthority {
                 throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");
             }
             if (!routes.permitsIntegration(upstream, call.target(), call.action())
-                    || !IntegrationRuntimeRoutes.permits(call, required(identity, "app_code")))
+                    || !IntegrationRuntimeRoutes.permits(call, required(identity, "app_code"))
+                    || !IntegrationRuntimeRoutes.permitsRoles(call, roles))
                 throw AuthorityException.denied("INTEGRATION_PATH_FORBIDDEN");
             if (!required(identity, "policy_version").equals(required(operationNode, "policy_version")))
                 throw AuthorityException.denied("INTEGRATION_SOURCE_CLAIMS");

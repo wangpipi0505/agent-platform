@@ -528,15 +528,23 @@ public class RunController {
 
     @GetMapping("/internal/audit")
     public Object audit() {
-        var rows =
-                store.db()
-                        .queryForList(
-                                "select r.public_id as \"runId\",r.principal_id as"
-                                    + " \"principalId\",e.seq,e.type,e.payload,e.created_at as"
-                                    + " \"createdAt\" from engine.run_event e join engine.run r on"
-                                    + " r.id=e.run_id where r.tenant_id=? order by e.id desc limit"
-                                    + " 500",
-                                Actor.current().tenantId());
+        String tenant = Actor.current().tenantId();
+        var rows = store.db().queryForList("""
+                select * from (
+                    select r.public_id as "runId",r.principal_id as "principalId",e.seq,e.type,e.payload,
+                        e.created_at as "createdAt"
+                    from engine.run_event e join engine.run r on r.id=e.run_id where r.tenant_id=?
+                    union all
+                    select a.run_public_id,a.principal_id,a.id,
+                        case when a.outcome='DENIED' then 'INTEGRATION_PATH_FORBIDDEN'
+                            else 'INTEGRATION_TASK_CANCEL' end,
+                        jsonb_build_object('taskId',a.task_public_id,'credentialId',a.credential_id,
+                            'appCode',a.app_code,'sourceSoftware',a.source_software,
+                            'targetSoftware',a.target_software,'outcome',a.outcome,'traceId',a.trace_id),
+                        a.created_at
+                    from engine.integration_task_control_audit a where a.tenant_id=?
+                ) audit order by "createdAt" desc,seq desc limit 500
+                """, tenant, tenant);
         rows.forEach(r -> r.put("payload", TraceStore.json(r.get("payload"))));
         return ApiResponse.ok(rows);
     }

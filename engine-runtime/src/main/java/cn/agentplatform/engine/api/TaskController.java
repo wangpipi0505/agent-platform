@@ -120,6 +120,8 @@ public class TaskController {
   @PostMapping("/v1/tasks/{taskId}/cancel")
   public Object cancel(@PathVariable("taskId") String taskId, @RequestBody(required = false) JsonNode req) {
     Actor actor = Actor.current();
+    var scope = IntegrationRuntimeRoutes.currentTaskScope(taskId);
+    if (scope != null) return ApiResponse.ok(tasks.cancelIntegration(taskId, req, actor, scope));
     return ApiResponse.ok(tasks.cancel(resolve(taskId, actor), req, actor));
   }
 

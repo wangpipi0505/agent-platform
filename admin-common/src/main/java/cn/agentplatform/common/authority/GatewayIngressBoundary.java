@@ -427,12 +427,14 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
             }
             try {
                 if (r.getDispatcherType() == DispatcherType.REQUEST && r.getContextPath().isEmpty()
-                        && IntegrationRuntimeRoutes.read(r.getMethod(), r.getRequestURI())
+                        && IntegrationRuntimeRoutes.supported(r.getMethod(), r.getRequestURI())
                         && IntegrationRuntimeRoutes.currentSource() != null) {
-                    if (r.getContentLengthLong() > 0 || r.getHeader("Transfer-Encoding") != null
-                            || r.getInputStream().read() != -1 || Collections.list(r.getHeaders("Authorization")).size() != 1
+                    if ((IntegrationRuntimeRoutes.read(r.getMethod(), r.getRequestURI())
+                            && (r.getContentLengthLong() > 0 || r.getHeader("Transfer-Encoding") != null
+                                || r.getInputStream().read() != -1))
+                            || Collections.list(r.getHeaders("Authorization")).size() != 1
                             || Collections.list(r.getHeaders("Origin")).size() > 1) throw denied();
-                    if (IntegrationRuntimeRoutes.taskRead(r.getMethod(), r.getRequestURI()))
+                    if (!IntegrationRuntimeRoutes.metadata(r.getMethod(), r.getRequestURI()))
                         IntegrationRuntimeRoutes.requireTaskQuery(r.getRequestURI(), r.getQueryString());
                     chain.doFilter(r, s);
                     return;

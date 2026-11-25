@@ -73,7 +73,12 @@ class IntegrationPolicyResolverHttpTest {
         app=startReceiver();fixture.externalPolicy(URI.create("http://127.0.0.1:"+app.getWebServer().getPort()+PolicyRequestVerifier.PATH));
     }
     static ServletWebServerApplicationContext startReceiver(){
+        return startReceiver("dev-hmac");
+    }
+    static ServletWebServerApplicationContext startReceiver(String mode){
         var application=new SpringApplication(Receiver.class);application.setAdditionalProfiles("test");
+        application.addInitializers(context -> org.springframework.test.context.support.TestPropertySourceUtils
+                .addInlinedPropertiesToEnvironment(context, "agent.security.mode=" + mode));
         application.setDefaultProperties(Map.ofEntries(Map.entry("server.address","127.0.0.1"),Map.entry("server.port","0"),Map.entry("spring.config.location","optional:classpath:/d2-no-config/"),Map.entry("spring.main.banner-mode","off"),Map.entry("springdoc.api-docs.enabled",false),Map.entry("spring.flyway.enabled",false),Map.entry("management.endpoints.web.exposure.exclude","*"),Map.entry("management.endpoints.web.discovery.enabled",false),Map.entry("logging.level.root","ERROR"),Map.entry("agent.policy-resolver.enabled",true),Map.entry("agent.policy-resolver.issuer",fixture.policyIssuer()+"/policy-issuer"),Map.entry("agent.policy-resolver.public-jwks",new JWKSet(fixture.policySigningKey().toPublicJWK()).toString())));
         return (ServletWebServerApplicationContext)application.run();
     }
@@ -176,19 +181,58 @@ class IntegrationPolicyResolverHttpTest {
         assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(1);
         assertThat(db.queryForObject("select claim_limits->'principalIds' @> '[\"alice\"]'::jsonb from app.integration_credential where id=?",Boolean.class,id)).isTrue();
     }
-    @Test void issueBindsStoredPublishedVersionAndInitialRevisionIsOne()throws Exception{
-        var body=new HashMap<>(policy("alice"));body.put("bizSystemCode","issued");
-        var resource=new ResourceBinding("app-version",APP+"@1",Digest.sha256("published-d2"));
-        assertThat(admin("POST","/admin/apps/"+APP+"/integration/credentials","/admin/apps/{code}/integration/credentials",new ResourceBinding("app-version",APP+"@1",Digest.sha256("wrong")),Json.write(body)).statusCode()).isEqualTo(403);
-        var issued=admin("POST","/admin/apps/"+APP+"/integration/credentials","/admin/apps/{code}/integration/credentials",resource,Json.write(body));assertThat(issued.statusCode()).as(issued.body()).isEqualTo(200);
-        assertThat(db.queryForObject("select policy_revision from app.integration_credential where tenant_id=? and app_code=? and biz_system_code='issued'",Long.class,TENANT,APP)).isEqualTo(1);
+    @Test void issueRequiresPlatformGrantAndStoredPublicationAndStartsAtRevisionOne(
+            @org.junit.jupiter.api.io.TempDir java.nio.file.Path vault) throws Exception {
+        String user = "issue-" + UUID.randomUUID();
+        var subject = new SubjectKey(TENANT, user);
+        String template = "/admin/apps/{code}/integration/credentials";
+        String path = "/admin/apps/" + APP + "/integration/credentials";
+        var body = new HashMap<>(policy("alice"));
+        body.put("bizSystemCode", "issued");
+        var original = app;
+        String keyProperty = System.getProperty("agent.master.key");
+        String dirProperty = System.getProperty("agent.secret.dir");
+        System.setProperty("agent.master.key", UUID.randomUUID().toString());
+        System.setProperty("agent.secret.dir", vault.toString());
+        fixture.portalActor(new Actor(TENANT, user, Set.of("ADMIN"), Map.of("dataLabels", Set.of("restricted"))));
+        try (var iam = startReceiver("iam")) {
+            app = iam;
+            var resource = PlatformBuildRoutes.resource(subject);
+            assertThat(admin("POST", path, template, resource, Json.write(body)).statusCode()).isEqualTo(403);
+            db.update("""
+                    insert into app.platform_user_role(tenant_id,subject,platform_role,app_scope,granted_by)
+                    values(?,?,'ADMIN',?::jsonb,'fixture')
+                    """, TENANT, user, Json.write(List.of(APP)));
+            var legacy = new ResourceBinding("app-version", APP + "@1", Digest.sha256("published-d2"));
+            assertThat(admin("POST", path, template, legacy, Json.write(body)).statusCode()).isEqualTo(403);
+            db.update("update app.application set status='DRAFT', current_version_no=null where tenant_id=? and code=?", TENANT, APP);
+            assertThat(admin("POST", path, template, resource, Json.write(body)).statusCode()).isEqualTo(409);
+            db.update("update app.application set status='PUBLISHED', current_version_no=1 where tenant_id=? and code=?", TENANT, APP);
+            var issued = admin("POST", path, template, resource, Json.write(body));
+            assertThat(issued.statusCode()).isEqualTo(200);
+            assertThat(db.queryForObject("select policy_revision from app.integration_credential where tenant_id=? and app_code=? and biz_system_code='issued'",
+                    Long.class, TENANT, APP)).isEqualTo(1);
+        } finally {
+            app = original;
+            fixture.portalActor(new Actor(TENANT, "admin-d2", Set.of("ADMIN"), Map.of("dataLabels", Set.of("restricted"))));
+            db.update("update app.application set status='PUBLISHED', current_version_no=1 where tenant_id=? and code=?", TENANT, APP);
+            db.update("delete from app.platform_user_role where tenant_id=? and subject=?", TENANT, user);
+            restoreProperty("agent.master.key", keyProperty);
+            restoreProperty("agent.secret.dir", dirProperty);
+        }
+    }
+    private static void restoreProperty(String name, String value) {
+        if (value == null) System.clearProperty(name);
+        else System.setProperty(name, value);
     }
     static Map<String,Object> sourceClaims(String digest){
         var c=fixture.integrationClaims();c.put("iss",ServiceTokens.ISSUER);c.put("tenant_id",TENANT);c.put("sub",IntegrationClaims.principal(BIZ,"alice"));c.put("app_code",APP);c.put("biz_system_code",BIZ);c.put("user_id","alice");c.put("credential_id",id);c.put("policy_digest",digest);
         c.put("roles",List.of("reader"));c.put("attributes",Map.of("region",List.of("A"),"dataLabels",List.of("source-only"),"bizSystemCode",List.of(BIZ),"userId",List.of("alice")));return c;
     }
     static String integrationToken(String digest){return fixture.integration(sourceClaims(digest));}
-    static ServiceCall integrationCall(){return new ServiceCall("engine","proxy.engine.get.RunController.status",new ResourceBinding("run","r-test",Digest.sha256("snapshot-v1")));}
+    static ServiceCall integrationCall(){
+        return IntegrationRuntimeRoutes.call(new ServiceRoutePolicy(), "GET", "/v1/apps/" + APP + "/input-schema");
+    }
     static com.fasterxml.jackson.databind.JsonNode ticketClaims(ServiceTicket ticket){return Json.read(new String(Base64.getUrlDecoder().decode(ticket.value().split("\\.")[1]),java.nio.charset.StandardCharsets.UTF_8));}
     static Map<String,Object> widePolicy(){return Map.of("claimLimits",Map.of("principalIds",List.of("alice",LONG_USER),"roles",List.of("reader","writer","ADMIN"),"attributes",Map.of("region",List.of("A","B"),"dataLabels",List.of("restricted"))),"allowedOrigins",List.of("https://embed.example.invalid"));}
     static String padBitsVariant(String token)throws Exception{
@@ -201,27 +245,27 @@ class IntegrationPolicyResolverHttpTest {
     void stableAuthenticationRejectsEquivalentOldTokenAfterSamePolicyRevision(String representation)throws Exception{
         String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();var claims=sourceClaims(digest);String original=fixture.integration(claims);
         String equivalent=representation.equals("pad-bits")?padBitsVariant(original):fixture.integration(new TreeMap<>(claims));assertThat(equivalent).isNotEqualTo(original);
-        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
+        try(var gateway=fixture.client("gateway");var receiver=fixture.client("app")){
             var call=integrationCall();int before=queries.get();var ticket=gateway.exchange(original,call);assertThat(queries.get()-before).isEqualTo(1);
-            before=queries.get();var current=engine.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
+            before=queries.get();var current=receiver.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
 
             assertThat(update(policy("alice")).statusCode()).isEqualTo(200);assertThat(Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText()).isEqualTo(digest);
             int grants=fixture.grantCount();before=queries.get();assertThatThrownBy(()->gateway.exchange(equivalent,call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);assertThat(fixture.grantCount()).isEqualTo(grants);
             before=queries.get();assertThatThrownBy(()->gateway.exchange(original,call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
             before=queries.get();assertThatThrownBy(()->gateway.resume(current.delegation(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
-            before=queries.get();assertThatThrownBy(()->engine.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);assertThat(fixture.grantCount()).isEqualTo(grants);
+            before=queries.get();assertThatThrownBy(()->receiver.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);assertThat(fixture.grantCount()).isEqualTo(grants);
             var fresh=new LinkedHashMap<>(claims);fresh.put("jti",UUID.randomUUID().toString());before=queries.get();var next=gateway.exchange(fixture.integration(fresh),call);assertThat(queries.get()-before).isEqualTo(1);assertThat(fixture.grantCount()).isEqualTo(grants+1);
-            before=queries.get();assertThat(engine.authorize(next.value(),call).actor().roles()).containsExactly("reader");assertThat(queries.get()-before).isEqualTo(1);
+            before=queries.get();assertThat(receiver.authorize(next.value(),call).actor().roles()).containsExactly("reader");assertThat(queries.get()-before).isEqualTo(1);
         }
         assertThat(fixture.resolverToAuthorityCalls()).isZero();
     }
     @Test void externalGrantKeepsNarrowSourceClaimsAndUnionsLabelsThroughEveryDecision()throws Exception{
         assertThat(update(widePolicy()).statusCode()).isEqualTo(200);String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();var claims=sourceClaims(digest);claims.put("roles",List.of("reader","ADMIN"));
-        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
+        try(var gateway=fixture.client("gateway");var receiver=fixture.client("app")){
             var call=integrationCall();int before=queries.get();var ticket=gateway.exchange(fixture.integration(claims),call);assertThat(queries.get()-before).isEqualTo(1);
-            before=queries.get();var current=engine.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
+            before=queries.get();var current=receiver.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
             before=queries.get();var resumed=gateway.resume(current.delegation(),call);assertThat(queries.get()-before).isEqualTo(1);
-            before=queries.get();var resumedCurrent=engine.authorize(resumed.value(),call);assertThat(queries.get()-before).isEqualTo(1);
+            before=queries.get();var resumedCurrent=receiver.authorize(resumed.value(),call);assertThat(queries.get()-before).isEqualTo(1);
             before=queries.get();var repeated=gateway.exchange(fixture.integration(new TreeMap<>(claims)),call);assertThat(queries.get()-before).isEqualTo(1);
             org.assertj.core.api.SoftAssertions.assertSoftly(soft->{
                 for(var candidate:List.of(ticket,resumed,repeated)){
@@ -239,12 +283,12 @@ class IntegrationPolicyResolverHttpTest {
     }
     @Test void emptySourcePermissionsAreNeverReplenishedFromPolicy()throws Exception{
         assertThat(update(widePolicy()).statusCode()).isEqualTo(200);String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();
-        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
+        try(var gateway=fixture.client("gateway");var receiver=fixture.client("app")){
             for(boolean explicitEmptyRegion:List.of(false,true)){
                 var claims=sourceClaims(digest);claims.put("roles",List.of());var attributes=new LinkedHashMap<String,Object>();attributes.put("bizSystemCode",List.of(BIZ));attributes.put("userId",List.of("alice"));if(explicitEmptyRegion)attributes.put("region",List.of());claims.put("attributes",attributes);
                 int before=queries.get();var ticket=gateway.exchange(fixture.integration(claims),integrationCall());assertThat(queries.get()-before).isEqualTo(1);
                 var initial=ticketClaims(ticket).path("initial_ceiling");assertThat(initial.path("roles")).isEmpty();assertThat(initial.path("attributes").path("region")).isEmpty();assertThat(initial.path("attributes").path("dataLabels").toString()).isEqualTo("[\"restricted\"]");
-                before=queries.get();var current=engine.authorize(ticket.value(),integrationCall());assertThat(queries.get()-before).isEqualTo(1);assertThat(current.actor().roles()).isEmpty();assertThat(current.actor().attributes().getOrDefault("region",Set.of())).isEmpty();
+                before=queries.get();var current=receiver.authorize(ticket.value(),integrationCall());assertThat(queries.get()-before).isEqualTo(1);assertThat(current.actor().roles()).isEmpty();assertThat(current.actor().attributes().getOrDefault("region",Set.of())).isEmpty();
             }
         }
     }
@@ -282,16 +326,16 @@ class IntegrationPolicyResolverHttpTest {
 
     @Test void realResolverBackedGrantsFailAfterRevisionAndExplicitNewAuthenticationRecovers()throws Exception{
         String digest=Json.read(resolve(requestBody("alice")).body()).path("policyDigest").asText();String subject=integrationToken(digest);
-        var call=new ServiceCall("engine","proxy.engine.get.RunController.status",new ResourceBinding("run","r-test",Digest.sha256("snapshot-v1")));
-        try(var gateway=fixture.client("gateway");var engine=fixture.client("engine")){
+        var call=integrationCall();
+        try(var gateway=fixture.client("gateway");var receiver=fixture.client("app")){
             int before=queries.get();var ticket=gateway.exchange(subject,call);assertThat(queries.get()-before).isEqualTo(1);
-            before=queries.get();var current=engine.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
+            before=queries.get();var current=receiver.authorize(ticket.value(),call);assertThat(queries.get()-before).isEqualTo(1);
             assertThat(current.actor().roles()).containsExactly("reader");
             assertThat(update(policy("alice")).statusCode()).isEqualTo(200);
-            before=queries.get();assertThatThrownBy(()->engine.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
+            before=queries.get();assertThatThrownBy(()->receiver.authorize(ticket.value(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
             before=queries.get();assertThatThrownBy(()->gateway.resume(current.delegation(),call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
             before=queries.get();assertThatThrownBy(()->gateway.exchange(subject,call)).isInstanceOf(PlatformException.class);assertThat(queries.get()-before).isEqualTo(1);
-            var fresh=gateway.exchange(integrationToken(digest),call);assertThat(engine.authorize(fresh.value(),call).actor().roles()).containsExactly("reader");
+            var fresh=gateway.exchange(integrationToken(digest),call);assertThat(receiver.authorize(fresh.value(),call).actor().roles()).containsExactly("reader");
             assertThat(admin("POST","/admin/apps/"+APP+"/integration/credentials/"+BIZ+"/revoke","/admin/apps/{code}/integration/credentials/{biz}/revoke",credentialResource(),"").statusCode()).isEqualTo(200);
             assertThatThrownBy(()->gateway.exchange(integrationToken(digest),call)).isInstanceOf(PlatformException.class);
         }
