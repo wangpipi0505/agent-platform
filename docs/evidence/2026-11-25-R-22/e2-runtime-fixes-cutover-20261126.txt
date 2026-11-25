@@ -14,3 +14,9 @@ Eight E2 containers healthy; Prometheus platform targets up 6/6.
 Playwright on primary console with real test session: 1440/1024/768, light style.
 GET /auth/session 200, GET /admin/classifications 200, GET /admin/apps 200 at all widths.
 Rendered test app at all widths, no horizontal overflow, no confirmation-count request after 15.5 s.
+Post-cutover PG counts: AGENT|SUCCEEDED|tasks=1|runs=1|modelCalls=1
+Post-cutover PG counts: PLAN|ACCEPTED|tasks=1|runs=0|modelCalls=0
+E2 compatibility frontend after correcting implicit favicon request: sha256:22563ea19076ea78a2d26ef8905a2daa254f825230d800244443e8a843ec4fc1, healthy, restart=0.
+R22_CONSOLE_ISOLATED_PASS; R22_CONSOLE_PRIMARY_PASS.
+Primary authenticated console retest: 3 widths, 9 protected responses HTTP 200, no page or console errors, no favicon or confirmation-count requests.
+Primary probes: /healthz 200, /console/ 200, unauthenticated /auth/session 401, /auth/dev-token 404, /actuator/prometheus 404.
