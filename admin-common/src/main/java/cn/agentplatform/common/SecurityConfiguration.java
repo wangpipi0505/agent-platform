@@ -49,6 +49,12 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfiguration {
+    @Value("${management.server.port:}")
+    private Integer managementPort;
+
+    @Value("${server.port:8080}")
+    private int businessPort = 8080;
+
     /** IAM_CONFIG_INCOMPLETE covers every authority-block validation reason, keeping the detail. */
     private static final Set<String> IAM_CONFIG_REASONS =
             Set.of(
@@ -242,7 +248,9 @@ public class SecurityConfiguration {
                             // Named RequestMatchers: the MVC resolver behind requestMatchers(String...)
                             // does not resolve actuator endpoints, and a path lambda is not registered
                             // as an AuthorizedUrl rule, so the probe fell through to anyRequest (403).
-                            x.requestMatchers(
+                            x.requestMatchers(request -> managementScrape(request, managementPort, businessPort))
+                                    .permitAll()
+                                    .requestMatchers(
                                             new AntPathRequestMatcher("/actuator/health"),
                                             new AntPathRequestMatcher("/actuator/health/**"),
                                             new AntPathRequestMatcher("/auth/dev-token"),
@@ -293,6 +301,14 @@ public class SecurityConfiguration {
                                 .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403"))
                                 .jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(converter)))
                 .build();
+    }
+
+    static boolean managementScrape(HttpServletRequest request, Integer managementPort, int businessPort) {
+        return managementPort != null && managementPort > 0 && managementPort != businessPort
+                && request.getLocalPort() == managementPort && request.getDispatcherType() == DispatcherType.REQUEST
+                && "127.0.0.1".equals(request.getLocalAddr()) && "127.0.0.1".equals(request.getRemoteAddr())
+                && request.getContextPath().isEmpty() && request.getQueryString() == null
+                && "GET".equals(request.getMethod()) && "/actuator/prometheus".equals(request.getRequestURI());
     }
 
     /** Explicit downstream entry; its decoder belongs to the service trust domain. */

@@ -12,6 +12,7 @@ name: agent-platform-test
 
 x-backend-env: &backend-env
   AGENT_BIND_ADDRESS: 127.0.0.1
+  MANAGEMENT_SERVER_ADDRESS: 127.0.0.1
   AGENT_SECURITY_MODE: iam
   AGENT_DEV_AUTH: "false"
   AGENT_RELEASE_GATE: IAM_SCOPE_ACCEPTED
@@ -105,6 +106,7 @@ services:
     environment:
       <<: *backend-env
       SERVER_PORT: "18090"
+      MANAGEMENT_SERVER_PORT: "18180"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=gateway
       AGENT_SECURITY_SERVICEID: gateway
       AGENT_SECURITY_AUTHORITY_CLIENTID: gateway
@@ -126,6 +128,7 @@ services:
     environment:
       <<: *backend-env
       SERVER_PORT: "18081"
+      MANAGEMENT_SERVER_PORT: "18181"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=app
       AGENT_SECURITY_SERVICEID: app
       AGENT_SECURITY_AUTHORITY_CLIENTID: app
@@ -150,6 +153,7 @@ services:
     environment:
       <<: *backend-env
       SERVER_PORT: "18082"
+      MANAGEMENT_SERVER_PORT: "18182"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=engine
       AGENT_SECURITY_SERVICEID: engine
       AGENT_SECURITY_AUTHORITY_CLIENTID: engine
@@ -171,6 +175,7 @@ services:
     environment:
       <<: *backend-env
       SERVER_PORT: "18083"
+      MANAGEMENT_SERVER_PORT: "18183"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=skill
       AGENT_SECURITY_SERVICEID: skill
       AGENT_SECURITY_AUTHORITY_CLIENTID: skill
@@ -190,6 +195,7 @@ services:
     environment:
       <<: *backend-env
       SERVER_PORT: "18084"
+      MANAGEMENT_SERVER_PORT: "18184"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=model
       AGENT_SECURITY_SERVICEID: model
       AGENT_SECURITY_AUTHORITY_CLIENTID: model
@@ -209,6 +215,7 @@ services:
     environment:
       <<: *backend-env
       SERVER_PORT: "18085"
+      MANAGEMENT_SERVER_PORT: "18185"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=monitor
       AGENT_SECURITY_SERVICEID: monitor
       AGENT_SECURITY_AUTHORITY_CLIENTID: monitor

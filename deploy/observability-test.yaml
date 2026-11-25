@@ -23,7 +23,7 @@ services:
     image: prom/prometheus:v2.53.0
     container_name: agent-platform-prometheus
     volumes:
-      - /home/agent-platform/obs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus-test.yml:/etc/prometheus/prometheus.yml:ro
       - agentplat_prom_data:/prometheus
 
   grafana:
