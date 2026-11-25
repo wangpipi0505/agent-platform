@@ -213,7 +213,7 @@ public class SecurityConfiguration {
                                 throws ServletException, IOException {
                             String header = request.getHeader("Authorization");
                             if ((trusted ? Boolean.TRUE.equals(deployment.allowEmbed())
-                                    && cn.agentplatform.common.authority.IntegrationRuntimeRoutes.metadata(
+                                    && IntegrationRuntimeRoutes.read(
                                             request.getMethod(), request.getRequestURI())
                                     : request.getRequestURI().startsWith("/v1/"))
                                     && header != null
@@ -281,10 +281,14 @@ public class SecurityConfiguration {
                                                                         .anyMatch(
                                                                                 a -> a.getAuthority().equals("ROLE_SERVICE"))));
                             if (trusted && "gateway".equals(deployment.serviceId())) {
-                                x.requestMatchers(request -> cn.agentplatform.common.authority.IntegrationRuntimeRoutes.metadata(
+                                x.requestMatchers(request -> IntegrationRuntimeRoutes.metadata(
                                         request.getMethod(), request.getRequestURI()))
                                         .access((auth, context) -> new AuthorizationDecision(
-                                                cn.agentplatform.common.authority.IntegrationRuntimeRoutes.currentSource() != null));
+                                                IntegrationRuntimeRoutes.currentSource() != null));
+                                x.requestMatchers(request -> IntegrationRuntimeRoutes.taskRead(
+                                        request.getMethod(), request.getRequestURI()))
+                                        .access((auth, context) -> new AuthorizationDecision(
+                                                IntegrationRuntimeRoutes.currentSource() != null || portalScope(auth.get())));
                             }
                             x.anyRequest()
                                     .access(

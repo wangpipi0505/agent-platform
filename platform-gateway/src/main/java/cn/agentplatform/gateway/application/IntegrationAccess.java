@@ -274,7 +274,7 @@ public class IntegrationAccess implements AllowedOriginPolicy, ApiKeyAuthenticat
         return authority;
     }
 
-    public ServiceTicket exchangeMetadata(HttpServletRequest request, ServiceCall call) {
+    public ServiceTicket exchangeRuntime(HttpServletRequest request, ServiceCall call) {
         var jwt = IntegrationRuntimeRoutes.currentSource();
         if (jwt == null) throw new PlatformException(401, "INVALID_TICKET", "请提供有效集成短票");
         var id = jwt.<Number>getClaim("credential_id");

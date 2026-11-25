@@ -1,0 +1,50 @@
+package cn.agentplatform.common.authority;
+
+import cn.agentplatform.common.PlatformException;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class IntegrationRuntimeRoutesTest {
+    private static final String TASK = "task-0123456789abcdef0123";
+    private final ServiceRoutePolicy routes = new ServiceRoutePolicy();
+
+    @Test
+    void readActionsBindTheCredentialApplicationAndExactPublicTask() {
+        for (String suffix : new String[]{"", "/events", "/result"}) {
+            String path = "/v1/tasks/" + TASK + suffix;
+            assertThat(IntegrationRuntimeRoutes.taskRead("GET", path)).isTrue();
+            var call = IntegrationRuntimeRoutes.taskCall(routes, "GET", path, "app-a");
+            assertThat(call.target()).isEqualTo("engine");
+            assertThat(IntegrationRuntimeRoutes.permits(call, "app-a")).isTrue();
+            assertThat(IntegrationRuntimeRoutes.permits(call, "app-b")).isFalse();
+            assertThat(IntegrationRuntimeRoutes.permits(
+                    new ServiceCall("engine", call.action(), new ResourceBinding(
+                            call.resource().kind(), call.resource().id(), "0".repeat(64))), "app-a")).isFalse();
+        }
+    }
+
+    @Test
+    void numericIdsControlActionsAndStreamsDoNotMatchTaskRead() {
+        for (String suffix : new String[]{"/cancel", "/resume", "/events/stream", "/result/"}) {
+            assertThat(IntegrationRuntimeRoutes.taskRead("GET", "/v1/tasks/" + TASK + suffix)).isFalse();
+        }
+        assertThat(IntegrationRuntimeRoutes.taskRead("GET", "/v1/tasks/123")).isFalse();
+        assertThat(IntegrationRuntimeRoutes.taskRead("POST", "/v1/tasks/" + TASK)).isFalse();
+        assertThatThrownBy(() -> IntegrationRuntimeRoutes.taskCall(routes, "GET", "/v1/tasks/123", "app-a"))
+                .isInstanceOf(PlatformException.class);
+    }
+
+    @Test
+    void onlyEventReadsAcceptTheCursorAndLimit() {
+        String path = "/v1/tasks/" + TASK;
+        IntegrationRuntimeRoutes.requireTaskQuery(path + "/events", "limit=4&afterSeq=1");
+        for (String query : new String[]{"afterSeq=1&afterSeq=2", "limit=-1", "tenant=x", "limit=1&"}) {
+            assertThatThrownBy(() -> IntegrationRuntimeRoutes.requireTaskQuery(path + "/events", query))
+                    .isInstanceOf(PlatformException.class);
+        }
+        assertThatThrownBy(() -> IntegrationRuntimeRoutes.requireTaskQuery(path + "/result", "limit=1"))
+                .isInstanceOf(PlatformException.class);
+    }
+}

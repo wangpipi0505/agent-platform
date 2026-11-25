@@ -4,6 +4,7 @@ package cn.agentplatform.engine.api;
 
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -36,6 +37,11 @@ public class TaskController {
   /** {taskId} 业务号→内部 id 解析（R-9⑤；形状解析归 Tasks，归属核验仍在 ownedTask）。 */
   private long resolve(String taskId, Actor actor) {
     return tasks.resolveTaskId(taskId, actor);
+  }
+
+  private long resolveRead(String taskId, Actor actor) {
+    var scope = IntegrationRuntimeRoutes.currentTaskScope(taskId);
+    return scope == null ? resolve(taskId, actor) : tasks.resolveIntegrationTask(taskId, actor, scope);
   }
 
   /** POST /v1/apps/{code}/tasks：受理（mode 必填；requestId 幂等；TASK_INTERNAL 根会话）。 */
@@ -87,7 +93,7 @@ public class TaskController {
   @GetMapping("/v1/tasks/{taskId}")
   public Object detail(@PathVariable("taskId") String taskId) {
     Actor actor = Actor.current();
-    return ApiResponse.ok(tasks.detail(resolve(taskId, actor), actor));
+    return ApiResponse.ok(tasks.detail(resolveRead(taskId, actor), actor));
   }
 
   /** GET /v1/tasks/{taskId}/events?afterSeq=：事件增量（排他游标，不 +1）。 */
@@ -97,7 +103,7 @@ public class TaskController {
           @RequestParam(value = "afterSeq", defaultValue = "0") long afterSeq,
           @RequestParam(value = "limit", defaultValue = "200") int limit) {
     Actor actor = Actor.current();
-    return ApiResponse.ok(tasks.events(resolve(taskId, actor), afterSeq, limit, actor));
+    return ApiResponse.ok(tasks.events(resolveRead(taskId, actor), afterSeq, limit, actor));
   }
 
   /** T2-11（接口稿 §7）：任务事件 SSE——Last-Event-ID 排他续读，15s :ping，断开不取消任务。 */
@@ -199,6 +205,6 @@ public class TaskController {
   @GetMapping("/v1/tasks/{taskId}/result")
   public Object result(@PathVariable("taskId") String taskId) {
     Actor actor = Actor.current();
-    return ApiResponse.ok(tasks.result(resolve(taskId, actor), actor));
+    return ApiResponse.ok(tasks.result(resolveRead(taskId, actor), actor));
   }
 }

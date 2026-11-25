@@ -97,7 +97,16 @@ public class GatewayController {
         if ("iam".equals(deployment.mode())) {
             if (IntegrationRuntimeRoutes.metadata(req.getMethod(), req.getRequestURI())) {
                 var call = IntegrationRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());
-                var ticket = integration.exchangeMetadata(req, call);
+                var ticket = integration.exchangeRuntime(req, call);
+                forward(req, res, call.target(), ticket.value());
+                return;
+            }
+            var integrationSource = IntegrationRuntimeRoutes.currentSource();
+            if (integrationSource != null && IntegrationRuntimeRoutes.taskRead(req.getMethod(), req.getRequestURI())) {
+                var call = IntegrationRuntimeRoutes.taskCall(serviceRoutes, req.getMethod(), req.getRequestURI(),
+                        integrationSource.getClaimAsString("app_code"));
+                var ticket = integration.exchangeRuntime(req, call);
+                res.setHeader("Cache-Control", "no-store");
                 forward(req, res, call.target(), ticket.value());
                 return;
             }

@@ -13,3 +13,20 @@
 JDK 21 在 admin-common、platform-gateway、app-management 和 authority-service 共执行 72 条定向测试，零失败、零跳过。覆盖签发主体、错误凭据版本、PostgreSQL 当前策略及服务调用。原始运行结果位于本地 `.local/r40-policy-version-green.log` 和 `.local/r40-policy-version-package.log`。
 
 旧版策略解析 HTTP 夹具补齐 PlatformAccessService 装配后复跑，仍保留台账已登记的 7 条失败。六条使用旧的 integration → engine run.status 换票路径，一条使用旧的 app-version 资源执行凭据签发。详见本地 `.local/r40-policy-version-legacy.log`。
+
+## 集成任务读取
+
+网关、authority-service、app-management 和 engine-runtime 使用隔离的 PostgreSQL 联验。Flyway 执行 V234。测试向 PostgreSQL 写入带接入归属的任务 `task-82c7e7ed0a324be2844b` 和一条事件，用真实 RS256 集成票访问网关，再由引擎复核当前凭据版本。
+
+| 断言 | HTTP |
+| --- | --- |
+| 所有者读详情、增量事件及结果信封 | 200、200、200 |
+| 同一凭据直连 ApiKey 读详情 | 200 |
+| 增量查询重复 limit | 400 TASK_QUERY_INVALID |
+| 缺受理归属、跨应用、跨业务系统、跨租户、标签不足 | 403 APP_BINDING_DENIED |
+| 同软件 AGENT_ADMIN 读他人正文，添加平台 ADMIN 后复验 | 403、403 |
+| 调用未开放的 resume | 403 |
+
+三个读取动作签入同一凭据应用和精确任务业务号。引擎按验签后的租户、主体、应用、业务系统和标签检查 PostgreSQL 归属。JDK 21 定向回归执行 66 条，零失败、零跳过，首次混合 JVM 运行触发 IAM 与开发票模式冲突，按测试类隔离进程复跑通过。
+
+导出输出见本地 `.local/r40-task-read-live.log` 与 `.local/r40-task-read-package.log`。本批验证读取链及权限拒绝。集成提交时写入归属、启动和续权、同软件中断与业务审计仍待接入。

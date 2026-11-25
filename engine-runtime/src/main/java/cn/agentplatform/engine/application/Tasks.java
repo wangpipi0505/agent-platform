@@ -1033,6 +1033,25 @@ public class Tasks {
     return ((Number) rows.getFirst().get("id")).longValue();
   }
 
+  /** Only rows with credential-backed admission provenance can be read using an IAM integration ticket. */
+  public long resolveIntegrationTask(String publicId, Actor actor,
+          cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope scope) {
+    var ids = store.db().queryForList("""
+            select t.id from engine.task t join engine.task_integration_scope a on a.task_id=t.id
+             where t.public_id=? and t.tenant_id=? and t.principal_id=? and t.app_code=?
+               and a.biz_system_code=? and a.data_labels <@ ?::jsonb
+            """, Long.class, publicId, actor.tenantId(), actor.principalId(), scope.appCode(),
+            scope.bizSystemCode(), Json.write(scope.dataLabels()));
+    if (ids.isEmpty()) {
+      org.slf4j.LoggerFactory.getLogger("agent.integration.audit").warn(
+              "AUDIT INTEGRATION_PATH_FORBIDDEN tenant={} software={} app={} task={} traceId={}",
+              actor.tenantId(), scope.bizSystemCode(), scope.appCode(), publicId,
+              cn.agentplatform.common.TraceContextFilter.current());
+      throw new PlatformException(403, "APP_BINDING_DENIED", "集成票无权读取此任务");
+    }
+    return ids.getFirst();
+  }
+
   private Map<String, Object> ownedTask(long taskId, Actor actor) {
     return ownedTask(taskId, actor, false);
   }
