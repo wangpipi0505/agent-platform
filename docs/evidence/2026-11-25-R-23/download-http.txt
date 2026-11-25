@@ -1,0 +1,23 @@
+# 2026-11-25 七服务 IAM 联验与独立宿主取证
+{"app":"r23file7e397d53f3","modelEntryId":3,"version":1,"reportId":"er_27263d61-45db-46d7-a412-7538b246034c","precheckId":"pc_01d114f5-58b1-4467-9bd1-328c5ccfc6c1","candidateSha256":"04db21418f48d07ad52d2293753a1edc703bcae360e2ed8580df9b3cfbd1c645","modelRefs":1}
+{"taskId":"task-4a626124f30a486cbe10","artifactId":"task_result_289a458b0b0d46819404a146b6aa8418","publishedDigest":"04db21418f48d07ad52d2293753a1edc703bcae360e2ed8580df9b3cfbd1c645","mediaType":"application/json","digest":"d88ef5d741916ce9f8982bf689cc8a910119710c8adbac15dd46f21a07e827dc","runId":"r_289a458b0b0d46819404a146b6aa8418","bytes":645,"downloadPath":"/v1/runs/r_289a458b0b0d46819404a146b6aa8418/artifacts/task_result_289a458b0b0d46819404a146b6aa8418/download","http":200,"etag":"\"d88ef5d741916ce9f8982bf689cc8a910119710c8adbac15dd46f21a07e827dc\""}
+Get-FileHash SHA256=d88ef5d741916ce9f8982bf689cc8a910119710c8adbac15dd46f21a07e827dc PostgreSQL=d88ef5d741916ce9f8982bf689cc8a910119710c8adbac15dd46f21a07e827dc|04db21418f48d07ad52d2293753a1edc703bcae360e2ed8580df9b3cfbd1c645|SUCCEEDED|SUCCEEDED file=r23file7e397d53f3-result.json
+No authorization: 401 SYS-AUTH-401
+Different subject: 403 APP_BINDING_DENIED
+Different software: 403 APP_BINDING_DENIED
+Different app: 403 APP_BINDING_DENIED
+Insufficient labels: 403 APP_BINDING_DENIED
+Noncanonical artifact: 403 APP_BINDING_DENIED
+Unexpected query: 400 TASK_QUERY_INVALID
+Direct ApiKey: 200 identical ETag
+Old ticket after policy revision: 403 IAM_AUTHORITY_FORBIDDEN
+Reissued current ticket: 200
+Ticket after credential revocation: 403 IAM_AUTHORITY_FORBIDDEN
+PASS R23 same-ticket attachment, receipt, file bytes, PostgreSQL, and policy isolation
+
+{"taskId":"task-af02747da17242c3847a","state":"SUCCEEDED","eventCount":5,"artifactCount":1,"downloads":[{"artifactId":"task_result_881b2983bf324daa965d440deb1ac884","bytes":654,"digest":"6d1900ac62aa54bf9ee04c960005054e50d84b10750ac248f55367d711e53ee2","etag":"\"6d1900ac62aa54bf9ee04c960005054e50d84b10750ac248f55367d711e53ee2\""}],"replayStatus":200,"conflictStatus":409}
+PASS independent host port=18959 ticketMints=1
+
+# 更新验证脚本后的同链路复跑
+{"taskId":"task-3681006de21e4e0ca38d","artifactId":"task_result_18ee40985d2f4e9faca1bfe5ca754159","runId":"r_18ee40985d2f4e9faca1bfe5ca754159","downloadPath":"/v1/runs/r_18ee40985d2f4e9faca1bfe5ca754159/artifacts/task_result_18ee40985d2f4e9faca1bfe5ca754159/download","mediaType":"application/json","bytes":646,"digest":"30d428a4293b8541081fa2c127cc38f68612c7187cfcd3c3123083481e985984","publishedDigest":"d5326831c4755841d300a4f35f7749679063dac847670bd7cc6fcbd3acbb7198","http":200,"etag":"\"30d428a4293b8541081fa2c127cc38f68612c7187cfcd3c3123083481e985984\""}
+PASS R23 same-ticket attachment, receipt, file bytes, PostgreSQL, and policy isolation

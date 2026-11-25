@@ -848,7 +848,19 @@
   "integrationAllowed": true,
   "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java:130",
   "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java",
-  "reason": "T2-15 任务结果读取（首版形状：result=null+resultSummary=goal 摘要+artifacts=[]；T2-13 结果读回接线后承载无附件完整输出）"
+  "reason": "T2-15 任务结果读取，包含已提交的内联结果和经校验的集成结果文件回执"
+ },
+ {
+  "method": "GET",
+  "template": "/v1/runs/{runId}/artifacts/{artifactId}/download",
+  "caller": "gateway",
+  "target": "engine",
+  "action": "proxy.engine.get.TaskController.downloadResult",
+  "mode": "delegated",
+  "integrationAllowed": true,
+  "source": "engine-runtime/src/main/java/cn/agentplatform/engine/api/TaskController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java",
+  "reason": "R-23 集成任务结果文件，独立命名空间，按已验应用和运行绑定服务票"
  },
  {
   "method": "GET",

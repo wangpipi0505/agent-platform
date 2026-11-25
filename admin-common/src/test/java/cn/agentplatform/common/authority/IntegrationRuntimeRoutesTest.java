@@ -73,4 +73,21 @@ class IntegrationRuntimeRoutesTest {
         assertThat(IntegrationTaskRoutes.downstream("engine", new ServiceCall("skill", "skill.invoke", root))).isFalse();
         assertThat(IntegrationTaskRoutes.downstream("model", new ServiceCall("model", "model.chat-stream", root))).isFalse();
     }
+
+    @Test
+    void resultFileMatchesOnlyItsOwnRunAndBindsTheCredentialApplication() {
+        String run = "r_" + "a".repeat(32);
+        String path = "/v1/runs/" + run + "/artifacts/task_result_" + "a".repeat(32) + "/download";
+        assertThat(IntegrationRuntimeRoutes.supported("GET", path)).isTrue();
+        assertThat(IntegrationRuntimeRoutes.supported("HEAD", path)).isFalse();
+        assertThat(IntegrationRuntimeRoutes.supported("GET", path.replace("result_a", "result_b"))).isFalse();
+        assertThat(IntegrationRuntimeRoutes.supported("GET", path.replace("task_result_", "art_"))).isFalse();
+        assertThat(IntegrationRuntimeRoutes.supported("GET", path + "/")).isFalse();
+        var call = IntegrationRuntimeRoutes.taskCall(routes, "GET", path, "app-a");
+        assertThat(call.target()).isEqualTo("engine");
+        assertThat(IntegrationRuntimeRoutes.permits(call, "app-a")).isTrue();
+        assertThat(IntegrationRuntimeRoutes.permits(call, "app-b")).isFalse();
+        assertThatThrownBy(() -> IntegrationRuntimeRoutes.requireTaskQuery(path, "ignored=1"))
+                .isInstanceOf(PlatformException.class);
+    }
 }

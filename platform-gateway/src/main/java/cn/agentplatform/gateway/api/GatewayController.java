@@ -121,7 +121,9 @@ public class GatewayController {
             boolean cancelIntegration = integrationSource != null
                     && IntegrationRuntimeRoutes.taskCancel(req.getMethod(), req.getRequestURI());
             if (integrationSource != null && (cancelIntegration
-                    || IntegrationRuntimeRoutes.taskRead(req.getMethod(), req.getRequestURI()))) {
+                    || IntegrationRuntimeRoutes.taskRead(req.getMethod(), req.getRequestURI())
+                    || IntegrationRuntimeRoutes.resultFileRead(req.getMethod(), req.getRequestURI()))) {
+                IntegrationRuntimeRoutes.requireTaskQuery(req.getRequestURI(), req.getQueryString());
                 var call = IntegrationRuntimeRoutes.taskCall(serviceRoutes, req.getMethod(), req.getRequestURI(),
                         integrationSource.getClaimAsString("app_code"));
                 byte[] body = cancelIntegration ? integrationCancelBody(req) : null;

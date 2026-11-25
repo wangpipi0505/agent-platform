@@ -8,6 +8,10 @@ import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -210,6 +214,23 @@ public class TaskController {
   @GetMapping("/v1/tasks/{taskId}/result")
   public Object result(@PathVariable("taskId") String taskId) {
     Actor actor = Actor.current();
-    return ApiResponse.ok(tasks.result(resolveRead(taskId, actor), actor));
+    var scope = IntegrationRuntimeRoutes.currentTaskScope(taskId);
+    return ApiResponse.ok(scope == null ? tasks.result(resolve(taskId, actor), actor)
+            : tasks.integrationResult(taskId, actor, scope));
+  }
+
+  @GetMapping(IntegrationRuntimeRoutes.RESULT_FILE_TEMPLATE)
+  public ResponseEntity<byte[]> downloadResult(@PathVariable String runId, @PathVariable String artifactId) {
+    var actor = Actor.current();
+    var scope = IntegrationRuntimeRoutes.currentResultFileScope(runId, artifactId);
+    if (scope == null) throw new PlatformException(403, "APP_BINDING_DENIED", "需要有效的集成下载授权");
+    var file = tasks.downloadIntegrationResult(runId, artifactId, actor, scope);
+    return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .contentLength(file.content().length)
+            .eTag(file.digest())
+            .cacheControl(CacheControl.noStore())
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.artifactId() + ".json\"")
+            .body(file.content());
   }
 }

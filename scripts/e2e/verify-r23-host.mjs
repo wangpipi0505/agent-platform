@@ -22,7 +22,8 @@ async function call(path, body) {
 const health = await call('health');
 assert(health.status === 200 && health.data.integration === 'READY' && health.data.ticketMode === true,
   'The independent host must have its short-ticket integration configured');
-const request = { requestId: 'r23-' + randomUUID(), goal: process.env.R23_TASK_GOAL || 'first' };
+const downloadArtifacts = process.env.R23_HOST_DOWNLOAD === 'true';
+const request = { requestId: 'r23-' + randomUUID(), goal: process.env.R23_TASK_GOAL || 'first', downloadArtifacts };
 const result = await call('dispatch', request);
 assert.equal(result.status, 200, 'Host dispatch HTTP status');
 assert.equal(result.data.state, 'SUCCEEDED', 'Host task status');
@@ -32,6 +33,17 @@ assert(typeof result.data.taskId === 'string' && /^task-[a-z0-9-]+$/.test(result
 assert(result.data.result?.text === expectedText, 'Host must preserve the expected structured result');
 assert(Array.isArray(result.data.events) && result.data.events.length > 0, 'Host must deliver task events');
 assert(Array.isArray(result.data.artifacts), 'Host must preserve the artifact list');
+if (downloadArtifacts) {
+  assert(result.data.artifacts.length > 0, 'Expected a file receipt from the released application');
+  assert(Array.isArray(result.data.downloads), 'Host must report verified downloads');
+  assert.equal(result.data.downloads.length, result.data.artifacts.length, 'Host must verify every file');
+  for (const [index, receipt] of result.data.artifacts.entries()) {
+    assert.equal(receipt.publishedDigest, process.env.R23_PUBLISHED_DIGEST, 'Expected the recorded publication digest');
+    assert.deepEqual(result.data.downloads[index], {
+      artifactId: receipt.artifactId, bytes: receipt.bytes, digest: receipt.digest, etag: `"${receipt.digest}"`,
+    }, 'Host must verify the downloaded bytes and ETag against the receipt');
+  }
+}
 const retry = await call('dispatch', request);
 assert(retry.status === 200 && retry.data.taskId === result.data.taskId, 'A retry must reuse the task ID');
 const conflict = await call('dispatch', { ...request, goal: request.goal + ' (changed)' });
@@ -43,6 +55,7 @@ console.log(JSON.stringify({
   state: result.data.state,
   eventCount: result.data.events.length,
   artifactCount: result.data.artifacts.length,
+  ...(downloadArtifacts && { downloads: result.data.downloads }),
   replayStatus: retry.status,
   conflictStatus: conflict.status,
 }));

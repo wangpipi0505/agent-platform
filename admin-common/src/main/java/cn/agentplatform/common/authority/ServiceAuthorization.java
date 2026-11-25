@@ -60,7 +60,7 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         return switch (serviceId) {
             case "app" -> PlatformBuildRoutes.serves(serviceId, method, path) || IntegrationRuntimeRoutes.metadata(method, path);
             case "engine" -> PortalRuntimeRoutes.matches(method, path) || IntegrationRuntimeRoutes.taskRead(method, path)
-                    || IntegrationRuntimeRoutes.taskCancel(method, path);
+                    || IntegrationRuntimeRoutes.taskCancel(method, path) || IntegrationRuntimeRoutes.resultFileRead(method, path);
             case "model", "skill" -> PlatformBuildRoutes.serves(serviceId, method, path);
             case "monitor" -> EvaluationCandidateBinding.portalTemplate(method, path) != null
                     || PlatformBuildRoutes.serves(serviceId, method, path);
@@ -181,7 +181,7 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         }
         boolean integration = "INTEGRATION".equals(operation.path("origin_kind").textValue());
         String integrationApp = IntegrationTaskRoutes.application(request.getMethod(), request.getRequestURI());
-        if (IntegrationRuntimeRoutes.isTaskSelector(call.resource())
+        if (IntegrationRuntimeRoutes.isScopedRuntimeSelector(call.resource())
                 || ("engine".equals(serviceId) && integration
                         && integrationApp == null
                         && IntegrationRuntimeRoutes.supported(request.getMethod(), request.getRequestURI()))) {

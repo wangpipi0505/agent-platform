@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 
 /** Exact integration runtime actions and their credential-bound selectors. */
@@ -20,6 +21,12 @@ public final class IntegrationRuntimeRoutes {
             "experience", "proxy.app.get.ExperienceController.experience");
     private static final String TASK_KIND = "integration-task";
     private static final String TASK_CODE = "task-[0-9a-f]{20}";
+    private static final String RESULT_FILE_KIND = "integration-task-result";
+    private static final String RESULT_FILE_ACTION = "proxy.engine.get.TaskController.downloadResult";
+    public static final String RESULT_FILE_TEMPLATE = "/v1/runs/{runId}/artifacts/{artifactId}/download";
+    private static final String RUN_ID = "r_[0-9a-f]{32}";
+    private static final Pattern RESULT_FILE =
+            Pattern.compile("/v1/runs/r_([0-9a-f]{32})/artifacts/task_result_\\1/download");
     private static final Pattern TASK = Pattern.compile("/v1/tasks/(" + TASK_CODE + ")(/events|/result)?");
     private static final Pattern TASK_CANCEL = Pattern.compile("/v1/tasks/(" + TASK_CODE + ")/cancel");
     private static final String CANCEL_ACTION = "proxy.engine.post.TaskController.cancel";
@@ -36,8 +43,12 @@ public final class IntegrationRuntimeRoutes {
         return "GET".equals(method) && TASK.matcher(path).matches();
     }
 
+    public static boolean resultFileRead(String method, String path) {
+        return "GET".equals(method) && RESULT_FILE.matcher(path).matches();
+    }
+
     public static boolean read(String method, String path) {
-        return metadata(method, path) || taskRead(method, path);
+        return metadata(method, path) || taskRead(method, path) || resultFileRead(method, path);
     }
 
     public static boolean taskCancel(String method, String path) {
@@ -57,6 +68,13 @@ public final class IntegrationRuntimeRoutes {
     }
 
     public static ServiceCall taskCall(ServiceRoutePolicy routes, String method, String path, String app) {
+        if ("GET".equals(method)) {
+            var file = RESULT_FILE.matcher(path);
+            if (file.matches()) {
+                var route = routes.require("gateway", "engine", method, RESULT_FILE_TEMPLATE);
+                return new ServiceCall(route.target(), route.action(), resultFile(app, "r_" + file.group(1)));
+            }
+        }
         var cancel = TASK_CANCEL.matcher(path);
         if ("POST".equals(method) && cancel.matches()) {
             var route = routes.require("gateway", "engine", method, "/v1/tasks/{taskId}/cancel");
@@ -95,23 +113,39 @@ public final class IntegrationRuntimeRoutes {
         return new ResourceBinding("integration-app", app, Digest.sha256("integration-app.v1:" + app));
     }
 
+    public static String resultFileId(String runId) {
+        if (!runId.matches(RUN_ID)) throw AuthorityProtocol.denied();
+        return "task_result_" + runId.substring(2);
+    }
+
+    private static ResourceBinding resultFile(String app, String runId) {
+        MetadataSelectors.code(app);
+        if (!runId.matches(RUN_ID)) throw AuthorityProtocol.denied();
+        String id = app + ":" + runId;
+        return new ResourceBinding(RESULT_FILE_KIND, id, Digest.sha256("integration-task-result.v1:" + id));
+    }
+
     public static boolean permits(ServiceCall call, String credentialApp) {
         if (IntegrationTaskRoutes.starts(call, credentialApp)
                 || IntegrationTaskRoutes.metadataCall(credentialApp).equals(call)) return true;
-        if ("engine".equals(call.target())
-                && (TASK_READ_ACTIONS.contains(call.action()) || CANCEL_ACTION.equals(call.action()))
-                && isTaskSelector(call.resource())) {
+        if ("engine".equals(call.target()) && isScopedRuntimeSelector(call.resource())) {
             String prefix = credentialApp + ":";
             String id = call.resource().id();
-            return id.startsWith(prefix) && id.substring(prefix.length()).matches(TASK_CODE)
-                    && task(credentialApp, id.substring(prefix.length())).equals(call.resource());
+            if (!id.startsWith(prefix)) return false;
+            String value = id.substring(prefix.length());
+            if (RESULT_FILE_KIND.equals(call.resource().kind())) {
+                return RESULT_FILE_ACTION.equals(call.action()) && value.matches(RUN_ID)
+                        && resultFile(credentialApp, value).equals(call.resource());
+            }
+            return (TASK_READ_ACTIONS.contains(call.action()) || CANCEL_ACTION.equals(call.action()))
+                    && value.matches(TASK_CODE) && task(credentialApp, value).equals(call.resource());
         }
         return "app".equals(call.target()) && ACTIONS.containsValue(call.action())
                 && application(credentialApp).equals(call.resource());
     }
 
-    public static boolean isTaskSelector(ResourceBinding resource) {
-        return resource != null && TASK_KIND.equals(resource.kind());
+    public static boolean isScopedRuntimeSelector(ResourceBinding resource) {
+        return resource != null && (TASK_KIND.equals(resource.kind()) || RESULT_FILE_KIND.equals(resource.kind()));
     }
 
     public static boolean permitsRoles(ServiceCall call, Set<String> roles) {
@@ -124,14 +158,26 @@ public final class IntegrationRuntimeRoutes {
 
     /** Only the mapped receiver's current, verified integration service ticket can supply this scope. */
     public static TaskScope currentTaskScope(String publicId) {
-        return currentScope(publicId, null);
+        return currentScope((verified, app) -> AuthorityProtocol.same(task(app, publicId), verified.call().resource()));
     }
 
     public static TaskScope currentStartScope(String appCode) {
-        return currentScope(null, appCode);
+        return currentScope((verified, app) -> {
+            AuthorityProtocol.same(app, appCode);
+            if (!IntegrationTaskRoutes.starts(verified.call(), app)
+                    || !IntegrationTaskRoutes.submitRoles(verified.actor().roles())) throw AuthorityProtocol.denied();
+        });
     }
 
-    private static TaskScope currentScope(String publicId, String appCode) {
+    public static TaskScope currentResultFileScope(String runId, String artifactId) {
+        return currentScope((verified, app) -> {
+            AuthorityProtocol.same(artifactId, resultFileId(runId));
+            AuthorityProtocol.same(new ServiceCall("engine", RESULT_FILE_ACTION, resultFile(app, runId)),
+                    verified.call());
+        });
+    }
+
+    private static TaskScope currentScope(BiConsumer<VerifiedAuthority, String> check) {
         var jwt = currentJwt();
         if (jwt == null || !"service".equals(jwt.getClaimAsString("token_use"))) return null;
         var claims = Json.tree(jwt.getClaims());
@@ -142,13 +188,7 @@ public final class IntegrationRuntimeRoutes {
             throw AuthorityProtocol.denied();
         var identity = IntegrationSource.decisionIdentity(operation.get("integration_credential"), claims);
         String app = identity.path("app_code").textValue();
-        if (appCode != null) {
-            AuthorityProtocol.same(app, appCode);
-            if (!IntegrationTaskRoutes.starts(verified.call(), app)
-                    || !IntegrationTaskRoutes.submitRoles(verified.actor().roles())) throw AuthorityProtocol.denied();
-        } else {
-            AuthorityProtocol.same(task(app, publicId), verified.call().resource());
-        }
+        check.accept(verified, app);
         return new TaskScope(app, identity.path("biz_system_code").textValue(),
                 verified.actor().attributes().getOrDefault("dataLabels", Set.of()),
                 identity.path("credential_id").longValue());

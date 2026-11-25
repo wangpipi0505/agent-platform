@@ -282,6 +282,7 @@ public class SecurityConfiguration {
                                                                                 a -> a.getAuthority().equals("ROLE_SERVICE"))));
                             if (trusted && "gateway".equals(deployment.serviceId())) {
                                 x.requestMatchers(request -> IntegrationRuntimeRoutes.metadata(
+                                        request.getMethod(), request.getRequestURI()) || IntegrationRuntimeRoutes.resultFileRead(
                                         request.getMethod(), request.getRequestURI()))
                                         .access((auth, context) -> new AuthorizationDecision(
                                                 IntegrationRuntimeRoutes.currentSource() != null));

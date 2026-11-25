@@ -4,6 +4,7 @@ import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.common.Roles;
+import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope;
 import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import cn.agentplatform.engine.infra.TraceStore;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -1113,10 +1115,7 @@ public class Tasks {
    * <ul>
    *   <li><b>result</b>：单步 AGENT 任务成功后返回已提交的入口运行输出，未形成输出时返回 null。</li>
    *   <li><b>resultSummary</b>：goal 摘要——首版取受理 goal（≤200 字截断），无输出时不缺省。</li>
-   *   <li><b>artifacts</b>：产物引用——首版恒为空列表；产物下载复用既有运行级二进制路径
-   *       （GET /v1/runs/{runId}/artifacts/{id}/download，integrationAllowed=true 行），
-   *       产物→运行→任务归属沿同一 principal 口径核验（skill ArtifactStore.download 既有
-   *       tenant/principal/run 复核），不在此端点重复暴露产物详情。</li>
+   *   <li><b>artifacts</b>：普通任务保留空列表。集成任务可由已提交的运行输出交付结果文件回执。</li>
    * </ul>
    *
    * <p>归属：与 detail 同一 {@link #ownedTask} 口径——非凭据绑定主体 404（他人任务不可探测，
@@ -1141,6 +1140,66 @@ public class Tasks {
     view.put("resultSummary", goal.length() <= 200 ? goal : goal.substring(0, 200));
     view.put("artifacts", List.of());
     return view;
+  }
+
+  public Map<String, Object> integrationResult(String taskId, Actor actor, TaskScope scope) {
+    long id = resolveIntegrationTask(taskId, actor, scope);
+    var view = result(id, actor);
+    var file = resultFile(id, actor);
+    if (file != null) view.put("artifacts", List.of(file.receipt()));
+    return view;
+  }
+
+  public ResultFile downloadIntegrationResult(String runId, String artifactId, Actor actor, TaskScope scope) {
+    if (!IntegrationRuntimeRoutes.resultFileId(runId).equals(artifactId))
+      throw integrationReadDenied(runId, actor, scope);
+    // Resolve the entry-step relation inside the current owner namespace before reading the output.
+    var linked = store.db().queryForList("""
+            select t.public_id from engine.run r join engine.task_step s on s.run_id=r.id
+              join engine.task t on t.id=s.task_id and t.tenant_id=r.tenant_id and t.principal_id=r.principal_id
+                and t.app_code=r.app_code
+             where r.public_id=? and r.tenant_id=? and r.principal_id=? and r.app_code=? and s.step_id=?
+            """, String.class, runId, actor.tenantId(), actor.principalId(), scope.appCode(), StepExecutionMapping.ENTRY);
+    if (linked.size() != 1) throw integrationReadDenied(runId, actor, scope);
+    var file = resultFile(resolveIntegrationTask(linked.getFirst(), actor, scope), actor);
+    if (file == null || !runId.equals(file.runId()))
+      throw new PlatformException(404, "ARTIFACT_NOT_FOUND", "未找到已提交的任务结果文件");
+    return file;
+  }
+
+  /** The committed task digest seals the canonical output bytes for both the receipt and the attachment. */
+  private ResultFile resultFile(long taskId, Actor actor) {
+    var rows = store.db().query("""
+            select r.public_id,t.result_digest,t.config_digest,r.output::text
+              from engine.task t join engine.task_step s on s.task_id=t.id
+              join engine.run r on r.id=s.run_id and r.tenant_id=t.tenant_id
+                and r.principal_id=t.principal_id and r.app_code=t.app_code
+             where t.id=? and t.tenant_id=? and t.principal_id=? and s.step_id=? and s.state='SUCCEEDED'
+               and t.state='SUCCEEDED' and r.status='SUCCEEDED'
+               and t.result_ref='pg:run/'||r.public_id||'/output'
+               and t.config_digest=r.snapshot->>'candidateSha256' and t.config_digest ~ '^[0-9a-f]{64}$'
+               and r.output is not null and r.output <> 'null'::jsonb
+            """, (rs, index) -> {
+              String run = rs.getString(1);
+              String digest = rs.getString(2);
+              String publishedDigest = rs.getString(3);
+              String canonical = Json.canonical(Json.read(rs.getString(4)));
+              if (!run.matches("r_[0-9a-f]{32}") || !Digest.sha256(canonical).equals(digest)) return null;
+              return new ResultFile(run, digest, publishedDigest, canonical.getBytes(StandardCharsets.UTF_8));
+            }, taskId, actor.tenantId(), actor.principalId(), StepExecutionMapping.ENTRY);
+    return rows.isEmpty() ? null : rows.getFirst();
+  }
+
+  public record ResultFile(String runId, String digest, String publishedDigest, byte[] content) {
+    public String artifactId() {
+      return IntegrationRuntimeRoutes.resultFileId(runId);
+    }
+
+    private Map<String, Object> receipt() {
+      String path = "/v1/runs/" + runId + "/artifacts/" + artifactId() + "/download";
+      return Map.of("artifactId", artifactId(), "runId", runId, "downloadPath", path, "mediaType", "application/json",
+              "bytes", content.length, "digest", digest, "publishedDigest", publishedDigest);
+    }
   }
 
   /**
@@ -1178,14 +1237,16 @@ public class Tasks {
                and a.biz_system_code=? and a.data_labels <@ ?::jsonb
             """, Long.class, publicId, actor.tenantId(), actor.principalId(), scope.appCode(),
             scope.bizSystemCode(), Json.write(scope.dataLabels()));
-    if (ids.isEmpty()) {
-      org.slf4j.LoggerFactory.getLogger("agent.integration.audit").warn(
-              "AUDIT INTEGRATION_PATH_FORBIDDEN tenant={} software={} app={} task={} traceId={}",
-              actor.tenantId(), scope.bizSystemCode(), scope.appCode(), publicId,
-              cn.agentplatform.common.TraceContextFilter.current());
-      throw new PlatformException(403, "APP_BINDING_DENIED", "集成票无权读取此任务");
-    }
+    if (ids.isEmpty()) throw integrationReadDenied(publicId, actor, scope);
     return ids.getFirst();
+  }
+
+  private PlatformException integrationReadDenied(String resourceId, Actor actor, TaskScope scope) {
+    org.slf4j.LoggerFactory.getLogger("agent.integration.audit").warn(
+            "AUDIT INTEGRATION_PATH_FORBIDDEN tenant={} software={} app={} resource={} traceId={}",
+            actor.tenantId(), scope.bizSystemCode(), scope.appCode(), resourceId,
+            cn.agentplatform.common.TraceContextFilter.current());
+    return new PlatformException(403, "APP_BINDING_DENIED", "集成票无权读取此任务");
   }
 
   private Map<String, Object> ownedTask(long taskId, Actor actor) {

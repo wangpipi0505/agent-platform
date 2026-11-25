@@ -1,6 +1,7 @@
 package cn.agentplatform.engine.infra;
 
 import cn.agentplatform.common.Actor;
+import cn.agentplatform.common.Digest;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope;
 import cn.agentplatform.engine.application.Tasks;
@@ -12,6 +13,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -57,6 +60,40 @@ class IntegrationTaskReadPostgresTest {
                     new Actor(actor.tenantId(), "software-a:bob", Set.of("AGENT_ADMIN"), Map.of()), scope));
             assertDenied(() -> tasks.resolveIntegrationTask(task,
                     new Actor("another-tenant", actor.principalId(), actor.roles(), Map.of()), scope));
+
+            String run = "r_" + UUID.randomUUID().toString().replace("-", "");
+            String artifactId = "task_result_" + run.substring(2);
+            String file = "{\"text\":\"轨道窗口\"}";
+            long runKey = db.queryForObject("""
+                    insert into engine.run(public_id,app_code,app_version_id,trigger_type,status,
+                      principal_id,tenant_id,input_ref,version_refs,guard_ctx,budget,snapshot,inputs,output)
+                    values(?,'app-a',1,'CHAT','SUCCEEDED',?,?,'input','{}','{}','{}',
+                      jsonb_build_object('candidateSha256',repeat('a',64)),'{}',?::jsonb) returning id
+                    """, Long.class, run, actor.principalId(), actor.tenantId(), file);
+            db.update("insert into engine.task_step(task_id,step_id,state,run_id) values(?,'entry','SUCCEEDED',?)",
+                    id, runKey);
+            assertThat(tasks.integrationResult(task, actor, scope).get("artifacts")).isEqualTo(List.of());
+            db.update("""
+                    update engine.task set state='SUCCEEDED',result_ref=?,result_digest=? where id=?
+                    """, "pg:run/" + run + "/output", Digest.sha256(file), id);
+            var download = tasks.downloadIntegrationResult(run, artifactId, actor, scope);
+            assertThat(download.content()).isEqualTo(file.getBytes(StandardCharsets.UTF_8));
+            assertThat(download.digest()).isEqualTo(Digest.sha256(file));
+            assertThat(tasks.integrationResult(task, actor, scope).get("artifacts"))
+                    .isEqualTo(List.of(Map.of("artifactId", artifactId, "runId", run,
+                            "downloadPath", "/v1/runs/" + run + "/artifacts/" + artifactId + "/download",
+                            "digest", Digest.sha256(file), "publishedDigest", "a".repeat(64),
+                            "mediaType", "application/json", "bytes", download.content().length)));
+            assertDenied(() -> tasks.downloadIntegrationResult(run, artifactId, actor,
+                    new TaskScope("app-b", scope.bizSystemCode(), scope.dataLabels(), 2)));
+            assertDenied(() -> tasks.downloadIntegrationResult(run, artifactId, actor,
+                    new TaskScope("app-a", scope.bizSystemCode(), Set.of("public"), 2)));
+            assertDenied(() -> tasks.downloadIntegrationResult(run, artifactId,
+                    new Actor(actor.tenantId(), "software-a:bob", Set.of("AGENT_ADMIN"), Map.of()), scope));
+            db.update("update engine.run set output='{\"text\":\"changed\"}'::jsonb where id=?", runKey);
+            assertThat(tasks.integrationResult(task, actor, scope).get("artifacts")).isEqualTo(List.of());
+            assertThatThrownBy(() -> tasks.downloadIntegrationResult(run, artifactId, actor, scope))
+                    .isInstanceOfSatisfying(PlatformException.class, error -> assertThat(error.status()).isEqualTo(404));
         });
     }
 
