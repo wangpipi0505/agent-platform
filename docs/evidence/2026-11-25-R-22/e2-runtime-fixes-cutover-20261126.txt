@@ -1,0 +1,16 @@
+# E2 主入口修复切换（2026-11-26 UTC+08:00）
+E2 长稳结束后仅重建 app-management、engine-runtime 和 frontend。
+POST /v1/apps/r22e2-real-v2/tasks HTTP 200 ×3（同一真实门户）
+E2_A01 plan=task-fc829b4aee864e7b8d22/ACCEPTED agent=task-a7102f740663473180ce/SUCCEEDED replay=one
+E2_RV06 conflicting replay HTTP 409 REQUEST_REPLAY
+GET /admin/platform-authorization/users?q=admin HTTP 200, one active match
+GET /admin/platform-authorization/grants?subject=admin HTTP 200
+R22_E2_PRIMARY_DIRECTORY_SEARCH_PASS userMatches=1
+/app sha256:545d330204bcd20fa3c1bde9372c90f513195a4a05c5573d630e990e585f057ae healthy restart=0
+/engine sha256:6944861286d5c5845e3b09229d22f315bb9811841d124ccd8393b089ada7bb6b healthy restart=0
+/frontend sha256:007f8f07ae40819ed4c80b7008a70ecead544cef935b8f3711f4b7725c1178 healthy restart=0
+R22_E2_RUNTIME_FIXES_CUTOVER_PASS
+Eight E2 containers healthy; Prometheus platform targets up 6/6.
+Playwright on primary console with real test session: 1440/1024/768, light style.
+GET /auth/session 200, GET /admin/classifications 200, GET /admin/apps 200 at all widths.
+Rendered test app at all widths, no horizontal overflow, no confirmation-count request after 15.5 s.

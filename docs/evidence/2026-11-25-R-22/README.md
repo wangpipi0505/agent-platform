@@ -82,3 +82,9 @@ E2 并发 PLAN 与 AGENT 暴露 `bizSystemCode` 将门户账号误判为外部�
 ## E2 目录检索补线
 
 真实管理员的 `auth.grant` 已生效，主入口 `GET /admin/platform-authorization/users?q=admin` 仍返回 503，原因是 E2 旧编排的 app-management 缺目录 URL、租户与搜索凭据引用。现有 user-mgmt 测试凭据实际读取用户列表及目标主体成功。为独立 app-management 注入测试目录引用后，经 E2 替代网关验证用户检索、授权读回均为 200，匹配一个活动用户。日志标记 `R22_E2_ISOLATED_DIRECTORY_SEARCH_PASS`。主入口随候选修复一起切换，避开正在运行的长稳采样。
+
+## E2 长稳结论与主入口上线
+
+两小时真实业务采样共成功 25 个 AGENT 任务，采样零失败。authority 容器从 513.10 MiB 增至 899.60 MiB，RV-05 内存判据未通过。结束后的 jcmd 只读检查确认 authority 与 model 的 Native Memory Tracking 均未启用。完整原始数据与两组曲线见 [PR-D 采样结果](pr-d-e2/README.md)。
+
+采样结束后，已在 E2 主入口切换 app-management、engine-runtime 和兼容前端。真实门户的并发 PLAN 受理、AGENT 执行和幂等重放通过，用户检索与授权读回均 200，控制台三宽度可访问且未授权角标无需请求。八容器 healthy，六个 Prometheus 目标 up。 [E2 切换与复测摘录](e2-runtime-fixes-cutover-20261126.txt)
