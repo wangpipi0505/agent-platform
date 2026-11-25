@@ -1,0 +1,10 @@
+# 2026-11-25 独立 space-ground-visible 宿主本地联验记录
+GET /agent-platform/health 200 READY port=18899
+POST /agent-platform/dispatch 200 DISPATCHED SUCCEEDED SUCCEEDED
+POST /agent-platform/dispatch with different goal 409 REQUEST_REPLAY
+GET /v1/tasks/task-e0cb4fb5ca6546b39497 with unauthoritative tenant 403 INTEGRATION_CLIENT_IDENTITY_REJECTED
+POST /agent-platform/dispatch after host ticket refresh point 200 sameTask=true ticketMints=2
+PASS task=task-e0cb4fb5ca6546b39497 events=5 resultTextVerified=true retrySameTask=true artifacts=0
+
+# 以仓库内脚本重跑
+{"taskId":"task-23e1ae183b9240508db4","state":"SUCCEEDED","eventCount":5,"artifactCount":0,"replayStatus":200,"conflictStatus":409}
