@@ -1,0 +1,26 @@
+# 2026-11-25 server609 E2
+Docker 26.1.4, Compose v2.27.1, linux/amd64
+Candidate archive SHA-256 9d4332e19b4eb0d3c8721e21cba8d7c8c56b42bb01051b7c7e8836f88fc27230
+Isolated migration rehearsal: app V127, engine V236, skill V322, model V306, monitor V506
+E2_REHEARSAL_PASS
+pg-before-cutover.dump SHA-256 7e8991afca3103c4d1d1fa3a6ca444c1111e75fd660ab62609189752845c040a
+pg_restore --list: 714 TOC entries
+Initial frontend compatibility failure: pwrite() "/tmp/nginx.pid" failed (1: Operation not permitted)
+Restored frontend health 200
+E2 compatibility frontend config ID sha256:34def6efab500e3ad51315c0519e19e6f8bcda235dca7c94941a7d375720fe63
+E2 console SHA-256 d5cac147508f66cb83bb68eee511de33e6f404e7e971623362ed4435d666c304
+E2_FRONTEND_CUTOVER_PASS
+POST /oauth/token HTTP 200
+GET /auth/session HTTP 200
+USER_MGMT demo/admin roles=ADMIN model.manage=true
+GET /admin/model-providers HTTP 200
+POST /admin/model-providers/1/test HTTP 200
+GET /admin/model-entries HTTP 200
+POST /admin/model-entries/1/test HTTP 200
+MODEL provider=1 entry=1 model=deepseek-flash status=HEALTHY latencyMs=1708
+Checks config PASS, circuit PASS, quota PASS, endpoint PASS, auth PASS, model PASS, tokenizer PASS, latency PASS
+POST /v1/chat/completions HTTP 200
+DEEPSEEK request_id=155607f6-8f79-4f09-b3cc-8c4c1e4d61b1 prompt_tokens=34 completion_tokens=12 total_tokens=46
+E2_USER_MGMT_AND_MODEL_PASS
+E2_PRIMARY_REAL_PROBE_PASS
+Prometheus platform targets: up 6/6

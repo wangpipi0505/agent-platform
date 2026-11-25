@@ -29,3 +29,17 @@ E2 的 Compose 已补齐 authority 的 test profile、真实目录启用开关�
 `deploy/test-static.py` 先复现旧 Compose 缺少 authority profile 的失败，再验证新配置与拒绝用例通过。八个镜像通过 `docker image save --platform linux/amd64` 导出为本地候选包，验过压缩包清单中的八个标签以及整个 tar 的 SHA-256。镜像标识和包摘要见 `e2-candidate-images.txt`。
 
 E2 上 `server609` 解析至 `192.168.1.2`。严格校验既有主机密钥后，项目记载的 SSH 别名与直连两条路径均到达服务器，客户端鉴权被拒绝。E2 现网镜像尚未替换，真实目录和供应商复验、带业务负载的两小时长稳以及 E3 环境验收仍待执行。
+
+## E2 实际升级、目录及供应商联验
+
+SSH 后续恢复。在 E2 校验并导入八个候选镜像，Docker 26 读取的 image config digest 全部与本地导出清单一致。升级前执行 PostgreSQL 备份并以 `pg_restore --list` 读取 714 项。首轮演练共用线上 PostgreSQL 实例，触发连接数上限，移除演练容器后连接恢复。随后用独立 PostgreSQL、Redis 恢复备份，迁移至 app V127、engine V236、skill V322、model V306、monitor V506，五个就绪端点均为 200。
+
+七个后端在 E2 主栈切换成功。初版前端在目标内核启动时出现 `pwrite() "/tmp/nginx.pid" failed (1: Operation not permitted)`，回退原前端恢复服务。复用 E2 上已验证的固定摘要 Nginx 镜像作为运行层，将新静态资源放在独立目录，先在回环 19191 核验再切换 18091。正式控制台文件摘要与原候选资源一致。八个容器均 healthy。
+
+旧 Prometheus 配置改为抓取六个业务模块的独立管理端口，成功 reload。E2 原编排只给了系统 Redis URI，模型配额与深度探针需要独立 host、port 和受控密码引用。补齐后模型探针从 DEGRADED 转 HEALTHY，六个 Prometheus 目标均 up。
+
+使用用户指定的 user-mgmt 源码所运行的本地真实目录。E2 测试通过回环 SSH 隧道访问该目录，网关使用与实际目录签发匹配的测试主体声明配置。真实 `/oauth/token` 和主入口 `/auth/session` 返回 200，平台授予 `demo/admin` 的 ADMIN 权限，`model.manage` 生效。当前该联验配置只绑定测试主体 admin，依赖临时目录通道。
+
+按原验收报告从同项目 E1 的 `r24_check` 定位既有 DeepSeek 供应商和模型配置。读取 E2 已登记的密钥文件引用，重新启动原回环代理并在 E2 主库注册 provider 1 和 entry 1。目标模型为 `deepseek-flash`，窗口 1048576，最大输出 393216。模型深度检查通过配额、供应商、真实对话和 tokenizer 测试。另发出一次受控最小请求，供应商返回 request id `155607f6-8f79-4f09-b3cc-8c4c1e4d61b1`，用量 **34 + 12 = 46 tokens**。
+
+备份、候选覆盖配置及脱敏输出在 E2 的 `/home/agent-platform/r22-candidates/20261125-204157/`。主验证标记为 `E2_PRIMARY_REAL_PROBE_PASS`。证据见 `e2-live-20261125.txt`。A01–A08 业务链在当前版本上的正式重放、PR-D 两小时业务长稳、长期目录接入及 E3 保持待验收。
