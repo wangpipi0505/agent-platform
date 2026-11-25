@@ -26,6 +26,10 @@ IAM 集成短票由 authority-service 签发，绑定接入凭据的策略摘要
 
 任务详情、增量事件与结果读取使用任务业务号。读取要求当前验签凭据与任务的租户、应用、业务系统相符，主体为任务所有者，且当前标签覆盖任务受理时记录的标签。事件增量可传 `afterSeq` 和 `limit`，每项至多一次。任务存量缺接入归属、身份跨边界或标签不足时统一返回 403 `APP_BINDING_DENIED`。平台授权行不参与此判断。
 
+集成任务成功后，任务结果的 `artifacts[]` 可返回引擎生成的结果文件回执。回执含 `artifactId`、`runId`、`downloadPath`、`mediaType`、`bytes`、`digest` 和 `publishedDigest`。文件是已提交运行输出的规范化 UTF-8 JSON，文件 SHA-256 与任务完成时封存的结果摘要一致。发布摘要独立标识运行锁定的发布版本。缺少已提交输出或一致性校验失败时不交付文件。
+
+宿主使用当前集成票或该凭据的直连 ApiKey 访问回执中的 `GET /v1/runs/{runId}/artifacts/{artifactId}/download`，并用实际下载字节复核长度和 SHA-256。成功响应为附件，强 ETag 为引号包裹的文件摘要。引擎只接收自己命名空间内、与运行号配对的任务结果文件，下载重新核验当前策略、归属和标签。技能产物仍由技能服务的既有下载路径处理。
+
 集成 `AGENT_ADMIN` 可通过 `POST /v1/tasks/{taskId}/cancel` 中断同租户、同应用及同业务系统的任务运行。请求可省略正文或传空 JSON 对象。响应只有任务号和状态。仍在途而关联运行不可中断时返回 409 `TASK_NOT_RUNNING`。中断与业务审计同事务提交，跨边界拒绝也记录审计，台账约定的 `audit.read` 可经 `GET /admin/audit` 查询。
 
 ## 2. 业务源码免改分级（L0～L3）
