@@ -34,6 +34,8 @@ class RunSchedulerReviewPostgresTest {
     @BeforeEach
     void clean() {
         TracePostgresTest.db.update("delete from engine.chat_turn");
+        // Reset the append-only event fixture before removing its parent sessions.
+        TracePostgresTest.db.execute("truncate table engine.session_event");
         TracePostgresTest.db.update("delete from engine.chat_session");
         fixture.clean();
         store = TracePostgresTest.store;
