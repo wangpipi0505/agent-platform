@@ -97,11 +97,14 @@ public final class TrustedJwtDecoder implements JwtDecoder,AutoCloseable {
             var expires = jwt.getExpiresAt();
             if (!"integration".equals(jwt.getClaimAsString("token_use"))
                     || !List.of(IntegrationSource.AUDIENCE).equals(jwt.getAudience())
+                    || !issuer.equals(jwt.getClaimAsString("iss"))
                     || issued == null || expires == null || jwt.getNotBefore() == null
-                    || issued.isAfter(clock.instant()) || !expires.isAfter(clock.instant())
+                    || issued.isAfter(clock.instant())
                     || jwt.getNotBefore().isBefore(issued) || !expires.isAfter(issued)
                     || expires.isAfter(issued.plusSeconds(config.authority().maxTicketSeconds())))
                 return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "JWT_PROFILE_INVALID", null));
+            if (!expires.isAfter(clock.instant()))
+                throw new PlatformException(401, "INTEGRATION_TICKET_EXPIRED", "集成短票已过期，请重新出票");
             return OAuth2TokenValidatorResult.success();
         }));
         return decoder;

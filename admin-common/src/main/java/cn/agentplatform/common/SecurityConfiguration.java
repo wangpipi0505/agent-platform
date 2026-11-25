@@ -7,6 +7,7 @@ import cn.agentplatform.common.authority.AuthorityDecoders;
 import cn.agentplatform.common.authority.AuthorityProperties;
 import cn.agentplatform.common.authority.CoverageGate;
 import cn.agentplatform.common.authority.IamStartupGate;
+import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 import cn.agentplatform.common.authority.ServiceAuthorization;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.common.authority.ServiceTrustChain;
@@ -295,10 +296,10 @@ public class SecurityConfiguration {
                         })
                 .exceptionHandling(x -> x
                         .authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
-                        .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403")))
+                        .accessDeniedHandler((request, response, error) -> accessDenied(request, response, deployment)))
                 .oauth2ResourceServer(
                         x -> x.authenticationEntryPoint((request, response, error) -> authError(response, 401, "SYS-AUTH-401"))
-                                .accessDeniedHandler((request, response, error) -> authError(response, 403, "SYS-AUTH-403"))
+                                .accessDeniedHandler((request, response, error) -> accessDenied(request, response, deployment))
                                 .jwt(j -> j.decoder(decoder).jwtAuthenticationConverter(converter)))
                 .build();
     }
@@ -309,6 +310,24 @@ public class SecurityConfiguration {
                 && "127.0.0.1".equals(request.getLocalAddr()) && "127.0.0.1".equals(request.getRemoteAddr())
                 && request.getContextPath().isEmpty() && request.getQueryString() == null
                 && "GET".equals(request.getMethod()) && "/actuator/prometheus".equals(request.getRequestURI());
+    }
+
+    private static void accessDenied(HttpServletRequest request, HttpServletResponse response,
+            AuthorityProperties deployment) throws IOException {
+        if ("iam".equals(deployment.mode()) && "gateway".equals(deployment.serviceId())
+                && request.getRequestURI().startsWith("/v1/")) {
+            var source = IntegrationRuntimeRoutes.currentSource();
+            if (source != null) {
+                // Record the authenticated credential and a path digest. Never log a header or request body.
+                org.slf4j.LoggerFactory.getLogger("agent.integration.audit").warn(
+                        "AUDIT INTEGRATION_PATH_FORBIDDEN credential={} method={} pathSha256={} traceId={}",
+                        source.getClaim("credential_id"), request.getMethod(),
+                        Digest.sha256(request.getRequestURI()), org.slf4j.MDC.get("traceId"));
+                authError(response, 403, "APP_BINDING_DENIED");
+                return;
+            }
+        }
+        authError(response, 403, "SYS-AUTH-403");
     }
 
     /** Explicit downstream entry; its decoder belongs to the service trust domain. */
