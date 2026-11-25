@@ -78,3 +78,7 @@ E2 并发 PLAN 与 AGENT 暴露 `bizSystemCode` 将门户账号误判为外部�
 ## E2 模型用量对账
 
 在目标数据库对同一运行关联引擎终态与 `model.call_log`。正式评测记录为 `EVALUATION`，用量 50/12/62。已发布应用的执行记录为 `FORMAL`，用量 48/17/65。两条均使用供应商 1、条目 1，模型网关状态 `SUCCEEDED`，用量对账 `RECONCILED`。第三方原始请求 ID 与上游用量见本轮主入口模型联验记录。
+
+## E2 目录检索补线
+
+真实管理员的 `auth.grant` 已生效，主入口 `GET /admin/platform-authorization/users?q=admin` 仍返回 503，原因是 E2 旧编排的 app-management 缺目录 URL、租户与搜索凭据引用。现有 user-mgmt 测试凭据实际读取用户列表及目标主体成功。为独立 app-management 注入测试目录引用后，经 E2 替代网关验证用户检索、授权读回均为 200，匹配一个活动用户。日志标记 `R22_E2_ISOLATED_DIRECTORY_SEARCH_PASS`。主入口随候选修复一起切换，避开正在运行的长稳采样。

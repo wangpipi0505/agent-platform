@@ -15,6 +15,8 @@ E2 使用内置 authority-service 时，为同一次 Maven 构建产出七个后
 
 E2 真实登录联验在部署环境里设置 `AGENT_AUTHORITY_IDENTITY_ENABLED=true`，并提供已配置的 user-mgmt 地址、租户和主体查询密钥引用。需要 R-37 委派时单独启用 `AGENT_AUTHORITY_DELEGATION_ENABLED`。测试票开关 `AGENT_AUTHORITY_TEST_TICKET_ENABLED` 默认关闭。
 
+E2 管理台检索用户还需为 app-management 配置同租户的 `AGENT_AUTHORITY_IDENTITY_URL`、`AGENT_AUTHORITY_IDENTITY_TENANT` 和 `AGENT_PLATFORM_USER_SEARCH_KEY_REF`。检索凭据应可读取 user-mgmt 的用户列表与指定主体身份。现行 Compose 支持 `env:AGENT_SECRET_PLATFORM_USER_SEARCH` 引用，凭据值由部署环境注入。
+
 ## 本地独立容器验收候选
 
 `compose.yaml` 使用独立项目名，业务、telemetry、ops 内部网络分离。后端的外部依赖网络、vault/观测持久卷均必须由运维预先创建成**全新的专用资源**并显式填名；不寻找或连接任何已有项目资源，也不把本机 bootstrap 的 loopback 实例直接当成容器依赖。不得配置 `host.docker.internal` 复用旧实例。
