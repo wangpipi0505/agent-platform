@@ -24,3 +24,5 @@ docker stats --no-stream --format '{{json .}}' codex-r32-gateway codex-r32-app c
 - [JVM RSS 源数据](jvm-rss-range.json)和[独立曲线](jvm-rss.png)
 
 E2 目标环境镜像部署与 PR-D 业务负载复测待执行。
+
+本机六个应用容器继续运行后，查询 `up{job="platform-services"}` 最近两小时的 15 秒区间采样。每个目标均有 481 个评估点，全部为 1。窗口起止时间见 [两小时抓取汇总](scrape-two-hours.json)。该窗口验证指标端连续可抓取，PR-D 的真实业务长稳需在目标环境另验。
