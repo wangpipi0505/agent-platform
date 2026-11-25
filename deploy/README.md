@@ -9,7 +9,11 @@
 - `Dockerfile.backend` 接收独立工程已打包的可执行 Spring Boot JAR；Java 构建镜像使用 Temurin 21 JDK、运行镜像使用 Temurin 21 JRE（含 `/bin/sh`、`sha256sum`），由运维注入真实 `@sha256:` 引用。Boot 仍为工程锁定的 3.5.0。
 - `Dockerfile.frontend` 用 Node 22（Debian 版）执行 lockfile `npm ci`；Nginx 官方 Alpine 镜像需包含 BusyBox `wget`。构建与运行基镜像同样要求真实 digest。门户 base 为 `/console/`，WebApp 为 `/w/`；`/admin/*` 保留管理API，页面刷新不会与API或另一端的assets冲突。WebApp入口为 `/w/:appCode`。
 - 助手产物为 `/assistant.js`，另提供 `/embed/assistant.<SHA256>.js` 与 `/embed/manifest.txt`；嵌入时使用带摘要的路径。动态 `/embed/ticket` 经 gateway，不能由静态站点生成权限票据。
-- `build-images.ps1` 的四个必填基镜像参数校验 digest 格式，仅执行本地构建、不推送。调用前需在专用构建环境完成 Maven 打包，并执行 `download-tools.ps1`。本轮未运行构建脚本。
+- `build-images.ps1` 的四个必填基镜像参数校验 digest 格式，仅执行本地构建、不推送。调用前需在专用构建环境完成 Maven 打包，并执行 `download-tools.ps1`。
+
+E2 使用内置 authority-service 时，为同一次 Maven 构建产出七个后端 jar，并给 `build-images.ps1` 加 `-IncludeAuthority`。可通过 E2 环境文件的 `AUTHORITY_SERVICE_IMAGE` 选择对应候选镜像。authority 的容器就绪探针读取回环 JWKS，业务服务探针继续使用各自的管理端口。
+
+E2 真实登录联验在部署环境里设置 `AGENT_AUTHORITY_IDENTITY_ENABLED=true`，并提供已配置的 user-mgmt 地址、租户和主体查询密钥引用。需要 R-37 委派时单独启用 `AGENT_AUTHORITY_DELEGATION_ENABLED`。测试票开关 `AGENT_AUTHORITY_TEST_TICKET_ENABLED` 默认关闭。
 
 ## 本地独立容器验收候选
 

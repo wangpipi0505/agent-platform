@@ -70,18 +70,20 @@ services:
 
   authority-service:
     network_mode: host
-    image: agent-platform-v12/authority-service:0.1.0
+    image: ${AUTHORITY_SERVICE_IMAGE:-agent-platform-v12/authority-service:0.1.0}
     container_name: agent-platform-authority
     restart: unless-stopped
     environment:
       SERVER_PORT: "18086"
+      SPRING_PROFILES_ACTIVE: test
       AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-IAM_SCOPE_ACCEPTED}
       AGENT_BIND_ADDRESS: 127.0.0.1
       AGENT_AUTHORITY_ISSUER: http://127.0.0.1:18086
       AGENT_AUTHORITY_KEY_PATH: /run/secrets/authority-rsa.pem
       AGENT_AUTHORITY_KID: "2026-10"
-      AGENT_AUTHORITY_TEST_TICKET_ENABLED: "true"
+      AGENT_AUTHORITY_TEST_TICKET_ENABLED: ${AGENT_AUTHORITY_TEST_TICKET_ENABLED:-false}
       AGENT_AUTHORITY_DELEGATION_ENABLED: ${AGENT_AUTHORITY_DELEGATION_ENABLED:-false}
+      AGENT_AUTHORITY_IDENTITY_ENABLED: ${AGENT_AUTHORITY_IDENTITY_ENABLED:-false}
       AGENT_AUTHORITY_IDENTITY_URL: ${AGENT_AUTHORITY_IDENTITY_URL:-}
       AGENT_AUTHORITY_IDENTITY_TENANT: ${AGENT_AUTHORITY_IDENTITY_TENANT:-local-v12}
       AGENT_AUTHORITY_IDENTITY_SUBJECT_KEY_REF: ${AGENT_AUTHORITY_IDENTITY_SUBJECT_KEY_REF:-}
@@ -95,6 +97,13 @@ services:
       TZ: Asia/Shanghai
     secrets:
       - authority-rsa.pem
+    # 签发服务只开放 JWKS，业务服务的 Actuator 就绪探针不适用。
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/opt/health", "HealthProbe", "http://127.0.0.1:18086/.well-known/jwks.json"]
+      interval: 15s
+      timeout: 4s
+      start_period: 60s
+      retries: 3
 
   platform-gateway:
     network_mode: host

@@ -19,3 +19,13 @@
 - `docker compose -f <配置> config --no-interpolate --no-env-resolution -q` 通过，共检查正式、测试和 E1 三份配置，以及测试栈叠加观测配置。
 - `python deploy/validate.py` 通过。先从官方版下载缺失的固定版本 Schema 并核对仓库固定 SHA-256，再确认 43 个 Kubernetes 对象、12 个加固工作负载及 3 项拒绝断言。 `python deploy/test-static.py` 通过，探针区分 200 与 503，可变镜像及未签认的 IAM 发布门禁被拒绝。
 - E2 复测与上表一致。当前 SSH 仍返回 Permission denied。本机 Docker 仅完成配置解析，Linux Engine 未运行。正式新镜像部署、真实登录后的业务复验、两小时长稳及 E3 仍待执行。
+
+## E2 可传输候选镜像与容器复验
+
+E2 的 Compose 已补齐 authority 的 test profile、真实目录启用开关及独立的测试票开关。默认关闭测试出票，authority 使用回环 JWKS 就绪探针。业务服务在分离的管理端口继续使用原就绪探针。构建脚本支持 `-IncludeAuthority`，E2 可使用 `AUTHORITY_SERVICE_IMAGE` 指定新版本。部署门禁保持原配置。
+
+本机 Docker Linux 引擎使用已打包的 JDK 21 后端和四个固定摘要的基础镜像，构建七个后端镜像及 portal 前端镜像。使用隔离网络命名空间、PG、Redis 和一次性密钥运行八个候选镜像。八个容器均 healthy，authority JWKS 返回 200，默认测试出票返回 404。前端控制台、工作台和嵌入清单返回 200，无票会话返回 401。原始状态见 `e2-container-smoke.txt`。首次容器复验的本地夹具缺少正确的 IAM 算法配置，修正本地夹具后复跑通过。
+
+`deploy/test-static.py` 先复现旧 Compose 缺少 authority profile 的失败，再验证新配置与拒绝用例通过。八个镜像通过 `docker image save --platform linux/amd64` 导出为本地候选包，验过压缩包清单中的八个标签以及整个 tar 的 SHA-256。镜像标识和包摘要见 `e2-candidate-images.txt`。
+
+E2 上 `server609` 解析至 `192.168.1.2`。严格校验既有主机密钥后，项目记载的 SSH 别名与直连两条路径均到达服务器，客户端鉴权被拒绝。E2 现网镜像尚未替换，真实目录和供应商复验、带业务负载的两小时长稳以及 E3 环境验收仍待执行。

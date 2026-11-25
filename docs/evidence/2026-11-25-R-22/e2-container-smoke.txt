@@ -1,0 +1,19 @@
+# 2026-11-25 isolated Docker Linux runtime verification
+app healthy
+authority healthy
+engine healthy
+frontend healthy
+gateway healthy
+model healthy
+monitor healthy
+skill healthy
+200 GET http://127.0.0.1:18086/.well-known/jwks.json
+404 GET http://127.0.0.1:18086/actuator/health/readiness
+404 POST http://127.0.0.1:18086/test/tickets
+200 GET http://127.0.0.1:18091/healthz
+200 GET http://127.0.0.1:18091/console/
+200 GET http://127.0.0.1:18091/w/
+200 GET http://127.0.0.1:18091/embed/manifest.txt
+401 GET http://127.0.0.1:18091/auth/session
+404 GET http://127.0.0.1:18091/auth/dev-token
+PASS E2-compatible eight-image isolated container suite

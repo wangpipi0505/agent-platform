@@ -1,6 +1,7 @@
 """Runnable negative release checks and Java HTTP-probe behavior; no containers/cluster."""
 from pathlib import Path
 import http.server
+import json
 import os
 import re
 import subprocess
@@ -20,7 +21,28 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 
 
+def check_e2_authority():
+    result = subprocess.run(
+        ['docker', 'compose', '-f', 'deploy/compose-test.yaml', 'config',
+         '--no-interpolate', '--no-env-resolution', '--format', 'json'],
+        cwd=ROOT, check=True, capture_output=True,
+    )
+    authority = json.loads(result.stdout)['services']['authority-service']
+    environment = authority['environment']
+    assert environment.get('SPRING_PROFILES_ACTIVE') == 'test', 'E2 IAM requires the existing test profile'
+    assert (
+        environment.get('AGENT_AUTHORITY_IDENTITY_ENABLED') == '${AGENT_AUTHORITY_IDENTITY_ENABLED:-false}'
+    ), 'E2 must forward the opt-in identity switch'
+    assert (
+        environment.get('AGENT_AUTHORITY_TEST_TICKET_ENABLED') == '${AGENT_AUTHORITY_TEST_TICKET_ENABLED:-false}'
+    ), 'E2 test tickets require a separate opt-in'
+    assert authority.get('healthcheck', {}).get('test') == [
+        'CMD', 'java', '-cp', '/opt/health', 'HealthProbe', 'http://127.0.0.1:18086/.well-known/jwks.json',
+    ], 'E2 authority must probe its registered JWKS endpoint'
+
+
 def main():
+    check_e2_authority()
     (ROOT / '.local').mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='deployment-check-', dir=ROOT / '.local') as name:
         temporary = Path(name)
@@ -49,7 +71,7 @@ def main():
             result = subprocess.run(['pwsh', '-NoProfile', '-File', str(ROOT / 'deploy/check-release.ps1'), '-EnvFile', str(env)], cwd=ROOT, capture_output=True, text=True, encoding='utf-8', errors='replace')
             expected = 'Explicit non-placeholder image digest' if mode == 'mutable-image' else 'IAM/service scope acceptance gate is blocked'
             assert result.returncode != 0 and expected in result.stdout + result.stderr, f'{mode} must fail before deployment'
-    print('PASS: HTTP readiness 200/503 behavior; mutable-image release rejected; IAM-blocked release rejected. No daemon/cluster accessed.')
+    print('PASS: E2 authority profile, opt-in gates and JWKS probe; HTTP readiness 200/503; mutable-image and IAM-blocked releases rejected. No daemon/cluster accessed.')
 
 
 if __name__ == '__main__':
