@@ -70,3 +70,11 @@ E2 并发 PLAN 与 AGENT 暴露 `bizSystemCode` 将门户账号误判为外部�
 - Engine 配置摘要 `6944861286d5c5845e3b09229d22f315bb9811841d124ccd8393b089ada7bb6b`。前端候选配置摘要 `0de3b72f20245bf61fd53fbaff7ddbf91754629b0a30c9d15b9ac81a41f59415`。E2 兼容 Nginx 运行镜像配置摘要 `007f8f07ae40819ed4c80b7008a70ecead544cef935b8f3711f4b7725c1178`。
 - 独立 PG、Redis、Engine 与替代网关启动，19182、19180 的 readiness 200。真实目录签发门户票，经 19090 两次提交同参 PLAN 均 200，`task-af2861e362a2477d8fc1` 为 `ACCEPTED`，隔离数据库只生成一行。
 - 替代前端只监听回环 19191，`/healthz`、`/console/`、`/w/`、`/embed/manifest.txt` 均 200。E2 阶段日志标记 `R22_E2_RUNTIME_FIXES_REHEARSAL_PASS`。
+
+## PR-C 回退与幂等复测
+
+使用 E2 切换前的 `pg-before-cutover.dump`，在专用 PostgreSQL 中生成升级库与独立回退库。回退库的逻辑 SQL 摘要与升级前基准完全一致，摘要 `c30d602e88ef709535d6f5b2aa960f2e9e615caf02e2d9e813b3ed2b08e4a8ec`。五服务迁移至 app V127、engine V236、skill V322、model V306、monitor V506 后重启这组隔离容器。五端口 readiness 全部 200，Flyway 迁移版本、序号和校验值的摘要 `26ba2e87938cc58adb0da7baf843122e360c47f45e7077dca0d49fda387754eea` 一致。E2 日志标记 `E2_PR_C_ROLLBACK_AND_IDEMPOTENCE_PASS`。
+
+## E2 模型用量对账
+
+在目标数据库对同一运行关联引擎终态与 `model.call_log`。正式评测记录为 `EVALUATION`，用量 50/12/62。已发布应用的执行记录为 `FORMAL`，用量 48/17/65。两条均使用供应商 1、条目 1，模型网关状态 `SUCCEEDED`，用量对账 `RECONCILED`。第三方原始请求 ID 与上游用量见本轮主入口模型联验记录。
