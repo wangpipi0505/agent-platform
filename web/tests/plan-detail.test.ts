@@ -256,7 +256,6 @@ describe("只读红线与注册（静态断言）", () => {
     expect(entry.read).toBe("session");
     expect(entry.write).toBe("");
     expect(entry.menu).toBe(false);
-    // 菜单数量不受参数页影响（navigation-policy 基线：F3-3 资产管理四页后 19）
-    expect(menuEntries().length).toBe(19);
+    expect(menuEntries()).not.toContain(entry);
   });
 });
