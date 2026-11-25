@@ -1,0 +1,40 @@
+# 2026-11-25 E2 product-chain probes (Asia/Shanghai)
+# Candidate branch a417765e, primary frontend 18091, real user-mgmt demo/admin
+
+# Unclassified synthetic draft
+POST /admin/evaluations HTTP 200
+report er_2112a409-8324-4780-b1f4-c0af6f55246a RUNNING
+engine run r_6be494b27cea4d108c0b33bb2801de80 RUNNING, AGENT node RUNNING
+authority decision model.chat-stream: permit
+model-gateway FrozenModelBindingVerifier:132: SYS-EGRESS-4031
+engine.run_authority later blocked_reason=AUTHORITY_DENIED
+
+# New synthetic draft r22e2-real-v2, config.requiredLabels=["public"]
+POST /admin/evaluations HTTP 200
+GET /admin/evaluations/er_14d21387-ac1e-4b0c-9f1d-f3d368fd01ae HTTP 200 status=ACCEPTED
+engine run r_6e6e8f9a327746d1b2724d701daeb22d SUCCEEDED usage=50/12/62
+POST /admin/apps/r22e2-real-v2/publish/precheck HTTP 200
+precheck pc_f36bc46f-a509-4544-b6df-224f483e6ddf passed=true
+precheck evalReportId=er_14d21387-ac1e-4b0c-9f1d-f3d368fd01ae
+POST /admin/apps/r22e2-real-v2/publish/commit HTTP 200 version=1
+GET /admin/apps/r22e2-real-v2/versions/1 HTTP 200 modelEntryId=1 modelRefs=1
+
+# Published AGENT task
+POST /v1/apps/r22e2-real-v2/tasks HTTP 200 task=task-e3a02b8c67a84a1990f8 initial=QUEUED
+Same request POST HTTP 200, same task ID
+GET /v1/apps/r22e2-real-v2/tasks HTTP 200
+PG engine.task task-e3a02b8c67a84a1990f8 SUCCEEDED populated result_digest
+PG engine.run r_72c5dd5abc9c493caa37cc4e8db84021 CHAT SUCCEEDED usage=48/17/65
+RUN_STARTED=1 NODE_STARTED=1 MODEL_DISPATCHED=1 LOGIC_RESULT_COMMITTED=1 NODE_FINISHED=1 RUN_FINISHED=1
+
+# Separate portal paths observed on the same primary entrance
+POST /v1/apps/r22e2-real-v2/sessions HTTP 200
+POST /v1/apps/r22e2-real-v2/sessions/{id}/turns HTTP 403 SYS-AUTH-403
+POST /admin/apps/r22e2-real-v2/sessions HTTP 403 SYS-AUTH-403
+POST /admin/apps/r22e2-real-v2/runs HTTP 503 PUBLISHED_RUN_UNAVAILABLE
+GET /admin/runs/r_72c5dd5abc9c493caa37cc4e8db84021 HTTP 403 SYS-AUTH-403
+
+# PR-D running baseline. The full 7200-second result is pending.
+R22_STABILITY_START time=1795616436 duration=7200
+2026-11-25 22:20:36 +0800 -> scheduled finish 2026-11-26 00:20:36 +0800
+r22-stability-1795616436-0,task-5b5824b72f8241f5a339,SUCCEEDED
