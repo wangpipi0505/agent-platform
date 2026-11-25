@@ -1,5 +1,6 @@
 package cn.agentplatform.common.authority;
 
+import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Digest;
 
 import java.util.Set;
@@ -47,5 +48,17 @@ public final class PortalRuntimeRoutes {
                 && "app-version".equals(resource.kind())
                 && resource.id().matches(Pattern.quote(code) + "@[1-9][0-9]*")
                 && resource.versionDigest().matches("[0-9a-f]{64}");
+    }
+
+    /** Directory attributes can appear on portal users, so only the bound route proves its source. */
+    public static boolean currentTaskStartMatches(String code, Actor actor) {
+        var current = AuthorityContext.currentIfBound();
+        return current != null
+                && current.actor().equals(actor)
+                && "gateway".equals(current.caller())
+                && "engine".equals(current.call().target())
+                && "PORTAL".equals(current.operation().sourceKind())
+                && "PORTAL".equals(current.operation().originKind())
+                && isPinnedTaskCall(current.call(), code);
     }
 }

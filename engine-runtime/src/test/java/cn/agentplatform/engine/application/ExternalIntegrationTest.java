@@ -37,8 +37,8 @@ import java.util.*;
  * 403+审计由 platform-gateway IntegrationSecurityTest 断言——引擎侧本测试如实断言目录行标志）；
  * 无附件任务的 result 端点返回完整形状 {taskId,state,result?,resultSummary?,artifacts?}。
  *
- * <p>外部 caller 判定与生产一致：attributes.bizSystemCode（网关 IntegrationPolicy.clip 唯一
- * 写入点，照 RunStatistics 外部集成判别式）。端点行为经 standalone MockMvc 真实 Controller
+ * <p>旧版外部票据夹具使用 attributes.bizSystemCode，与网关 IntegrationPolicy.clip 保持一致。
+ * 已委派的门户来源边界由 PortalTaskModeTest 覆盖。端点行为经 standalone MockMvc 真实 Controller
  * 调用（先例 TaskEventsSseTest/SessionEventsEndpointTest）。
  *
  * <p>夹具 tenant='engine-test'（共享测试库约定租户，清理照 TasksApiTest）+ h215_% 前缀双向
@@ -275,7 +275,7 @@ class ExternalIntegrationTest {
     // ------------------------------------------------- 验收 4：白名单外路径——目录行 integrationAllowed=false
 
     /**
-     * 白名单外任务端点（cancel/resume/事件SSE/步骤调用/对账/计划/execute）以 authority 目录行
+     * 白名单外任务端点（resume/事件SSE/步骤调用/对账/计划/execute）以 authority 目录行
      * integrationAllowed=false 承接（如实说明：引擎侧断言目录行标志；全栈 403+审计由
      * platform-gateway IntegrationSecurityTest 对 IntegrationPolicy.allowedPath 断言）。
      */
@@ -284,13 +284,14 @@ class ExternalIntegrationTest {
         try (var input = getClass().getResourceAsStream("/agent-service-authority.json")) {
             assertNotNull(input, "agent-service-authority.json 必须在测试类路径上（admin-common 依赖）");
             var catalog = Json.read(new String(input.readAllBytes(), StandardCharsets.UTF_8), JsonNode.class);
-            // 四端点白名单（integrationAllowed=true）——动作必须指向本端点委派。
+            // R-40 增加受控中断。目录仅允许委派，实际中断还须核验同软件、同应用和管理员。
             for (String[] whitelisted :
                     new String[][] {
                         {"POST", "/v1/apps/{code}/tasks", "proxy.engine.post.TaskController.create"},
                         {"GET", "/v1/tasks/{taskId}", "proxy.engine.get.TaskController.detail"},
                         {"GET", "/v1/tasks/{taskId}/result", "proxy.engine.get.TaskController.result"},
-                        {"GET", "/v1/tasks/{taskId}/events", "proxy.engine.get.TaskController.events"}
+                        {"GET", "/v1/tasks/{taskId}/events", "proxy.engine.get.TaskController.events"},
+                        {"POST", "/v1/tasks/{taskId}/cancel", "proxy.engine.post.TaskController.cancel"}
                     }) {
                 var rows = taskRows(catalog, whitelisted[0], whitelisted[1]);
                 assertEquals(1, rows.size(), whitelisted[1] + " 必须恰登记一行: " + rows);
@@ -305,7 +306,6 @@ class ExternalIntegrationTest {
             for (String[] rejected :
                     new String[][] {
                         {"GET", "/v1/tasks/{taskId}/events/stream"},
-                        {"POST", "/v1/tasks/{taskId}/cancel"},
                         {"POST", "/v1/tasks/{taskId}/resume"},
                         {"GET", "/v1/tasks/{taskId}/steps/{stepId}/calls"},
                         {"POST", "/v1/tasks/{taskId}/steps/{stepId}/calls/{callId}/reconcile"},

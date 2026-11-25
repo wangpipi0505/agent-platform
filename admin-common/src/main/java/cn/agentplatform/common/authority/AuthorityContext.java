@@ -33,6 +33,9 @@ public final class AuthorityContext implements AutoCloseable {
         try{if(frame.mapping.hasInitialProof())frame.mapping.requireVerified();return frame.mapping.current();}
         catch(RuntimeException e){frame.invalidated=true;throw e;}
     }
+    static VerifiedAuthority currentIfBound() {
+        return CURRENT.get() == null ? null : current();
+    }
     static AuthorityContext bind(VerifiedAuthority value,Supplier<VerifiedAuthority> refresh){
         Objects.requireNonNull(refresh);return bindRetained(RetainedAuthorization.currentOnly(value),()->RetainedAuthorization.currentOnly(refresh.get()));
     }

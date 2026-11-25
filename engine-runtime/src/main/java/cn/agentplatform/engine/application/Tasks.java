@@ -7,6 +7,7 @@ import cn.agentplatform.common.Roles;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope;
 import cn.agentplatform.common.authority.IntegrationTaskRoutes;
+import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.engine.infra.TraceStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -186,7 +187,7 @@ public class Tasks {
     if (!Set.of("PLAN", "AGENT").contains(mode))
       throw new PlatformException(400, "PARAM_MODE_REQUIRED", "mode 必须为 PLAN 或 AGENT");
     // T2-15：SERVICE 票据面首期仅 AGENT（接口稿 §6 权限矩阵 SERVICE 列——评审十六/十七轮）。
-    if (externalIntegrationCaller(actor) && !"AGENT".equals(mode)) {
+    if (!"AGENT".equals(mode) && externalIntegrationCaller(code, actor)) {
       // 引擎无独立审计表（审计归口 monitor）；照 ChatSessions 先例落结构化拒绝审计日志行。
       org.slf4j.LoggerFactory.getLogger(Tasks.class)
               .warn(
@@ -1273,8 +1274,10 @@ public class Tasks {
    * clip 后才换发票据转发），门户用户票不含该属性——与 RunStatistics 按
    * {@code guard_ctx->'attributes'->'bizSystemCode'} 识别外部集成是同一判别式。
    */
-  static boolean externalIntegrationCaller(Actor actor) {
-    return !actor.attributes().getOrDefault("bizSystemCode", Set.of()).isEmpty();
+  private static boolean externalIntegrationCaller(String code, Actor actor) {
+    // Legacy integration tickets retain the original attribute check.
+    return !actor.attributes().getOrDefault("bizSystemCode", Set.of()).isEmpty()
+            && !PortalRuntimeRoutes.currentTaskStartMatches(code, actor);
   }
 
   private void appendTaskEvent(long taskId, String type, JsonNode payload) {
