@@ -58,11 +58,13 @@ public final class InitialChatRules {
         if(config.has("requiredLabels")){var labels=config.path("requiredLabels");if(!labels.isArray()||labels.size()>256)throw denied();for(var label:labels)if(!label.isTextual()||label.textValue().isBlank()||label.textValue().length()>256)throw denied();}
         var dependencies=snapshot.path("dependencyVersions");if(!dependencies.isObject()||!dependencies.path("modelRefs").isArray()||dependencies.path("modelRefs").size()!=1)throw denied();
         boolean template="TEMPLATE".equals(config.path("promptSource").asText());
-        if (config.has("promptSource") && !template && !evaluation) throw promptMismatch();
+        boolean direct="DIRECT".equals(config.path("promptSource").asText());
+        if (config.has("promptSource") && !template && !direct) throw promptMismatch();
+        if (direct && !evaluation) requireCandidateDigest(snapshot);
         dependencies.fieldNames().forEachRemaining(k->{
             if(k.equals("modelRefs"))return;
             if(template&&k.equals("frozenPrompts"))return;
-            if((template||evaluation)&&k.equals("skillRefs")&&dependencies.path(k).isArray()&&dependencies.path(k).isEmpty())return;
+            if((template||direct||evaluation)&&k.equals("skillRefs")&&dependencies.path(k).isArray()&&dependencies.path(k).isEmpty())return;
             throw denied();
         });
         if(positive(dependencies.path("modelRefs").get(0).path("modelEntryId"))!=entry)throw denied();
@@ -126,15 +128,19 @@ public final class InitialChatRules {
                 ||!sha.equals(prompt.path("sha256").asText())||!"PUBLISHED".equals(prompt.path("status").asText())
                 ||!prompt.path("content").isTextual()||!prompt.path("variables").isArray()
                 ||!prompt.path("outputContract").isObject())throw promptMismatch();
-        var candidate=new LinkedHashMap<String,Object>();
-        for(String key:List.of("appCode","type","name","description","domain","bizCategory","tags","config","definition"))
-            candidate.put(key,snapshot.path(key));
-        if(!Digest.sha256(Json.canonical(candidate)).equals(snapshot.path("candidateSha256").asText())
-                ||!sha.equals(Digest.sha256(Json.canonical(Map.of("content",prompt.path("content"),
+        requireCandidateDigest(snapshot);
+        if(!sha.equals(Digest.sha256(Json.canonical(Map.of("content",prompt.path("content"),
                         "variables",prompt.path("variables"),"outputContract",prompt.path("outputContract"))))))throw promptMismatch();
         var result=(com.fasterxml.jackson.databind.node.ObjectNode)config.deepCopy();
         result.set("frozenPrompts",frozen.deepCopy());
         return result;
+    }
+    private static void requireCandidateDigest(JsonNode snapshot) {
+        var candidate = new LinkedHashMap<String, Object>();
+        for (String key : List.of("appCode", "type", "name", "description", "domain", "bizCategory", "tags", "config", "definition"))
+            candidate.put(key, snapshot.path(key));
+        if (!Digest.sha256(Json.canonical(candidate)).equals(snapshot.path("candidateSha256").asText()))
+            throw promptMismatch();
     }
     private static PlatformException promptMismatch(){return new PlatformException(409,"PROMPT_TEMPLATE_SNAPSHOT_MISMATCH","冻结模板正文与候选中的精确版本摘要不一致");}
     public static void requireAgent(JsonNode definition,Object nodeDef,Object nodeType,long step){

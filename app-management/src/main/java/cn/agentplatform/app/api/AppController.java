@@ -163,6 +163,10 @@ public class AppController {
     @PostMapping("/admin/apps/{code}/publish/commit")
     public Object commit(@PathVariable String code, @RequestBody Map<String, Object> b) {
         require(PlatformAccessService.PUBLISH, code);
+        if (iam()) {
+            EvaluationCandidateBinding.requirePublication(code, "gateway", "app",
+                    EvaluationCandidateBinding.COMMIT_ACTION);
+        }
         return ApiResponse.ok(apps.commit(code, b));
     }
 

@@ -43,6 +43,21 @@ class PromptTemplateSourceTest {
 
     static JsonNode inputs() { return Json.tree(Map.of("topic", "实际问题", "legacy", "历史首段")); }
 
+    @Test void explicitDirectPublishedPromptMustMatchItsCandidateDigest() {
+        var snapshot = source();
+        var config = (ObjectNode) snapshot.path("config");
+        config.put("promptSource", "DIRECT").put("systemPrompt", "已发布的内联正文");
+        config.remove("promptRefs");
+        var dependencies = (ObjectNode) snapshot.path("dependencyVersions");
+        dependencies.remove("frozenPrompts");
+        dependencies.putArray("skillRefs");
+        hash(snapshot);
+        assertDoesNotThrow(() -> InitialChatRules.requireSources(snapshot, inputs()));
+
+        config.put("systemPrompt", "被改写的内联正文");
+        assertThrows(PlatformException.class, () -> InitialChatRules.requireSources(snapshot, inputs()));
+    }
+
     @Test void explicitTemplateIsPrimaryWhileExistingInlineAndAppendOrderRemainUnchanged() {
         var snapshot = source();
         var config = (ObjectNode) snapshot.path("config").deepCopy();

@@ -59,6 +59,7 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         String path = request.getRequestURI();
         return switch (serviceId) {
             case "app" -> PlatformBuildRoutes.serves(serviceId, method, path) || IntegrationRuntimeRoutes.metadata(method, path);
+            case "engine" -> PortalRuntimeRoutes.matches(method, path);
             case "model", "skill" -> PlatformBuildRoutes.serves(serviceId, method, path);
             case "monitor" -> EvaluationCandidateBinding.portalTemplate(method, path) != null
                     || PlatformBuildRoutes.serves(serviceId, method, path);

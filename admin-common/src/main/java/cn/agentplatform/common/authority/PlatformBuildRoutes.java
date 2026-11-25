@@ -26,7 +26,7 @@ public final class PlatformBuildRoutes {
             rule("GET", "/admin/apps/" + CODE + "/versions/diff", "/admin/apps/{code}/versions/diff"),
             rule("GET", "/admin/apps/" + CODE + "/versions/[1-9][0-9]*", "/admin/apps/{code}/versions/{versionNo}"),
             rule("POST", "/admin/apps/" + CODE + "/publish/precheck", "/admin/apps/{code}/publish/precheck"),
-            rule("POST", "/admin/apps/" + CODE + "/publish/commit", "/admin/apps/{code}/publish/commit"),
+            rule("POST", "/admin/apps/" + CODE + "/publish/commit", EvaluationCandidateBinding.COMMIT_TEMPLATE),
             rule("GET", "/admin/apps/" + CODE + "/integration", "/admin/apps/{code}/integration"),
             rule("POST", "/admin/apps/" + CODE + "/integration/credentials", "/admin/apps/{code}/integration/credentials"),
             rule("PUT", "/admin/apps/" + CODE + "/integration/credentials/" + CODE,

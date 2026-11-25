@@ -110,7 +110,7 @@ public class GatewayController {
             if (buildTemplate != null) {
                 var source = GatewayIngressBoundary.claimRuntime(req);
                 var call = PlatformBuildRoutes.call(serviceRoutes, req.getMethod(), buildTemplate, source.subject());
-                if (EvaluationCandidateBinding.PRECHECK_TEMPLATE.equals(buildTemplate)) {
+                if (EvaluationCandidateBinding.publicationTemplate(buildTemplate)) {
                     String code = req.getRequestURI().split("/")[3];
                     call = new ServiceCall(call.target(), call.action(), EvaluationCandidateBinding.publication(code));
                 }

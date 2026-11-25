@@ -9,6 +9,8 @@ public final class EvaluationCandidateBinding {
     public static final String ROUTE = "/admin/evaluations";
     public static final String PRECHECK_TEMPLATE = "/admin/apps/{code}/publish/precheck";
     public static final String PRECHECK_ACTION = "proxy.app.post.AppController.precheck";
+    public static final String COMMIT_TEMPLATE = "/admin/apps/{code}/publish/commit";
+    public static final String COMMIT_ACTION = "proxy.app.post.AppController.commit";
     public static final String EVIDENCE_ACTION = "evaluation.accepted.read";
     public static final String KIND = "evaluation-candidate";
     public static final String REPORT_TEMPLATE = "/admin/evaluations/{id}";
@@ -40,6 +42,10 @@ public final class EvaluationCandidateBinding {
         MetadataSelectors.code(code);
         return new ResourceBinding("evaluation-publication", code,
                 Digest.sha256("evaluation-publication.v1:" + code));
+    }
+
+    public static boolean publicationTemplate(String template) {
+        return PRECHECK_TEMPLATE.equals(template) || COMMIT_TEMPLATE.equals(template);
     }
 
     public static VerifiedAuthority requirePublication(String code, String caller, String target, String action) {

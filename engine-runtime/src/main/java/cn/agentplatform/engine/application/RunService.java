@@ -534,8 +534,10 @@ public class RunService {
 
     private void requirePublishedFlow(JsonNode snapshot) { GraphRules.requirePublishedFlow(snapshot); }
 
-    private void requireFirstChat(JsonNode snapshot, JsonNode inputs) {
-        if (!publishedInitialEnabled || initialMaterials == null || initialChunks == null) throw RunAuthorityStore.denied();
+    private void requireFirstChat(JsonNode snapshot, JsonNode inputs, boolean admittedTask) {
+        // Direct AGENT tasks already hold a portal admission pinned to this published app version.
+        if ((!publishedInitialEnabled && !admittedTask) || initialMaterials == null || initialChunks == null)
+            throw RunAuthorityStore.denied();
         InitialChatRules.requireSources(snapshot, inputs);
         ModelInputMaterials.initialOutputPolicy(snapshot.path("config").path("output"));
         FrozenModels.reference(snapshot, InitialChatRules.entryId(snapshot));
@@ -808,7 +810,7 @@ public class RunService {
                 InitialChatRules.requireEvaluationSources(source, req.path("inputs"));
                 FrozenModels.reference(source, InitialChatRules.entryId(source));
                 ModelInputMaterials.initialOutputPolicy(source.path("config").path("output"));
-            } else if (firstChat) requireFirstChat(source, req.path("inputs"));
+            } else if (firstChat) requireFirstChat(source, req.path("inputs"), taskEntry != null);
             else if (protectedAdmission) requirePublishedFlow(source);
             final String actualTrigger =
                     trigger.equals("TASK") && source.path("type").asText().equals("CHAT")
