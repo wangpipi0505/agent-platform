@@ -132,7 +132,10 @@ public class RunScheduleRepository {
                                 "with renewable as (select id from engine.run where id=? and"
                                     + " dispatch_owner=? and dispatch_generation=? and"
                                     + " dispatch_until>clock_timestamp() and status not in"
-                                    + " ('SUCCEEDED','FAILED','CANCELLED') for update skip locked)"
+                                    + " ('SUCCEEDED','FAILED','CANCELLED') and not exists (select 1"
+                                    + " from engine.node_instance n join engine.model_invocation m on m.node_instance_id=n.id"
+                                    + " where n.run_id=engine.run.id and m.status='DISPATCHED'"
+                                    + " and m.source_request->>'manifestSha256' is not null) for update skip locked)"
                                     + " update engine.run r set dispatch_until=clock_timestamp()+(?"
                                     + " * interval '1 millisecond') from renewable n where"
                                     + " r.id=n.id",

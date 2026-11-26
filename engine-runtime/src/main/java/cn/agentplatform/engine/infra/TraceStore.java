@@ -1344,6 +1344,12 @@ public class TraceStore {
                 db.update("update engine.attempt set request_snapshot=?::jsonb where id=?", Json.write(frozen), attempt);
                 db.update("insert into engine.model_invocation(run_id,node_instance_id,round_no,kind,source_request,final_request,status,sdk_attempts,output_attempt_no)"
                         + " values(?,?,0,'MAIN',?::jsonb,?::jsonb,'DISPATCHED',1,0)", dispatch.runId(), node, Json.write(frozen), raw);
+                // The client has a 15 s absolute I/O budget. Leave time to commit its receipt and
+                // for another worker to reconcile a lost acknowledgement inside the 60 s grant.
+                db.update("update engine.node_instance set lease_until=least(lease_until,clock_timestamp()+interval '25 seconds')"
+                        + " where id=?", node);
+                db.update("update engine.run set dispatch_until=least(dispatch_until,clock_timestamp()+interval '25 seconds')"
+                        + " where id=?", dispatch.runId());
                 append(view, "attempt-request", Long.toString(attempt), proof);
                 append(view, "attempt-state", Long.toString(attempt), proof);
                 appendEvent(view, "MODEL_DISPATCHED", Map.of("nodeInstanceId", node, "attemptId", attempt, "sendSeq", 1), proof);

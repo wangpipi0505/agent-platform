@@ -2545,22 +2545,18 @@ public class RunService {
             var manifest = initialMaterials.preparedInitial(id, proof);
             byte[] bytes = initialMaterials.initialRequestUtf8(id, manifest, proof);
             var claim = store.dispatchInitial(dispatch, owner, manifest, bytes, proof);
-            long node = TraceStore.number(claim, "id");
-            activeNodes.add(node);
-            try {
-                if (Boolean.TRUE.equals(claim.get("unacknowledged"))) {
-                    store.commitInitial(dispatch, claim, runAuthority.currentRetained(id));
-                    return;
-                }
-                try {
-                    new ModelExchange(store, clients).exchangeInitial(dispatch, claim, manifest, bytes,
-                            initialMaterials, runAuthority, text -> initialChunks.publish(id, text));
-                } catch (RuntimeClients.RecordedModelUnavailable confirmed) {
-                    store.failInitial(dispatch, claim, runAuthority.currentRetained(id), confirmed);
-                    return;
-                }
+            if (Boolean.TRUE.equals(claim.get("unacknowledged"))) {
                 store.commitInitial(dispatch, claim, runAuthority.currentRetained(id));
-            } finally { activeNodes.remove(node); }
+                return;
+            }
+            try {
+                new ModelExchange(store, clients).exchangeInitial(dispatch, claim, manifest, bytes,
+                        initialMaterials, runAuthority, text -> initialChunks.publish(id, text));
+            } catch (RuntimeClients.RecordedModelUnavailable confirmed) {
+                store.failInitial(dispatch, claim, runAuthority.currentRetained(id), confirmed);
+                return;
+            }
+            store.commitInitial(dispatch, claim, runAuthority.currentRetained(id));
         } catch (RuntimeException failure) {
             // Durable marker without response remains unknown, including lost commit acknowledgement.
             scheduler.deferOwned(id, java.time.Duration.ofSeconds(3));
