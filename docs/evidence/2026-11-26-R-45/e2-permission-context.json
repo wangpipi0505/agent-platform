@@ -1,0 +1,162 @@
+{
+  "/auth/session": {
+    "http": 200,
+    "code": "OK",
+    "message": "",
+    "data": {
+      "roles": [
+        "ADMIN"
+      ],
+      "capabilities": [
+        "agent.build",
+        "auth.grant",
+        "agent.publish",
+        "audit.read",
+        "model.manage",
+        "agent.view",
+        "plugin.manage",
+        "skill.manage"
+      ],
+      "principalId": "admin"
+    }
+  },
+  "/admin/apps/r22e2-real-v2/integration": {
+    "http": 200,
+    "code": "OK",
+    "message": "",
+    "data": 1
+  },
+  "/admin/apps/r22e2-real-v2": {
+    "http": 200,
+    "code": "OK",
+    "message": "",
+    "data": [
+      "code",
+      "name",
+      "type",
+      "description",
+      "domain",
+      "status",
+      "id",
+      "draftId",
+      "draftNo",
+      "bizCategory",
+      "draftRev",
+      "currentVersionNo",
+      "updatedAt",
+      "tags",
+      "config",
+      "definition",
+      "layout",
+      "candidateSha256",
+      "semanticDigest"
+    ]
+  },
+  "/admin/model-providers": {
+    "http": 200,
+    "code": "OK",
+    "message": "",
+    "data": [
+      {
+        "code": "deepseek",
+        "trustLabels": [
+          "public"
+        ],
+        "status": "ENABLED"
+      }
+    ]
+  },
+  "/admin/evaluations/er_30268104-9288-498a-8ea8-166bed22d2e5": {
+    "http": 200,
+    "code": "OK",
+    "message": "",
+    "data": {
+      "id": "er_30268104-9288-498a-8ea8-166bed22d2e5",
+      "status": "RUNNING",
+      "results": [
+        {
+          "id": "r44-text",
+          "turns": [
+            {
+              "runId": "r_2ba95112dfce4a50b7fc1a8813cf7ce7",
+              "actual": {},
+              "passed": false,
+              "status": "RUNNING",
+              "turnNo": 1,
+              "expected": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "reasonCode": "ASSERTION_EXECUTION_NOT_SUCCEEDED",
+              "inputsSha256": "36ba54d257f3ab2697dc32591e92b0dbcd42d2dfd7e5ac14fd8afcf0cce32755",
+              "sourceEvidence": {
+                "runId": "r_2ba95112dfce4a50b7fc1a8813cf7ce7",
+                "environment": "UNKNOWN",
+                "datasetSha256": "cd1cf4abe39b51299c3889e288c0d9a5f3470f618411401b538c50d258651d11",
+                "schemaVersion": 2,
+                "datasetVersion": "r44-e2-text-validation"
+              }
+            }
+          ],
+          "actual": [
+            {}
+          ],
+          "passed": false,
+          "safety": true,
+          "status": "RUNNING",
+          "expected": [
+            {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          ],
+          "regression": false,
+          "attribution": "CONVERSATION_FAILURE",
+          "baselinePassed": false,
+          "conversationId": "es_26481330978bfda47f483950ce0aee6a9daeb0ae54d2c4e3",
+          "sourceEvidence": {
+            "runId": "r_2ba95112dfce4a50b7fc1a8813cf7ce7",
+            "runSource": {
+              "scope": "PLATFORM_PARTICIPANT_MODES_CONVERSATION",
+              "turnCount": 1,
+              "schemaVersion": 2,
+              "turnSourcesSha256": "de0a38b3eba620dc8a12154a8982ec3974ffec718055db42b80df614b5eecc1c"
+            },
+            "turnCount": 1,
+            "turnRunIds": [
+              "r_2ba95112dfce4a50b7fc1a8813cf7ce7"
+            ],
+            "environment": "UNKNOWN",
+            "datasetSha256": "cd1cf4abe39b51299c3889e288c0d9a5f3470f618411401b538c50d258651d11",
+            "schemaVersion": 2,
+            "conversationId": "es_26481330978bfda47f483950ce0aee6a9daeb0ae54d2c4e3",
+            "datasetVersion": "r44-e2-text-validation"
+          },
+          "conversationProtocol": 1
+        }
+      ],
+      "detail": "逐轮固定候选执行；安全100%、原断言与同数据集基线；未完成轮不计通过"
+    }
+  },
+  "issue": {
+    "code": "SYS-AUTH-403",
+    "message": "身份或授权验证未通过",
+    "traceId": "48bfb09d-2d91-43c5-9158-cfb618350a93"
+  }
+}

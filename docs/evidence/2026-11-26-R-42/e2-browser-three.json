@@ -1,0 +1,60 @@
+{
+  "events": [
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions",
+      "http": 200
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions",
+      "http": 200,
+      "code": "OK",
+      "traceId": "855c0756-0ea3-488d-8896-6f6af6523661",
+      "sessionId": "s_2528ce58ff554322889b752e88d17ea7"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_2528ce58ff554322889b752e88d17ea7",
+      "http": 200
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_2528ce58ff554322889b752e88d17ea7/events/stream",
+      "http": 200
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_2528ce58ff554322889b752e88d17ea7/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "38b97ea0-1b1b-47dd-bd61-7671aaf5f4e5",
+      "runId": "r_36116c0d4bd2463087a758e001c665cd"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_2528ce58ff554322889b752e88d17ea7/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "08e74ecc-8f56-432f-a70f-de2c02776aa7",
+      "runId": "r_087d635fd1a54570a4ca25a71e0a0978"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_2528ce58ff554322889b752e88d17ea7/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "72e7dd9c-6835-43c7-923e-99e12178729a",
+      "runId": "r_8b279b7627f6435f904a92709438ea5b"
+    }
+  ],
+  "alert": [],
+  "messages": [
+    "你第1轮，请回复 R22_OK。请只使用文本，不调用工具。",
+    "智能体R22_OK",
+    "你第2轮，请回复 R22_OK。请只使用文本，不调用工具。",
+    "智能体R22_OK",
+    "你第3轮，请回复 R22_OK。请只使用文本，不调用工具。",
+    "智能体R22_OK"
+  ]
+}

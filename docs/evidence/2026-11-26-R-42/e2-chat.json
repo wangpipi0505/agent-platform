@@ -1,0 +1,99 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "ea124ae1-8012-4c39-a79f-5b2457d74ba8"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "ffe56b45-82bb-4620-96fa-1a2a7812f298"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_02e6b70f7359443cb2a636a890632e57",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "a2bff857-359e-4929-8966-6072fcea513d"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/user-governance-assistant/sessions/s_02e6b70f7359443cb2a636a890632e57",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "message": "无权读取或操作该会话",
+      "traceId": "8d0078f9-9d97-4a64-b862-6004689623a5"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_02e6b70f7359443cb2a636a890632e57/turns",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "cd964157-0461-4339-8098-b83c562d61ce"
+    },
+    {
+      "method": "POST",
+      "path": "/oauth/session/revoke",
+      "http": 200,
+      "code": null,
+      "message": null,
+      "traceId": null
+    },
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 401,
+      "code": "IAM_AUTHORITY_UNAUTHORIZED",
+      "message": "调用方未被可信授权服务认证（401）",
+      "traceId": "d559b687-4a2b-4868-8309-15332ad740dd"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "f7b9f74c-27f2-4326-9ca8-92309279d06b"
+    }
+  ],
+  "principal": "admin",
+  "browser": {
+    "events": [
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions",
+        "http": 200
+      },
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_37ad8b1d38b34b30afb2a0f1c2fbc644",
+        "http": 200
+      },
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_37ad8b1d38b34b30afb2a0f1c2fbc644/events/stream",
+        "http": 200
+      }
+    ],
+    "alert": []
+  },
+  "apiTurn": {
+    "runId": "r_16add6f920494f3d989dbc85ac94e876",
+    "status": "PENDING",
+    "code": null
+  },
+  "revocation": {
+    "revoke": 200,
+    "previous": 401,
+    "parallelLogin": 200
+  }
+}

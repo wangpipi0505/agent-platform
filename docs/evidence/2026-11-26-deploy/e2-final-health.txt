@@ -1,0 +1,40 @@
+2026-11-26T19:54:24+0800
+2026-11-26T18:02:33+0800
+archive_sha256=18ed9ed9fde5afa7ebc31fbb3084a45f40aef9b6118d69f8963c3b891234668d
+agent-platform-v12/app-management:r23-20261126 sha256:532d24c25e7e2fc792ac44e8c178d47038ab9322463839dbfa2bc94091e69179
+agent-platform-v12/authority-service:r23-20261126 sha256:67f782d5d85162297d9d6f50cac25c4a4376c88d0a2d3860fa062a62b767eb9d
+agent-platform-v12/engine-runtime:r23-20261126 sha256:7fe89404392f84c83cfc2a7d685c1af80a71b438b2902058b5e00dee727a8655
+agent-platform-v12/frontend:r23-20261126 sha256:dc25fc86816e6b60d1c2b78de628e75c2c1ca4f299804b2b47a7d3bd602a4788
+agent-platform-v12/model-gateway:r23-20261126 sha256:3a634455f151eee75a3089215ef38d0cef789439d51586f3a3ef5c5e26d4afde
+agent-platform-v12/monitor:r23-20261126 sha256:f4b57c833a51672844022955e4f8cac4408165c642fde5952f0ce1e94b49e3ca
+agent-platform-v12/platform-gateway:r23-20261126 sha256:3fbf845a97835e03c2bb1643a2c5f5f5c75e542ed97a3a9f9359d9dc5bf82bbf
+agent-platform-v12/skill-registry:r23-20261126 sha256:9dfdadb796fd355c37de06e1a8d44d12f43f579fbeb33cad04bc982aa76e6be3
+ee3eb420dc65f8e4ba3489b764b9735eaf712e2ce0f25a43fedb9513dabd67f4  r22-candidates/r23-20261126/before.dump
+/agent-platform-authority agent-platform-v12/authority-service:r23-20261126 running healthy sha256:67f782d5d85162297d9d6f50cac25c4a4376c88d0a2d3860fa062a62b767eb9d
+/agent-platform-gateway agent-platform-v12/platform-gateway:r23-20261126 running healthy sha256:3fbf845a97835e03c2bb1643a2c5f5f5c75e542ed97a3a9f9359d9dc5bf82bbf
+/agent-platform-app agent-platform-v12/app-management:r23-20261126 running healthy sha256:532d24c25e7e2fc792ac44e8c178d47038ab9322463839dbfa2bc94091e69179
+/agent-platform-engine agent-platform-v12/engine-runtime:r23-20261126 running healthy sha256:7fe89404392f84c83cfc2a7d685c1af80a71b438b2902058b5e00dee727a8655
+/agent-platform-skill agent-platform-v12/skill-registry:r23-20261126 running healthy sha256:9dfdadb796fd355c37de06e1a8d44d12f43f579fbeb33cad04bc982aa76e6be3
+/agent-platform-model agent-platform-v12/model-gateway:r23-20261126 running healthy sha256:3a634455f151eee75a3089215ef38d0cef789439d51586f3a3ef5c5e26d4afde
+/agent-platform-monitor agent-platform-v12/monitor:r23-20261126 running healthy sha256:f4b57c833a51672844022955e4f8cac4408165c642fde5952f0ce1e94b49e3ca
+/agent-platform-frontend agent-platform-v12/frontend:r23-20261126 running healthy sha256:dc25fc86816e6b60d1c2b78de628e75c2c1ca4f299804b2b47a7d3bd602a4788
+/agent-platform-pg postgres:16 running healthy sha256:2fd2c185c3dc19e21db2174dce9677cbe6c78dfa6b50d7a3751cea87d95d16b3
+/agent-platform-redis redis:7 running  sha256:3a17a97bb6c7d9a7ee1bd3d5ecf7c6d02adf4bfd9fe73a974b3767b442dfbfaa
+18086/.well-known/jwks.json 200
+18091/healthz 200
+18180/actuator/health 200
+18181/actuator/health 200
+18182/actuator/health 200
+18183/actuator/health 200
+18184/actuator/health 200
+18185/actuator/health 200
+{"status":"UP","groups":["liveness","readiness"]}
+app:127
+engine:237
+skill:322
+model:306
+monitor:506
+iam_revocation:1
+[('http://127.0.0.1:18180/actuator/prometheus', 'up'), ('http://127.0.0.1:18182/actuator/prometheus', 'up'), ('http://127.0.0.1:18184/actuator/prometheus', 'up'), ('http://127.0.0.1:18181/actuator/prometheus', 'up'), ('http://127.0.0.1:18183/actuator/prometheus', 'up'), ('http://127.0.0.1:18185/actuator/prometheus', 'up')]
+assistant via nginx:
+979c64dc3649bd9f24fa7ca147fe21493a112acd17bd6459298cc04ba3417ce3  -

@@ -1,0 +1,17 @@
+### A) 形制合规应用 r22e2-real-v2：受理 200
+{"code":"OK","message":"","data":{"taskId":"task-63da852f63794dc596fa","state":"RUNNING","stateVersion":3,"mode":"AGENT","purpose":"EXECUTE","appCode":"r22e2-real-v2","goal":"用一句话说明你能做什么","principalId":"space-visibility:sgv-op-1","createdAt":"2026-11-26 11:20:54.121607","parentTaskId":null,"role":null,"subtasks":[],"availableActions":["CANCEL"],"recovery":null,"steps":[{"step_id":"entry","state":"RUNNING","attempt_no":1}],"dependencies":[],"eventWatermark":10,"hasCompression":false},"traceId":"f163e199-33b9-486a-bc6f-83794f5c563d"}
+HTTP 200
+
+### B) 事件增量 afterSeq=0
+{"code":"OK","message":"","data":{"taskId":33,"truncated":false,"nextAfterSeq":10,"events":[{"occurredAt":"2026-11-26 11:20:54.121607","seq":1,"data":{"goal":"用一句话说明你能做什么","mode":"AGENT"},"type":"TASK_ACCEPTED"},{"occurredAt":"2026-11-26 11:20:54.121607","seq":2,"data":{"runId":"r_21309accbb3a4e56867600d23fcc7bfa","stepId":"entry"},"type":"STEP_READY"},{"occurredAt":"2026-11-26 11:20:54.552904","seq":3,"data":{"owner":"task-1c17ab16-4196-439d-a2c1-1b32bf03981c","stepId":"entry","generation":1},"type":"STEP_STARTED"},{"occurredAt":"2026-11-26 11:21:24.650371","seq":4,"data":{"owner":"task-1c17ab16-4196-439d-a2c1-1b32bf03981c","stepId":"entry","generation":2},"type":"STEP_STARTED"},{"occurredAt":"2026-11-26 11:21:54.757562","seq":5,"data":{"owner":"task-1c17ab16-4196-439d-a2c1-1b32bf03981c","stepId":"entry","generation":3},"type":"STEP_STARTED"},{"occurredAt":"2026-11-26 11:22:24.876263","
+
+### C) 结果端点
+{"code":"OK","message":"","data":{"taskId":"task-63da852f63794dc596fa","state":"RUNNING","result":null,"resultSummary":"用一句话说明你能做什么","artifacts":[]},"traceId":"eb49bc34-c1b1-42be-898a-18fd37bcdc8a"}
+HTTP 200
+
+### D) 执行面阻断证据：model-gateway SYS-MODEL-503 分布式模型配额暂不可用
+cn.agentplatform.common.PlatformException: 分布式模型配额暂不可用，请稍后重试
+
+### E) engine 侧调度告警
+2026-11-26T11:15:09.595+08:00  WARN 1 --- [engine-runtime] [    virtual-257] c.a.engine.application.RunScheduler      : Scheduler operation failed: PlatformException
+2026-11-26T11:20:58.285+08:00  WARN 1 --- [engine-runtime] [    virtual-368] c.a.engine.application.RunScheduler      : Scheduler operation failed: PlatformException

@@ -1,0 +1,23 @@
+### 1) metadata GET /v1/apps/satellite-planning-assistant/input-schema
+{"code":"OK","message":"","data":{"appCode":"satellite-planning-assistant","versionNo":1,"type":"CHAT","inputs":[]},"traceId":"17b5d69b-0bc0-428c-a571-7f035193f7ff"}
+HTTP 200
+
+### 2) submit POST .../tasks mode=AGENT (CHAT app)
+{"code":"RUN_AUTHORITY_DENIED","message":"运行授权或材料范围不匹配","data":null,"traceId":"3fc64251-aad8-48d7-bdbf-092970e68b23","userMessage":"运行授权或材料范围不匹配","category":"AUTH","retryable":false}
+HTTP 403
+
+### 3) metadata GET /v1/apps/user-governance-assistant/input-schema (FLOW)
+{"code":"OK","message":"","data":{"appCode":"user-governance-assistant","versionNo":1,"type":"FLOW","inputs":[{"key":"message","type":"STRING","required":true,"description":"账号开通与授权需求"}]},"traceId":"5e5a3f79-c502-45bb-9ea4-119a102baf59"}
+HTTP 200
+
+### 4) submit FLOW app without mode
+{"code":"SERVICE_AGENT_ONLY","message":"集成方仅可提交 AGENT 任务","data":null,"traceId":"2565172f-a6db-44a7-8678-8d281d205eaf","userMessage":"集成方仅可提交 AGENT 任务","category":"AUTH","retryable":false}
+HTTP 403
+
+### 5) submit FLOW app with mode=AGENT
+{"code":"CHAT_REQUIRED","message":"单步 AGENT 任务需要已发布的对话应用","data":null,"traceId":"57138d99-8f0f-4599-9ddd-d3878efbd6e3","userMessage":"单步 AGENT 任务需要已发布的对话应用","category":"BUSINESS","retryable":false}
+HTTP 409
+
+### 6) negatives
+no-auth: {"code":"SYS-AUTH-401","message":"身份或授权验证未通过","data":null,"traceId":"b591286e-d5f9-4ae4-972d-9bda90e7fbb9","userMessage":"身份或授权验证未通过","category":"AUTH","retryable":false} HTTP 401
+bad-key: {"code":"INVALID_CREDENTIAL","message":"集成凭据无效","data":null,"traceId":"665cad1d-ebc6-447d-b00c-d4cb75b19271","userMessage":"集成凭据无效","category":"AUTH","retryable":false} HTTP 401

@@ -1,0 +1,83 @@
+{
+  "app": "satellite-planning-assistant",
+  "steps": [
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant/versions",
+      "http": 200,
+      "code": "OK",
+      "traceId": "e2d9f517-66b9-4fb7-9961-91c7809221de"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/model-entries",
+      "http": 200,
+      "code": "OK",
+      "traceId": "20f13d39-68c7-4e1a-9a8f-415bf04047ec"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ab2c7013-0a32-46da-9d16-6d6679af3c97"
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/apps/satellite-planning-assistant/config",
+      "http": 200,
+      "code": "OK",
+      "traceId": "beca27cb-ef35-4b57-9bf2-bdba7681912c"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/model-bindings/refreeze",
+      "http": 200,
+      "code": "OK",
+      "traceId": "2b67886d-2dd1-4431-950c-86195cc16ebd"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant",
+      "http": 200,
+      "code": "OK",
+      "traceId": "4d63623b-ff38-43d7-ba83-530b3162e336"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/precheck",
+      "http": 409,
+      "code": "EVALUATION_ENVIRONMENT_BLOCKED",
+      "traceId": "d00f2dd2-4c9a-4348-b413-429eb0561491"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant/versions",
+      "http": 200,
+      "code": "OK",
+      "traceId": "4aa16633-6a16-46e0-a72f-76a54dc70813"
+    }
+  ],
+  "before": [
+    [
+      1,
+      null
+    ]
+  ],
+  "freeze": {
+    "draftRev": 3,
+    "modelBindingRefs": [
+      {
+        "sha256": "b04638ca342d1bc8fa4a27c2dcb6e5046361ffa2011c93335cedf5041f528ac3",
+        "bindingId": 1
+      }
+    ]
+  },
+  "failure": "{'method': 'POST', 'path': '/admin/apps/satellite-planning-assistant/publish/precheck', 'http': 409, 'code': 'EVALUATION_ENVIRONMENT_BLOCKED', 'traceId': 'd00f2dd2-4c9a-4348-b413-429eb0561491'}",
+  "after": [
+    [
+      1,
+      null
+    ]
+  ]
+}

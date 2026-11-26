@@ -1,0 +1,251 @@
+{
+  "app": "r22e2-real-v2",
+  "credentialId": 7,
+  "biz": "e2-sgv-6c05da89",
+  "health": {
+    "status": "UP",
+    "integration": "READY",
+    "baseUrl": "http://127.0.0.1:18090",
+    "appCode": "r22e2-real-v2",
+    "ticketMode": false,
+    "userId": "sgv-op-1"
+  },
+  "dispatch": {
+    "http": 200,
+    "body": {
+      "status": "DISPATCHED",
+      "taskId": "task-3295f74daa744968a7eb",
+      "state": "SUCCEEDED",
+      "resultState": "SUCCEEDED",
+      "events": [
+        {
+          "seq": 1,
+          "data": {
+            "goal": "仅回复 R22_OK，不使用任何工具。",
+            "mode": "AGENT"
+          },
+          "type": "TASK_ACCEPTED",
+          "occurredAt": "2026-11-26 19:30:22.631139"
+        },
+        {
+          "seq": 2,
+          "data": {
+            "runId": "r_873211e047c7411889eed41e418e75eb",
+            "stepId": "entry"
+          },
+          "type": "STEP_READY",
+          "occurredAt": "2026-11-26 19:30:22.631139"
+        },
+        {
+          "seq": 3,
+          "data": {
+            "owner": "task-c8644bee-4ee9-4759-a524-e9c5f6ed83e3",
+            "stepId": "entry",
+            "generation": 1
+          },
+          "type": "STEP_STARTED",
+          "occurredAt": "2026-11-26 19:30:23.187964"
+        },
+        {
+          "seq": 4,
+          "data": {
+            "state": "SUCCEEDED",
+            "stepId": "entry",
+            "generation": 1,
+            "resultDigest": "8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f"
+          },
+          "type": "STEP_FINISHED",
+          "occurredAt": "2026-11-26 19:30:30.380495"
+        },
+        {
+          "seq": 5,
+          "data": {
+            "runId": "r_873211e047c7411889eed41e418e75eb",
+            "state": "SUCCEEDED"
+          },
+          "type": "TASK_FINISHED",
+          "occurredAt": "2026-11-26 19:30:30.380495"
+        }
+      ],
+      "nextAfterSeq": 5,
+      "eventsTruncated": false,
+      "result": {
+        "text": "R22_OK",
+        "usage": {
+          "totalTokens": 65,
+          "promptTokens": 52,
+          "completionTokens": 13
+        },
+        "admission": {
+          "exact": true,
+          "inputTokens": 233,
+          "reservedTokens": 745
+        },
+        "toolCalls": [],
+        "actualModel": {
+          "endpoint": "http://127.0.0.1:18990",
+          "modelName": "deepseek-flash",
+          "providerId": 1,
+          "modelEntryId": 1
+        },
+        "sourceEvidence": {
+          "runId": "r_873211e047c7411889eed41e418e75eb",
+          "factId": 40,
+          "producer": "model",
+          "tenantId": "demo",
+          "principalId": "e2-sgv-6c05da89:sgv-op-1",
+          "executionPath": "MODEL_HTTP",
+          "externalTruth": "NOT_ASSESSED",
+          "invocationRef": "material:m_e3e7103106cf46769b1c12edd8546d81:MAIN",
+          "schemaVersion": 1,
+          "producerEnvironment": "REAL"
+        }
+      },
+      "resultSummary": "仅回复 R22_OK，不使用任何工具。",
+      "artifacts": [
+        {
+          "downloadPath": "/v1/runs/r_873211e047c7411889eed41e418e75eb/artifacts/task_result_873211e047c7411889eed41e418e75eb/download",
+          "bytes": 606,
+          "runId": "r_873211e047c7411889eed41e418e75eb",
+          "digest": "8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f",
+          "mediaType": "application/json",
+          "publishedDigest": "7d495960d0810d2cb96a4652634fd53c55269c2ffd10c7a6c0be07b2e1e96e99",
+          "artifactId": "task_result_873211e047c7411889eed41e418e75eb"
+        }
+      ],
+      "downloads": [
+        {
+          "artifactId": "task_result_873211e047c7411889eed41e418e75eb",
+          "bytes": 606,
+          "digest": "8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f",
+          "etag": "\"8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f\""
+        }
+      ]
+    }
+  },
+  "retry": {
+    "http": 200,
+    "body": {
+      "status": "DISPATCHED",
+      "taskId": "task-3295f74daa744968a7eb",
+      "state": "SUCCEEDED",
+      "resultState": "SUCCEEDED",
+      "events": [
+        {
+          "seq": 1,
+          "data": {
+            "goal": "仅回复 R22_OK，不使用任何工具。",
+            "mode": "AGENT"
+          },
+          "type": "TASK_ACCEPTED",
+          "occurredAt": "2026-11-26 19:30:22.631139"
+        },
+        {
+          "seq": 2,
+          "data": {
+            "runId": "r_873211e047c7411889eed41e418e75eb",
+            "stepId": "entry"
+          },
+          "type": "STEP_READY",
+          "occurredAt": "2026-11-26 19:30:22.631139"
+        },
+        {
+          "seq": 3,
+          "data": {
+            "owner": "task-c8644bee-4ee9-4759-a524-e9c5f6ed83e3",
+            "stepId": "entry",
+            "generation": 1
+          },
+          "type": "STEP_STARTED",
+          "occurredAt": "2026-11-26 19:30:23.187964"
+        },
+        {
+          "seq": 4,
+          "data": {
+            "state": "SUCCEEDED",
+            "stepId": "entry",
+            "generation": 1,
+            "resultDigest": "8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f"
+          },
+          "type": "STEP_FINISHED",
+          "occurredAt": "2026-11-26 19:30:30.380495"
+        },
+        {
+          "seq": 5,
+          "data": {
+            "runId": "r_873211e047c7411889eed41e418e75eb",
+            "state": "SUCCEEDED"
+          },
+          "type": "TASK_FINISHED",
+          "occurredAt": "2026-11-26 19:30:30.380495"
+        }
+      ],
+      "nextAfterSeq": 5,
+      "eventsTruncated": false,
+      "result": {
+        "text": "R22_OK",
+        "usage": {
+          "totalTokens": 65,
+          "promptTokens": 52,
+          "completionTokens": 13
+        },
+        "admission": {
+          "exact": true,
+          "inputTokens": 233,
+          "reservedTokens": 745
+        },
+        "toolCalls": [],
+        "actualModel": {
+          "endpoint": "http://127.0.0.1:18990",
+          "modelName": "deepseek-flash",
+          "providerId": 1,
+          "modelEntryId": 1
+        },
+        "sourceEvidence": {
+          "runId": "r_873211e047c7411889eed41e418e75eb",
+          "factId": 40,
+          "producer": "model",
+          "tenantId": "demo",
+          "principalId": "e2-sgv-6c05da89:sgv-op-1",
+          "executionPath": "MODEL_HTTP",
+          "externalTruth": "NOT_ASSESSED",
+          "invocationRef": "material:m_e3e7103106cf46769b1c12edd8546d81:MAIN",
+          "schemaVersion": 1,
+          "producerEnvironment": "REAL"
+        }
+      },
+      "resultSummary": "仅回复 R22_OK，不使用任何工具。",
+      "artifacts": [
+        {
+          "downloadPath": "/v1/runs/r_873211e047c7411889eed41e418e75eb/artifacts/task_result_873211e047c7411889eed41e418e75eb/download",
+          "bytes": 606,
+          "runId": "r_873211e047c7411889eed41e418e75eb",
+          "digest": "8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f",
+          "mediaType": "application/json",
+          "publishedDigest": "7d495960d0810d2cb96a4652634fd53c55269c2ffd10c7a6c0be07b2e1e96e99",
+          "artifactId": "task_result_873211e047c7411889eed41e418e75eb"
+        }
+      ],
+      "downloads": [
+        {
+          "artifactId": "task_result_873211e047c7411889eed41e418e75eb",
+          "bytes": 606,
+          "digest": "8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f",
+          "etag": "\"8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f\""
+        }
+      ]
+    }
+  },
+  "independentDownload": {
+    "http": 200,
+    "etag": "\"8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f\"",
+    "bytes": 606,
+    "sha256": "8440ae069ec7b0c3d884eeab6472c1ddaddc7154a8b296f8519f27d65c56371f",
+    "runId": "r_873211e047c7411889eed41e418e75eb",
+    "contentLength": 606
+  },
+  "revocation": {
+    "http": 200,
+    "code": "OK"
+  }
+}

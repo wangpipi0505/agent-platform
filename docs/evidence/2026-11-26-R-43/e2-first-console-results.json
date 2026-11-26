@@ -1,0 +1,67 @@
+{
+  "session": {
+    "http": 200,
+    "tenantId": "demo",
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "negative": [
+    {
+      "app": "r22e2-real-v1",
+      "path": "/admin/apps/r22e2-real-v1/runs",
+      "http": 503,
+      "response": {
+        "code": "GATEWAY_RUN_REJECTED",
+        "message": "运行请求未完成，请检查权限或服务状态",
+        "data": null,
+        "traceId": null
+      }
+    },
+    {
+      "app": "r43-nonexistent-20261126",
+      "path": "/admin/apps/r43-nonexistent-20261126/runs",
+      "http": 503,
+      "response": {
+        "code": "GATEWAY_RUN_REJECTED",
+        "message": "运行请求未完成，请检查权限或服务状态",
+        "data": null,
+        "traceId": null
+      }
+    }
+  ],
+  "publishedApi": {
+    "app": "r22e2-real-v2",
+    "path": "/admin/apps/r22e2-real-v2/runs",
+    "http": 403,
+    "response": {
+      "code": "GATEWAY_RUN_REJECTED",
+      "message": "运行请求未完成，请检查权限或服务状态",
+      "data": null,
+      "traceId": null
+    }
+  },
+  "published": {
+    "path": "/admin/apps/r22e2-real-v2/demo-chat",
+    "status": 403,
+    "body": {
+      "code": "SYS-AUTH-403",
+      "message": "入口未获授权",
+      "data": null,
+      "traceId": null
+    },
+    "failedRequests": [
+      [
+        "GET",
+        "/admin/apps/r22e2-real-v2/available-tools",
+        403
+      ],
+      [
+        "POST",
+        "/admin/apps/r22e2-real-v2/demo-chat",
+        403
+      ]
+    ]
+  }
+}
