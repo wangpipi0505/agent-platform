@@ -1,0 +1,67 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant",
+      "http": 200,
+      "code": "OK",
+      "traceId": "a7a1777b-6ef6-48f8-b9c4-55335e2e0063"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations",
+      "http": 200,
+      "code": "OK",
+      "traceId": "55fdab4f-7d62-47c1-af7d-04211ccee753"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations/er_675dd0c0-8941-450d-9a8a-1d1a94f82bed/resume",
+      "http": 200,
+      "code": "OK",
+      "traceId": "170bf999-e894-4c31-8989-2c63037d6a45"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations/er_675dd0c0-8941-450d-9a8a-1d1a94f82bed/resume",
+      "http": 200,
+      "code": "OK",
+      "traceId": "55cee85e-7fa2-458f-a75f-9902195b1e51"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations/er_675dd0c0-8941-450d-9a8a-1d1a94f82bed/resume",
+      "http": 200,
+      "code": "OK",
+      "traceId": "6ec1095a-043a-4186-a884-7ef2ec7aafb6"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/precheck",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ee8c57aa-44c7-40a4-aaed-2753b220d5d0"
+    }
+  ],
+  "reportId": "er_675dd0c0-8941-450d-9a8a-1d1a94f82bed",
+  "statuses": [
+    "RUNNING",
+    "RUNNING",
+    "RUNNING",
+    "ACCEPTED"
+  ],
+  "terminal": {
+    "id": "er_675dd0c0-8941-450d-9a8a-1d1a94f82bed",
+    "status": "ACCEPTED",
+    "failureCode": null,
+    "outcome": null
+  },
+  "precheck": {
+    "passed": true,
+    "precheckId": "pc_bde2e8b3-a37a-4464-99de-d2126b49b668",
+    "evalReportId": "er_675dd0c0-8941-450d-9a8a-1d1a94f82bed",
+    "candidateSha256": "1b16043e34ab0e56cea3fe32a9b1bb97ce4b6e42a8ebb8142976ed71f9dc94a0",
+    "environmentEvidenceSha256": "4eab0caeddec4ba8b63a7bd9db052aa1135bb9e0451a10e390fe6c8e6653619d",
+    "draftRev": 5
+  }
+}

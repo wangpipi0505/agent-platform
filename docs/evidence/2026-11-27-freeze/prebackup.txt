@@ -1,0 +1,16 @@
+Filesystem               Size  Used Avail Use% Mounted on
+/dev/mapper/centos-home  157G   14G  143G   9% /home
+dump bytes=972585 mode=600
+781 r22-candidates/r23-20261127/before.toc
+b9d54cecb3b055129f89efad347369643c0a1f000c8e6f1e9385590e2d96f1fe  r22-candidates/r23-20261127/before.dump
+/agent-platform-gateway agent-platform-v12/platform-gateway:r23-20261126 sha256:3fbf845a97835e03c2bb1643a2c5f5f5c75e542ed97a3a9f9359d9dc5bf82bbf running
+/agent-platform-app agent-platform-v12/app-management:r23-20261126 sha256:532d24c25e7e2fc792ac44e8c178d47038ab9322463839dbfa2bc94091e69179 running
+/agent-platform-engine agent-platform-v12/engine-runtime:r23-20261126 sha256:7fe89404392f84c83cfc2a7d685c1af80a71b438b2902058b5e00dee727a8655 running
+/agent-platform-skill agent-platform-v12/skill-registry:r23-20261126 sha256:9dfdadb796fd355c37de06e1a8d44d12f43f579fbeb33cad04bc982aa76e6be3 running
+/agent-platform-model agent-platform-v12/model-gateway:r23-20261126 sha256:3a634455f151eee75a3089215ef38d0cef789439d51586f3a3ef5c5e26d4afde running
+/agent-platform-monitor agent-platform-v12/monitor:r23-20261126 sha256:f4b57c833a51672844022955e4f8cac4408165c642fde5952f0ce1e94b49e3ca running
+/agent-platform-authority agent-platform-v12/authority-service:r23-20261126 sha256:67f782d5d85162297d9d6f50cac25c4a4376c88d0a2d3860fa062a62b767eb9d running
+/agent-platform-frontend agent-platform-v12/frontend:r23-20261126 sha256:dc25fc86816e6b60d1c2b78de628e75c2c1ca4f299804b2b47a7d3bd602a4788 running
+/home/agent-platform/r22-candidates/r23-20261126/nginx.conf /etc/nginx/nginx-e2.conf
+
+["nginx","-c","/etc/nginx/nginx-e2.conf","-g","daemon off;"] null 10001:10001

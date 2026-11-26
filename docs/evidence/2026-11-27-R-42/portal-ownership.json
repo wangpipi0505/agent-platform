@@ -1,0 +1,82 @@
+{
+  "existing-grants": {
+    "method": "GET",
+    "path": "/admin/platform-authorization/grants?subject=operatorA",
+    "http": 200,
+    "code": "OK",
+    "traceId": "aa49ba52-4f78-4fd0-8ff8-a986dc9669d9"
+  },
+  "grant-operator": {
+    "method": "PUT",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "15673f79-d2ee-485f-af2c-7542bb7c854e"
+  },
+  "owner-identity": {
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 200,
+    "code": "OK",
+    "traceId": "9733167b-bf41-46dc-994a-4bfabb999b14",
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ],
+    "pages": [
+      "/assets/mcp",
+      "/assets/rules",
+      "/audit",
+      "/apps",
+      "/evaluations",
+      "/assets/plugins",
+      "/skills",
+      "/model/prompt-templates",
+      "/model/management",
+      "/platform/authorizations"
+    ],
+    "capabilities": [
+      "skill.manage",
+      "plugin.manage",
+      "agent.view",
+      "model.manage",
+      "audit.read",
+      "agent.publish",
+      "auth.grant",
+      "agent.build"
+    ]
+  },
+  "second-identity": {
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "72c7b869-1656-47cf-91eb-2527e2a1ffc9"
+  },
+  "owner-create": {
+    "method": "POST",
+    "path": "/v1/apps/r22e2-real-v2/sessions",
+    "http": 200,
+    "code": "OK",
+    "traceId": "29e1c299-515e-426c-9f52-5cdb5e273acf",
+    "sessionId": "s_6f05a46f2d0441d0abb26a341b2e7440"
+  },
+  "second-create": {
+    "method": "POST",
+    "path": "/v1/apps/satellite-planning-assistant/sessions",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "84d98481-09e2-4b21-b038-ede2f5c7b76b"
+  },
+  "revoke-grant": {
+    "method": "DELETE",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "e8510df9-54f2-44f4-a76f-857c08b593b0"
+  },
+  "revoke-operator-session": {
+    "http": 200,
+    "code": null
+  }
+}

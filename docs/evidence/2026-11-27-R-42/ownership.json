@@ -1,0 +1,51 @@
+{
+  "owner-create": {
+    "http": 200,
+    "code": "OK",
+    "traceId": "fd71859c-6de1-4d46-93e9-902b996238b2",
+    "sessionId": "s_be141086181e479eae2bee152c269236"
+  },
+  "ownerSession": "s_be141086181e479eae2bee152c269236",
+  "exchange": {
+    "http": 200,
+    "code": "OK"
+  },
+  "second-create": {
+    "http": 403,
+    "code": "APP_BINDING_DENIED",
+    "traceId": "181bd04b-9673-46b5-84a6-6065fbe50777",
+    "sessionId": null
+  },
+  "owner-read": {
+    "http": 200,
+    "code": "OK",
+    "traceId": "6412ad91-77a9-4895-a0c2-44d5264cc6a9",
+    "sessionId": "s_be141086181e479eae2bee152c269236"
+  },
+  "other-subject": {
+    "http": 403,
+    "code": "APP_BINDING_DENIED",
+    "traceId": "cc147f20-3a56-4278-8f33-b0288a80de50",
+    "sessionId": null
+  },
+  "other-app": {
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "78b2aabe-5c01-4ec4-aa97-d9e5ffeda939",
+    "sessionId": null
+  },
+  "audit": [
+    {
+      "tenant_id": "demo",
+      "principal_id": "admin",
+      "app_code": "user-governance-assistant",
+      "session_id": "s_be141086181e479eae2bee152c269236",
+      "reason": "APP_MISMATCH",
+      "trace_id": "78b2aabe-5c01-4ec4-aa97-d9e5ffeda939"
+    }
+  ],
+  "credentialRevocation": {
+    "http": 200,
+    "code": "OK"
+  }
+}

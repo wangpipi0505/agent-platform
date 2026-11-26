@@ -1,0 +1,3 @@
+# R-42 对话续流与主体隔离
+[三轮截图](e2-chat.png)、[浏览器请求与登录撤销](e2-chat.json)、[运行终态](e2-session-cursor.json)和[SSE 断点接续](e2-replay.json)显示三轮 SUCCEEDED，断在 2 后从 3 续，1 至 12 无缺帧或重放，旧登录 401、独立登录 200。admin 跨应用被拒，审计原因 APP_MISMATCH。
+以真实 user-mgmt 演示账号 operatorA 签发临时凭据，在平台正式授 OPERATOR 并限制两个应用。签票身份为 demo/operatorA，外部角色 user_manager、common_user。应用内授权 ACTIVE，/auth/session 与本人建会话均返回 403；本人 200 与他人会话 SUBJECT_MISMATCH 两个判据仍缺。[门户实测](portal-ownership.json) · [角色、授权及页面](portal-role-diagnosis.json) · [网关角色配置](gateway-roles.txt)。独立接入票在门户路由也被拒，错误 APP_BINDING_DENIED，不能证明会话所有权。[接入票对照](ownership.json)。临时平台授权与两轮登录均回收，临时目录 API key 已吊销，authority 恢复原部署。[清理回执](identity-cleanup.txt)。

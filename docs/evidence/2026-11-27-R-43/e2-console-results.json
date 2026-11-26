@@ -1,0 +1,146 @@
+{
+  "session": {
+    "http": 200,
+    "tenantId": "demo",
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "negative": [
+    {
+      "app": "r22e2-real-v1",
+      "path": "/admin/apps/r22e2-real-v1/runs",
+      "http": 409,
+      "response": {
+        "code": "APP_UNAVAILABLE",
+        "message": "应用未发布或无可运行版本",
+        "data": null,
+        "traceId": null
+      }
+    },
+    {
+      "app": "r43-nonexistent-20261127",
+      "path": "/admin/apps/r43-nonexistent-20261127/runs",
+      "http": 404,
+      "response": {
+        "code": "APP_NOT_FOUND",
+        "message": "应用不存在",
+        "data": null,
+        "traceId": null
+      }
+    }
+  ],
+  "publishedApi": {
+    "app": "r22e2-real-v2",
+    "path": "/admin/apps/r22e2-real-v2/runs",
+    "http": 200,
+    "response": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "runId": "r_6fe446331e02411bb5c32e63d17149e7",
+        "appCode": "r22e2-real-v2",
+        "status": "PENDING",
+        "eventsWatermark": 0,
+        "inputs": {
+          "message": "R22_OK"
+        },
+        "output": {},
+        "fileRefs": [],
+        "error": {},
+        "errorRaw": {},
+        "versionRefs": {
+          "appVer": 1,
+          "traceId": "957e4a97-e1a1-4a14-be3d-c68c5de7a5e8",
+          "modelCfg": {
+            "modelEntryId": 1
+          },
+          "ontology": [],
+          "skillVers": {},
+          "flowDefSha": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "promptShas": {},
+          "promptVers": {},
+          "evalReportId": null,
+          "interpreterVer": "1.0"
+        },
+        "nodes": [
+          {
+            "id": 52,
+            "node_def_id": null,
+            "node_type": "AGENT",
+            "status": "READY",
+            "pause_seq": null,
+            "error": {},
+            "output": {},
+            "started_at": null,
+            "ended_at": null,
+            "nodeInstanceId": 52,
+            "nodeDefId": null
+          }
+        ],
+        "events": [],
+        "paused": null
+      },
+      "traceId": "957e4a97-e1a1-4a14-be3d-c68c5de7a5e8"
+    }
+  },
+  "published": {
+    "path": "/v1/apps/r22e2-real-v2/sessions/s_c3104b6f46b74e70a52d08f65b4f77ac/turns",
+    "status": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "runId": "r_2fd5c09802b946b095905585ca0b2b45",
+        "appCode": "r22e2-real-v2",
+        "status": "PENDING",
+        "eventsWatermark": 0,
+        "inputs": {
+          "message": "Reply R22_OK. Do not use tools."
+        },
+        "output": {},
+        "fileRefs": [],
+        "error": {},
+        "errorRaw": {},
+        "versionRefs": {
+          "appVer": 1,
+          "traceId": "8f62f73a-8bca-45ca-8bf6-893876003c23",
+          "modelCfg": {
+            "modelEntryId": 1
+          },
+          "ontology": [],
+          "skillVers": {},
+          "flowDefSha": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "promptShas": {},
+          "promptVers": {},
+          "evalReportId": null,
+          "interpreterVer": "1.0"
+        },
+        "nodes": [
+          {
+            "id": 53,
+            "node_def_id": null,
+            "node_type": "AGENT",
+            "status": "READY",
+            "pause_seq": null,
+            "error": {},
+            "output": {},
+            "started_at": null,
+            "ended_at": null,
+            "nodeInstanceId": 53,
+            "nodeDefId": null
+          }
+        ],
+        "events": [],
+        "paused": null
+      },
+      "traceId": "8f62f73a-8bca-45ca-8bf6-893876003c23"
+    },
+    "failedRequests": []
+  },
+  "database": {
+    "runId": "r_2fd5c09802b946b095905585ca0b2b45",
+    "status": "SUCCEEDED"
+  }
+}

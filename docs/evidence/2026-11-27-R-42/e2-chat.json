@@ -1,0 +1,139 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "e06b2a39-8161-4fae-ad4c-dc58148c8cb0"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "f81915c0-9df9-446c-8dc4-78c05dc2dc8e"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_8042b3e9ca0e4ecb9d8abe1dbc45f242",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "8fc4a32f-bc66-4fd5-b66c-59a43a6fab6b"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/user-governance-assistant/sessions/s_8042b3e9ca0e4ecb9d8abe1dbc45f242",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "message": "无权读取或操作该会话",
+      "traceId": "75852618-0e41-4186-b7ce-e9ea5c562deb"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_8042b3e9ca0e4ecb9d8abe1dbc45f242/turns",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "66e5d711-36ea-4cc8-9f27-3a1b633e4a3e"
+    },
+    {
+      "method": "POST",
+      "path": "/oauth/session/revoke",
+      "http": 200,
+      "code": null,
+      "message": null,
+      "traceId": null
+    },
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 401,
+      "code": "IAM_AUTHORITY_UNAUTHORIZED",
+      "message": "调用方未被可信授权服务认证（401）",
+      "traceId": "c09d00d9-4b30-477b-a025-74da57018e43"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "ca61e55b-2e0e-4855-856b-2de46c4f6e3f"
+    }
+  ],
+  "principal": "admin",
+  "browser": {
+    "events": [
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions",
+        "http": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/apps/r22e2-real-v2/sessions",
+        "http": 200,
+        "code": "OK",
+        "traceId": "846ef0c2-2d1c-40af-951d-c2e66247d22e",
+        "sessionId": "s_72654f7c7ace4cd59f18ae5150624c5f"
+      },
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_72654f7c7ace4cd59f18ae5150624c5f",
+        "http": 200
+      },
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_72654f7c7ace4cd59f18ae5150624c5f/events/stream",
+        "http": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_72654f7c7ace4cd59f18ae5150624c5f/turns",
+        "http": 200,
+        "code": "OK",
+        "traceId": "ef00bf7c-6704-49b4-816c-24e6670a1cd4",
+        "runId": "r_61d97cec8b4a42878e9042be4d752c3f"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_72654f7c7ace4cd59f18ae5150624c5f/turns",
+        "http": 200,
+        "code": "OK",
+        "traceId": "4190af76-d634-4c87-ba9d-a062be9d4fd6",
+        "runId": "r_b06f74048eac4386897410a2b7c3f489"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_72654f7c7ace4cd59f18ae5150624c5f/turns",
+        "http": 200,
+        "code": "OK",
+        "traceId": "84d0679e-b4c0-42d0-9801-2d55eb22c10c",
+        "runId": "r_6a035b2181334c15b32f128d883d6702"
+      }
+    ],
+    "alert": [],
+    "messages": [
+      "你第1轮，请回复 R22_OK。请只使用文本，不调用工具。",
+      "智能体R22_OK",
+      "你第2轮，请回复 R22_OK。请只使用文本，不调用工具。",
+      "智能体R22_OK",
+      "你第3轮，请回复 R22_OK。请只使用文本，不调用工具。",
+      "智能体R22_OK"
+    ]
+  },
+  "apiTurn": {
+    "runId": "r_a41d3ddfe7434e15a9ba0120f935cc18",
+    "status": "PENDING",
+    "code": null
+  },
+  "revocation": {
+    "revoke": 200,
+    "previous": 401,
+    "parallelLogin": 200
+  }
+}

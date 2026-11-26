@@ -1,0 +1,10 @@
+gateway
+/home/agent-platform/overlays/gateway.yml /opt/agent/authority-overlay.yml
+/home/agent-platform/r22-candidates/r23-20261126/gateway-application.yml /opt/agent/r23-application.yml
+authority
+overlays/gateway.yml
+      role-allowlist: ADMIN,BUILDER,OPERATOR,USER,admin
+      scope-allowlist: platform.access
+r22-candidates/20261125-204157/gateway-ums-test.yml
+      role-allowlist: ADMIN,BUILDER,OPERATOR,USER,admin
+      scope-allowlist: platform.access

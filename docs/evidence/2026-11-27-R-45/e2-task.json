@@ -1,0 +1,296 @@
+{
+  "app": "r22e2-real-v2",
+  "steps": [
+    {
+      "stage": "issue credential",
+      "http": 200,
+      "code": "OK",
+      "traceId": "b9d0fafd-5e99-4347-9ab8-8553316b261a"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "23dac025-d325-4b3b-9f3f-87cf193c5eca",
+      "state": "QUEUED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "30783652-b302-45c0-b5de-cb81d6865b02",
+      "state": "QUEUED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "74a4fa8e-214a-4176-ad47-5b43bf76dcb1",
+      "state": "RUNNING"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "cf1f68c3-9bf1-4435-b730-54993f5e3059",
+      "state": "RUNNING"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "04515d3c-eaaa-49e7-bfe8-1f8fd51d4e72",
+      "state": "RUNNING"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "2b88d72f-bc66-4ddc-b351-d9757ed2d168",
+      "state": "SUCCEEDED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d",
+      "http": 200,
+      "code": "OK",
+      "traceId": "0e8b537e-5f2d-48e9-a1bd-a6bce6270b42",
+      "state": "SUCCEEDED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d/events",
+      "http": 200,
+      "code": "OK",
+      "traceId": "50a45c8a-2af4-4b35-abcd-438a79c3e66e",
+      "state": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-dde06bfa9b0c4b118f1d/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "8e6743db-c195-497a-8884-2a90e521a328",
+      "state": "SUCCEEDED"
+    }
+  ],
+  "credentialId": 10,
+  "creation": {
+    "taskId": "task-dde06bfa9b0c4b118f1d",
+    "state": "QUEUED",
+    "stateVersion": 2,
+    "mode": "AGENT",
+    "purpose": "EXECUTE",
+    "appCode": "r22e2-real-v2",
+    "goal": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "principalId": "e2-r45-5431afc7:sgv-op-1",
+    "createdAt": "2026-11-27 01:54:10.854919",
+    "parentTaskId": null,
+    "role": null,
+    "subtasks": [],
+    "availableActions": [
+      "CANCEL"
+    ],
+    "recovery": null,
+    "steps": [
+      {
+        "step_id": "entry",
+        "state": "READY",
+        "attempt_no": 1
+      }
+    ],
+    "dependencies": [],
+    "eventWatermark": 2,
+    "hasCompression": false
+  },
+  "result": {
+    "taskId": "task-dde06bfa9b0c4b118f1d",
+    "state": "SUCCEEDED",
+    "result": {
+      "text": "R22_OK",
+      "usage": {
+        "totalTokens": 69,
+        "promptTokens": 55,
+        "completionTokens": 14
+      },
+      "admission": {
+        "exact": true,
+        "inputTokens": 243,
+        "reservedTokens": 755
+      },
+      "toolCalls": [],
+      "actualModel": {
+        "endpoint": "http://127.0.0.1:18990",
+        "modelName": "deepseek-flash",
+        "providerId": 1,
+        "modelEntryId": 1
+      },
+      "sourceEvidence": {
+        "runId": "r_a085eb511b834aa5811524b8c7d9eee9",
+        "factId": 44,
+        "producer": "model",
+        "tenantId": "demo",
+        "principalId": "e2-r45-5431afc7:sgv-op-1",
+        "executionPath": "MODEL_HTTP",
+        "externalTruth": "NOT_ASSESSED",
+        "invocationRef": "material:m_bb018c39aaf14722b3dff7945e58f885:MAIN",
+        "schemaVersion": 1,
+        "producerEnvironment": "REAL"
+      }
+    },
+    "resultSummary": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "artifacts": [
+      {
+        "mediaType": "application/json",
+        "digest": "89c78acfc8b8bbcc1e73a85799c10f30f5c41be93de4fc9866eb4b28924569e7",
+        "runId": "r_a085eb511b834aa5811524b8c7d9eee9",
+        "bytes": 606,
+        "downloadPath": "/v1/runs/r_a085eb511b834aa5811524b8c7d9eee9/artifacts/task_result_a085eb511b834aa5811524b8c7d9eee9/download",
+        "artifactId": "task_result_a085eb511b834aa5811524b8c7d9eee9",
+        "publishedDigest": "7d495960d0810d2cb96a4652634fd53c55269c2ffd10c7a6c0be07b2e1e96e99"
+      }
+    ]
+  },
+  "detail": {
+    "taskId": "task-dde06bfa9b0c4b118f1d",
+    "state": "SUCCEEDED",
+    "stateVersion": 4,
+    "mode": "AGENT",
+    "purpose": "EXECUTE",
+    "appCode": "r22e2-real-v2",
+    "goal": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "principalId": "e2-r45-5431afc7:sgv-op-1",
+    "createdAt": "2026-11-27 01:54:10.854919",
+    "parentTaskId": null,
+    "role": null,
+    "subtasks": [],
+    "availableActions": [
+      "REISSUE",
+      "EXPORT"
+    ],
+    "recovery": null,
+    "steps": [
+      {
+        "step_id": "entry",
+        "state": "SUCCEEDED",
+        "attempt_no": 1
+      }
+    ],
+    "dependencies": [],
+    "eventWatermark": 5,
+    "hasCompression": false
+  },
+  "events": {
+    "nextAfterSeq": 5,
+    "truncated": false,
+    "taskId": 43,
+    "events": [
+      {
+        "data": {
+          "goal": "仅回复校验字符 R22_OK。无需使用任何工具。",
+          "mode": "AGENT"
+        },
+        "seq": 1,
+        "occurredAt": "2026-11-27 01:54:10.854919",
+        "type": "TASK_ACCEPTED"
+      },
+      {
+        "data": {
+          "runId": "r_a085eb511b834aa5811524b8c7d9eee9",
+          "stepId": "entry"
+        },
+        "seq": 2,
+        "occurredAt": "2026-11-27 01:54:10.854919",
+        "type": "STEP_READY"
+      },
+      {
+        "data": {
+          "owner": "task-9606319c-622f-4f83-b091-f78197dd96ac",
+          "stepId": "entry",
+          "generation": 1
+        },
+        "seq": 3,
+        "occurredAt": "2026-11-27 01:54:11.26668",
+        "type": "STEP_STARTED"
+      },
+      {
+        "data": {
+          "state": "SUCCEEDED",
+          "stepId": "entry",
+          "generation": 1,
+          "resultDigest": "89c78acfc8b8bbcc1e73a85799c10f30f5c41be93de4fc9866eb4b28924569e7"
+        },
+        "seq": 4,
+        "occurredAt": "2026-11-27 01:54:19.305122",
+        "type": "STEP_FINISHED"
+      },
+      {
+        "data": {
+          "runId": "r_a085eb511b834aa5811524b8c7d9eee9",
+          "state": "SUCCEEDED"
+        },
+        "seq": 5,
+        "occurredAt": "2026-11-27 01:54:19.305122",
+        "type": "TASK_FINISHED"
+      }
+    ]
+  },
+  "afterRestart": {
+    "taskId": "task-dde06bfa9b0c4b118f1d",
+    "state": "SUCCEEDED",
+    "result": {
+      "text": "R22_OK",
+      "usage": {
+        "totalTokens": 69,
+        "promptTokens": 55,
+        "completionTokens": 14
+      },
+      "admission": {
+        "exact": true,
+        "inputTokens": 243,
+        "reservedTokens": 755
+      },
+      "toolCalls": [],
+      "actualModel": {
+        "endpoint": "http://127.0.0.1:18990",
+        "modelName": "deepseek-flash",
+        "providerId": 1,
+        "modelEntryId": 1
+      },
+      "sourceEvidence": {
+        "runId": "r_a085eb511b834aa5811524b8c7d9eee9",
+        "factId": 44,
+        "producer": "model",
+        "tenantId": "demo",
+        "principalId": "e2-r45-5431afc7:sgv-op-1",
+        "executionPath": "MODEL_HTTP",
+        "externalTruth": "NOT_ASSESSED",
+        "invocationRef": "material:m_bb018c39aaf14722b3dff7945e58f885:MAIN",
+        "schemaVersion": 1,
+        "producerEnvironment": "REAL"
+      }
+    },
+    "resultSummary": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "artifacts": [
+      {
+        "downloadPath": "/v1/runs/r_a085eb511b834aa5811524b8c7d9eee9/artifacts/task_result_a085eb511b834aa5811524b8c7d9eee9/download",
+        "artifactId": "task_result_a085eb511b834aa5811524b8c7d9eee9",
+        "publishedDigest": "7d495960d0810d2cb96a4652634fd53c55269c2ffd10c7a6c0be07b2e1e96e99",
+        "mediaType": "application/json",
+        "digest": "89c78acfc8b8bbcc1e73a85799c10f30f5c41be93de4fc9866eb4b28924569e7",
+        "runId": "r_a085eb511b834aa5811524b8c7d9eee9",
+        "bytes": 606
+      }
+    ]
+  },
+  "credentialRevocation": {
+    "http": 200,
+    "code": "OK"
+  }
+}

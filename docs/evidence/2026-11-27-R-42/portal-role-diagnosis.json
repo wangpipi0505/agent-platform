@@ -1,0 +1,147 @@
+{
+  "existing-grants": {
+    "message": "",
+    "method": "GET",
+    "path": "/admin/platform-authorization/grants?subject=operatorA",
+    "http": 200,
+    "code": "OK",
+    "traceId": "4c51cf19-2b7e-48b5-a393-74dfe88d7d3b"
+  },
+  "grant-operator": {
+    "message": "",
+    "method": "PUT",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "e4e964b0-6590-43cc-9d23-0a0b9f82bfd5"
+  },
+  "owner-identity": {
+    "message": "",
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 200,
+    "code": "OK",
+    "traceId": "d8bc78f9-cde7-4263-b619-9e2d396cac24",
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ],
+    "pages": [
+      "/assets/mcp",
+      "/assets/rules",
+      "/audit",
+      "/apps",
+      "/evaluations",
+      "/assets/plugins",
+      "/skills",
+      "/model/prompt-templates",
+      "/model/management",
+      "/platform/authorizations"
+    ],
+    "capabilities": [
+      "skill.manage",
+      "plugin.manage",
+      "agent.view",
+      "model.manage",
+      "audit.read",
+      "agent.publish",
+      "auth.grant",
+      "agent.build"
+    ]
+  },
+  "second-identity": {
+    "message": "身份或授权验证未通过",
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "329484e3-cc8b-46fe-94b9-a1ffdf23db73"
+  },
+  "signedIdentity": {
+    "sub": "operatorA",
+    "tenant_id": "demo",
+    "roles": [
+      "user_manager",
+      "common_user"
+    ],
+    "token_use": "user"
+  },
+  "operator-user-directory": {
+    "message": "身份或授权验证未通过",
+    "method": "GET",
+    "path": "/admin/platform-authorization/users?q=operatorA",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "e5c3669c-71df-4433-909b-fc4ad7cd6897"
+  },
+  "admin-user-directory": {
+    "message": "",
+    "method": "GET",
+    "path": "/admin/platform-authorization/users?q=operatorA",
+    "http": 200,
+    "code": "OK",
+    "traceId": "8eaec019-4c23-431b-851c-43fffbfd8513"
+  },
+  "current-grant": {
+    "message": "",
+    "method": "GET",
+    "path": "/admin/platform-authorization/grants?subject=operatorA",
+    "http": 200,
+    "code": "OK",
+    "traceId": "83144855-f1ed-45a4-9909-cb8470409173"
+  },
+  "registeredGrant": [
+    {
+      "subject": "operatorA",
+      "role": "OPERATOR",
+      "appScope": [
+        "r22e2-real-v2",
+        "satellite-planning-assistant"
+      ],
+      "status": "ACTIVE",
+      "grantedBy": "admin",
+      "expiresAt": "2026-11-26T18:19:02.029947Z"
+    }
+  ],
+  "rolePages": {
+    "admin": {
+      "url": "http://127.0.0.1:29091/console/#/apps",
+      "links": [
+        "智能体管理",
+        "技能库",
+        "提示词模板",
+        "规则管理",
+        "插件与来源",
+        "MCP 连接",
+        "模型管理",
+        "审计记录",
+        "用户与授权",
+        "评测中心",
+        "卫星规划助手satellite-planning-assistant",
+        "R22 E2 validationr22e2-real-v2",
+        "R22 E2 validationr22e2-real-v1",
+        "账号开通与角色授权助手user-governance-assistant"
+      ],
+      "menus": [],
+      "visibleText": "◈ 智能体平台\n构建与管理\n智能体\n▾\n智能体管理\n构建资产\n▾\n技能库\n提示词模板\n规则管理\n集成与治理\n▾\n插件与来源\nMCP 连接\n平台管理\n▾\n模型管理\n审计记录\n用户与授权\n评测中心\n独立环境 · v1.2\n智能体\n/\n智能体管理\n创建智能体\n刷新\n搜索\nCtrl K\n☀ 亮色\n显示密度\n标准\nadmin\n退出\n共 4 条记录\n选择业务分类\n状态（默认不含归档）\n名称 / 编码\n\t\n状态\n\t\n当前版本\n\t\n类型\n\t\n专业领域\n\t\n业务分类\n\t\n说明\n\t\n更新于\n\t\n操作\n卫星规划助手\nsatellite-planning-assistant\n\t\n已发布\n\t\nv2\n\t\nCHAT\n\t\n航天\n\t\n观测任务规划\n\t\n从卫星与目标查询，到载荷约束、观测下传规划、人工确认、任务与结果的完整示例。\n\t\n2026/11/26 19:21\n\t\n运行\n复制\n查看详情\n\n\nR22 E2 validation\nr22e2-real-v2\n\t\n已发布\n\t\nv1\n\t\nCHAT\n\t\n\t\n\t\n\t\n2026/11/25 22:17\n\t\n运行\n复制\n查看详情\n\n\nR22 E2 validation\nr22e2-real-v1\n\t\n草稿\n\t\n—\n\t\nCHAT\n\t\n\t\n\t\n\t\n2026/11/25 22:07\n\t\n运行\n复制\n查看详情\n\n\n账号开通与角色授权助手\nuser-governance-assistant\n\t\n已发布\n\t\nv1\n\t\nFLOW\n\t\n用户管理\n\t\nUSER_GOVERNANCE\n\t\n从业务权限拉取、账号治理规则校验到审批执行及结果读回的账号管理流程。\n\t\n2026/11/20 00:25\n\t\n运行\n复制\n查看详情\n12/page\n1\nTotal 4"
+    },
+    "operator": {
+      "url": "http://127.0.0.1:29091/console/#/apps",
+      "links": [],
+      "menus": [],
+      "visibleText": "AGENT PLATFORM · V1.2\n智能体构建工作台\n\n从模型与技能出发，将业务流程编排为可调试、可评测、可发布的智能体。\n\n当前账号无权访问工作台，请联系管理员\n\n重新连接\n\n身份变化会清除本页未保存内容。"
+    }
+  },
+  "revoke-grant": {
+    "message": "",
+    "method": "DELETE",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "c2a05b2d-6b3b-44a4-af6c-85192ac75503"
+  },
+  "revoke-operator-session": {
+    "http": 200,
+    "code": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "session": {
+    "http": 200,
+    "tenantId": "demo",
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ]
+  },
+  "negative": [
+    {
+      "app": "r22e2-real-v1",
+      "path": "/admin/apps/r22e2-real-v1/runs",
+      "http": 409,
+      "response": {
+        "code": "APP_UNAVAILABLE",
+        "message": "应用未发布或无可运行版本",
+        "data": null,
+        "traceId": null
+      }
+    },
+    {
+      "app": "r43-nonexistent-20261127",
+      "path": "/admin/apps/r43-nonexistent-20261127/runs",
+      "http": 404,
+      "response": {
+        "code": "APP_NOT_FOUND",
+        "message": "应用不存在",
+        "data": null,
+        "traceId": null
+      }
+    }
+  ],
+  "published": {
+    "path": "/admin/apps/r22e2-real-v2/runs",
+    "http": 200
+  }
+}
