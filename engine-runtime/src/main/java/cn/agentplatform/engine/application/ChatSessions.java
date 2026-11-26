@@ -973,6 +973,7 @@ public class ChatSessions {
                                 actor.principalId());
         if (rows.isEmpty()) {
             if (clients != null && clients.iamEnabled()) {
+                store.recordPortalSessionDenial(actor, code, id);
                 org.slf4j.LoggerFactory.getLogger(ChatSessions.class).warn(
                         "AUDIT PORTAL_SESSION_DENIED tenant={} principal={} appCode={} sessionId={}",
                         actor.tenantId(), actor.principalId(), code, id);

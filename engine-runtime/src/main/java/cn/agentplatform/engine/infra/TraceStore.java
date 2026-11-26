@@ -64,6 +64,20 @@ public class TraceStore {
         return tx.execute(s -> f.get());
     }
 
+    /** A rejected turn rolls back its business transaction. Its denial must remain attributable. */
+    public void recordPortalSessionDenial(Actor actor, String app, String session) {
+        var audit = new TransactionTemplate(tx.getTransactionManager());
+        audit.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        audit.executeWithoutResult(status -> db.update("""
+                insert into engine.portal_session_denial(tenant_id,principal_id,app_code,session_id,reason,trace_id)
+                select ?,?,?,?,coalesce((
+                    select case when principal_id<>? then 'SUBJECT_MISMATCH' else 'APP_MISMATCH' end
+                    from engine.chat_session where tenant_id=? and public_id=? and (principal_id<>? or app_code<>?)
+                ), 'SESSION_OUT_OF_SCOPE'),?
+                """, actor.tenantId(), actor.principalId(), app, session, actor.principalId(),
+                actor.tenantId(), session, actor.principalId(), app, TraceContextFilter.current()));
+    }
+
     public Map<String, Object> run(String id, Actor actor) {
         if(protectedRun(id,actor))throw denied();
         var rows =

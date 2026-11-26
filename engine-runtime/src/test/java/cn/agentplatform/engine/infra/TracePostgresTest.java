@@ -34,6 +34,7 @@ class TracePostgresTest {
                 .schemas("engine")
                 .defaultSchema("engine")
                 .locations("classpath:db/migration")
+                .outOfOrder(true)
                 .load()
                 .migrate();
         var clients = new RuntimeClients();

@@ -1,0 +1,91 @@
+{
+  "create-owner": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/v1/apps/r22e2-real-v2/sessions",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "sessionId": "s_9730a387c0224bf7bf44898f3e8f2d6e",
+        "appCode": "r22e2-real-v2",
+        "versionNo": 1,
+        "nextTurn": 1,
+        "maxTurns": 40,
+        "turns": [],
+        "messages": [],
+        "eventWatermark": 0
+      },
+      "traceId": "cb876fab-f0e4-4409-b954-41d55698de16"
+    }
+  },
+  "create-second": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/v1/apps/r42-second-app/sessions",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "sessionId": "s_241f1a7049114c61ba5b39b2d2b8de08",
+        "appCode": "r42-second-app",
+        "versionNo": 1,
+        "nextTurn": 1,
+        "maxTurns": 40,
+        "turns": [],
+        "messages": [],
+        "eventWatermark": 0
+      },
+      "traceId": "1b9347df-ec4a-41f9-82fa-d555f1b0c821"
+    }
+  },
+  "owner-read": {
+    "method": "GET",
+    "path": "http://127.0.0.1:18880/v1/apps/r22e2-real-v2/sessions/s_9730a387c0224bf7bf44898f3e8f2d6e",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "sessionId": "s_9730a387c0224bf7bf44898f3e8f2d6e",
+        "appCode": "r22e2-real-v2",
+        "versionNo": 1,
+        "nextTurn": 1,
+        "maxTurns": 40,
+        "turns": [],
+        "messages": [],
+        "eventWatermark": 0
+      },
+      "traceId": "33ec7d7a-fda2-44b7-bd3e-d2cdf737ff08"
+    }
+  },
+  "other-subject": {
+    "method": "GET",
+    "path": "http://127.0.0.1:18880/v1/apps/r22e2-real-v2/sessions/s_9730a387c0224bf7bf44898f3e8f2d6e",
+    "http": 403,
+    "body": {
+      "code": "SYS-AUTH-403",
+      "message": "无权读取或操作该会话",
+      "data": null,
+      "traceId": "449cc424-b4b0-4002-b919-8b9d2208f4fb",
+      "userMessage": "无权读取或操作该会话",
+      "category": "AUTH",
+      "retryable": false
+    }
+  },
+  "other-app": {
+    "method": "GET",
+    "path": "http://127.0.0.1:18880/v1/apps/r42-second-app/sessions/s_9730a387c0224bf7bf44898f3e8f2d6e",
+    "http": 403,
+    "body": {
+      "code": "SYS-AUTH-403",
+      "message": "无权读取或操作该会话",
+      "data": null,
+      "traceId": "8035b989-80db-48d9-a061-a8538f85077d",
+      "userMessage": "无权读取或操作该会话",
+      "category": "AUTH",
+      "retryable": false
+    }
+  },
+  "audit": []
+}

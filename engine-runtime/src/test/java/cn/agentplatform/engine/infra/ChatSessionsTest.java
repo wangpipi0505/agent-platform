@@ -35,6 +35,19 @@ class ChatSessionsTest {
     }
 
     @Test
+    void deniedSessionAuditSurvivesRollbackOfTheRequest() {
+        var actor = new Actor("audit-test", "reader", Set.of("USER"), Map.of());
+        String id = "s_" + UUID.randomUUID().toString().replace("-", "");
+        assertThrows(PlatformException.class, () -> TracePostgresTest.store.atomic(() -> {
+            TracePostgresTest.store.recordPortalSessionDenial(actor, "chat", id);
+            throw new PlatformException(403, "SYS-AUTH-403", "会话访问被拒绝");
+        }));
+        assertEquals(List.of("SESSION_OUT_OF_SCOPE"), TracePostgresTest.db.queryForList(
+                "select reason from engine.portal_session_denial where tenant_id=? and principal_id=? and session_id=?",
+                String.class, actor.tenantId(), actor.principalId(), id));
+    }
+
+    @Test
     void turnsArePinnedOwnedIdempotentAndCarryPreviousRunMessages() throws Exception {
         var entry = Json.read("{\"modelEntryId\":1}");
         var snapshot =

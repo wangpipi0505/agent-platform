@@ -1,0 +1,108 @@
+{
+  "create-owner": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/v1/apps/r22e2-real-v2/sessions",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "sessionId": "s_f363036de17242c7b73d814e35ae1008",
+        "appCode": "r22e2-real-v2",
+        "versionNo": 1,
+        "nextTurn": 1,
+        "maxTurns": 40,
+        "turns": [],
+        "messages": [],
+        "eventWatermark": 0
+      },
+      "traceId": "d1c6b98a-6854-4166-8b1b-3a1797cfec1b"
+    }
+  },
+  "create-second": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/v1/apps/r42-second-app/sessions",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "sessionId": "s_a00229e908eb4861979dd93011db54ba",
+        "appCode": "r42-second-app",
+        "versionNo": 1,
+        "nextTurn": 1,
+        "maxTurns": 40,
+        "turns": [],
+        "messages": [],
+        "eventWatermark": 0
+      },
+      "traceId": "53785095-f458-4e1e-ae42-fb60708fece4"
+    }
+  },
+  "owner-read": {
+    "method": "GET",
+    "path": "http://127.0.0.1:18880/v1/apps/r22e2-real-v2/sessions/s_f363036de17242c7b73d814e35ae1008",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "sessionId": "s_f363036de17242c7b73d814e35ae1008",
+        "appCode": "r22e2-real-v2",
+        "versionNo": 1,
+        "nextTurn": 1,
+        "maxTurns": 40,
+        "turns": [],
+        "messages": [],
+        "eventWatermark": 0
+      },
+      "traceId": "3613c90e-52dd-4549-b385-0879c162838f"
+    }
+  },
+  "other-subject": {
+    "method": "GET",
+    "path": "http://127.0.0.1:18880/v1/apps/r22e2-real-v2/sessions/s_f363036de17242c7b73d814e35ae1008",
+    "http": 403,
+    "body": {
+      "code": "SYS-AUTH-403",
+      "message": "无权读取或操作该会话",
+      "data": null,
+      "traceId": "723815e2-8561-43a9-9e7c-e670398f7d9c",
+      "userMessage": "无权读取或操作该会话",
+      "category": "AUTH",
+      "retryable": false
+    }
+  },
+  "other-app": {
+    "method": "GET",
+    "path": "http://127.0.0.1:18880/v1/apps/r42-second-app/sessions/s_f363036de17242c7b73d814e35ae1008",
+    "http": 403,
+    "body": {
+      "code": "SYS-AUTH-403",
+      "message": "无权读取或操作该会话",
+      "data": null,
+      "traceId": "15e27f09-2b63-48dd-96a0-381b298cc1a1",
+      "userMessage": "无权读取或操作该会话",
+      "category": "AUTH",
+      "retryable": false
+    }
+  },
+  "audit": [
+    {
+      "tenant_id": "t-r46-verify",
+      "principal_id": "observer",
+      "app_code": "r22e2-real-v2",
+      "session_id": "s_f363036de17242c7b73d814e35ae1008",
+      "reason": "SUBJECT_MISMATCH",
+      "trace_id": "723815e2-8561-43a9-9e7c-e670398f7d9c"
+    },
+    {
+      "tenant_id": "t-r46-verify",
+      "principal_id": "auditor",
+      "app_code": "r42-second-app",
+      "session_id": "s_f363036de17242c7b73d814e35ae1008",
+      "reason": "APP_MISMATCH",
+      "trace_id": "15e27f09-2b63-48dd-96a0-381b298cc1a1"
+    }
+  ]
+}

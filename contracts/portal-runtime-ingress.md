@@ -21,3 +21,7 @@ IAM 网关只接受已验证、含 `platform.access` 的门户票。允许 GET �
 网关和引擎核对绑定的应用与会话，数据库核对租户、主体。外部提交不能指定历史。引擎从本人会话已成功的历史轮次构造正式模型输入。回答写入 `assistant/message.content`，结束帧 `turn/end` 含 turn、reason、status、runId。用户面过滤系统消息。每次重连由网关重新换票，已连接的流定期复核授权。
 
 在签发服务提交 `POST /oauth/session/revoke`，以 Authorization Bearer 携带要撤销的本人门户票，成功返回 `{"revoked":true}`。重复撤销幂等。过期或被撤销的门户票不能继续换取会话权能，其他登录独立。签发服务用 `AGENT_AUTHORITY_REVOCATION_DB`、`AGENT_DB_USER`、`AGENT_DB_PASSWORD` 连接同一 PostgreSQL，Flyway 在独立 `iam_revocation` schema 保存登录指纹与到期时间。多实例共用该库，撤销登记不可读时拒绝换票。独立 dev/test 未提供撤销库时撤销请求返回 503；正式身份签发需配置撤销库。
+
+### 会话归属拒绝记录
+
+同租户的其他主体访问会话、本人从其他应用路径访问会话，均返回 HTTP 403。引擎在独立事务中写入 `engine.portal_session_denial`，保存调用主体、请求应用、会话标识、traceId 和拒绝原因。其他主体记为 `SUBJECT_MISMATCH`，本人跨应用记为 `APP_MISMATCH`，当前租户中查不到目标记为 `SESSION_OUT_OF_SCOPE`。拒绝响应不公开会话归属信息。
