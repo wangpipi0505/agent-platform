@@ -1,0 +1,45 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions?mine=true",
+      "http": 200,
+      "code": "OK",
+      "traceId": "8a1840b5-d6a6-45b3-a788-3f3aa5062a33"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "cc497a50-f080-4a55-b836-5daa44d13966",
+      "taskId": "task-112ec5fa80e64b7ebf4a",
+      "state": "ACCEPTED"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "1ef71df1-ae3a-4c3e-8ed3-34e6e043f9e6",
+      "taskId": "task-112ec5fa80e64b7ebf4a",
+      "state": "ACCEPTED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-112ec5fa80e64b7ebf4a",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "traceId": "7f3f614b-ccd8-48a6-aa90-d7d596e17215"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/tasks/task-112ec5fa80e64b7ebf4a/plans",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "traceId": "8e5765a7-5eeb-4cc7-8d68-1899d73b3d4a"
+    }
+  ],
+  "planId": "p-a8a61431a9d748f5",
+  "taskId": "task-112ec5fa80e64b7ebf4a"
+}

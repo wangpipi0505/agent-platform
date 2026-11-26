@@ -1,0 +1,18 @@
+Filesystem               Size  Used Avail Use% Mounted on
+/dev/mapper/centos-home  157G   16G  142G  10% /home
+dump bytes=1211545 mode=600
+787 r22-candidates/r42-20261127-portal2/before.toc
+e669b2ae3c57a1e7f01a14e38375ef89b1434b02277abf286b00650b4c00cf69  r22-candidates/r42-20261127-portal2/before.dump
+/agent-platform-gateway agent-platform-v12/platform-gateway:r42-20261127-portal1 sha256:ed85a45476afa46f2819f0a3847194d1356f0e649cf8e499cc02cd3adfe9f7eb running
+/agent-platform-app agent-platform-v12/app-management:r42-20261127-portal1 sha256:80ffac610a5b960caa484fcee09078f288a3063f05d48e600766d6a42672e149 running
+/agent-platform-engine agent-platform-v12/engine-runtime:r42-20261127-portal1 sha256:a05b839b9a64165922dbec6aadfa23e861b426e197f53a9aa203bd263ec1f887 running
+/agent-platform-skill agent-platform-v12/skill-registry:r42-20261127-portal1 sha256:1618a4f3c35210b39d6c47a85a768e97240b69dcf17dee724cdf93f69a16f4f2 running
+/agent-platform-model agent-platform-v12/model-gateway:r42-20261127-portal1 sha256:83bede655709e0fc3add28492d04a39ce5e13f417d3dd38179e42c08aef1ebb9 running
+/agent-platform-monitor agent-platform-v12/monitor:r42-20261127-portal1 sha256:c3daedb45bf939eba594266d35e7a37b51b7ed1c095fb0e090e30329dfec658d running
+/agent-platform-authority agent-platform-v12/authority-service:r42-20261127-portal1 sha256:cea7f050e074958166795d1475adebf404b02e13cd42e83f3af123c27c2caaf3 running
+/agent-platform-frontend agent-platform-v12/frontend:r42-20261127-portal1 sha256:79425cf0af128a731b03922c9c94f30eb7b38095c8fc06fcdddb153f7c5a131d running
+/home/agent-platform/r22-candidates/r42-20261127-portal1/nginx.conf /etc/nginx/nginx-e2.conf
+
+["nginx","-c","/etc/nginx/nginx-e2.conf","-g","daemon off;"] null 10001:10001
+gateway override keys ['environment', 'image', 'volumes']
+gateway volume targets ['/opt/agent/r23-application.yml']

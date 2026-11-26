@@ -1,0 +1,113 @@
+{
+  "app": "satellite-planning-assistant",
+  "steps": [
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant/versions",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3c41542a-301f-4e24-a87f-41361842a163"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/model-entries",
+      "http": 200,
+      "code": "OK",
+      "traceId": "41dc647a-229a-48c3-b396-9fc78a33183d"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant",
+      "http": 200,
+      "code": "OK",
+      "traceId": "54e09efa-9146-4ece-a979-7b446053af5d"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant",
+      "http": 200,
+      "code": "OK",
+      "traceId": "80b102f0-ea13-42f4-ae90-71d0a7be4aea"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/model-bindings/refreeze",
+      "http": 200,
+      "code": "OK",
+      "traceId": "5826f393-cd1e-4af9-98ce-c73ec4415227"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant",
+      "http": 200,
+      "code": "OK",
+      "traceId": "a63cb06a-9fe9-45fd-989c-9ac5790558fd"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/precheck",
+      "http": 200,
+      "code": "OK",
+      "traceId": "58cc40c2-3db3-4ab6-827c-df61ab540961"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/precheck",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ee20eab7-8716-4928-9148-8e8452348abb"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/commit",
+      "http": 200,
+      "code": "OK",
+      "traceId": "9bc0d7af-2c0a-48c1-b171-47839dd7f00f"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant/versions",
+      "http": 200,
+      "code": "OK",
+      "traceId": "7591aa23-1896-4601-aec1-a091559c86a1"
+    }
+  ],
+  "before": [
+    [
+      2,
+      null
+    ],
+    [
+      1,
+      null
+    ]
+  ],
+  "freeze": {
+    "draftRev": 5,
+    "modelBindingRefs": [
+      {
+        "sha256": "b04638ca342d1bc8fa4a27c2dcb6e5046361ffa2011c93335cedf5041f528ac3",
+        "bindingId": 1
+      }
+    ]
+  },
+  "precheck": {
+    "passed": true,
+    "precheckId": "pc_52232faf-9237-4838-86b5-2c23a17dca06",
+    "draftRev": 5,
+    "evalReportId": "er_f803e082-743e-4744-b77b-e9b97e6ccd2f"
+  },
+  "release": {
+    "versionNo": 2
+  },
+  "after": [
+    [
+      2,
+      null
+    ],
+    [
+      1,
+      null
+    ]
+  ]
+}

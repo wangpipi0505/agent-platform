@@ -1,0 +1,75 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant",
+      "http": 200,
+      "code": "OK",
+      "traceId": "8c413b36-eac9-4be9-8347-8829d9c2fae3"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations",
+      "http": 200,
+      "code": "OK",
+      "traceId": "fe5115b0-9fdb-4fec-9c5b-6ff0083b3945"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations/er_f803e082-743e-4744-b77b-e9b97e6ccd2f/resume",
+      "http": 200,
+      "code": "OK",
+      "traceId": "07af13cb-53a6-426f-8896-dd9e08f61286"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations/er_f803e082-743e-4744-b77b-e9b97e6ccd2f/resume",
+      "http": 200,
+      "code": "OK",
+      "traceId": "a71844a7-2a3b-4a18-9721-09104e7d41a2"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations/er_f803e082-743e-4744-b77b-e9b97e6ccd2f/resume",
+      "http": 200,
+      "code": "OK",
+      "traceId": "a5012cdd-f15c-4ca3-9457-cf5e013054de"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/evaluations/er_f803e082-743e-4744-b77b-e9b97e6ccd2f/resume",
+      "http": 200,
+      "code": "OK",
+      "traceId": "1cdaf5cd-ff50-4372-b13a-5c4238ccb7ca"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/precheck",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3ab14933-74fc-4f7c-a48d-806d60e50674"
+    }
+  ],
+  "reportId": "er_f803e082-743e-4744-b77b-e9b97e6ccd2f",
+  "statuses": [
+    "RUNNING",
+    "RUNNING",
+    "RUNNING",
+    "RUNNING",
+    "ACCEPTED"
+  ],
+  "terminal": {
+    "id": "er_f803e082-743e-4744-b77b-e9b97e6ccd2f",
+    "status": "ACCEPTED",
+    "failureCode": null,
+    "outcome": null
+  },
+  "precheck": {
+    "passed": true,
+    "precheckId": "pc_77a36036-3f83-447f-8cdf-a54f0443e60e",
+    "evalReportId": "er_f803e082-743e-4744-b77b-e9b97e6ccd2f",
+    "candidateSha256": "1b16043e34ab0e56cea3fe32a9b1bb97ce4b6e42a8ebb8142976ed71f9dc94a0",
+    "environmentEvidenceSha256": "a175e64a6d76f2ab382624ae3255579b8a42fbd798631c323ae7848500ee74b5",
+    "draftRev": 5
+  }
+}

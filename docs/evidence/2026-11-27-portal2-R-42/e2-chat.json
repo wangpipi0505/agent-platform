@@ -1,0 +1,121 @@
+{
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "ea2a143c-fd42-4cb5-a8e4-733efcc601b6"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "58966bc0-a164-4db7-934c-63eadb52a6e2"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_f75b5d15e38d43fc82fb02561024243a",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "b6f5dbf9-b326-4a04-8a1f-d4f09d90dfc4"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/user-governance-assistant/sessions/s_f75b5d15e38d43fc82fb02561024243a",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "message": "无权读取或操作该会话",
+      "traceId": "053ddd35-38a7-4a87-9309-e2577c6f5786"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_f75b5d15e38d43fc82fb02561024243a/turns",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "16f4d52b-291a-4c38-be62-5d9557639f37"
+    },
+    {
+      "method": "POST",
+      "path": "/oauth/session/revoke",
+      "http": 200,
+      "code": null,
+      "message": null,
+      "traceId": null
+    },
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 401,
+      "code": "IAM_AUTHORITY_UNAUTHORIZED",
+      "message": "调用方未被可信授权服务认证（401）",
+      "traceId": "2952443d-a43b-46b0-9986-61464e02b260"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "message": "",
+      "traceId": "87a731a2-2e0f-4a5b-92e0-0b9a6fb59e58"
+    }
+  ],
+  "principal": "admin",
+  "browser": {
+    "events": [
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions",
+        "http": 200
+      },
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_68ff8a13c3c045b98f16083c8b47d0f7",
+        "http": 200
+      },
+      {
+        "method": "GET",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_68ff8a13c3c045b98f16083c8b47d0f7/events/stream",
+        "http": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_68ff8a13c3c045b98f16083c8b47d0f7/turns",
+        "http": 200,
+        "code": "OK",
+        "traceId": "ba3232af-3c29-446c-bf17-1fd708bb8849",
+        "runId": "r_9736235279124e198f554301d3643194"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/apps/r22e2-real-v2/sessions/s_68ff8a13c3c045b98f16083c8b47d0f7/turns",
+        "http": 409,
+        "code": "CHAT_TURN_ACTIVE",
+        "traceId": "68471454-b3fd-4b27-b534-cca6eb983016"
+      }
+    ],
+    "alert": [
+      "上一轮仍在执行或恢复"
+    ],
+    "messages": [
+      "你Reply R22_OK. Do not use tools.",
+      "智能体R22_OK",
+      "你第1轮，请回复 R22_OK。请只使用文本，不调用工具。"
+    ]
+  },
+  "apiTurn": {
+    "runId": "r_9c12fbad5cd942e0a920c0587d96b183",
+    "status": "PENDING",
+    "code": null
+  },
+  "revocation": {
+    "revoke": 200,
+    "previous": 401,
+    "parallelLogin": 200
+  }
+}

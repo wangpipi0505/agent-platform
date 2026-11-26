@@ -1,0 +1,8 @@
+agent-platform-gateway gate=IAM_SCOPE_ACCEPTED entrypoint=["/bin/sh","/opt/agent/entrypoint.sh"]
+agent-platform-authority gate=IAM_SCOPE_ACCEPTED entrypoint=["/bin/sh","/opt/agent/entrypoint.sh"]
+agent-platform-app gate=IAM_SCOPE_ACCEPTED entrypoint=["/bin/sh","/opt/agent/entrypoint.sh"]
+agent-platform-engine gate=IAM_SCOPE_ACCEPTED entrypoint=["/bin/sh","/opt/agent/entrypoint.sh"]
+agent-platform-skill gate=IAM_SCOPE_ACCEPTED entrypoint=["/bin/sh","/opt/agent/entrypoint.sh"]
+agent-platform-model gate=IAM_SCOPE_ACCEPTED entrypoint=["/bin/sh","/opt/agent/entrypoint.sh"]
+agent-platform-monitor gate=IAM_SCOPE_ACCEPTED entrypoint=["/bin/sh","/opt/agent/entrypoint.sh"]
+isolated unset-decision candidate exit=78 message=Deployment blocked: IAM and service-scope acceptance required.

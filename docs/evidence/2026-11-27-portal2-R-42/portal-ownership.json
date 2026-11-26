@@ -1,0 +1,209 @@
+{
+  "before-grant-app": {
+    "method": "GET",
+    "path": "/v1/apps/r22e2-real-v2/sessions",
+    "http": 403,
+    "code": "PLATFORM_CAPABILITY_DENIED",
+    "traceId": "f28987e6-859d-4962-b5ef-a88c4a76b408"
+  },
+  "existing-grants": {
+    "method": "GET",
+    "path": "/admin/platform-authorization/grants?subject=operatorA",
+    "http": 200,
+    "code": "OK",
+    "traceId": "c2113b12-e6bc-4193-83ec-fe12e5032674"
+  },
+  "grant-operator": {
+    "method": "PUT",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "1192048a-a0d8-4658-bf84-9e850fb88d8f"
+  },
+  "owner-identity": {
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 200,
+    "code": "OK",
+    "traceId": "65ec68f4-8a11-4517-bffa-e0630ffd97d2",
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ],
+    "pages": [
+      "/audit",
+      "/apps",
+      "/evaluations",
+      "/assets/plugins",
+      "/skills",
+      "/model/prompt-templates",
+      "/model/management",
+      "/platform/authorizations",
+      "/assets/mcp",
+      "/assets/rules"
+    ],
+    "capabilities": [
+      "model.manage",
+      "audit.read",
+      "agent.publish",
+      "auth.grant",
+      "agent.build",
+      "skill.manage",
+      "plugin.manage",
+      "agent.view"
+    ]
+  },
+  "second-identity": {
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 200,
+    "code": "OK",
+    "traceId": "3ab956fd-2e11-415f-9181-f3d96a788353",
+    "principalId": "operatorA",
+    "roles": [
+      "OPERATOR"
+    ],
+    "pages": [
+      "/apps"
+    ],
+    "capabilities": [
+      "agent.view"
+    ]
+  },
+  "owner-create": {
+    "method": "POST",
+    "path": "/v1/apps/r22e2-real-v2/sessions",
+    "http": 200,
+    "code": "OK",
+    "traceId": "1aaea5b3-d456-4ef7-aec1-4f432fa6035e",
+    "sessionId": "s_2880053158b14661bdf2035a960715dc"
+  },
+  "second-create": {
+    "method": "POST",
+    "path": "/v1/apps/satellite-planning-assistant/sessions",
+    "http": 200,
+    "code": "OK",
+    "traceId": "d6fae861-cdf6-4148-9241-aaf460211b0e",
+    "sessionId": "s_c50b4ea872024441bdd0ae15485e6e74"
+  },
+  "second-own-read": {
+    "method": "GET",
+    "path": "/v1/apps/satellite-planning-assistant/sessions/s_c50b4ea872024441bdd0ae15485e6e74",
+    "http": 200,
+    "code": "OK",
+    "traceId": "a30ba1c6-2b0a-4ae2-b00b-364ce7a35930",
+    "sessionId": "s_c50b4ea872024441bdd0ae15485e6e74"
+  },
+  "owner-own-read": {
+    "method": "GET",
+    "path": "/v1/apps/r22e2-real-v2/sessions/s_2880053158b14661bdf2035a960715dc",
+    "http": 200,
+    "code": "OK",
+    "traceId": "bc6d9083-b4cb-471f-8e2d-1f01bc74d9e9",
+    "sessionId": "s_2880053158b14661bdf2035a960715dc"
+  },
+  "outside-scope": {
+    "method": "GET",
+    "path": "/v1/apps/user-governance-assistant/sessions",
+    "http": 403,
+    "code": "PLATFORM_CAPABILITY_DENIED",
+    "traceId": "37f9f6a4-e5b0-4c0e-8950-75ed4c066ee6"
+  },
+  "other-subject": {
+    "method": "GET",
+    "path": "/v1/apps/r22e2-real-v2/sessions/s_2880053158b14661bdf2035a960715dc",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "ab0e4acb-cda4-4d4b-800d-705426a3ed6e"
+  },
+  "other-app": {
+    "method": "GET",
+    "path": "/v1/apps/satellite-planning-assistant/sessions/s_2880053158b14661bdf2035a960715dc",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "14e12303-5fe1-400b-bf90-2cdccf8a3aaf"
+  },
+  "operator-release-precheck": {
+    "method": "POST",
+    "path": "/admin/apps/r22e2-real-v2/publish/precheck",
+    "http": 403,
+    "code": "PLATFORM_CAPABILITY_DENIED",
+    "traceId": "20746691-892f-4580-8ac0-06e2d0e21997"
+  },
+  "operator-admin-route": {
+    "method": "GET",
+    "path": "/admin/platform-authorization/users?q=operatorA",
+    "http": 403,
+    "code": "PLATFORM_CAPABILITY_DENIED",
+    "traceId": "91906a26-d42c-425f-b77c-ed386e434d84"
+  },
+  "audit": [
+    {
+      "tenant_id": "demo",
+      "principal_id": "operatorA",
+      "app_code": "r22e2-real-v2",
+      "session_id": "s_2880053158b14661bdf2035a960715dc",
+      "reason": "SUBJECT_MISMATCH",
+      "trace_id": "ab0e4acb-cda4-4d4b-800d-705426a3ed6e"
+    },
+    {
+      "tenant_id": "demo",
+      "principal_id": "admin",
+      "app_code": "satellite-planning-assistant",
+      "session_id": "s_2880053158b14661bdf2035a960715dc",
+      "reason": "APP_MISMATCH",
+      "trace_id": "14e12303-5fe1-400b-bf90-2cdccf8a3aaf"
+    }
+  ],
+  "rolePages": {
+    "admin": {
+      "url": "http://127.0.0.1:29091/console/#/apps",
+      "links": [
+        "智能体管理",
+        "技能库",
+        "提示词模板",
+        "规则管理",
+        "插件与来源",
+        "MCP 连接",
+        "模型管理",
+        "审计记录",
+        "用户与授权",
+        "评测中心",
+        "卫星规划助手satellite-planning-assistant",
+        "R22 E2 validationr22e2-real-v2",
+        "R22 E2 validationr22e2-real-v1",
+        "账号开通与角色授权助手user-governance-assistant"
+      ],
+      "menus": [],
+      "visibleText": "◈ 智能体平台\n构建与管理\n智能体\n▾\n智能体管理\n构建资产\n▾\n技能库\n提示词模板\n规则管理\n集成与治理\n▾\n插件与来源\nMCP 连接\n平台管理\n▾\n模型管理\n审计记录\n用户与授权\n评测中心\n独立环境 · v1.2\n智能体\n/\n智能体管理\n创建智能体\n刷新\n搜索\nCtrl K\n☀ 亮色\n显示密度\n标准\nadmin\n退出\n共 4 条记录\n选择业务分类\n状态（默认不含归档）\n名称 / 编码\n\t\n状态\n\t\n当前版本\n\t\n类型\n\t\n专业领域\n\t\n业务分类\n\t\n说明\n\t\n更新于\n\t\n操作\n卫星规划助手\nsatellite-planning-assistant\n\t\n已发布\n\t\nv2\n\t\nCHAT\n\t\n航天\n\t\n观测任务规划\n\t\n从卫星与目标查询，到载荷约束、观测下传规划、人工确认、任务与结果的完整示例。\n\t\n2026/11/26 19:21\n\t\n运行\n复制\n查看详情\n\n\nR22 E2 validation\nr22e2-real-v2\n\t\n已发布\n\t\nv1\n\t\nCHAT\n\t\n\t\n\t\n\t\n2026/11/25 22:17\n\t\n运行\n复制\n查看详情\n\n\nR22 E2 validation\nr22e2-real-v1\n\t\n草稿\n\t\n—\n\t\nCHAT\n\t\n\t\n\t\n\t\n2026/11/25 22:07\n\t\n运行\n复制\n查看详情\n\n\n账号开通与角色授权助手\nuser-governance-assistant\n\t\n已发布\n\t\nv1\n\t\nFLOW\n\t\n用户管理\n\t\nUSER_GOVERNANCE\n\t\n从业务权限拉取、账号治理规则校验到审批执行及结果读回的账号管理流程。\n\t\n2026/11/20 00:25\n\t\n运行\n复制\n查看详情\n12/page\n1\nTotal 4"
+    },
+    "operator": {
+      "url": "http://127.0.0.1:29091/console/#/apps",
+      "links": [
+        "智能体管理",
+        "卫星规划助手satellite-planning-assistant",
+        "R22 E2 validationr22e2-real-v2"
+      ],
+      "menus": [],
+      "visibleText": "◈ 智能体平台\n构建与管理\n智能体\n▾\n智能体管理\n独立环境 · v1.2\n智能体\n/\n智能体管理\n刷新\n搜索\nCtrl K\n☀ 亮色\n显示密度\n标准\noperatorA\n退出\n共 2 条记录\n选择业务分类\n状态（默认不含归档）\n名称 / 编码\n\t\n状态\n\t\n当前版本\n\t\n类型\n\t\n专业领域\n\t\n业务分类\n\t\n说明\n\t\n更新于\n\t\n操作\n卫星规划助手\nsatellite-planning-assistant\n\t\n已发布\n\t\nv2\n\t\nCHAT\n\t\n航天\n\t\n观测任务规划\n\t\n从卫星与目标查询，到载荷约束、观测下传规划、人工确认、任务与结果的完整示例。\n\t\n2026/11/26 19:21\n\t\n运行\n查看详情\n\n\nR22 E2 validation\nr22e2-real-v2\n\t\n已发布\n\t\nv1\n\t\nCHAT\n\t\n\t\n\t\n\t\n2026/11/25 22:17\n\t\n运行\n查看详情\n12/page\n1\nTotal 2"
+    }
+  },
+  "revoke-grant": {
+    "method": "DELETE",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "35c5a67c-5127-4dea-9a22-8ecfe41dfdd5"
+  },
+  "revoked-own-read": {
+    "method": "GET",
+    "path": "/v1/apps/satellite-planning-assistant/sessions/s_c50b4ea872024441bdd0ae15485e6e74",
+    "http": 403,
+    "code": "PLATFORM_CAPABILITY_DENIED",
+    "traceId": "c75b4dfc-4487-429a-b39e-16ee8d153d7d"
+  },
+  "revoke-operator-session": {
+    "http": 200,
+    "code": null
+  }
+}

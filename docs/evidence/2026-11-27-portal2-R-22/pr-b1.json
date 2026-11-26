@@ -1,0 +1,139 @@
+{
+  "steps": [
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "3f12c65b-7019-4a45-965e-e130af27cb3f",
+      "method": "GET",
+      "path": "/auth/session"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "c54700e5-b602-4077-9155-df306cc7b197",
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "88b20efe-1d73-446c-92bf-48970cc58d92",
+      "method": "POST",
+      "path": "/admin/evaluations"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "6fdefd4e-58f8-45c8-bf07-aa5a1e8973bb",
+      "method": "POST",
+      "path": "/admin/evaluations/er_27991495-987b-48d8-8f89-4e9ddca6dbdf/resume"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "c09b6368-852f-4ed6-98cc-4b911175fbb0",
+      "method": "POST",
+      "path": "/admin/evaluations/er_27991495-987b-48d8-8f89-4e9ddca6dbdf/resume"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "ea947d78-14ca-41a0-9373-a52f96bb527c",
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/precheck"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "1f1d9164-6e91-49cc-89f2-fa3f63c1d9ed",
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/publish/commit"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "1755d851-171b-47ae-842d-1b9cbd7362c3",
+      "method": "GET",
+      "path": "/admin/apps/satellite-planning-assistant/versions/2"
+    },
+    {
+      "http": 200,
+      "code": "OK",
+      "traceId": "bd27f2dc-8e30-4ab2-ba91-684f8c6cfb7e",
+      "method": "POST",
+      "path": "/admin/apps/satellite-planning-assistant/runs"
+    }
+  ],
+  "identity": {
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ],
+    "tenantId": "demo"
+  },
+  "evaluation": {
+    "id": "er_27991495-987b-48d8-8f89-4e9ddca6dbdf",
+    "status": "ACCEPTED",
+    "failureCode": null
+  },
+  "precheck": {
+    "passed": true,
+    "precheckId": "pc_f1991c99-8fb3-4642-a9a3-ec1ee167ad41",
+    "evalReportId": "er_27991495-987b-48d8-8f89-4e9ddca6dbdf",
+    "candidateSha256": "1b16043e34ab0e56cea3fe32a9b1bb97ce4b6e42a8ebb8142976ed71f9dc94a0",
+    "draftRev": 5,
+    "environmentEvidenceSha256": "178add01dc0330bd5c60cabbfe886a7f66aaba55bbd2aa25ad71709a17f9562c"
+  },
+  "versionNo": 2,
+  "modelRefs": [
+    {
+      "entry": {
+        "id": 1,
+        "baseUrl": "http://127.0.0.1:18990",
+        "protocol": "OPENAI_COMPATIBLE",
+        "provider": {
+          "id": 1,
+          "code": "deepseek",
+          "name": "DeepSeek",
+          "trustLabels": [
+            "public"
+          ]
+        },
+        "modelName": "deepseek-flash",
+        "providerId": 1,
+        "displayName": "deepseek-flash",
+        "capabilities": [
+          "chat"
+        ],
+        "tokenizerUrl": "http://127.0.0.1:18990/tokenize",
+        "contextWindow": 1048576,
+        "maxOutputTokens": 393216
+      },
+      "modelEntryId": 1,
+      "modelBindingRef": {
+        "sha256": "b04638ca342d1bc8fa4a27c2dcb6e5046361ffa2011c93335cedf5041f528ac3",
+        "bindingId": 1
+      }
+    }
+  ],
+  "database": {
+    "runId": "r_0937d593f9b84c6395d257d3f5893a68",
+    "state": "SUCCEEDED",
+    "engineUsage": {
+      "totalTokens": 199,
+      "promptTokens": 195,
+      "completionTokens": 4
+    },
+    "versionNo": 2,
+    "sha": "1b16043e34ab0e56cea3fe32a9b1bb97ce4b6e42a8ebb8142976ed71f9dc94a0",
+    "calls": [
+      {
+        "input": 195,
+        "output": 4,
+        "total": 199,
+        "reconciliation": "RECONCILED"
+      }
+    ]
+  },
+  "passed": true
+}
