@@ -6,6 +6,7 @@
  * （POST memories 携带当前会话 ID，默认 PRIVATE——接口稿 §5.4）。
  */
 import { computed, ref } from "vue";
+import { guard } from "../../shared/api-task";
 import {
   createMemory,
   deleteMemory,
@@ -20,7 +21,7 @@ import { confirmDanger } from "../../shared/components/DangerConfirm";
 type MemoryListItem = MockMemoryRow;
 type MemoryDetail = { memoryId: string; content: string; kind: MemoryKind; scope: string; tags: string[]; version: number; status: string };
 
-const props = defineProps<{ sessionId: string }>();
+const props = defineProps<{ sessionId: string; appCode: string }>();
 
 const rows = ref<MemoryListItem[]>([]);
 const selected = ref<MemoryDetail | null>(null);
@@ -29,10 +30,16 @@ const notice = ref("");
 const query = ref("");
 
 const refresh = async () => {
-  const page = await listMemories({ q: query.value });
+  const page = await guard(() => listMemories({ q: query.value }, props.appCode));
+  if ("error" in page) {
+    rows.value = [];
+    selected.value = null;
+    error.value = page.userMessage;
+    return;
+  }
   rows.value = page.memories;
   if (selected.value) {
-    const fresh = await getMemory(selected.value.memoryId);
+    const fresh = await getMemory(selected.value.memoryId, props.appCode);
     selected.value = "error" in fresh ? null : fresh;
   }
 };
@@ -63,7 +70,7 @@ async function submitSave() {
     scope: saveForm.value.scope,
     tags: tagsOf(saveForm.value.tags),
     sessionId: saveSessionId.value || undefined,
-  });
+  }, props.appCode);
   if ("error" in res) {
     error.value = res.userMessage || res.error;
     return;
@@ -78,7 +85,7 @@ const editing = ref(false);
 const editForm = ref({ content: "", tags: "" });
 const showDetail = async (row: MemoryListItem) => {
   error.value = "";
-  const res = await getMemory(row.memoryId);
+  const res = await getMemory(row.memoryId, props.appCode);
   if ("error" in res) {
     error.value = "正文读取失败：该条目不可见或已撤销";
     return;
@@ -98,7 +105,7 @@ const submitEdit = async () => {
     content: editForm.value.content,
     tags: tagsOf(editForm.value.tags),
     expectedVersion: selected.value.version,
-  });
+  }, props.appCode);
   if ("error" in res) {
     error.value = res.error === "MEMORY_VERSION_CONFLICT"
       ? "记忆已被其他修改更新（版本冲突），已重新加载，请基于最新内容再改。"
@@ -121,7 +128,7 @@ const remove = async (row: MemoryListItem) => {
   )
     return;
   error.value = "";
-  const res = await deleteMemory(row.memoryId, { requestId: crypto.randomUUID() });
+  const res = await deleteMemory(row.memoryId, { requestId: crypto.randomUUID() }, props.appCode);
   if ("error" in res) {
     error.value = "删除失败";
     return;

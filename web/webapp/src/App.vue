@@ -166,11 +166,14 @@ onBeforeUnmount(stopMedia);
             @select="selectRow"
             @create="createSession"
           />
-          <MyMemories
-            v-show="sideTab === 'memories'"
-            ref="memoriesRef"
-            :session-id="current?.sessionId ?? ''"
-          />
+          <KeepAlive :key="auth.generation">
+            <MyMemories
+              v-if="sideTab === 'memories'"
+              ref="memoriesRef"
+              :app-code="code"
+              :session-id="current?.sessionId ?? ''"
+            />
+          </KeepAlive>
         </aside>
         <div
           v-if="narrow && drawerOpen"

@@ -35,8 +35,8 @@ export interface MockMemoryDetail extends MockMemoryRow {
   content: string;
 }
 
-const memoryPath = (memoryId: string) =>
-  `/v1/apps/${encodeURIComponent(demoAppCode)}/memories/${encodeURIComponent(memoryId)}`;
+const memoryPath = (memoryId: string, appCode: string) =>
+  `/v1/apps/${encodeURIComponent(appCode)}/memories/${encodeURIComponent(memoryId)}`;
 
 function normalizeMemory(row: any, withContent = false): MockMemoryDetail {
   const tags = Array.isArray(row?.tags)
@@ -64,6 +64,7 @@ function normalizeMemory(row: any, withContent = false): MockMemoryDetail {
  *  服务端 status 仅接受 ACTIVE/DRAFT（REVOKED 已退出检索不再返回）——REVOKED 查询如实返回空。 */
 export async function listMemories(
   query: { scope?: MemoryScope; status?: MemoryStatus; tags?: string; q?: string; sessionId?: string } = {},
+  appCode = demoAppCode,
 ): Promise<{ memories: MockMemoryRow[] }> {
   const api = useApi();
   const wanted = query.status ?? "ACTIVE";
@@ -75,15 +76,15 @@ export async function listMemories(
   if (query.q) params.set("q", query.q);
   if (query.sessionId) params.set("sessionId", query.sessionId);
   params.set("pageSize", "100");
-  const page = await api<any>(`/v1/apps/${encodeURIComponent(demoAppCode)}/memories?${params.toString()}`);
+  const page = await api<any>(`/v1/apps/${encodeURIComponent(appCode)}/memories?${params.toString()}`);
   const rows: any[] = Array.isArray(page?.memories) ? page.memories : Array.isArray(page) ? page : [];
   return { memories: rows.map((row) => normalizeMemory(row)) };
 }
 
 /** 单条（真实端点）：不存在或不可见按 404 形状（api 抛错降形）。 */
-export async function getMemory(memoryId: string): Promise<MockMemoryDetail | ApiFailure> {
+export async function getMemory(memoryId: string, appCode = demoAppCode): Promise<MockMemoryDetail | ApiFailure> {
   const api = useApi();
-  return guard(async () => normalizeMemory(await api<any>(memoryPath(memoryId)), true));
+  return guard(async () => normalizeMemory(await api<any>(memoryPath(memoryId, appCode)), true));
 }
 
 /** 显式保存（真实端点）：requestId 幂等。 */
@@ -96,11 +97,11 @@ export async function createMemory(req: {
   expiresAt?: string;
   sessionId?: string;
   sourceTaskId?: string;
-}): Promise<MockMemoryDetail | ApiFailure> {
+}, appCode = demoAppCode): Promise<MockMemoryDetail | ApiFailure> {
   const api = useApi();
   return guard(async () =>
     normalizeMemory(
-      await api<any>(`/v1/apps/${encodeURIComponent(demoAppCode)}/memories`, "POST", {
+      await api<any>(`/v1/apps/${encodeURIComponent(appCode)}/memories`, "POST", {
         requestId: req.requestId,
         content: req.content,
         kind: req.kind,
@@ -119,6 +120,7 @@ export async function createMemory(req: {
 export async function updateMemory(
   memoryId: string,
   req: { content?: string; tags?: string[]; expiresAt?: string; status?: MemoryStatus; expectedVersion: number },
+  appCode = demoAppCode,
 ): Promise<MockMemoryDetail | ApiFailure> {
   const api = useApi();
   return guard(async () => {
@@ -127,7 +129,7 @@ export async function updateMemory(
     if (req.tags !== undefined) body.tags = req.tags;
     if (req.expiresAt !== undefined) body.expiresAt = req.expiresAt;
     if (req.status !== undefined) body.status = req.status;
-    return normalizeMemory(await api<any>(memoryPath(memoryId), "PATCH", body), true);
+    return normalizeMemory(await api<any>(memoryPath(memoryId, appCode), "PATCH", body), true);
   });
 }
 
@@ -135,10 +137,11 @@ export async function updateMemory(
 export async function deleteMemory(
   memoryId: string,
   req: { requestId: string },
+  appCode = demoAppCode,
 ): Promise<{ memoryId: string; status: MemoryStatus } | ApiFailure> {
   const api = useApi();
   return guard(async () => {
-    const done = await api<any>(memoryPath(memoryId), "DELETE", { requestId: req.requestId });
+    const done = await api<any>(memoryPath(memoryId, appCode), "DELETE", { requestId: req.requestId });
     return { memoryId: String(done?.memoryId ?? memoryId), status: (done?.status ?? "REVOKED") as MemoryStatus };
   });
 }
