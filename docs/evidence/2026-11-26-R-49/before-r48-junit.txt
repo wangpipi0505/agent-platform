@@ -1,0 +1,19 @@
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 11.10 s <<< FAILURE! -- in cn.agentplatform.engine.infra.ModelFailureTaskPostgresTest
+
+interruptedModelCallIsClosedByTheNextWorkerWithoutResending (7.936 s)
+cn.agentplatform.common.PlatformException: 模型发送结果待核实，不自动重发
+	at cn.agentplatform.engine.infra.TraceStore.initialUnknown(TraceStore.java:1533)
+	at cn.agentplatform.engine.infra.TraceStore.lambda$dispatchInitial$24(TraceStore.java:1299)
+	at cn.agentplatform.engine.infra.TraceStore.lambda$protectedAtomic$14(TraceStore.java:769)
+	at org.springframework.transaction.support.TransactionTemplate.execute(TransactionTemplate.java:140)
+	at cn.agentplatform.engine.infra.TraceStore.protectedAtomic(TraceStore.java:766)
+	at cn.agentplatform.engine.infra.TraceStore.dispatchInitial(TraceStore.java:1265)
+
+confirmedModel503ReachesBothTaskViews (3.139 s)
+cn.agentplatform.common.PlatformException: 模型流不符合已冻结的初始调用契约
+	at cn.agentplatform.engine.infra.RuntimeClients.initialStreamInvalid(RuntimeClients.java:230)
+	at cn.agentplatform.engine.infra.RuntimeClients.readInitialEvents(RuntimeClients.java:215)
+	at cn.agentplatform.engine.infra.RuntimeClients.chatInitialStream(RuntimeClients.java:158)
+	at cn.agentplatform.engine.application.ModelExchange.exchangeInitial(ModelExchange.java:41)
+	at cn.agentplatform.engine.application.RunService.driveOwnedInitial(RunService.java:2551)
+	at cn.agentplatform.engine.application.RunService.driveOwned(RunService.java:2531)
