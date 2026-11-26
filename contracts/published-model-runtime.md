@@ -6,7 +6,7 @@ IAM 网关与 engine 同时启用 `AGENT_PUBLISHED_RUN_ENABLED=true`。网关从
 
 ## 显式重冻结（R-45）
 
-`POST /admin/apps/{code}/model-bindings/refreeze` 接受 `{draftRev,requestId}`。网关执行平台权限检查，app 复核发布权限、租户与应用；模型服务返回当前模型条目的冻结回执，app 校验后才按原草稿修订号提交。响应含新 draftRev 与 modelBindingRefs。同一请求号与原修订重放复用回执，修订冲突返回 409。成功操作写入 `app.lifecycle_log`。已发布快照固定，替换在线引用需重新评测、预检并发布新版本。
+`POST /admin/apps/{code}/model-bindings/refreeze` 接受 `{draftRev,requestId}`。网关执行平台权限检查，app 复核发布权限、租户与应用；模型服务返回当前模型条目的冻结回执，app 校验后才按原草稿修订号提交。响应含新 draftRev 与 modelBindingRefs。同一请求号与原修订重放复用回执，草稿已前移返回 412，同一请求号改指另一修订返回 409。成功操作写入 `app.lifecycle_log`。已发布快照固定，替换在线引用需重新评测、预检并发布新版本。
 
 运行材料检查使用持久化清单的原始 JSON 计算规范摘要。冻结绑定单独对照运行快照、冻结回执和存储摘要。缺少运行材料使用 `MATERIAL_MISSING`，内容摘要不一致使用 `MATERIAL_DIGEST_MISMATCH`，缺少合规冻结引用使用 `BINDING_NOT_FROZEN`。错误响应不包含原始材料或票据。
 

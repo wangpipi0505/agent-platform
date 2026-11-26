@@ -111,18 +111,19 @@ export interface MockSessionRow {
 /** 本人会话列表（真实端点）：mine=true 首期固定；行内 turns/title 由服务端字段投影。 */
 export async function listMySessions(
   query: { mine?: boolean; limit?: number; before?: string } = {},
+  appCode = demoAppCode,
 ): Promise<{ sessions: MockSessionRow[]; nextBefore: string | null }> {
   const api = useApi();
   const params = new URLSearchParams();
   if (query.mine !== false) params.set("mine", "true");
   if (query.limit) params.set("limit", String(query.limit));
   if (query.before) params.set("before", query.before);
-  const page = await api<any>(`/v1/apps/${encodeURIComponent(demoAppCode)}/sessions?${params.toString()}`);
+  const page = await api<any>(`/v1/apps/${encodeURIComponent(appCode)}/sessions?${params.toString()}`);
   const rows: any[] = Array.isArray(page?.sessions) ? page.sessions : Array.isArray(page) ? page : [];
   return {
     sessions: rows.map((row) => ({
       sessionId: String(row.sessionId ?? row.session_id ?? ""),
-      appCode: String(row.appCode ?? demoAppCode),
+      appCode: String(row.appCode ?? appCode),
       title: truncateTitle(String(row.title ?? row.firstUserMessage ?? "")),
       startedAt: String(row.startedAt ?? row.started_at ?? row.createdAt ?? ""),
       lastActiveAt: String(row.lastActiveAt ?? row.last_active_at ?? row.updatedAt ?? ""),

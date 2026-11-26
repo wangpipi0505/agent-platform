@@ -80,6 +80,15 @@ public final class AuthorityController {
         return handle("token", authorization, body, this::issueTicket);
     }
 
+    @PostMapping(path = "/oauth/session/revoke", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> revokeSession(
+            @RequestHeader(name = "Authorization", required = false) String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer "))
+            throw AuthorityException.invalidClient("portal_token_required");
+        delegated.revokePortalLogin(authorization.substring(7));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(Map.of("revoked", true));
+    }
+
     @PostMapping(path = "/internal/authorize", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> authorize(
             @RequestHeader(name = "Authorization", required = false) String authorization,

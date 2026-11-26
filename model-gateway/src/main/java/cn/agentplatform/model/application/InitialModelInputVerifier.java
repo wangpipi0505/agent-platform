@@ -147,7 +147,8 @@ public final class InitialModelInputVerifier implements AutoCloseable {
     if (!"engine".equals(a.caller())
         || !"model".equals(a.call().target())
         || !"model.chat-stream".equals(a.call().action())
-        || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(root.kind())
+        || !Set.of("app-version", EvaluationCandidateBinding.KIND,
+            cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND).contains(root.kind())
         || !"DELEGATED".equals(a.operation().sourceKind())
         || !("PORTAL".equals(a.operation().originKind())
             || cn.agentplatform.common.authority.IntegrationTaskRoutes.modelExecution(a))) throw changed();
@@ -370,7 +371,8 @@ public final class InitialModelInputVerifier implements AutoCloseable {
     hash(n.get("modelBindingRef").get("sha256"));
     var messages = n.get("messages");
     if (!messages.isArray() || messages.size() < 2 || messages.size() > 400 || messages.size() % 2 != 0
-        || !evaluation && messages.size() != 2) throw bad();
+        || !evaluation && !cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND.equals(root.kind())
+            && messages.size() != 2) throw bad();
     for (int i = 0; i < messages.size(); i++) {
       fields(messages.get(i), "role", "content");
       sameText(messages.get(i).get("role"), i == 0 ? "system" : i % 2 == 1 ? "user" : "assistant");

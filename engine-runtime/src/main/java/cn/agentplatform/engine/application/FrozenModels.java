@@ -21,11 +21,11 @@ public final class FrozenModels {
                         || !ref.path("sha256").asText().matches("[a-f0-9]{64}")
                         || !Digest.sha256(Json.canonical(item.path("entry")))
                                 .equals(ref.path("sha256").asText()))
-                    throw new PlatformException(409, "MODEL_BINDING_TAMPERED", "模型冻结配置摘要不匹配");
+                    throw new PlatformException(409, "MATERIAL_DIGEST_MISMATCH", "模型冻结配置摘要不匹配");
                 selected = ref;
             }
         if (selected == null)
-            throw new PlatformException(409, "MODEL_BINDING_REQUIRED", "运行缺少精确冻结模型引用");
+            throw new PlatformException(409, "BINDING_NOT_FROZEN", "运行缺少精确冻结模型引用");
         return selected.deepCopy();
     }
 }

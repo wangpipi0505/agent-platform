@@ -12,6 +12,8 @@ import cn.agentplatform.common.authority.TrustedJwtDecoder;
 import cn.agentplatform.common.authority.WorkloadCredentialResolver;
 import cn.agentplatform.gateway.api.GatewayController;
 import cn.agentplatform.gateway.api.PortalSessionController;
+import cn.agentplatform.gateway.application.PublishedMetadataClient;
+import cn.agentplatform.gateway.application.PublishedRunProxy;
 import cn.agentplatform.gateway.application.RunEventsProxy;
 import cn.agentplatform.gateway.application.RunStatusProxy;
 
@@ -64,11 +66,25 @@ import java.util.Objects;
 public class GatewayIamPortalConfiguration {
     @Bean(destroyMethod = "close")
     @org.springframework.context.annotation.Lazy
-    cn.agentplatform.gateway.application.PublishedMetadataClient taskPublishedMetadata(
+    PublishedMetadataClient taskPublishedMetadata(
             CurrentAuthorityClient authority, Environment environment) {
-        return new cn.agentplatform.gateway.application.PublishedMetadataClient(
+        return new PublishedMetadataClient(
                 java.net.URI.create(environment.getRequiredProperty("agent.services.app")),
                 authority, testProfile(environment));
+    }
+
+    @Bean(destroyMethod = "close")
+    @ConditionalOnProperty(name = "agent.gateway.published-run.enabled", havingValue = "true")
+    PublishedRunHttp publishedRunHttp() {
+        return new PublishedRunHttp();
+    }
+
+    @Bean(destroyMethod = "close")
+    @ConditionalOnProperty(name = "agent.gateway.published-run.enabled", havingValue = "true")
+    PublishedRunProxy publishedRunProxy(Environment environment, PublishedMetadataClient metadata,
+            CurrentAuthorityClient authority, PublishedRunHttp http) {
+        return new PublishedRunProxy(java.net.URI.create(environment.getRequiredProperty("agent.services.engine")),
+                metadata, authority, http, testProfile(environment));
     }
 
     /**

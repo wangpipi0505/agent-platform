@@ -142,6 +142,15 @@ public class RunAdmissionService {
         return AuthorityContext.requireInitialFor(actor, root);
     }
 
+    RetainedAuthorization portalSessionOpening(String code, JsonNode snapshot, Actor actor) {
+        if (!wired()) throw new PlatformException(403, "IAM_ADMISSION_UNAVAILABLE", "受理授权尚未装配");
+        var root = PortalRuntimeRoutes.sessionResource(code, snapshot.path("chatSession").path("sessionId").asText());
+        var current = AuthorityContext.current();
+        if (!PortalRuntimeRoutes.isSessionTurn(current) || !root.equals(current.call().resource()))
+            throw RunAuthorityStore.denied();
+        return AuthorityContext.requireInitialFor(actor, root);
+    }
+
     RetainedAuthorization evaluationOpening(String code, JsonNode request, Actor actor, boolean turn) {
         if (!wired()) {
             throw new PlatformException(403, "IAM_ADMISSION_UNAVAILABLE", "受理授权尚未装配");

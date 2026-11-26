@@ -109,8 +109,10 @@ public final class EngineModelInputManifestClient implements AutoCloseable {
           http.sendAsync(
               request,
               info -> {
-                if (info.statusCode() != 200) {
+                if (info.statusCode() != 200 && info.statusCode() != 403) {
                   if (info.statusCode() >= 500) throw unavailable();
+                  if (info.statusCode() == 404)
+                    throw new PlatformException(404, "MATERIAL_MISSING", "当前主体缺少指定模型输入材料");
                   throw changed();
                 }
                 var enc = info.headers().allValues("Content-Encoding");
@@ -120,11 +122,11 @@ public final class EngineModelInputManifestClient implements AutoCloseable {
                 if (!lengths.isEmpty())
                   try {
                     long size = Long.parseLong(lengths.getFirst());
-                    if (size < 0 || size > MAX) throw changed();
+                    if (size < 0 || size > (info.statusCode() == 403 ? 4096 : MAX)) throw changed();
                   } catch (NumberFormatException invalid) {
                     throw changed();
                   }
-                var bounded = new BoundedBody();
+                var bounded = new BoundedBody(info.statusCode() == 403 ? 4096 : MAX);
                 body.set(bounded);
                 return bounded;
               });
@@ -134,6 +136,21 @@ public final class EngineModelInputManifestClient implements AutoCloseable {
       if (remaining <= 0) throw new TimeoutException();
       var response = future.get(remaining, TimeUnit.NANOSECONDS);
       if (System.nanoTime() - started >= TimeUnit.SECONDS.toNanos(5)) throw new TimeoutException();
+      if (response.statusCode() == 403) {
+        try {
+          var denied = EXACT.readTree(response.body());
+          if (denied != null) {
+            String code = denied.path("code").asText("");
+            if ("MATERIAL_DIGEST_MISMATCH".equals(code))
+              throw new PlatformException(403, code, "引擎持久化材料摘要不一致");
+            if (Set.of("SYS-AUTH-403", "IAM_AUTHORITY_FORBIDDEN", "AUTHORITY_DENIED", "AUTHORITY_CONTEXT_MISSING").contains(code))
+              throw new PlatformException(403, "MATERIAL_READ_DENIED", "引擎拒绝了材料读取授权");
+          }
+        } catch (IOException malformed) {
+          throw changed();
+        }
+        throw changed();
+      }
       var headers = response.headers();
       String material = one(headers, "X-Agent-Material-Ref"),
           scopeSha = one(headers, "X-Agent-Material-Sha256");
@@ -346,6 +363,11 @@ public final class EngineModelInputManifestClient implements AutoCloseable {
     private final CompletableFuture<byte[]> result = new CompletableFuture<>();
     private final ByteArrayOutputStream bytes = new ByteArrayOutputStream(8192);
     private Flow.Subscription subscription;
+    private final int maximum;
+
+    BoundedBody(int maximum) {
+      this.maximum = maximum;
+    }
 
     public CompletionStage<byte[]> getBody() {
       return result;
@@ -365,7 +387,7 @@ public final class EngineModelInputManifestClient implements AutoCloseable {
       long incoming = 0;
       for (var chunk : chunks) {
         incoming += chunk.remaining();
-        if (incoming > MAX - bytes.size()) {
+        if (incoming > maximum - bytes.size()) {
           result.completeExceptionally(changed());
           cancel();
           return;

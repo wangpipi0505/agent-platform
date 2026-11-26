@@ -99,7 +99,7 @@ public final class ModelInputMaterialStore {
                 + " run_id=r.id) as invoked,(not ? and exists(select 1 from engine.chat_turn where"
                 + " run_public_id=r.public_id)) as history,exists(select 1 from engine.tool_call"
                 + " where run_id=r.id) as tools from engine.run r where id=?",
-            evaluation, evaluation, runId);
+            evaluation, evaluation || firstChat && PortalRuntimeRoutes.SESSION_KIND.equals(b.root().kind()), runId);
     eq(evaluation ? "EVALUATION" : firstChat ? "CHAT" : "TASK", control.get("trigger_type"));
     eq("FULL", control.get("mode"));
     for (String k : List.of("unsupported", "invoked", "history", "tools"))
@@ -153,8 +153,7 @@ public final class ModelInputMaterialStore {
       values.add(new AuthorizedMaterial(value, scope));
     }
     var snapshot = (JsonNode) values.get(0).payload();
-    if (evaluation) cn.agentplatform.engine.domain.InitialChatRules.requireEvaluationSources(snapshot, (JsonNode) values.get(1).payload());
-    else if (firstChat) cn.agentplatform.engine.domain.InitialChatRules.requireSources(snapshot, (JsonNode) values.get(1).payload());
+    if (firstChat) cn.agentplatform.engine.domain.InitialChatRules.requireBoundChat(b.root(), snapshot, (JsonNode) values.get(1).payload());
     var refs = (JsonNode) values.get(2).payload();
     TraceStore.requireSnapshotRelations(b, snapshot, refs);
     var ids =
@@ -324,7 +323,13 @@ public final class ModelInputMaterialStore {
         });
   }
 
+  public record StoredManifest(ModelInputManifest verified, JsonNode document) {}
+
   public ModelInputManifest readManifest(String id, String version, RetainedAuthorization proof) {
+    return exportManifest(id, version, proof).verified();
+  }
+
+  public StoredManifest exportManifest(String id, String version, RetainedAuthorization proof) {
     selector(id, "m_");
     hash(version);
     exportPurpose(proof);
@@ -334,7 +339,7 @@ public final class ModelInputMaterialStore {
     var tx = new TransactionTemplate(new DataSourceTransactionManager(source));
     tx.setReadOnly(true);
     tx.setIsolationLevel(java.sql.Connection.TRANSACTION_REPEATABLE_READ);
-    ModelInputManifest result;
+    StoredManifest result;
     try {
       result =
           tx.execute(
@@ -350,10 +355,10 @@ public final class ModelInputMaterialStore {
                         version,
                         a.actor().tenantId(),
                         a.actor().principalId());
-                if (runs.size() != 1) throw missing();
+                if (runs.size() != 1) throw new PlatformException(404, "MATERIAL_MISSING", "当前主体缺少指定版本的模型输入材料");
                 var b = binding(runs.getFirst());
                 exportBinding(b, proof);
-                return readStored(id, version, proof, b, true);
+                return verifiedDocument(id, version, proof, b, true);
               });
     } catch (PlatformException e) {
       if (e.status() == 400) throw missing();
@@ -440,6 +445,13 @@ public final class ModelInputMaterialStore {
       RetainedAuthorization proof,
       RunAuthorityStore.Binding b,
       boolean export) {
+    return verifiedDocument(id, version, proof, b, export).verified();
+  }
+
+  // JSONB preserves array order. Returning the verified document also preserves legacy set ordering
+  // across JVM restarts, which is part of the original manifest digest on the wire.
+  private StoredManifest verifiedDocument(String id, String version, RetainedAuthorization proof,
+      RunAuthorityStore.Binding b, boolean export) {
     // Probe both JSON documents in PG before obtaining any variable-length metadata text.
     var sizes =
         db.queryForList(
@@ -471,8 +483,9 @@ public final class ModelInputMaterialStore {
     if (!json.isObject() || json.size() != 14) throw missing();
     var unsigned = json.deepCopy();
     ((com.fasterxml.jackson.databind.node.ObjectNode) unsigned).remove("manifestSha256");
-    eq(Digest.sha256(Json.canonical(unsigned)), text(json, "manifestSha256"));
-    eq(text(json, "manifestSha256"), row.get("manifest_sha256"));
+    String storedDigest = text(json, "manifestSha256");
+    if (!Digest.sha256(Json.canonical(unsigned)).equals(storedDigest) || !storedDigest.equals(row.get("manifest_sha256")))
+      throw new PlatformException(403, "MATERIAL_DIGEST_MISMATCH", "持久化材料清单与其摘要不一致");
     ModelInputManifest m;
     try {
       m = EXACT.treeToValue(json, ModelInputManifest.class);
@@ -559,7 +572,7 @@ public final class ModelInputMaterialStore {
     }
     if (export) exportBinding(b, proof);
     else localBinding(b, proof);
-    return m;
+    return new StoredManifest(m, json);
   }
 
   private RunAuthorityStore.Binding binding(long run) {
@@ -654,7 +667,7 @@ public final class ModelInputMaterialStore {
     eq(b.initial(), proof.requireInitialCeiling());
     eq(b.originId(), proof.requireOriginAuthenticationId());
     eq(b.sourceKind(), a.operation().originKind());
-    if (EvaluationCandidateBinding.KIND.equals(b.root().kind()) || "INTEGRATION".equals(b.sourceKind()))
+    if (EvaluationCandidateBinding.KIND.equals(b.root().kind()) || PortalRuntimeRoutes.SESSION_KIND.equals(b.root().kind()) || "INTEGRATION".equals(b.sourceKind()))
       eq(b.delegation(), a.delegation());
     for (var p : b.scopes()) MaterialAuthorization.require(p, a, clock);
   }
@@ -666,7 +679,8 @@ public final class ModelInputMaterialStore {
     if (!"model".equals(a.caller())
         || !"engine".equals(a.call().target())
         || !"material.scope.read".equals(a.call().action())
-        || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(a.call().resource().kind())
+        || !Set.of("app-version", EvaluationCandidateBinding.KIND,
+            cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND).contains(a.call().resource().kind())
         || !"DELEGATED".equals(a.operation().sourceKind())
         || !("PORTAL".equals(a.operation().originKind())
             || "INTEGRATION".equals(a.operation().originKind())

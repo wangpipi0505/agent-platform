@@ -58,6 +58,39 @@ class DelegatedResumeContractTest extends DelegatedTestSupport {
     private DecisionStore decisions;
 
     @Test
+    void onlyTheSessionTurnGrantCanAdvanceItsRun() {
+        var root = PortalRuntimeRoutes.sessionResource("ops", "s_0123456789abcdef0123456789abcdef");
+        var turn = new ServiceCall(ENGINE, PortalRuntimeRoutes.TURN_ACTION, root);
+        var read = new ServiceCall(ENGINE, "proxy.engine.get.ChatSessionController.get", root);
+        var advance = new ServiceCall(ENGINE, RUN_ADVANCE, root);
+        try (var engine = client(ENGINE, ENGINE_SECRET_REF, ENGINE_SECRET)) {
+            var observed = engine.authorize(DelegatedTickets.bootstrap(keys, read, GATEWAY), read);
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> engine.resume(observed.delegation(), advance))
+                    .isInstanceOf(cn.agentplatform.common.PlatformException.class);
+            var admission = engine.authorize(DelegatedTickets.bootstrap(keys, turn, GATEWAY), turn);
+            var ticket = engine.resume(admission.delegation(), advance);
+            assertThat(engine.authorize(ticket.value(), advance).call()).isEqualTo(advance);
+        }
+    }
+
+    @Test
+    void shorterServiceHopKeepsTheSignedGrantDeadline() {
+        var call = rootCall(FIRST_ACTION, "appv-short-hop");
+        var signed = DelegatedTickets.bootstrap(keys, call, GATEWAY);
+        var claims = (com.fasterxml.jackson.databind.node.ObjectNode)
+                TestJwt.verifiedClaims(signed, "at+jwt", publishedKey()).deepCopy();
+        long grant = claims.path("grant_expires_at").asLong();
+        claims.put("exp", grant - 20);
+        ((com.fasterxml.jackson.databind.node.ObjectNode) claims.path("operation")).put("expires_at", grant - 20);
+        var shortHop = keys.sign("at+jwt", Json.mapper().convertValue(claims, Map.class));
+        try (var engine = client(ENGINE, ENGINE_SECRET_REF, ENGINE_SECRET)) {
+            var current = engine.authorize(shortHop, call);
+            assertThat(current.delegation().expiresAt()).isEqualTo(Instant.ofEpochSecond(grant));
+            assertThat(current.operation().expiresAt()).isEqualTo(Instant.ofEpochSecond(grant - 20));
+        }
+    }
+
+    @Test
     void resumeExchangesTheStoredGrantForANewDelegatedTicket() {
         ServiceCall inbound = rootCall(FIRST_ACTION, "appv-resume-ok");
         ServiceCall advance = rootCall(RUN_ADVANCE, "appv-resume-ok");

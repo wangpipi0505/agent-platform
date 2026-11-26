@@ -150,6 +150,19 @@ public class AppController {
         return ApiResponse.ok(apps.publishedInputs(code, versionNo));
     }
 
+    @PostMapping(EvaluationCandidateBinding.REFREEZE_TEMPLATE)
+    public Object refreeze(@PathVariable String code, @RequestBody Map<String, Object> request) {
+        var actor = Actor.current();
+        if (iam()) {
+            EvaluationCandidateBinding.requirePublication(code, "gateway", "app", EvaluationCandidateBinding.REFREEZE_ACTION);
+            access().require(actor, PlatformAccessService.GRANT, null);
+            access().require(actor, PlatformAccessService.PUBLISH, code);
+        } else {
+            actor.requireRole("ADMIN");
+        }
+        return ApiResponse.ok(apps.refreeze(code, request));
+    }
+
     @PostMapping("/admin/apps/{code}/publish/precheck")
     public Object precheck(@PathVariable String code) {
         require(PlatformAccessService.PUBLISH, code);

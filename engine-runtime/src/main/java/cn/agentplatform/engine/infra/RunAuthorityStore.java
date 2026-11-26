@@ -53,7 +53,9 @@ public final class RunAuthorityStore {
         var current=admission.current();requirePurpose(current,false);
         Actor initial=admission.requireInitialCeiling();String origin=admission.requireOriginAuthenticationId();
         object(snapshot);object(inputs);object(refs);object(budget);
-        if(firstChat) cn.agentplatform.engine.domain.InitialChatRules.requireSources(snapshot,inputs);
+        boolean portalSession = PortalRuntimeRoutes.isSessionTurn(current);
+        if (portalSession) InitialChatRules.requirePortalSources(snapshot, inputs);
+        else if (firstChat) InitialChatRules.requireSources(snapshot, inputs);
         String code=MetadataSelectors.code(text(snapshot,"appCode"));
         Long no = null, version = null, revision = null;
         ResourceBinding root;
@@ -64,8 +66,9 @@ public final class RunAuthorityStore {
             version = snapshot.has("appVersionId") ? positive(snapshot.get("appVersionId")) : positive(snapshot.get("versionId"));
             if (snapshot.has("versionId") && positive(snapshot.get("versionId")) != version) throw denied();
             same(no, positive(refs.get("appVer")));
-            root = new ResourceBinding("app-version", code + "@" + no, candidate);
-            if (snapshot.has("appVersionKey")) same(root.id(), text(snapshot, "appVersionKey"));
+            if (snapshot.has("appVersionKey")) same(code + "@" + no, text(snapshot, "appVersionKey"));
+            root = portalSession ? PortalRuntimeRoutes.sessionResource(code, snapshot.path("chatSession").path("sessionId").asText())
+                    : new ResourceBinding("app-version", code + "@" + no, candidate);
         } else {
             if ("CHAT".equals(text(snapshot,"type"))) InitialChatRules.requireEvaluationSources(snapshot, inputs);
             else cn.agentplatform.engine.domain.GraphRules.requirePublishedFlow(snapshot);
@@ -90,7 +93,7 @@ public final class RunAuthorityStore {
             publicId,code,version,trigger,initial.principalId(),initial.tenantId(),"pg:run/"+publicId+"/input",Json.write(refs),Json.write(Map.of("tenantId",initial.tenantId(),"principalId",initial.principalId(),"roles",current.actor().roles(),"attributes",current.actor().attributes(),"snapshotAt",clock.instant().toString())),Json.write(budget),Json.write(snapshot),Json.write(inputs),mode,requestId,candidateRef);
         String snapshotSha=MaterialScopeStore.payloadDigest(db,"run-snapshot",id);
         db.update("insert into engine.run_authority(run_id,tenant_id,principal_id,grant_ref,grant_expires_at,initial_ceiling,resource_digest,source_kind,origin_authentication_id,app_version_id,app_version_no,root_kind,root_id,initial_ceiling_sha256,accepted_snapshot_sha256,admission_decision_id,authorization_version,operation_id,candidate_rev) values(?,?,?,?,?,?::jsonb,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            id,initial.tenantId(),initial.principalId(),current.delegation().value(),Timestamp.from(current.delegation().expiresAt()),Json.write(initial),candidate,current.operation().originKind(),origin,version,no,root.kind(),root.id(),MaterialAuthorization.ceilingSha256(initial),snapshotSha,current.decisionId(),current.authorizationVersion(),current.operation().operationId(),revision);
+            id,initial.tenantId(),initial.principalId(),current.delegation().value(),Timestamp.from(current.delegation().expiresAt()),Json.write(initial),root.versionDigest(),current.operation().originKind(),origin,version,no,root.kind(),root.id(),MaterialAuthorization.ceilingSha256(initial),snapshotSha,current.decisionId(),current.authorizationVersion(),current.operation().operationId(),revision);
         var materialStore=new MaterialScopeStore(source,clock);
         var entitlements=new TreeMap<>(initial.attributes());entitlements.remove("dataLabels");
         var obligations=new TreeSet<>(initial.attributes().getOrDefault("dataLabels",Set.of()));obligations.addAll(current.actor().attributes().getOrDefault("dataLabels",Set.of()));obligations.addAll(labels);
@@ -196,7 +199,8 @@ public final class RunAuthorityStore {
     static Binding load(JdbcTemplate db,long runId,boolean complete){
         var rows=db.queryForList("""
                 select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,
-                    r.app_code,r.app_version_id as run_version,r.trigger_type,r.eval_candidate::text,a.*,
+                    r.app_code,r.app_version_id as run_version,r.trigger_type,r.eval_candidate::text,
+                    r.snapshot #>> '{chatSession,sessionId}' as session_id,a.*,
                     coalesce(g.grant_ref,a.grant_ref) as active_grant_ref,
                     coalesce(g.grant_expires_at,a.grant_expires_at) as active_grant_expires_at,
                     coalesce(g.origin_authentication_id,a.origin_authentication_id) as active_origin_id
@@ -227,8 +231,13 @@ public final class RunAuthorityStore {
             version=((Number)r.get("app_version_id")).longValue();
             no=((Number)r.get("app_version_no")).longValue();
             if(version<1||no<1||!Objects.equals(r.get("run_version"),r.get("app_version_id")))throw denied();
-            same("app-version",kind);
-            same(str(r,"app_code")+"@"+no,root.id());
+            if (PortalRuntimeRoutes.SESSION_KIND.equals(kind)) {
+                same("CHAT", str(r, "trigger_type"));
+                same(root, PortalRuntimeRoutes.sessionResource(str(r, "app_code"), str(r, "session_id")));
+            } else {
+                same("app-version", kind);
+                same(str(r, "app_code") + "@" + no, root.id());
+            }
         }
         var b=new Binding(runId,str(r,"public_id"),owner,new DelegationRef(str(r,"active_grant_ref"),owner,instant(r,"active_grant_expires_at")),initial,
             root,version,no,initialSha,snapshotSha,str(r,"active_origin_id"),str(r,"admission_decision_id"),str(r,"authorization_version"),str(r,"operation_id"),((Number)r.get("check_version")).longValue(),(String)r.get("blocked_reason"),instant(r,"retry_not_before"),sourceKind,List.of());
@@ -324,7 +333,9 @@ public final class RunAuthorityStore {
                 && IntegrationTaskRoutes.CREATE.equals(a.call().action()) && IntegrationTaskRoutes.versionRoot(a.call().resource())
                 && "INTEGRATION".equals(a.operation().sourceKind()) && "INTEGRATION".equals(a.operation().originKind())
                 && IntegrationTaskRoutes.submitRoles(a.actor().roles());
-        if(localOnly ? !local : !(main || evaluation || integrated))throw denied();
+        boolean session = PortalRuntimeRoutes.isSessionTurn(a)
+                && PortalRuntimeRoutes.SESSION_KIND.equals(a.call().resource().kind());
+        if(localOnly ? !local : !(main || evaluation || integrated || session))throw denied();
         same(a.call().resource(),a.operation().resource());
     }
     static void requireWrite(DataSource source){

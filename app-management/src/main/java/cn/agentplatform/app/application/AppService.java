@@ -504,8 +504,10 @@ public class AppService {
             throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布读取能力不匹配");
         MetadataSelectors.code(code);
         var received = current.call().resource();
-        boolean runtimeRead = "app-runtime".equals(received.kind());
-        if (runtimeRead && !cn.agentplatform.common.authority.PortalRuntimeRoutes.appResource(code).equals(received))
+        boolean applicationRead = "app-runtime".equals(received.kind());
+        boolean runtimeRead = applicationRead
+                || cn.agentplatform.common.authority.PortalRuntimeRoutes.sessionForApp(received, code);
+        if (applicationRead && !cn.agentplatform.common.authority.PortalRuntimeRoutes.appResource(code).equals(received))
             throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布资源与授权不匹配");
         var observed = publishedMetadata(actor.tenantId(), code);
         if (observed == null) throw error(404, "APP_NOT_FOUND", "应用不存在");
@@ -663,6 +665,25 @@ public class AppService {
                         hash);
         if (!rows.isEmpty())
             return objects(Json.read(rows.getFirst().get("model_refs").toString(), Object.class));
+        var refs = freezeConfiguredModels(app);
+        String stored =
+                db.queryForObject(
+                        "insert into"
+                            + " app.candidate_model_snapshot(tenant_id,app_code,draft_rev,candidate_sha256,model_refs)"
+                            + " values(?,?,?,?,?::jsonb) on"
+                            + " conflict(tenant_id,app_code,draft_rev,candidate_sha256) do update"
+                            + " set model_refs=app.candidate_model_snapshot.model_refs returning"
+                            + " model_refs::text",
+                        String.class,
+                        tenant(),
+                        code,
+                        rev,
+                        hash,
+                        Json.write(refs));
+        return objects(Json.read(stored, Object.class));
+    }
+
+    private List<Map<String, Object>> freezeConfiguredModels(Map<String, Object> app) {
         var ids = new LinkedHashSet<Long>();
         collectModelIds(object(app.get("config")), ids);
         collectModelIds(object(app.get("definition")), ids);
@@ -686,21 +707,70 @@ public class AppService {
                             "entry",
                             frozen.get("entry")));
         }
-        String stored =
-                db.queryForObject(
-                        "insert into"
-                            + " app.candidate_model_snapshot(tenant_id,app_code,draft_rev,candidate_sha256,model_refs)"
-                            + " values(?,?,?,?,?::jsonb) on"
-                            + " conflict(tenant_id,app_code,draft_rev,candidate_sha256) do update"
-                            + " set model_refs=app.candidate_model_snapshot.model_refs returning"
-                            + " model_refs::text",
-                        String.class,
-                        tenant(),
-                        code,
-                        rev,
-                        hash,
-                        Json.write(refs));
-        return objects(Json.read(stored, Object.class));
+        return refs;
+    }
+
+    /** Freeze remotely before locking. Previously published versions and admitted runs retain their refs. */
+    public Map<String, Object> refreeze(String code, Map<String, Object> request) {
+        String requestId = text(request, "requestId");
+        long expected = number(request, "draftRev");
+        if (expected < 1 || !requestId.matches("[A-Za-z0-9_-]{1,64}"))
+            throw error(400, "INVALID_INPUT", "需要有效的请求号和草稿修订");
+        var prior = refreezeReceipt(code, requestId, expected);
+        if (prior != null) return prior;
+        var app = get(code);
+        if (((Number) app.get("draftRev")).longValue() != expected)
+            throw error(412, "CANDIDATE_CHANGED", "草稿已更新");
+        if (Set.of("DISABLED", "ARCHIVED").contains(app.get("status")))
+            throw error(409, "APP_STATE", "请先重新启用应用");
+        String hash = sha(app);
+        var refs = freezeConfiguredModels(app);
+        if (refs.isEmpty()) throw error(409, "BINDING_NOT_FROZEN", "请先在草稿设置有效模型条目");
+        for (var item : refs) {
+            var ref = Json.tree(item.get("modelBindingRef"));
+            if (ref.path("bindingId").asLong() < 1
+                    || !Digest.sha256(Json.canonical(item.get("entry"))).equals(ref.path("sha256").asText()))
+                throw error(409, "MATERIAL_DIGEST_MISMATCH", "模型服务返回的冻结引用与快照不符");
+        }
+        return tx.execute(status -> {
+            var locked = get(code, true);
+            var replay = refreezeReceipt(code, requestId, expected);
+            if (replay != null) return replay;
+            if (((Number) locked.get("draftRev")).longValue() != expected || !hash.equals(sha(locked)))
+                throw error(412, "CANDIDATE_CHANGED", "冻结期间草稿已更新");
+            if (Set.of("DISABLED", "ARCHIVED").contains(locked.get("status")))
+                throw error(409, "APP_STATE", "请先重新启用应用");
+            var existing = db.queryForList("select model_refs::text from app.candidate_model_snapshot"
+                    + " where tenant_id=? and app_code=? and draft_rev=? and candidate_sha256=?",
+                    String.class, tenant(), code, expected, hash);
+            boolean changed = existing.isEmpty() || !Json.canonical(Json.read(existing.getFirst())).equals(Json.canonical(refs));
+            long revision = expected;
+            if (changed) {
+                revision++;
+                int nextDraft = locked.get("currentVersionNo") instanceof Number version ? version.intValue() + 1 : 1;
+                db.update("update app.app_draft set draft_rev=?,draft_no=greatest(draft_no,?),updated_at=now()"
+                                + " where tenant_id=? and app_code=?",
+                        revision, nextDraft, tenant(), code);
+                db.update("insert into app.candidate_model_snapshot(tenant_id,app_code,draft_rev,candidate_sha256,model_refs)"
+                        + " values(?,?,?,?,?::jsonb)", tenant(), code, revision, hash, Json.write(refs));
+            }
+            var bindings = refs.stream().map(item -> item.get("modelBindingRef")).toList();
+            Map<String, Object> receipt = Map.of("requestId", requestId, "requestedRev", expected,
+                    "draftRev", revision, "candidateSha256", hash, "modelBindingRefs", bindings, "changed", changed);
+            String state = locked.get("status").toString();
+            log(code, "MODEL_REFREEZE", state, state, receipt);
+            return receipt;
+        });
+    }
+
+    private Map<String, Object> refreezeReceipt(String code, String requestId, long expected) {
+        var rows = db.queryForList("select detail::text from app.lifecycle_log where tenant_id=? and app_code=?"
+                + " and action='MODEL_REFREEZE' and detail->>'requestId'=?", String.class, tenant(), code, requestId);
+        if (rows.isEmpty()) return null;
+        var receipt = object(Json.read(rows.getFirst(), Map.class));
+        if (((Number) receipt.get("requestedRev")).longValue() != expected)
+            throw error(409, "REQUEST_CONFLICT", "重冻结请求号已用于其他草稿修订");
+        return receipt;
     }
 
     private void collectModelIds(Object value, Set<Long> ids) {

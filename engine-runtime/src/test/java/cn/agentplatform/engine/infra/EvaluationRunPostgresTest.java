@@ -44,8 +44,9 @@ import static org.mockito.Mockito.when;
 
 @EnabledIfEnvironmentVariable(named = "AGENT_R37_ENGINE_DB_URL", matches = ".+")
 class EvaluationRunPostgresTest {
-    @Test
-    void evaluationTurnsReuseTheAuthorizedPriorAnswerInCanonicalModelInput() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void conversationTurnsReuseTheAuthorizedPriorAnswerInCanonicalModelInput(boolean portal) throws Exception {
         var source = new DriverManagerDataSource(System.getenv("AGENT_R37_ENGINE_DB_URL"),
                 System.getenv("AGENT_DB_USER"), System.getenv("AGENT_DB_PASSWORD"));
         var db = new JdbcTemplate(source);
@@ -72,7 +73,7 @@ class EvaluationRunPostgresTest {
             });
             var workerFailure = new java.util.concurrent.atomic.AtomicReference<RuntimeException>();
             var repository = new RunScheduleRepository(trace, true);
-            try (var scheduler = new RunScheduler(repository, 1, 1, 10, 90000, 1000) {
+            try (var scheduler = new RunScheduler(repository, 4, 1, 10, 90000, 1000) {
                      @Override
                      public void bind(java.util.function.LongConsumer work, Runnable renew, Runnable ready) {
                          super.bind(run -> {
@@ -107,6 +108,15 @@ class EvaluationRunPostgresTest {
                 candidate.set("dependencyVersions", Json.tree(Map.of("skillRefs", List.of(), "modelRefs", List.of(
                         Map.of("modelEntryId", 1, "modelBindingRef", Map.of("bindingId", 1,
                                 "sha256", Digest.sha256(Json.canonical(entry))), "entry", entry)))));
+                if (portal) {
+                    candidate.remove("draftRev");
+                    candidate.put("versionId", 1);
+                    candidate.put("versionNo", 1);
+                    when(clients.publishedForRuntime(anyString(), any())).thenReturn(candidate);
+                    when(clients.published(anyString(), any())).thenReturn(candidate);
+                    portalTurns(fixture, gateway, engine, decoder, trace, clients, service, db, workerFailure, requests);
+                    return;
+                }
                 var root = EvaluationCandidateBinding.of("r37chat", 1, digest);
                 var create = new ServiceCall("monitor", "proxy.monitor.post.EvaluationController.evaluate", root);
                 var call = new ServiceCall("engine", "evaluation.turn", root);
@@ -153,6 +163,96 @@ class EvaluationRunPostgresTest {
                     RequestContextHolder.resetRequestAttributes();
                 }
             }
+        }
+    }
+
+    private static void portalTurns(LoopbackAuthority iam, CurrentAuthorityClient gateway,
+            CurrentAuthorityClient engine, TrustedJwtDecoder decoder, TraceStore trace, RuntimeClients clients,
+            RunService runs, JdbcTemplate db, java.util.concurrent.atomic.AtomicReference<RuntimeException> failure,
+            List<JsonNode> modelCalls) throws Exception {
+        var controller = new ChatSessionController(new ChatSessions(trace, clients, runs));
+        var receiver = new ServiceAuthorization("engine", new ServiceRoutePolicy(), engine);
+        String collection = "/v1/apps/r37chat/sessions";
+        var created = portalRequest(iam, gateway, decoder, receiver, controller, "POST", collection, "create",
+                () -> controller.create("r37chat", null));
+        String id = created.path("sessionId").asText();
+        assertThat(id).matches("s_[a-f0-9]{32}");
+        String detail = collection + "/" + id;
+        var expected = new java.util.ArrayList<Map<String, String>>();
+        expected.add(Map.of("role", "system", "content", "system"));
+        long cursor = 0;
+        for (int i = 1; i <= 3; i++) {
+            String message = "question-" + i;
+            var input = Json.tree(Map.of("requestId", "turn-" + i, "inputs", Map.of("message", message)));
+            var first = portalRequest(iam, gateway, decoder, receiver, controller, "POST", detail + "/turns", "turn",
+                    () -> controller.turn("r37chat", id, input));
+            awaitSuccess(db, first.path("runId").asText(), failure);
+            var replay = portalRequest(iam, gateway, decoder, receiver, controller, "POST", detail + "/turns", "turn",
+                    () -> controller.turn("r37chat", id, input));
+            assertThat(replay.path("runId")).isEqualTo(first.path("runId"));
+            assertThat(modelCalls).hasSize(i);
+            expected.add(Map.of("role", "user", "content", message));
+            assertThat(modelCalls.get(i - 1).path("messages")).isEqualTo(Json.tree(expected));
+            assertThat(modelCalls.get(i - 1).path("callKind").asText()).isEqualTo("FORMAL");
+            expected.add(Map.of("role", "assistant", "content", "answer-" + i));
+            String after = Long.toString(cursor);
+            var events = portalRequest(iam, gateway, decoder, receiver, controller, "GET", detail + "/events", "events",
+                    () -> controller.events("r37chat", id, after, null, null));
+            for (var event : events.path("events")) assertThat(event.path("seq").asLong()).isEqualTo(++cursor);
+            var state = portalRequest(iam, gateway, decoder, receiver, controller, "GET", detail, "get",
+                    () -> controller.get("r37chat", id));
+            assertThat(state.path("messages").size()).isEqualTo(2 * i);
+            assertThat(state.path("eventWatermark").asLong()).isEqualTo(cursor);
+        }
+        assertThatThrownBy(() -> portalRequest(iam, gateway, decoder, receiver, controller, "GET",
+                detail.replace("r37chat", "other"), "get", () -> controller.get("other", id)))
+                .isInstanceOfSatisfying(cn.agentplatform.common.PlatformException.class,
+                        denied -> assertThat(denied.status()).isEqualTo(403));
+        var frozen = clients.publishedForRuntime("r37chat", null);
+        var published = new ServiceCall("engine", "proxy.engine.post.RunController.run",
+                new ResourceBinding("app-version", "r37chat@1", frozen.path("candidateSha256").asText()));
+        var adminController = new RunController(runs, trace, null, null);
+        var direct = signedRequest(iam, gateway, decoder, receiver, adminController, "POST", "/admin/apps/r37chat/runs",
+                "run", published, () -> adminController.run("r37chat", Json.tree(Map.of(
+                        "inputs", Map.of("message", "direct"), "requestId", "direct-" + id))));
+        String run = direct.path("runId").asText();
+        assertThat(run).matches("r_[a-f0-9]{32}");
+        awaitSuccess(db, run, failure);
+        assertThat(modelCalls).hasSize(4);
+        assertThat(modelCalls.get(3).path("messages").size()).isEqualTo(2);
+
+        iam.portalActor(new Actor("tenant-a", "bob", Set.of("USER"), Map.of()));
+        assertThatThrownBy(() -> portalRequest(iam, gateway, decoder, receiver, controller, "GET", detail, "get",
+                () -> controller.get("r37chat", id))).isInstanceOfSatisfying(cn.agentplatform.common.PlatformException.class,
+                        denied -> assertThat(denied.status()).isEqualTo(403));
+    }
+
+    private static JsonNode portalRequest(LoopbackAuthority iam, CurrentAuthorityClient gateway, TrustedJwtDecoder decoder,
+            ServiceAuthorization receiver, ChatSessionController controller, String method, String path,
+            String handlerName, java.util.function.Supplier<Object> invoke) throws Exception {
+        var call = PortalRuntimeRoutes.call(new ServiceRoutePolicy(), method, path);
+        return signedRequest(iam, gateway, decoder, receiver, controller, method, path, handlerName, call, invoke);
+    }
+
+    private static JsonNode signedRequest(LoopbackAuthority iam, CurrentAuthorityClient gateway, TrustedJwtDecoder decoder,
+            ServiceAuthorization receiver, Object controller, String method, String path, String handlerName,
+            ServiceCall call, java.util.function.Supplier<Object> invoke) throws Exception {
+        var ticket = gateway.exchange(iam.portal(), call);
+        var handler = new HandlerMethod(controller, java.util.Arrays.stream(controller.getClass().getMethods())
+                .filter(m -> m.getName().equals(handlerName)).findFirst().orElseThrow());
+        var request = new MockHttpServletRequest(method, path);
+        request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,
+                path.replaceFirst("/apps/[^/]+", "/apps/{code}").replaceFirst("/s_[a-f0-9]{32}", "/{id}"));
+        var response = new MockHttpServletResponse();
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(decoder.decode(ticket.value()), List.of()));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        try {
+            receiver.preHandle(request, response, handler);
+            return Json.tree(invoke.get()).path("data");
+        } finally {
+            receiver.afterCompletion(request, response, handler, null);
+            SecurityContextHolder.clearContext();
+            RequestContextHolder.resetRequestAttributes();
         }
     }
 

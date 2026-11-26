@@ -139,10 +139,12 @@ public class RunService {
             RunScheduler scheduler, RunSnapshotService snapshots, RunAdmissionService admissions,
             RunRecoveryCoordinator recovery, org.springframework.beans.factory.ObjectProvider<RunAuthority> authority,
             org.springframework.beans.factory.ObjectProvider<RunAuthorityStore> admissionStore,
-            ModelInputMaterials materials, ChunkBus chunks) {
+            ModelInputMaterials materials, ChunkBus chunks,
+            @org.springframework.beans.factory.annotation.Value("${agent.run.published-initial.enabled:false}")
+            boolean enablePublishedChat) {
         this(store, clients, flow, agent, scheduler, authority.getIfAvailable(), admissionStore.getIfAvailable(),
                 Clock.systemUTC(), clients.iamEnabled() ? materials : null,
-                clients.iamEnabled() ? chunks : null, snapshots, admissions, recovery, false);
+                clients.iamEnabled() ? chunks : null, snapshots, admissions, recovery, clients.iamEnabled() && enablePublishedChat);
     }
 
     /**
@@ -538,6 +540,9 @@ public class RunService {
         // Direct AGENT tasks already hold a portal admission pinned to this published app version.
         if ((!publishedInitialEnabled && !admittedTask) || initialMaterials == null || initialChunks == null)
             throw RunAuthorityStore.denied();
+        if (!snapshot.path("dependencyVersions").path("modelRefs").isArray()
+                || snapshot.path("dependencyVersions").path("modelRefs").isEmpty())
+            throw new PlatformException(409, "BINDING_NOT_FROZEN", "应用版本尚未冻结模型引用");
         InitialChatRules.requireSources(snapshot, inputs);
         ModelInputMaterials.initialOutputPolicy(snapshot.path("config").path("output"));
         FrozenModels.reference(snapshot, InitialChatRules.entryId(snapshot));
@@ -554,7 +559,8 @@ public class RunService {
         String id = metadata.get("public_id").toString();
         boolean evaluation = "EVALUATION".equals(trigger) && "EVALUATION".equals(metadata.get("trigger_type"));
         if (!(evaluation || "TASK".equals(metadata.get("trigger_type"))
-                || publishedInitialEnabled && "CHAT".equals(metadata.get("trigger_type")))
+                || "CHAT".equals(metadata.get("trigger_type")) && (publishedInitialEnabled
+                        || PortalRuntimeRoutes.isSessionTurn(AuthorityContext.current())))
                 || !"FULL".equals(metadata.get("mode"))
                 || !code.equals(metadata.get("app_code"))
                 || !actor.tenantId().equals(metadata.get("tenant_id"))
@@ -718,22 +724,25 @@ public class RunService {
         final boolean protectedAdmission = iamEnabled();
         final boolean candidateAdmission = protectedAdmission && "EVALUATION".equals(trigger);
         final boolean evaluationTurn = candidateAdmission && trustedSnapshot != null;
+        final boolean portalTurn = protectedAdmission && acceptedReservation && trustedSnapshot != null
+                && PortalRuntimeRoutes.isSessionTurn(AuthorityContext.current());
         admissions.requireNoAmbientTransaction(protectedAdmission);
         if (protectedAdmission && !candidateAdmission)
             RunAdmissionService.requirePublishedRequest(
                     req,
                     trigger,
-                    trustedSnapshot,
+                    portalTurn ? null : trustedSnapshot,
                     controlledDraftId,
                     recordedReplay,
-                    suppliedTicket,
-                    acceptedReservation);
+                    portalTurn ? null : suppliedTicket,
+                    acceptedReservation && !portalTurn);
         if (code == null || code.isBlank() || code.length() > 64 || !req.path("inputs").isObject())
             throw new PlatformException(400, "RUN_INPUT_INVALID", "请提供应用编码和对象类型inputs");
         if (req.has("versionNo") && req.path("versionNo").asInt() < 1)
             throw new PlatformException(400, "VERSION_INVALID", "版本号必须大于零");
         final RetainedAuthorization opening =
                 candidateAdmission ? admissions.evaluationOpening(code, req, actor, evaluationTurn)
+                        : portalTurn ? admissions.portalSessionOpening(code, trustedSnapshot, actor)
                         : admissions.opening(code, actor, protectedAdmission, taskEntry != null);
         if (trigger.equals("DEBUG")) actor.requireRole("EDITOR");
         if (candidateAdmission) {
@@ -808,6 +817,11 @@ public class RunService {
                 if (!evaluationTurn && (source.has("chatSession") || source.has("evaluationConversation")
                         || source.has("evaluationHistory"))) throw RunAuthorityStore.denied();
                 InitialChatRules.requireEvaluationSources(source, req.path("inputs"));
+                FrozenModels.reference(source, InitialChatRules.entryId(source));
+                ModelInputMaterials.initialOutputPolicy(source.path("config").path("output"));
+            } else if (portalTurn) {
+                InitialChatRules.requirePortalSources(source, req.path("inputs"));
+                if (initialMaterials == null || initialChunks == null) throw RunAuthorityStore.denied();
                 FrozenModels.reference(source, InitialChatRules.entryId(source));
                 ModelInputMaterials.initialOutputPolicy(source.path("config").path("output"));
             } else if (firstChat) requireFirstChat(source, req.path("inputs"), taskEntry != null);
@@ -889,6 +903,7 @@ public class RunService {
             if (runQuota != null) runQuota.requireRunAdmission(actor, code, frozen);
             final RetainedAuthorization admissionProof =
                     candidateAdmission ? admissions.evaluationOpening(code, req, actor, evaluationTurn)
+                            : portalTurn ? admissions.portalSessionOpening(code, trustedSnapshot, actor)
                             : admissions.bind(code, actor, protectedAdmission, taskEntry != null);
             if (protectedAdmission) admissions.requireInitialCoverage(admissionProof);
             final var created = new java.util.concurrent.atomic.AtomicBoolean(!protectedAdmission);
@@ -962,7 +977,7 @@ public class RunService {
                                                                         ? req.path("requestId")
                                                                                 .asText()
                                                                         : null,
-                                                                Set.of())
+                                                                portalTurn ? InitialChatRules.portalLabels(frozen) : Set.of())
                                                         : admissionStore.createPublished(
                                                                 admissionProof,
                                                                 frozen,
@@ -1088,7 +1103,7 @@ public class RunService {
                                                                 + " engine.node_instance(run_id,step_seq,node_type,status,definition)"
                                                                 + " values(?,1,'AGENT','READY','{\"type\":\"AGENT\"}'::jsonb)",
                                                             rid);
-                                        if (evaluationTurn) store.attachEvaluationTurn(rid, frozen, admissionProof);
+                                        if (evaluationTurn || portalTurn) store.attachSessionTurn(rid, frozen, admissionProof);
                                         if (taskEntry != null) taskEntry.attach().accept(rid);
                                         if (protectedAdmission) {
                                             AuthorityContext.requireBound(admissionProof);

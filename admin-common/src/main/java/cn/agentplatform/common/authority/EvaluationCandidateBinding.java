@@ -9,6 +9,8 @@ public final class EvaluationCandidateBinding {
     public static final String ROUTE = "/admin/evaluations";
     public static final String PRECHECK_TEMPLATE = "/admin/apps/{code}/publish/precheck";
     public static final String PRECHECK_ACTION = "proxy.app.post.AppController.precheck";
+    public static final String REFREEZE_TEMPLATE = "/admin/apps/{code}/model-bindings/refreeze";
+    public static final String REFREEZE_ACTION = "proxy.app.post.AppController.refreeze";
     public static final String COMMIT_TEMPLATE = "/admin/apps/{code}/publish/commit";
     public static final String COMMIT_ACTION = "proxy.app.post.AppController.commit";
     public static final String EVIDENCE_ACTION = "evaluation.accepted.read";
@@ -45,7 +47,7 @@ public final class EvaluationCandidateBinding {
     }
 
     public static boolean publicationTemplate(String template) {
-        return PRECHECK_TEMPLATE.equals(template) || COMMIT_TEMPLATE.equals(template);
+        return PRECHECK_TEMPLATE.equals(template) || COMMIT_TEMPLATE.equals(template) || REFREEZE_TEMPLATE.equals(template);
     }
 
     public static VerifiedAuthority requirePublication(String code, String caller, String target, String action) {

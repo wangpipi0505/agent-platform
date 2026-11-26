@@ -168,7 +168,7 @@ public class RunSnapshotService {
             if (!present) {
                 if (!trigger.equals("DEBUG"))
                     throw new PlatformException(
-                            409, "MODEL_BINDING_REQUIRED", "已发布或评测快照缺少模型冻结引用，需重新评测发布");
+                            409, "BINDING_NOT_FROZEN", "已发布或评测快照缺少模型冻结引用，需重新评测发布");
                 JsonNode frozen =
                         clients.post(
                                 "model",

@@ -3,7 +3,7 @@ package cn.agentplatform.engine.api;
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.AuthorityContext;
 import cn.agentplatform.engine.application.ModelInputMaterials;
-import cn.agentplatform.engine.domain.ModelInputManifest;
+import com.fasterxml.jackson.databind.JsonNode;
 import cn.agentplatform.engine.infra.ModelInputMaterialStore;
 import jakarta.servlet.http.*;
 import java.util.*;
@@ -19,7 +19,7 @@ public final class ModelInputMaterialController {
   }
 
   @GetMapping("/internal/material-scopes/{kind}/{id}")
-  public ApiResponse<ModelInputManifest> manifest(
+  public ApiResponse<JsonNode> manifest(
       @PathVariable String kind,
       @PathVariable String id,
       HttpServletRequest request,
@@ -35,14 +35,14 @@ public final class ModelInputMaterialController {
     ModelInputMaterialStore.hash(version);
     var current = AuthorityContext.current();
     var proof = AuthorityContext.requireInitialFor(Actor.current(), current.call().resource());
-    var manifest = materials.manifest(id, version, proof);
+    var manifest = materials.exportManifest(id, version, proof);
     ModelInputMaterialStore.exportPurpose(proof);
-    var result = ApiResponse.ok(manifest);
+    var result = ApiResponse.ok(manifest.document());
     ModelInputMaterialStore.bounded(Json.tree(result), ModelInputMaterialStore.MANIFEST_BYTES);
     response.setHeader(
         "X-Agent-Material-Ref",
         "/internal/material-scopes/model-input/" + id + "?version=" + version);
-    response.setHeader("X-Agent-Material-Sha256", manifest.scope().scopeSha256());
+    response.setHeader("X-Agent-Material-Sha256", manifest.verified().scope().scopeSha256());
     return result;
   }
 }

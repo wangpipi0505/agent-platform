@@ -23,6 +23,9 @@ spring:
     locations: classpath:db/migration
     create-schemas: true
 agent:
+  gateway:
+    published-run:
+      enabled: ${AGENT_PUBLISHED_RUN_ENABLED:false}
   dev-auth: ${AGENT_DEV_AUTH:false}
   security:
     allow-embed: true

@@ -48,10 +48,10 @@ class FrozenModelBindingVerifierTest {
       });
     }
   }
-  @Test void rejectsChangedSnapshotUnderOldSha()throws Exception{
+  @Test void distinguishesChangedStoredMaterialFromMissingBinding()throws Exception{
     try(var f=new FrozenModelBindingConsumerFixture()){
       var snapshot=(ObjectNode)Json.read(f.original);snapshot.put("modelName","tampered");f.snapshot(snapshot,false);
-      f.accepted(input->{denied(()->new FrozenModelBindingVerifier(f.ds).verify(input),"MATERIAL_SCOPE_MISSING_OR_CHANGED");assertThat(f.ds.reads).hasValue(1);return null;});
+      f.accepted(input->{denied(()->new FrozenModelBindingVerifier(f.ds).verify(input),"MATERIAL_DIGEST_MISMATCH");assertThat(f.ds.reads).hasValue(1);return null;});
     }
   }
   @Test void retainsLostLabelObligation()throws Exception{
@@ -114,7 +114,7 @@ class FrozenModelBindingVerifierTest {
           case "provider"->{var n=(ObjectNode)Json.read(f.original);n.put("providerId",f.provider+1);f.snapshot(n,true);}
           default->{var n=(ObjectNode)Json.read(f.original);((ObjectNode)n.get("provider")).put("id",f.provider+1);f.snapshot(n,true);}
         }
-        f.ds.reset();f.accepted(input->{denied(()->new FrozenModelBindingVerifier(f.ds).verify(input),"MATERIAL_SCOPE_MISSING_OR_CHANGED");assertThat(f.ds.reads).hasValue(1);return null;});
+        f.ds.reset();f.accepted(input->{denied(()->new FrozenModelBindingVerifier(f.ds).verify(input),Set.of("tenant","missing").contains(mode) ? "BINDING_NOT_FROZEN" : "MATERIAL_SCOPE_MISSING_OR_CHANGED");assertThat(f.ds.reads).hasValue(1);return null;});
       }
     }
   }
@@ -128,7 +128,7 @@ class FrozenModelBindingVerifierTest {
   @Test void fullTreeHashRetainsArrayOrderAndObjectOrderIsCanonical()throws Exception{
     try(var f=new FrozenModelBindingConsumerFixture()){
       var n=(ObjectNode)Json.read(f.original);var a=(com.fasterxml.jackson.databind.node.ArrayNode)n.path("capabilities");a.add(a.remove(0));f.snapshot(n,false);
-      f.accepted(input->{denied(()->new FrozenModelBindingVerifier(f.ds).verify(input),"MATERIAL_SCOPE_MISSING_OR_CHANGED");return null;});
+      f.accepted(input->{denied(()->new FrozenModelBindingVerifier(f.ds).verify(input),"MATERIAL_DIGEST_MISMATCH");return null;});
       var original=Json.read(f.original);var reverse=Json.object();var keys=new ArrayList<String>();original.fieldNames().forEachRemaining(keys::add);Collections.reverse(keys);keys.forEach(k->reverse.set(k,original.get(k)));f.snapshot(reverse,false);
       f.accepted(input->{assertThat(new FrozenModelBindingVerifier(f.ds).verify(input)).isNotNull();return null;});
     }

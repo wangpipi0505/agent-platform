@@ -44,10 +44,11 @@ final class ModelInputMaterialFixture implements AutoCloseable {
     gateway = iam.client("gateway");
     engine = iam.client("engine");
     model = iam.client("model");
+    String pg = "jdbc:postgresql://127.0.0.1:" + Integer.getInteger("model.input.pg-port", 25432) + "/";
     var admin =
         new JdbcTemplate(
             new DriverManagerDataSource(
-                "jdbc:postgresql://127.0.0.1:25432/agent_platform_v12",
+                pg + "agent_platform_v12",
                 "agent_v12",
                 System.getenv("AGENT_DB_PASSWORD")));
     if (admin.queryForObject(
@@ -73,7 +74,7 @@ final class ModelInputMaterialFixture implements AutoCloseable {
     ds =
         new RunAuthorityFixture.CountingDataSource(
             new DriverManagerDataSource(
-                "jdbc:postgresql://127.0.0.1:25432/" + database,
+                pg + database,
                 "agent_v12",
                 System.getenv("AGENT_DB_PASSWORD")));
     db = new JdbcTemplate(ds);

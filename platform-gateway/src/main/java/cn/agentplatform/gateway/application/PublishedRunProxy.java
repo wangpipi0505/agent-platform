@@ -341,7 +341,12 @@ public final class PublishedRunProxy implements AutoCloseable {
                 }
                 installWriter();
             } catch (PlatformException e) {
-                fail(e.status());
+                if (e.status() == 404 && "APP_NOT_FOUND".equals(e.code())
+                        || e.status() == 409 && "APP_UNAVAILABLE".equals(e.code())) {
+                    fail(e.status(), e.code(), e.getMessage());
+                } else {
+                    fail(e.status());
+                }
             } catch (Exception e) {
                 fail(503);
             }
@@ -434,6 +439,10 @@ public final class PublishedRunProxy implements AutoCloseable {
         }
 
         void fail(int status) {
+            fail(status, "GATEWAY_RUN_REJECTED", "运行请求未完成，请检查权限或服务状态");
+        }
+
+        private void fail(int status, String code, String message) {
             if (!beginServlet(null)) return;
             try {
                 boolean committed = response.isCommitted(), stop;
@@ -447,7 +456,7 @@ public final class PublishedRunProxy implements AutoCloseable {
                     // Once bytes are committed/claimed, termination may not relabel them as error.
                     if (!committed && position == 0)
                         responseStatus =
-                                Set.of(400, 401, 403, 409, 413, 415, 503).contains(status)
+                                Set.of(400, 401, 403, 404, 409, 413, 415, 503).contains(status)
                                         ? status
                                         : 503;
                     if (!stop) {
@@ -456,8 +465,8 @@ public final class PublishedRunProxy implements AutoCloseable {
                         output =
                                 Json.write(
                                                 new ApiResponse<>(
-                                                        "GATEWAY_RUN_REJECTED",
-                                                        "运行请求未完成，请检查权限或服务状态",
+                                                        code,
+                                                        message,
                                                         null,
                                                         null))
                                         .getBytes(java.nio.charset.StandardCharsets.UTF_8);

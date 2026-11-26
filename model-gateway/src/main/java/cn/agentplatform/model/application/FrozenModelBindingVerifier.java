@@ -143,7 +143,8 @@ public final class FrozenModelBindingVerifier {
     var owner = new SubjectKey(a.actor().tenantId(), a.actor().principalId());
     if (!"engine".equals(a.caller()) || !"model".equals(a.call().target())
         || !"model.chat-stream".equals(a.call().action())
-        || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(a.call().resource().kind())
+        || !Set.of("app-version", EvaluationCandidateBinding.KIND,
+            cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND).contains(a.call().resource().kind())
         || a.operation() == null || !"DELEGATED".equals(a.operation().sourceKind())
         || !("PORTAL".equals(a.operation().originKind())
             || cn.agentplatform.common.authority.IntegrationTaskRoutes.modelExecution(a))) throw missing();
@@ -160,8 +161,10 @@ public final class FrozenModelBindingVerifier {
     catch (Exception e) { throw missing(); }
     // Whole strict tree, before projection or array-to-set conversion. This hash has no relation
     // to app candidate/run snapshot/accepted request/manifest/provider-wire digest domains.
-    same(row.sha256(), manifest.modelBindingRef().sha256());
-    same(row.sha256(), Digest.sha256(Json.canonical(n)));
+    if (!Objects.equals(row.sha256(), Digest.sha256(Json.canonical(n))))
+      throw new PlatformException(403, "MATERIAL_DIGEST_MISMATCH", "持久化模型快照的正文与摘要不一致");
+    if (!Objects.equals(row.sha256(), manifest.modelBindingRef().sha256()))
+      throw new PlatformException(403, "MATERIAL_DIGEST_MISMATCH", "运行冻结引用与绑定快照摘要不一致");
     same(row.id(),manifest.modelBindingRef().bindingId());
     same(row.modelEntryId(),manifest.modelEntryId());
     fields(n,"id","providerId","modelName","displayName","contextWindow","maxOutputTokens","capabilities","provider","protocol","baseUrl","tokenizerUrl");

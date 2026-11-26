@@ -49,8 +49,9 @@ services:
       OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
       OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
       AGENT_GATEWAY_URL: http://platform-gateway:8080
-      AGENT_APP_URL: http://app-management:8080
-      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_PUBLISHED_RUN_ENABLED: ${AGENT_PUBLISHED_RUN_ENABLED:-false}
+      AGENT_APP_URL: ${AGENT_APP_URL:-http://app-management:8080}
+      AGENT_ENGINE_URL: ${AGENT_ENGINE_URL:-http://engine-runtime:8080}
       AGENT_SKILL_URL: http://skill-registry:8080
       AGENT_MODEL_URL: http://model-gateway:8080
       AGENT_MONITOR_URL: http://monitor:8080
@@ -145,8 +146,9 @@ services:
       OTEL_INSTRUMENTATION_JDBC_STATEMENT_SANITIZER_ENABLED: 'true'
       OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: 'false'
       AGENT_GATEWAY_URL: http://platform-gateway:8080
-      AGENT_APP_URL: http://app-management:8080
-      AGENT_ENGINE_URL: http://engine-runtime:8080
+      AGENT_PUBLISHED_RUN_ENABLED: ${AGENT_PUBLISHED_RUN_ENABLED:-false}
+      AGENT_APP_URL: ${AGENT_APP_URL:-http://app-management:8080}
+      AGENT_ENGINE_URL: ${AGENT_ENGINE_URL:-http://engine-runtime:8080}
       AGENT_SKILL_URL: http://skill-registry:8080
       AGENT_MODEL_URL: http://model-gateway:8080
       AGENT_MONITOR_URL: http://monitor:8080

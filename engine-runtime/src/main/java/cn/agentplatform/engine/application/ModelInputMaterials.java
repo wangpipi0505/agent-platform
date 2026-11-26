@@ -96,6 +96,11 @@ public class ModelInputMaterials {
     return result;
   }
 
+  public ModelInputMaterialStore.StoredManifest exportManifest(String id, String version, RetainedAuthorization received) {
+    if (client == null) throw missing();
+    return store.exportManifest(id, version, received);
+  }
+
   public ModelInputManifest manifest(String id, String version, RetainedAuthorization received) {
     if (client == null) throw missing();
     return store.readManifest(id, version, received);
@@ -184,12 +189,13 @@ public class ModelInputMaterials {
     var declaredConfig = snapshot.path("config");
     var config = cn.agentplatform.engine.domain.InitialChatRules.promptConfig(snapshot);
     boolean evaluation = EvaluationCandidateBinding.KIND.equals(source.binding().root().kind());
+    boolean portal = cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND.equals(source.binding().root().kind());
     if (!"CHAT".equals(snapshot.path("type").asText()) || !config.isObject() || !inputs.isObject())
       throw missing();
     for (String key :
         List.of(
             "materialRefs", "historyRefs", "history", "sessionId", "chatSession", "chatTurn", "sessionHistory"))
-      if (inputs.has(key) || snapshot.hasNonNull(key) && !(evaluation && "chatSession".equals(key))) throw missing();
+      if (inputs.has(key) || snapshot.hasNonNull(key) && !((evaluation || portal) && "chatSession".equals(key))) throw missing();
     var allowed =
         Set.of(
             "modelEntryId",
@@ -282,7 +288,8 @@ public class ModelInputMaterials {
     if (labels.size() > 256) throw missing();
     guardPromptExpansion(config, inputs);
     var history = evaluation ? cn.agentplatform.engine.domain.InitialChatRules.evaluationMessages(snapshot)
-            : List.<Map<String, Object>>of();
+            : portal ? cn.agentplatform.engine.domain.InitialChatRules.portalMessages(snapshot)
+                : List.<Map<String, Object>>of();
     var request = new ContextAssembler().assemble(config, inputs, List.of(), List.of(), history);
     request.put("appCode", snapshot.path("appCode").textValue());
     request.put("runId", source.binding().publicId());

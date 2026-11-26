@@ -102,16 +102,13 @@ public final class PublishedMetadataClient implements AutoCloseable {
 
     private PublishedVersion read(String code, String segment, ServiceTicket ticket, long deadline,
             PublishedRunHttp.Cancellation cancellation) {
-        var response =
-                http.get(
-                        origin.resolve("/internal/apps/" + code + "/" + segment),
-                        ticket.value(),
-                        MAX_BYTES,
-                        deadline,
-                        cancellation,
-                        () -> {
-                            if (closed) throw unavailable();
-                        });
+        URI uri = origin.resolve("/internal/apps/" + code + "/" + segment);
+        Runnable check = () -> {
+            if (closed) throw unavailable();
+        };
+        var response = "published-metadata".equals(segment)
+                ? http.getPublishedMetadata(uri, ticket.value(), MAX_BYTES, deadline, cancellation, check)
+                : http.get(uri, ticket.value(), MAX_BYTES, deadline, cancellation, check);
         return parse(response.body(), code);
     }
     private static PublishedVersion parse(byte[] bytes,String expectedCode){

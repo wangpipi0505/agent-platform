@@ -33,6 +33,9 @@ spring:
     # 样例 V901 可能已在升级库执行，后续引擎结构迁移仍使用引擎版本段。
     out-of-order: true
 agent:
+  run:
+    published-initial:
+      enabled: ${AGENT_PUBLISHED_RUN_ENABLED:false}
   scheduler:
     # Local worker slots; distributed model/tool/assembly permits remain separate gates.
     interactive-workers: ${AGENT_INTERACTIVE_WORKERS:16}

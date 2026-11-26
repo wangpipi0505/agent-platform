@@ -59,6 +59,7 @@ class GatewayIamPortalHttpTest {
     private static HttpServer engine;
     private static final String VERSION_SHA = Digest.sha256("r36-published-version");
     private static final String CANDIDATE_SHA = Digest.sha256("r37-evaluation-candidate");
+    private static final String SESSION = "/v1/apps/ops/sessions/s_0123456789abcdef0123456789abcdef";
     private static String base;
 
     @BeforeAll
@@ -68,7 +69,45 @@ class GatewayIamPortalHttpTest {
                 Map.of("region", Set.of("A"), "dataLabels", Set.of("confidential"))));
         engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
+        engine.createContext(SESSION, request -> {
+            try (request; var authority = iam.client("engine")) {
+                var path = request.getRequestURI().getPath();
+                var call = cn.agentplatform.common.authority.PortalRuntimeRoutes.call(new ServiceRoutePolicy(),
+                        request.getRequestMethod(), path);
+                authority.authorize(request.getRequestHeaders().getFirst("Authorization").substring(7), call);
+                if (path.endsWith("/events/stream")) {
+                    if (!"4".equals(request.getRequestHeaders().getFirst("Last-Event-ID"))) {
+                        request.sendResponseHeaders(400, -1);
+                        return;
+                    }
+                    byte[] bytes = "id:5\nevent:turn/end\ndata:{}\n\n".getBytes(StandardCharsets.UTF_8);
+                    request.getResponseHeaders().set("Content-Type", "text/event-stream");
+                    request.sendResponseHeaders(200, bytes.length);
+                    request.getResponseBody().write(bytes);
+                } else {
+                    reply(request, 200, ApiResponse.ok(Map.of("action", call.action())));
+                }
+            }
+        });
         engine.createContext("/internal/apps/ops/published-metadata", GatewayIamPortalHttpTest::respondAsApp);
+        engine.createContext("/admin/apps/ops/runs", request -> {
+            try (request; var authority = iam.client("engine")) {
+                var call = new ServiceCall("engine", "proxy.engine.post.RunController.run",
+                        new ResourceBinding("app-version", "ops@1", VERSION_SHA));
+                authority.authorize(request.getRequestHeaders().getFirst("Authorization").substring(7), call);
+                reply(request, 200, ApiResponse.ok(Map.of("runId", "r_fixture")));
+            }
+        });
+        for (var name : List.of("draft", "missing")) {
+            engine.createContext("/internal/apps/" + name + "/published-metadata", request -> {
+                try (request; var authority = iam.client("app")) {
+                    var call = new ServiceCall("app", MetadataSelectors.ACTION, MetadataSelectors.published("tenant-a", name));
+                    authority.authorize(request.getRequestHeaders().getFirst("Authorization").substring(7), call);
+                    boolean draft = name.equals("draft");
+                    reply(request, draft ? 409 : 404, new ApiResponse<>(draft ? "APP_UNAVAILABLE" : "APP_NOT_FOUND", "fixture", null, null));
+                }
+            });
+        }
         engine.createContext("/admin/evaluations", GatewayIamPortalHttpTest::respondAsMonitor);
         engine.createContext("/admin/apps/ops/publish/precheck", GatewayIamPortalHttpTest::respondAsPrecheck);
         engine.createContext("/internal/platform-authorization/session", GatewayIamPortalHttpTest::respondWithAccess);
@@ -129,6 +168,7 @@ class GatewayIamPortalHttpTest {
         values.put("server.port", "0");
         values.put("spring.flyway.enabled", "false");
         values.put("agent.dev-auth", "false");
+        values.put("agent.gateway.published-run.enabled", "true");
         values.put("agent.security.mode", "iam");
         values.put("agent.security.service-id", "gateway");
         values.put("agent.security.portal.enabled", "true");
@@ -186,14 +226,42 @@ class GatewayIamPortalHttpTest {
     }
 
     @Test
-    void portalTicketPassesTheAdminSurface() throws Exception {
-        var response = send(HttpRequest.newBuilder(URI.create(base + "/admin/apps/app-a/runs"))
-                .header("Authorization", "Bearer " + iam.portal())
-                .POST(HttpRequest.BodyPublishers.ofString("{}")));
-        // Reaching the controller proves authentication and authorisation passed; the 503 is the
-        // published-run proxy being absent from this minimal deployment, not an auth rejection.
-        assertThat(response.statusCode()).as(response.body()).isEqualTo(503);
-        assertThat(response.body()).contains("PUBLISHED_RUN_UNAVAILABLE");
+    void publishedRunUsesTheNormalIamAssemblyAndReportsMissingVersions() throws Exception {
+        var result = postEvaluation("/admin/apps/ops/runs", iam.portal(), "{}");
+        assertThat(result.statusCode()).as(result.body()).isEqualTo(200);
+        assertThat(Json.read(result.body()).at("/data/runId").asText()).isEqualTo("r_fixture");
+        for (var failure : Map.of("draft", "APP_UNAVAILABLE", "missing", "APP_NOT_FOUND").entrySet()) {
+            var rejected = postEvaluation("/admin/apps/" + failure.getKey() + "/runs", iam.portal(), "{}");
+            assertThat(rejected.statusCode()).as(rejected.body()).isEqualTo(failure.getKey().equals("draft") ? 409 : 404);
+            assertThat(Json.read(rejected.body()).path("code").asText()).isEqualTo(failure.getValue());
+        }
+    }
+
+    @Test
+    void exactPortalSessionRoutesCarryTheCursorAndRequireALiveTicket() throws Exception {
+        assertThat(get(SESSION, iam.portal()).statusCode()).isEqualTo(200);
+        assertThat(postEvaluation(SESSION + "/turns", iam.portal(), "{}").statusCode()).isEqualTo(200);
+        var stream = send(HttpRequest.newBuilder(URI.create(base + SESSION + "/events/stream"))
+                .header("Authorization", "Bearer " + iam.portal()).header("Last-Event-ID", "4").GET());
+        assertThat(stream.statusCode()).as(stream.body()).isEqualTo(200);
+        assertThat(stream.headers().firstValue("Content-Type").orElse("")).startsWith("text/event-stream");
+        assertThat(stream.body()).isEqualTo("id:5\nevent:turn/end\ndata:{}\n\n");
+        assertThat(get(SESSION, iam.portal(-90)).statusCode()).isEqualTo(401);
+    }
+
+    @Test
+    void enabledPublishedProxyRequiresATrustedConfiguredEngine() {
+        var config = new GatewayIamPortalConfiguration();
+        var env = new org.springframework.mock.env.MockEnvironment();
+        try (var http = new PublishedRunHttp(); var authority = iam.client("gateway");
+             var metadata = config.taskPublishedMetadata(authority,
+                     new org.springframework.mock.env.MockEnvironment().withProperty("agent.services.app", "https://app.invalid"))) {
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> config.publishedRunProxy(env, metadata, authority, http))
+                    .isInstanceOf(IllegalStateException.class).hasMessageContaining("agent.services.engine");
+            env.setProperty("agent.services.engine", "http://engine.invalid");
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> config.publishedRunProxy(env, metadata, authority, http))
+                    .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("TRUSTED_ORIGIN_REQUIRED");
+        }
     }
 
     @Test
@@ -489,6 +557,13 @@ class GatewayIamPortalHttpTest {
         var response = postEvaluation("/admin/apps/ops/publish/precheck", iam.portal(), "");
         assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
         assertThat(response.body()).isEqualTo("tenant-a/alice ops");
+    }
+
+    private static void reply(com.sun.net.httpserver.HttpExchange request, int status, Object value) throws java.io.IOException {
+        byte[] bytes = Json.write(value).getBytes(StandardCharsets.UTF_8);
+        request.getResponseHeaders().set("Content-Type", "application/json");
+        request.sendResponseHeaders(status, bytes.length);
+        request.getResponseBody().write(bytes);
     }
 
     private static void respondAsPrecheck(com.sun.net.httpserver.HttpExchange request) throws java.io.IOException {

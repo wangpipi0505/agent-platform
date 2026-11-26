@@ -53,7 +53,7 @@ public final class ServiceRoutePolicy {
         return call != null && "engine".equals(caller) && "engine".equals(call.target())
             && "run.advance".equals(call.action()) && "delegated".equals(mode)
             && call.resource() != null && "DELEGATED".equals(source)
-            && (("PORTAL".equals(origin) && Set.of("app-version", EvaluationCandidateBinding.KIND)
+            && (("PORTAL".equals(origin) && Set.of("app-version", EvaluationCandidateBinding.KIND, PortalRuntimeRoutes.SESSION_KIND)
                     .contains(call.resource().kind()))
                 || ("INTEGRATION".equals(origin) && IntegrationTaskRoutes.versionRoot(call.resource())));
     }

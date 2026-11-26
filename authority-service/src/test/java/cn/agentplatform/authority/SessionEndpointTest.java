@@ -42,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 AuthorityTestSupport.P_KEY,
                 AuthorityTestSupport.P_GATEWAY,
                 AuthorityTestSupport.P_APP,
+                DelegatedTestSupport.P_ENGINE,
                 DelegatedTestSupport.P_DELEGATION_ON,
                 "agent.authority.identity.subject-lookup-key-ref=env:AGENT_R38_TEST_LOOKUP_KEY"})
 class SessionEndpointTest extends AuthorityTestSupport {
@@ -243,6 +244,42 @@ class SessionEndpointTest extends AuthorityTestSupport {
         assertThat(exchangeSubject(token, "r38-missing").getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         MODE.set("server-error");
         assertThat(exchangeSubject(token, "r38-outage").getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @Test
+    @org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "AGENT_AUTHORITY_REVOCATION_DB", matches = ".+")
+    void revokingOnePortalLoginIsIdempotentAndDoesNotRevokeItsSibling() {
+        String first = issueSession();
+        String other = issueSession();
+        assertThat(exchangeSubject(first, "r42-before").getStatusCode()).isEqualTo(HttpStatus.OK);
+        var stream = cn.agentplatform.common.authority.PortalRuntimeRoutes.call(
+                new cn.agentplatform.common.authority.ServiceRoutePolicy(), "GET",
+                "/v1/apps/demo/sessions/s_0123456789abcdef0123456789abcdef/events/stream");
+        var resource = Map.of("kind", stream.resource().kind(), "id", stream.resource().id(),
+                "version_digest", stream.resource().versionDigest());
+        var issued = postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET),
+                DelegatedTestSupport.body("exchange", stream, "before-open",
+                        Map.of("resource", resource, "subject_token", first)));
+        assertThat(issued.getStatusCode()).isEqualTo(HttpStatus.OK);
+        String streamTicket = issued.getBody().path("ticket").asText();
+        var authorization = Map.of("resource", resource, "service_ticket", streamTicket);
+        assertThat(postJson("/internal/authorize", basic(DelegatedTestSupport.ENGINE, DelegatedTestSupport.ENGINE_SECRET),
+                DelegatedTestSupport.body("authorize", stream, "before-frame", authorization))
+                .getStatusCode()).isEqualTo(HttpStatus.OK);
+        for (int i = 0; i < 2; i++) {
+            assertThat(postJson("/oauth/session/revoke", "Bearer " + first, "{}").getStatusCode())
+                    .isEqualTo(HttpStatus.OK);
+        }
+        assertThat(postJson("/internal/authorize", basic(DelegatedTestSupport.ENGINE, DelegatedTestSupport.ENGINE_SECRET),
+                DelegatedTestSupport.body("authorize", stream, "after-frame", authorization))
+                .getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(exchangeSubject(first, "r42-after").getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(exchangeSubject(other, "r42-sibling").getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    private String issueSession() {
+        return postJson("/oauth/token", basic(GATEWAY, GATEWAY_SECRET), sessionBody("ak-admin-test"))
+                .getBody().path("access_token").asText();
     }
 
     private ResponseEntity<JsonNode> exchangeSubject(String token, String nonce) {

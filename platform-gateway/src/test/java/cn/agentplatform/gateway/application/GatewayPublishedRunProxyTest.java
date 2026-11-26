@@ -61,7 +61,7 @@ class GatewayPublishedRunProxyTest {
                     org.springframework.boot.autoconfigure.security.servlet
                             .SecurityFilterAutoConfiguration.class)
     @EnableWebSecurity(debug = false)
-    @Import({GatewayController.class, GatewayIamAssembly.class, PlatformErrors.class})
+    @Import({GatewayController.class, GatewayIamAssembly.class, cn.agentplatform.common.authority.PlatformAccessClient.class, PlatformErrors.class})
     static class Receiver {
         @Bean
         static org.springframework.beans.factory.config.BeanFactoryPostProcessor deployment(

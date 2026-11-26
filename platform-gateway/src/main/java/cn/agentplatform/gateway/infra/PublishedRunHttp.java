@@ -31,7 +31,7 @@ public final class PublishedRunHttp implements AutoCloseable {
     private final AtomicBoolean closed = new AtomicBoolean();
 
     public record Response(int status, byte[] body) {}
-    private enum Policy { LEGACY, OBSERVATION_METADATA, STATUS }
+    private enum Policy { LEGACY, PUBLISHED_METADATA, OBSERVATION_METADATA, STATUS }
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON=new com.fasterxml.jackson.databind.ObjectMapper(
             com.fasterxml.jackson.core.JsonFactory.builder().enable(com.fasterxml.jackson.core.StreamReadFeature.STRICT_DUPLICATE_DETECTION).build())
             .enable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
@@ -171,6 +171,11 @@ public final class PublishedRunHttp implements AutoCloseable {
         return execute(new HttpGet(uri), ticket, maximum, deadline, cancel, check);
     }
 
+    public Response getPublishedMetadata(URI uri, String ticket, int maximum, long deadline,
+            Cancellation cancel, Runnable check) {
+        return execute(new HttpGet(uri), ticket, maximum, deadline, cancel, check, Policy.PUBLISHED_METADATA);
+    }
+
     public Response post(
             URI uri,
             String ticket,
@@ -245,7 +250,11 @@ public final class PublishedRunHttp implements AutoCloseable {
                         try {
                         int status = response.getCode();
                         if (status != 200) {
-                            if(policy!=Policy.LEGACY){if(status!=403&&status!=404)throw unavailable();}
+                            if (policy == Policy.PUBLISHED_METADATA) {
+                                if (status == 401 || status == 403)
+                                    throw new PlatformException(status, "DEPENDENCY_REJECTED", "发布版本查询被拒绝");
+                                if (status != 404 && status != 409) throw unavailable();
+                            } else if(policy!=Policy.LEGACY){if(status!=403&&status!=404)throw unavailable();}
                             else if (Set.of(401, 403, 409, 503).contains(status))
                                 throw new PlatformException(
                                         status, "DEPENDENCY_REJECTED", "下游拒绝当前请求");
@@ -316,6 +325,13 @@ public final class PublishedRunHttp implements AutoCloseable {
                     ||!r.path("code").isTextual()||!r.path("message").isTextual()||r.path("message").textValue().length()>512
                     ||!r.path("data").isNull()||!(r.path("traceId").isNull()||r.path("traceId").isTextual()&&r.path("traceId").textValue().length()<=128))return unavailable();
             String code=r.path("code").textValue();
+            if (policy == Policy.PUBLISHED_METADATA) {
+                if (status == 404 && "APP_NOT_FOUND".equals(code))
+                    return new PlatformException(404, code, "应用不存在");
+                if (status == 409 && "APP_UNAVAILABLE".equals(code))
+                    return new PlatformException(409, code, "应用未发布或无可运行版本");
+                return unavailable();
+            }
             if(status==404&&code.equals("RUN_NOT_FOUND"))return new PlatformException(404,code,"运行不存在");
             if(status==403&&code.equals("RUN_STATUS_TOO_LARGE")&&policy==Policy.STATUS)return new PlatformException(403,code,"运行状态超出范围");
             if(status==403&&Set.of("SYS-AUTH-403","AUTHORITY_EXPIRED","AUTHORITY_CONTEXT_MISSING","RUN_AUTHORITY_DENIED","MATERIAL_SCOPE_MISSING_OR_CHANGED","AUTHORITY_DENIED").contains(code))return new PlatformException(403,code,"当前授权不允许读取运行状态");

@@ -75,6 +75,9 @@ services:
     restart: unless-stopped
     environment:
       SERVER_PORT: "18086"
+      AGENT_AUTHORITY_REVOCATION_DB: jdbc:postgresql://127.0.0.1:15432/agent_platform
+      AGENT_DB_USER: agentplat
+      AGENT_DB_PASSWORD: ${PG_PASSWORD}
       SPRING_PROFILES_ACTIVE: test
       AGENT_RELEASE_GATE: ${AGENT_RELEASE_GATE:-IAM_SCOPE_ACCEPTED}
       AGENT_BIND_ADDRESS: 127.0.0.1
@@ -97,6 +100,8 @@ services:
       TZ: Asia/Shanghai
     secrets:
       - authority-rsa.pem
+    depends_on:
+      pg: {condition: service_healthy}
     # 签发服务只开放 JWKS，业务服务的 Actuator 就绪探针不适用。
     healthcheck:
       test: ["CMD", "java", "-cp", "/opt/health", "HealthProbe", "http://127.0.0.1:18086/.well-known/jwks.json"]
@@ -114,6 +119,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *backend-env
+      AGENT_PUBLISHED_RUN_ENABLED: ${AGENT_PUBLISHED_RUN_ENABLED:-true}
       SERVER_PORT: "18090"
       MANAGEMENT_SERVER_PORT: "18180"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=gateway
@@ -161,6 +167,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *backend-env
+      AGENT_PUBLISHED_RUN_ENABLED: ${AGENT_PUBLISHED_RUN_ENABLED:-true}
       SERVER_PORT: "18082"
       MANAGEMENT_SERVER_PORT: "18182"
       AGENT_DB_URL: jdbc:postgresql://127.0.0.1:15432/agent_platform?currentSchema=engine

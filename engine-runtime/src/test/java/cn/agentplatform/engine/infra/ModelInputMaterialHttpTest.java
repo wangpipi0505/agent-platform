@@ -224,6 +224,30 @@ class ModelInputMaterialHttpTest {
   }
 
   @Test
+  void exportPreservesThePersistedManifestOrderAcrossProcessLifetimes() throws Exception {
+    long run = f.create();
+    var manifest = f.materials.prepareInitial(run);
+    var document = (ObjectNode) Json.read(f.db.queryForObject(
+        "select manifest::text from engine.model_input_snapshot where run_id=?", String.class, run));
+    var labels = (com.fasterxml.jackson.databind.node.ArrayNode) document.at("/scope/requiredDataLabels");
+    assertThat(labels.size()).isGreaterThan(1);
+    labels.add(labels.remove(0));
+    document.remove("manifestSha256");
+    String digest = Digest.sha256(Json.canonical(document));
+    document.put("manifestSha256", digest);
+    // This test database models an immutable row written with another JVM's set iteration order.
+    f.tx.executeWithoutResult(status -> {
+      f.db.execute("alter table engine.model_input_snapshot disable trigger model_input_snapshot_immutable");
+      f.db.update("update engine.model_input_snapshot set manifest=?::jsonb,manifest_sha256=? where run_id=?",
+          Json.write(document), digest, run);
+      f.db.execute("alter table engine.model_input_snapshot enable trigger model_input_snapshot_immutable");
+    });
+    var response = get("localhost", path(manifest), ticket(run).value());
+    assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+    assertThat(Json.read(response.body()).path("data")).isEqualTo(document);
+  }
+
+  @Test
   void unsignedPortalWrongCallerAndWrongSelectorsCannotRead() throws Exception {
     long run = f.create();
     var m = f.materials.prepareInitial(run);

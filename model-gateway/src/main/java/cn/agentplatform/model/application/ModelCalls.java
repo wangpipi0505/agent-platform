@@ -81,7 +81,8 @@ public class ModelCalls {
         var root = a.call().resource();
         if (!"engine".equals(a.caller()) || !"model".equals(a.call().target())
                 || !"model.chat-stream".equals(a.call().action())
-                || !Set.of("app-version", EvaluationCandidateBinding.KIND).contains(root.kind())
+                || !Set.of("app-version", EvaluationCandidateBinding.KIND,
+            cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND).contains(root.kind())
                 || !"DELEGATED".equals(a.operation().sourceKind())
                 || !("PORTAL".equals(a.operation().originKind()) || IntegrationTaskRoutes.modelExecution(a))
                 || !root.equals(a.operation().resource())

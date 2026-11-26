@@ -325,10 +325,41 @@ public class RuntimeClients implements AutoCloseable {
         return iam;
     }
 
+    public Runnable portalSessionStream(String code, String session, Actor actor) {
+        var call = new ServiceCall("engine", PortalRuntimeRoutes.STREAM_ACTION,
+                PortalRuntimeRoutes.sessionResource(code, session));
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authority == null || auth == null
+                || !(auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt ticket))
+            throw RunAuthorityStore.denied();
+        var opening = AuthorityContext.requireInitialFor(actor, call.resource());
+        var current = opening.current();
+        if (!call.equals(current.call()) || !"gateway".equals(current.caller())
+                || !"PORTAL".equals(current.operation().sourceKind())
+                || !"PORTAL".equals(current.operation().originKind())) throw RunAuthorityStore.denied();
+        // The pump has no thread-bound request frame. It rechecks this exact ticket and never renews it.
+        return new Runnable() {
+            private RetainedAuthorization latest = opening;
+            private long nextCheck = System.nanoTime();
+            @Override public void run() {
+                long now = System.nanoTime();
+                if (now - nextCheck >= 0) {
+                    latest = authority.authorizeRetained(ticket.getTokenValue(), call);
+                    if (!actor.equals(latest.current().actor())
+                            || !current.delegation().equals(latest.current().delegation())
+                            || !current.authorizationVersion().equals(latest.current().authorizationVersion()))
+                        throw RunAuthorityStore.denied();
+                    nextCheck = now + java.util.concurrent.TimeUnit.SECONDS.toNanos(1);
+                }
+                latest.requireVerified();
+            }
+        };
+    }
+
     public JsonNode publishedForRuntime(String code, Actor actor) {
         if (!iam) return get("app", "/internal/apps/" + code + "/published", actor);
         var current = AuthorityContext.current();
-        var resource = PortalRuntimeRoutes.isPinnedTaskCall(current.call(), code)
+        var resource = PortalRuntimeRoutes.isPinnedTaskCall(current.call(), code) || PortalRuntimeRoutes.isSessionTurn(current)
                 ? current.call().resource() : PortalRuntimeRoutes.appResource(code);
         var retained = AuthorityContext.requireInitialFor(actor, resource);
         return published(code, retained);
@@ -341,7 +372,8 @@ public class RuntimeClients implements AutoCloseable {
         var current = retained.current();
         var root = current.call().resource();
         boolean runtimeRead = PortalRuntimeRoutes.permitsPublishedRead(current.call().action())
-                && PortalRuntimeRoutes.appResource(code).equals(root);
+                && PortalRuntimeRoutes.appResource(code).equals(root)
+                || PortalRuntimeRoutes.isSessionTurn(current) && PortalRuntimeRoutes.sessionForApp(root, code);
         boolean runRead = ("proxy.engine.post.RunController.run".equals(current.call().action())
                 && "app-version".equals(root.kind())
                 && root.id().matches(java.util.regex.Pattern.quote(code) + "@[1-9][0-9]*"))

@@ -31,7 +31,7 @@ public final class FrozenModelBindingStore {
         try (var rows = query.executeQuery()) {
           boolean present = rows.next();
           checkTime(started);
-          if (!present) throw missing();
+          if (!present) throw new PlatformException(403, "BINDING_NOT_FROZEN", "当前租户缺少该冻结绑定");
           var row = new BindingRow(rows.getLong(1), rows.getLong(2), rows.getLong(3), rows.getString(4), rows.getString(5));
           checkTime(started);
           boolean extra = rows.next();

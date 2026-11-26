@@ -16,21 +16,43 @@ public final class InitialChatRules {
             "history","historyRefs","materialRefs","tools","toolDefinitions","dataSources","frozenPrompts",
             "modelOverride","overrides","summary","summarizer","retry","compressedMaterials");
     public static void requireSources(JsonNode snapshot,JsonNode inputs) {
-        requireSources(snapshot, inputs, false);
+        requireSources(snapshot, inputs, false, false);
+    }
+
+    /** Validate conversation inputs against the resource persisted at admission. */
+    public static void requireBoundChat(cn.agentplatform.common.authority.ResourceBinding root,
+            JsonNode snapshot, JsonNode inputs) {
+        if (cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND.equals(root.kind())) {
+            var expected = cn.agentplatform.common.authority.PortalRuntimeRoutes.sessionResource(
+                    snapshot.path("appCode").asText(), snapshot.path("chatSession").path("sessionId").asText());
+            if (!expected.equals(root)) throw denied();
+            requirePortalSources(snapshot, inputs);
+        } else if (cn.agentplatform.common.authority.EvaluationCandidateBinding.KIND.equals(root.kind())) {
+            requireEvaluationSources(snapshot, inputs);
+        } else {
+            requireSources(snapshot, inputs);
+        }
     }
 
     public static void requireEvaluationSources(JsonNode snapshot, JsonNode inputs) {
-        requireSources(snapshot, inputs, true);
+        requireSources(snapshot, inputs, true, false);
         evaluationMessages(snapshot);
     }
 
-    private static void requireSources(JsonNode snapshot, JsonNode inputs, boolean evaluation) {
+    public static void requirePortalSources(JsonNode snapshot, JsonNode inputs) {
+        requireSources(snapshot, inputs, false, true);
+        if (!snapshot.has("portalHistory") || !snapshot.has("chatSession")) throw denied();
+        portalMessages(snapshot);
+    }
+
+    private static void requireSources(JsonNode snapshot, JsonNode inputs, boolean evaluation, boolean portal) {
         if(!snapshot.isObject()||!"CHAT".equals(snapshot.path("type").asText())||!inputs.isObject())throw denied();
         for(String key:List.of("debugSnapshot","evalCandidate","controlledDraftId","controlledReplay","reexecution",
                 "debugControls","controlledSkillVersion","guard","sessionId","chatSession","chatTurn","sessionHistory","history","historyRefs","materialRefs"))
-            if ((snapshot.has(key) && !(evaluation && key.equals("chatSession"))) || inputs.has(key)) throw denied();
+            if ((snapshot.has(key) && !((evaluation || portal) && key.equals("chatSession"))) || inputs.has(key)) throw denied();
         for (String key : List.of("evaluationConversation", "evaluationHistory"))
             if ((!evaluation && snapshot.has(key)) || inputs.has(key)) throw denied();
+        if ((!portal && snapshot.has("portalHistory")) || inputs.has("portalHistory")) throw denied();
         if(snapshot.has("definition")&&!snapshot.path("definition").isNull()&&!snapshot.path("definition").isEmpty())throw denied();
         var config=snapshot.path("config");if(!config.isObject())throw denied();
         promptConfig(snapshot);
@@ -78,11 +100,21 @@ public final class InitialChatRules {
         if (session != snapshot.has("evaluationConversation") || session != snapshot.has("evaluationHistory"))
             throw denied();
         if (!session) return List.of();
+        return conversationMessages(snapshot, "evaluationHistory", "es_[a-f0-9]{48}", true);
+    }
+
+    public static List<Map<String, Object>> portalMessages(JsonNode snapshot) {
+        return conversationMessages(snapshot, "portalHistory", "s_[a-f0-9]{32}", false);
+    }
+
+    private static List<Map<String, Object>> conversationMessages(
+            JsonNode snapshot, String historyField, String sessionPattern, boolean completeHistory) {
         var pointer = snapshot.path("chatSession");
         long turn = positive(pointer.path("turnNo"));
-        var history = snapshot.path("evaluationHistory").path("priorTurns");
-        if (turn > 200 || !pointer.path("sessionId").asText().matches("es_[a-f0-9]{48}")
-                || !history.isArray() || history.size() != turn - 1) throw denied();
+        var history = snapshot.path(historyField).path("priorTurns");
+        if (turn > 200 || !pointer.path("sessionId").asText().matches(sessionPattern)
+                || !history.isArray() || history.size() >= turn
+                || completeHistory && history.size() != turn - 1) throw denied();
         var messages = new ArrayList<Map<String, Object>>(2 * history.size());
         for (var item : history) {
             if (!item.path("runId").asText().matches("r_[0-9a-f]{32}")
@@ -96,8 +128,16 @@ public final class InitialChatRules {
     }
 
     public static Set<String> evaluationLabels(JsonNode snapshot) {
-        if (!snapshot.has("evaluationHistory")) return Set.of();
-        var labels = snapshot.path("evaluationHistory").path("requiredLabels");
+        return conversationLabels(snapshot, "evaluationHistory");
+    }
+
+    public static Set<String> portalLabels(JsonNode snapshot) {
+        return conversationLabels(snapshot, "portalHistory");
+    }
+
+    private static Set<String> conversationLabels(JsonNode snapshot, String field) {
+        if (!snapshot.has(field)) return Set.of();
+        var labels = snapshot.path(field).path("requiredLabels");
         if (!labels.isArray() || labels.size() > 256) throw denied();
         var result = new TreeSet<String>();
         for (var label : labels)

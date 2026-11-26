@@ -8,6 +8,8 @@ import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.RetainedAuth
 import cn.agentplatform.engine.domain.GraphRules;
 import cn.agentplatform.engine.domain.InitialChatRules;
 import cn.agentplatform.engine.domain.RunDispatch;
+import cn.agentplatform.engine.harness.session.SessionEvents;
+import cn.agentplatform.engine.harness.session.SessionStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -383,12 +385,17 @@ public class TraceStore {
         view.requireCurrent();return view;
     }
 
-    /** Read only completed turns of this evaluation, through the same protected material store. */
-    public JsonNode evaluationHistory(String session, int turn, JsonNode snapshot, RetainedAuthorization proof) {
+    /** Reuse only completed turns belonging to the same protected conversation. */
+    public JsonNode conversationHistory(String session, int turn, JsonNode snapshot, RetainedAuthorization proof) {
         AuthorityContext.requireBound(proof);
         var current = proof.current();
-        same("evaluation.turn", current.call().action());
-        same(EvaluationCandidateBinding.from(snapshot), current.call().resource());
+        boolean portal = PortalRuntimeRoutes.isSessionTurn(current);
+        if (portal) {
+            same(PortalRuntimeRoutes.sessionResource(snapshot.path("appCode").asText(), session), current.call().resource());
+        } else {
+            same("evaluation.turn", current.call().action());
+            same(EvaluationCandidateBinding.from(snapshot), current.call().resource());
+        }
         var owner = current.delegation().subject();
         return MaterialScopeStore.snapshot(source, () -> {
             var rows = db.queryForList("""
@@ -398,21 +405,26 @@ public class TraceStore {
                     where s.public_id=? and s.tenant_id=? and s.principal_id=? and s.app_code=?
                       and t.turn_no<? and r.status='SUCCEEDED' order by t.turn_no
                     """, session, owner.tenantId(), owner.principalId(), snapshot.path("appCode").asText(), turn);
-            if (rows.size() != turn - 1) throw denied();
+            if (!portal && rows.size() != turn - 1) throw denied();
             var prior = new ArrayList<Map<String, String>>();
             var labels = new TreeSet<String>();
             long bytes = 0;
             for (var row : rows) {
-                int previousTurn = prior.size() + 1;
-                same((long) previousTurn, number(row, "turn_no"));
+                long previousTurn = number(row, "turn_no");
+                if (!portal) same((long) prior.size() + 1, previousTurn);
                 var binding = RunAuthorityStore.load(db, number(row, "id"), true);
                 materials.requireReader(binding, current);
                 var scopes = materials.currentScopes(binding);
                 var frozen = evaluationMaterial(binding, scopes, "run-snapshot", proof).payload();
-                same(Json.canonical(snapshot.path("evaluationConversation")), Json.canonical(frozen.path("evaluationConversation")));
+                if (portal) {
+                    same(snapshot.path("candidateSha256").asText(), frozen.path("candidateSha256").asText());
+                    same(snapshot.path("versionNo").asLong(), frozen.path("versionNo").asLong());
+                } else {
+                    same(Json.canonical(snapshot.path("evaluationConversation")), Json.canonical(frozen.path("evaluationConversation")));
+                }
                 same(Json.canonical(snapshot.path("dependencyVersions")), Json.canonical(frozen.path("dependencyVersions")));
                 same(session, frozen.path("chatSession").path("sessionId").asText());
-                same(previousTurn, frozen.path("chatSession").path("turnNo").asInt());
+                same(previousTurn, frozen.path("chatSession").path("turnNo").asLong());
                 var input = evaluationMaterial(binding, scopes, "run-inputs", proof);
                 var output = evaluationMaterial(binding, scopes, "run-output", proof);
                 var answer = output.payload().path("text");
@@ -421,7 +433,7 @@ public class TraceStore {
                 var fact = Map.of("runId", binding.publicId(), "inputScopeSha256", input.scope().scopeSha256(),
                         "outputScopeSha256", output.scope().scopeSha256(), "user", user, "assistant", answer.textValue());
                 bytes += Json.canonical(fact).getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
-                if (bytes > 512 * 1024) throw new PlatformException(413, "EVALUATION_HISTORY_SIZE", "评测会话历史超过授权材料大小");
+                if (bytes > 512 * 1024) throw new PlatformException(413, portal ? "SESSION_HISTORY_SIZE" : "EVALUATION_HISTORY_SIZE", "会话历史超过授权材料大小");
                 labels.addAll(input.scope().requiredDataLabels());
                 labels.addAll(output.scope().requiredDataLabels());
                 prior.add(fact);
@@ -442,7 +454,7 @@ public class TraceStore {
         return new EvaluationMaterial(payload.value(), scope);
     }
 
-    public void attachEvaluationTurn(long run, JsonNode snapshot, RetainedAuthorization proof) {
+    public void attachSessionTurn(long run, JsonNode snapshot, RetainedAuthorization proof) {
         AuthorityContext.requireBound(proof);
         var pointer = snapshot.path("chatSession");
         int count = db.update("""
@@ -450,7 +462,12 @@ public class TraceStore {
                 from engine.chat_session s,engine.run r
                 where r.id=? and r.tenant_id=s.tenant_id and r.principal_id=s.principal_id and r.app_code=s.app_code
                   and t.session_id=s.public_id and t.session_id=? and t.turn_no=? and t.run_public_id is null
-                  and s.snapshot->'evaluationConversation'=r.snapshot->'evaluationConversation' and t.inputs=r.inputs
+                  and (s.snapshot->'evaluationConversation'=r.snapshot->'evaluationConversation'
+                       or (r.trigger_type='CHAT' and jsonb_exists(r.snapshot,'portalHistory')
+                           and not jsonb_exists(s.snapshot,'evaluationConversation')
+                           and s.snapshot->'versionNo'=r.snapshot->'versionNo'
+                           and s.snapshot->'candidateSha256'=r.snapshot->'candidateSha256'))
+                  and t.inputs=r.inputs
                 """, run, pointer.path("sessionId").asText(), pointer.path("turnNo").intValue());
         if (count != 1) throw denied();
     }
@@ -540,8 +557,15 @@ public class TraceStore {
         String code=MetadataSelectors.code(text(snapshot,"appCode"));long no=positive(snapshot.get("versionNo"));
         long version=snapshot.has("appVersionId")?positive(snapshot.get("appVersionId")):positive(snapshot.get("versionId"));
         if(snapshot.has("versionId"))same(version,positive(snapshot.get("versionId")));
-        same(b.appVersionId(),version);same(b.appVersionNo(),no);same(code+"@"+no,b.root().id());
-        String candidate=text(snapshot,"candidateSha256");hash(candidate);same(candidate,b.root().versionDigest());
+        same(b.appVersionId(), version);
+        same(b.appVersionNo(), no);
+        String candidate = text(snapshot, "candidateSha256");
+        hash(candidate);
+        if (PortalRuntimeRoutes.SESSION_KIND.equals(b.root().kind())) {
+            same(PortalRuntimeRoutes.sessionResource(code, snapshot.path("chatSession").path("sessionId").asText()), b.root());
+        } else {
+            same(new ResourceBinding("app-version", code + "@" + no, candidate), b.root());
+        }
         if(snapshot.has("appVersionKey"))same(code+"@"+no,text(snapshot,"appVersionKey"));
         same(no,positive(refs.get("appVer")));
     }
@@ -580,7 +604,7 @@ public class TraceStore {
         var events=new ArrayList<Map<String,Object>>();
         if ("CHAT".equals(run.get("trigger_type"))) {
             var snapshot=values.get(key("run-snapshot",b.publicId()));
-            InitialChatRules.requireSources(snapshot,values.get(key("run-inputs",b.publicId())));
+            InitialChatRules.requireBoundChat(b.root(), snapshot, values.get(key("run-inputs", b.publicId())));
             cn.agentplatform.engine.application.FrozenModels.reference(snapshot,InitialChatRules.entryId(snapshot));
             if(nodes.size()!=1)throw denied();
             var node=nodes.getFirst();
@@ -1197,8 +1221,7 @@ public class TraceStore {
         long id = number(nodes.getFirst(), "id");
         var definition = json(nodes.getFirst().get("definition"));
         if (firstChat) {
-            if (evaluation) InitialChatRules.requireEvaluationSources(json(run.get("snapshot")), json(run.get("inputs")));
-            else InitialChatRules.requireSources(json(run.get("snapshot")),json(run.get("inputs")));
+            InitialChatRules.requireBoundChat(view.binding().root(), json(run.get("snapshot")), json(run.get("inputs")));
             InitialChatRules.requireAgent(definition,nodes.getFirst().get("node_def_id"),nodes.getFirst().get("node_type"),number(nodes.getFirst(),"step_seq"));
         } else if (!"LLM".equals(nodes.getFirst().get("node_type")) || !definition.equals(Json.tree(Map.of("id", "initial", "type", "LLM")))
                 || !"initial".equals(nodes.getFirst().get("node_def_id"))) throw denied();
@@ -1208,7 +1231,7 @@ public class TraceStore {
                 + " or controlled_skill_test_version_id is not null or controlled_skill_test_digest is not null"
                 + " or (not ? and exists(select 1 from engine.chat_turn where run_public_id=r.public_id))"
                 + " or exists(select 1 from engine.tool_call where run_id=r.id))", Integer.class,
-                view.binding().runId(), evaluation, evaluation) != 0) throw denied();
+                view.binding().runId(), evaluation, evaluation || PortalRuntimeRoutes.SESSION_KIND.equals(view.binding().root().kind())) != 0) throw denied();
         var invocations = db.queryForList("select node_instance_id,round_no,kind,output_attempt_no"
                 + " from engine.model_invocation where run_id=?", view.binding().runId());
         if (invocations.size() > 1) throw denied();
@@ -1464,6 +1487,7 @@ public class TraceStore {
             }
             append(view, "run-state", view.binding().publicId(), proof);
             appendEvent(view, "RUN_FINISHED", Map.of("status", status), proof);
+            appendPortalTurnResult(view, output, status);
             initialTerminalFence(dispatch, node, attempt, claim.get("lease_owner").toString(), status, proof);
             final String committedStatus = status;
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -1475,6 +1499,22 @@ public class TraceStore {
         });
         initialTerminalFence(dispatch, number(claim, "id"), number(claim, "attemptId"),
                 claim.get("lease_owner").toString(), terminalStatus, proof);
+    }
+
+    private void appendPortalTurnResult(WriteView view, JsonNode output, String status) {
+        if (!PortalRuntimeRoutes.SESSION_KIND.equals(view.binding().root().kind())) return;
+        var snapshot = view.values().get(key("run-snapshot", view.binding().publicId()));
+        var pointer = snapshot.path("chatSession");
+        String session = pointer.path("sessionId").asText();
+        int turn = pointer.path("turnNo").asInt();
+        var log = new SessionStore(this);
+        if ("SUCCEEDED".equals(status)) {
+            log.append(session, null, SessionEvents.ASSISTANT_MESSAGE,
+                    Json.tree(Map.of("content", output.path("text").asText(), "runId", view.binding().publicId())), null);
+        }
+        log.append(session, null, SessionEvents.TURN_END,
+                Json.tree(Map.of("turn", turn, "status", status, "runId", view.binding().publicId(),
+                        "reason", "SUCCEEDED".equals(status) ? "completed" : "error")), null);
     }
 
     private void initialTerminalFence(RunDispatch dispatch, long node, long attempt, String owner,

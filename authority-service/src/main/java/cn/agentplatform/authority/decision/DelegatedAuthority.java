@@ -126,6 +126,16 @@ public final class DelegatedAuthority {
     private final Clock clock;
     private final SessionService sessions;
     private IntegrationPolicyClient integrationPolicy;
+    private cn.agentplatform.authority.identity.PortalRevocations revocations;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void portalRevocations(cn.agentplatform.authority.identity.PortalRevocations store) {
+        this.revocations = store;
+    }
+
+    private void requireActiveLogin(String origin) {
+        if (revocations != null) revocations.requireActive(origin);
+    }
 
     @org.springframework.beans.factory.annotation.Autowired
     void integrationPolicy(IntegrationPolicyClient policy) {
@@ -366,6 +376,7 @@ public final class DelegatedAuthority {
         try {
             requireEnabled();
             DecisionStore.Decision original = resumeGrant(clientId, request);
+            requireActiveLogin(original.originAuthenticationId());
             long iat = now();
             Instant issued = Instant.ofEpochSecond(iat);
             Instant grantExpiresAt = original.grantExpiresAt();
@@ -434,6 +445,13 @@ public final class DelegatedAuthority {
                 .toList();
         if (matched.isEmpty()) {
             throw AuthorityException.denied("RESUME_ESCALATION");
+        }
+        if ("run.advance".equals(request.call().action())
+                && cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND.equals(request.call().resource().kind())) {
+            matched = matched.stream().filter(value ->
+                    cn.agentplatform.common.authority.PortalRuntimeRoutes.TURN_ACTION.equals(value.action()))
+                    .toList();
+            if (matched.isEmpty()) throw AuthorityException.denied("RESUME_ACTION");
         }
         boolean evaluationAdvance = "run.advance".equals(request.call().action())
                 && EvaluationCandidateBinding.KIND.equals(request.call().resource().kind());
@@ -1518,6 +1536,21 @@ public final class DelegatedAuthority {
      * 身份字段（tenant/sub/roles）由调用方继续读；这里只负责"这张令牌能不能当主体凭据"。
      */
     private JsonNode verifyPortalUser(String token) {
+        JsonNode claims = verifyPortalCredential(token);
+        requireActiveLogin(originOf(claims, "SUBJECT_ORIGIN"));
+        sessions.requireCurrentIdentity(text(claims, "tenant_id"), text(claims, "sub"));
+        return claims;
+    }
+
+    /** A caller can only revoke the signed login credential it presents. Repeating the request is safe. */
+    public void revokePortalLogin(String token) {
+        var claims = verifyPortalCredential(token);
+        String origin = originOf(claims, "SUBJECT_ORIGIN");
+        if (origin == null) throw AuthorityException.invalidRequest("门户票缺少登录标识", "subject_origin_missing");
+        revocations.revoke(origin, Instant.ofEpochSecond(claims.path("exp").longValue()));
+    }
+
+    private JsonNode verifyPortalCredential(String token) {
         JsonNode claims = keys.verify(token, TicketService.TICKET_TYPE);
         if (!"user".equals(text(claims, "token_use"))) {
             throw AuthorityException.denied("SUBJECT_TOKEN_USE");
@@ -1533,7 +1566,6 @@ public final class DelegatedAuthority {
         if (subjectClient != null && !subjectClient.isBlank() && !subjectClient.equals(text(claims, "client_id"))) {
             throw AuthorityException.denied("SUBJECT_CLIENT");
         }
-        sessions.requireCurrentIdentity(text(claims, "tenant_id"), text(claims, "sub"));
         return claims;
     }
 
@@ -1673,6 +1705,13 @@ public final class DelegatedAuthority {
         if (operationNode == null || !operationNode.isObject()) {
             throw AuthorityException.denied("TICKET_OPERATION");
         }
+        if ("PORTAL".equals(routeOriginKind)) requireActiveLogin(originOf(claims, "TICKET_ORIGIN"));
+        // A long-lived portal stream must observe directory revocation after the original exchange.
+        if ("PORTAL".equals(routeOriginKind) && "gateway".equals(upstream)
+                && cn.agentplatform.common.authority.PortalRuntimeRoutes.STREAM_ACTION.equals(call.action())
+                && cn.agentplatform.common.authority.PortalRuntimeRoutes.SESSION_KIND.equals(call.resource().kind())) {
+            sessions.requireCurrentIdentity(tenantId, principalId);
+        }
         if ("INTEGRATION".equals(routeOriginKind)) {
             var identity = authorizedIntegrationIdentity(operationNode, claims);
             String app = required(identity, "app_code");
@@ -1707,15 +1746,22 @@ public final class DelegatedAuthority {
         if (expiresNode == null || !expiresNode.isIntegralNumber()) {
             throw AuthorityException.denied("TICKET_OPERATION");
         }
-        Instant grantExpiresAt = Instant.ofEpochSecond(expiresNode.longValue());
+        // The signed grant outlives individual resumed/forwarded service tickets. Preserve its
+        // identity for material reads, while bounding this decision by the incoming ticket.
+        long operationEnd = expiresNode.longValue();
+        long grantEnd = epochSeconds(toMap(claims), "grant_expires_at");
+        long ticketEnd = epochSeconds(toMap(claims), "exp");
         Instant issued = Instant.ofEpochSecond(now());
+        if (ticketEnd > operationEnd || operationEnd > grantEnd || ticketEnd <= issued.getEpochSecond())
+            throw AuthorityException.denied("TICKET_WINDOW");
+        Instant grantExpiresAt = Instant.ofEpochSecond(grantEnd);
         // 1d 的 retained 票会把 parent_admission_id 带回来，这里原样落到决策上，S2/S3 才能反查到 S0。
         String parentAdmissionId = text(claims, "parent_admission_id");
         DecisionStore.Decision decision = new DecisionStore.Decision(newId("dec"), clientId, call.target(),
                 call.action(), resourceOf(call), actor(tenantId, principalId, roles, attributes),
                 toMap(ceilingNode), operation, grantRef, grantExpiresAt, upstream, text(claims, "jti"),
                 originOf(claims, "TICKET_ORIGIN"), required(claims, "authorization_version"),
-                earlier(issued.plusSeconds(delegation.decisionSeconds()), grantExpiresAt),
+                earlier(issued.plusSeconds(delegation.decisionSeconds()), Instant.ofEpochSecond(ticketEnd)),
                 // S2 是 retained 票的确认跳：它本身就是 S3 唯一接受的 RETAINED 决策。
                 // 入站 nonce/摘要记录的是**这次 authorize 请求**，S3 的 immutable.admission_* 正是这份值。
                 parentAdmissionId == null ? null : DecisionStore.Purpose.RETAINED,
@@ -1773,7 +1819,8 @@ public final class DelegatedAuthority {
         claims.put("token_use", "service");
         claims.put("iat", iat);
         claims.put("nbf", iat);
-        claims.put("exp", Math.min(iat + properties.ticketSeconds(), decision.grantExpiresAt().getEpochSecond()));
+        claims.put("exp", Math.min(iat + properties.ticketSeconds(),
+                Math.min(decision.grantExpiresAt().getEpochSecond(), epochSeconds(decision.operation(), "expires_at"))));
         claims.put("jti", jti);
         claims.put("target", call.target());
         claims.put("action", call.action());

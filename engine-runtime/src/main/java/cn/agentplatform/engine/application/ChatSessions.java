@@ -121,14 +121,16 @@ public class ChatSessions {
         // contracts/session-events.md §2 Surface 投影）；content 为事件 data 原文。
         var projection = turnEvents.deriveMessages(id, null);
         var messages = new ArrayList<Map<String, Object>>();
-        for (var message : projection.messages())
+        for (var message : projection.messages()) {
+            if (clients != null && clients.iamEnabled() && "system".equals(message.role())) continue;
             messages.add(
                     Map.of(
                             "seq", message.sourceSeq(),
                             "role", message.role(),
                             "content", message.content()));
+        }
         view.put("messages", messages);
-        view.put("eventWatermark", turnEvents.watermark(id));
+        view.put("eventWatermark", projection.lastSeq());
         if (session.get("config_release_id") != null)
             view.put("configReleaseId", session.get("config_release_id"));
         return view;
@@ -143,6 +145,8 @@ public class ChatSessions {
             throw new PlatformException(403,"EVALUATION_SESSION_ROUTE_REQUIRED","候选评测会话只能经受控EVALUATION入口续接");
         // INT-06：轮次只能沿用会话创建时固定的配置版本；客户端在轮次里换版本一律拒绝。
         RunService.ConfigReference pinnedConfig = pinnedConfig(pinnedSession, req);
+        boolean portal = clients != null && clients.iamEnabled();
+        if (portal) InitialChatRules.requireSources(TraceStore.json(pinnedSession.get("snapshot")), req.path("inputs"));
         boolean known =
                 !store.db()
                         .queryForList(
@@ -157,7 +161,7 @@ public class ChatSessions {
         if (!known) {
             requireTurnLimit(pinnedSession);
             ChatHistory.checkScope(store, id, code, actor);
-            clients.get("app", "/internal/apps/" + code + "/published", actor);
+            clients.publishedForRuntime(code, actor);
         }
         RunScheduler.Admission ticket = null;
         if (!known) {
@@ -280,6 +284,12 @@ public class ChatSessions {
             input.remove("sessionId");
             input.remove("configReleaseId");
             input.put("requestId", "session:" + id + ":" + requestId);
+            if (portal) {
+                var resource = cn.agentplatform.common.authority.PortalRuntimeRoutes.sessionResource(code, id);
+                var proof = cn.agentplatform.common.authority.AuthorityContext.requireInitialFor(actor, resource);
+                source.set("portalHistory", store.conversationHistory(
+                        id, ((Number) reservation.get("turn_no")).intValue(), source, proof));
+            }
             var result =
                     pinnedConfig == null
                             ? runs.createReservedSessionTurn(code, input, source, actor, ticket)
@@ -569,7 +579,8 @@ public class ChatSessions {
         }
         long after = parseStreamCursor(headerLastEventId, paramLastEventId);
         var emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(0L);
-        var pump = new StreamPump(code, id, after, emitter, actor.tenantId(), actor.principalId());
+        var guard = clients != null && clients.iamEnabled() ? clients.portalSessionStream(code, id, actor) : null;
+        var pump = new StreamPump(code, id, after, emitter, actor.tenantId(), actor.principalId(), guard);
         streams.add(pump);
         emitter.onCompletion(pump::close);
         emitter.onTimeout(pump::close);
@@ -754,6 +765,7 @@ public class ChatSessions {
         private final org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter;
         private final String tenantId;
         private final String principalId;
+        private final Runnable guard;
         private final java.util.concurrent.atomic.AtomicBoolean open =
                 new java.util.concurrent.atomic.AtomicBoolean(true);
 
@@ -763,13 +775,15 @@ public class ChatSessions {
                 long after,
                 org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter,
                 String tenantId,
-                String principalId) {
+                String principalId,
+                Runnable guard) {
             this.appCode = appCode;
             this.sessionId = sessionId;
             this.after = after;
             this.emitter = emitter;
             this.tenantId = tenantId;
             this.principalId = principalId;
+            this.guard = guard;
         }
 
         @Override
@@ -778,6 +792,7 @@ public class ChatSessions {
                 long cursor = after;
                 long lastEmit = System.currentTimeMillis();
                 while (open.get()) {
+                    if (guard != null) guard.run();
                     var scanned = turnEvents.read(sessionId, cursor, 200);
                     if (scanned.isEmpty()) {
                         if (System.currentTimeMillis() - lastEmit >= heartbeatMillis) {
@@ -792,6 +807,7 @@ public class ChatSessions {
                     for (var event : scanned) {
                         cursor = event.seq();
                         if (SURFACE_HIDDEN.contains(event.type())) continue;
+                        if (guard != null) guard.run();
                         send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter
                                 .event()
                                 .id(Long.toString(event.seq()))
@@ -817,7 +833,7 @@ public class ChatSessions {
                         return;
                     }
                 }
-            } catch (java.io.IOException | IllegalStateException disconnected) {
+            } catch (java.io.IOException | IllegalStateException | PlatformException disconnected) {
                 // 客户端断开/容器回收：SSE 只是观察通道，停泵即止，不触碰 run/turn。
             } catch (InterruptedException stopped) {
                 Thread.currentThread().interrupt();
@@ -911,7 +927,7 @@ public class ChatSessions {
             var source=(com.fasterxml.jackson.databind.node.ObjectNode)fixed.deepCopy();
             source.set("chatSession",Json.tree(Map.of("sessionId",id,"turnNo",turn)));
             if (iam && reservation.get("run_public_id") == null)
-                source.set("evaluationHistory", store.evaluationHistory(id, turn, source, authorization));
+                source.set("evaluationHistory", store.conversationHistory(id, turn, source, authorization));
             result=runs.createEvaluationSessionTurn(code,req,source,actor);
             if (!iam) store.db().update("update engine.chat_turn set run_public_id=? where session_id=? and turn_no=? and run_public_id is null",result.get("runId"),id,turn);
         }
@@ -955,7 +971,15 @@ public class ChatSessions {
                                 code,
                                 actor.tenantId(),
                                 actor.principalId());
-        if (rows.isEmpty()) throw new PlatformException(404, "SESSION_NOT_FOUND", "会话不存在");
+        if (rows.isEmpty()) {
+            if (clients != null && clients.iamEnabled()) {
+                org.slf4j.LoggerFactory.getLogger(ChatSessions.class).warn(
+                        "AUDIT PORTAL_SESSION_DENIED tenant={} principal={} appCode={} sessionId={}",
+                        actor.tenantId(), actor.principalId(), code, id);
+                throw new PlatformException(403, "SYS-AUTH-403", "无权读取或操作该会话");
+            }
+            throw new PlatformException(404, "SESSION_NOT_FOUND", "会话不存在");
+        }
         return rows.getFirst();
     }
 

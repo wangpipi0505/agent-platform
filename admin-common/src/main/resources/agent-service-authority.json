@@ -397,6 +397,18 @@
  },
  {
   "method": "POST",
+  "template": "/admin/apps/{code}/model-bindings/refreeze",
+  "caller": "gateway",
+  "target": "app",
+  "action": "proxy.app.post.AppController.refreeze",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/AppController.java",
+  "callerSource": "platform-gateway/src/main/java/cn/agentplatform/gateway/api/GatewayController.java:34;platform-gateway/src/main/java/cn/agentplatform/gateway/domain/Routes.java:7",
+  "reason": ""
+ },
+ {
+  "method": "POST",
   "template": "/admin/apps/{code}/publish/precheck",
   "caller": "gateway",
   "target": "app",

@@ -7,9 +7,16 @@ import { useTheme } from "../../shared/theme";
 import SessionList from "./SessionList.vue";
 import MyMemories from "./MyMemories.vue";
 import AssistantChat from "./AssistantChat.vue";
+import PortalConversation from "./PortalConversation.vue";
+import { createPortalSession, trustedPortal } from "../../shared/portal-auth";
 import type { SessionView } from "./demo-flow";
 
 const auth = useAuth();
+const provider = trustedPortal(window as Window & { agentPlatformPortal?: unknown });
+const portal = provider || import.meta.env.VITE_AUTH_MODE === 'portal'
+  ? createPortalSession(auth, provider, {mode: 'portal'}) : undefined;
+onMounted(() => { if (portal) void portal.connect(); });
+onBeforeUnmount(() => portal?.dispose());
 // F4-4 亮色切换（方案 §7.3）：顶栏按钮翻转 dark/light 并持久 localStorage，初始跟随系统。
 const { resolved: themeResolved, toggleTheme, dispose: disposeTheme } = useTheme();
 onBeforeUnmount(disposeTheme);
@@ -29,6 +36,7 @@ watch(
 );
 onBeforeUnmount(() => hostChannel?.close());
 async function enter() {
+  if (portal) { await portal.connect(); return; }
   try {
     auth.token = await login();
   } catch (e: any) {
@@ -50,7 +58,17 @@ const stopMedia = () => mediaQuery?.removeEventListener("change", onMediaChange)
 /** 当前会话（sessionId=""=新建草稿）；新建会话首次发送后由 session-created 回填侧栏。 */
 const current = ref<SessionView | null>(null);
 const localRows = ref<SessionView[]>([]);
+const surface = ref<'task' | 'chat'>('task');
+function openChat() {
+  if (current.value?.sessionId && !current.value.sessionId.startsWith('s_')) createSession();
+  surface.value = 'chat';
+}
+watch(() => auth.generation, () => {
+  current.value = null;
+  localRows.value = [];
+});
 function selectRow(row: SessionView) {
+  if (row.sessionId.startsWith('s_')) surface.value = 'chat';
   current.value = row;
   drawerOpen.value = false;
 }
@@ -99,6 +117,8 @@ onBeforeUnmount(stopMedia);
         >
           会话/记忆
         </el-button>
+        <el-button v-if="auth.token" :aria-pressed="surface === 'chat'" @click="openChat">会话对话</el-button>
+        <el-button v-if="auth.token" :aria-pressed="surface === 'task'" @click="surface = 'task'">执行任务</el-button>
         <strong>{{ code }} · 业务对话</strong><span class="muted">智能体平台</span>
       </span>
       <!-- F4-4 亮色切换：与 admin 顶栏同源（shared/theme.ts），解析结果间翻转并持久覆盖 -->
@@ -117,8 +137,8 @@ onBeforeUnmount(stopMedia);
       <div v-if="!auth.token" class="panel">
         <h1>开始对话</h1>
         <p class="muted">请先获取当前环境的身份票据。</p>
-        <el-button type="primary" @click="enter">开发登录</el-button>
-        <p v-if="error" role="alert">{{ error }}</p>
+        <el-button type="primary" @click="enter">{{ portal ? '连接门户' : '开发登录' }}</el-button>
+        <p v-if="error || auth.notice" role="alert">{{ error || auth.notice }}</p>
       </div>
       <template v-else>
         <aside :class="['sidebar', { open: drawerOpen }]">
@@ -140,6 +160,7 @@ onBeforeUnmount(stopMedia);
           </nav>
           <SessionList
             v-show="sideTab === 'sessions'"
+            :app-code="code"
             :active-id="current?.sessionId ?? ''"
             :local-rows="localRows"
             @select="selectRow"
@@ -156,7 +177,9 @@ onBeforeUnmount(stopMedia);
           class="scrim"
           @click="drawerOpen = false"
         />
-        <AssistantChat
+        <PortalConversation v-if="surface === 'chat'" :key="auth.generation" :app-code="code"
+          :session-id="current?.sessionId || ''" @created="onSessionCreated" />
+        <AssistantChat v-else
           class="chat-pane"
           :session="current"
           @save-memory="openMemoryForm"

@@ -10,7 +10,7 @@ import type { SessionView } from "./demo-flow";
 
 const emit = defineEmits<{ select: [row: SessionView]; create: [] }>();
 const props = withDefaults(
-  defineProps<{ activeId: string; localRows?: SessionView[] }>(),
+  defineProps<{ appCode?: string; activeId: string; localRows?: SessionView[] }>(),
   { localRows: () => [] },
 );
 
@@ -27,7 +27,7 @@ async function loadMore() {
   loading.value = true;
   error.value = "";
   try {
-    const page = await listMySessions({ mine: true, before: nextBefore.value });
+    const page = await listMySessions({ mine: true, before: nextBefore.value }, props.appCode);
     rows.value.push(...page.sessions);
     nextBefore.value = page.nextBefore ?? undefined;
     // 首次装载且未选中会话时自动选中最近会话（前端稿 §5.4 消息流示意默认有内容）。
