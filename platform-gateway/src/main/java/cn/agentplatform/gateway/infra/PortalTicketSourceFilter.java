@@ -2,6 +2,7 @@ package cn.agentplatform.gateway.infra;
 
 import cn.agentplatform.common.ApiResponse;
 import cn.agentplatform.common.Json;
+import cn.agentplatform.common.authority.PortalTaskRoutes;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,7 +27,7 @@ import java.io.IOException;
  * parameter is never parsed by anything downstream.
  *
  * <p>Scope is the portal surface only ({@code /admin/**}, {@code /auth/session} and the user-plane
- * {@code /v1/apps/**}); every other route never reached this boundary before either. The {@code 400}
+ * {@code /v1/apps/**} and the registered owner operations on {@code /v1/tasks/**}). The {@code 400}
  * status is deliberate: the request itself is malformed, not unauthorised, and {@code 401} stays
  * reserved for "no usable ticket".
  */
@@ -38,14 +39,15 @@ final class PortalTicketSourceFilter extends OncePerRequestFilter {
     static final String REJECTED_CODE = "PORTAL_TICKET_SOURCE_INVALID";
 
     /** The gateway ingress boundary owns the portal surface and nothing else. */
-    static boolean portalSurface(String path) {
+    static boolean portalSurface(String method, String path) {
         return path != null
-                && (path.startsWith("/admin/") || path.equals("/auth/session") || path.startsWith("/v1/apps/"));
+                && (path.startsWith("/admin/") || path.equals("/auth/session") || path.startsWith("/v1/apps/")
+                    || PortalTaskRoutes.match(method, path) != null);
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !portalSurface(request.getRequestURI());
+        return !portalSurface(request.getMethod(), request.getRequestURI());
     }
 
     @Override

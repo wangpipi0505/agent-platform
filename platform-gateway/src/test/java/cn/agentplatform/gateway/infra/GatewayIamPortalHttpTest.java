@@ -8,6 +8,7 @@ import cn.agentplatform.common.authority.CoverageGate;
 import cn.agentplatform.common.authority.CurrentAuthorityClient;
 import cn.agentplatform.common.authority.LoopbackAuthority;
 import cn.agentplatform.common.authority.MetadataSelectors;
+import cn.agentplatform.common.authority.PortalTaskRoutes;
 import cn.agentplatform.common.authority.ResourceBinding;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
@@ -61,6 +62,7 @@ class GatewayIamPortalHttpTest {
     private static final String VERSION_SHA = Digest.sha256("r36-published-version");
     private static final String CANDIDATE_SHA = Digest.sha256("r37-evaluation-candidate");
     private static final String SESSION = "/v1/apps/ops/sessions/s_0123456789abcdef0123456789abcdef";
+    private static final String TASK = "/v1/tasks/task-0123456789abcdef0123";
     private static String base;
 
     @BeforeEach
@@ -75,6 +77,14 @@ class GatewayIamPortalHttpTest {
                 Map.of("region", Set.of("A"), "dataLabels", Set.of("confidential"))));
         engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
+        engine.createContext(TASK, request -> {
+            try (request; var authority = iam.client("engine")) {
+                var route = PortalTaskRoutes.match(request.getRequestMethod(), request.getRequestURI().getPath());
+                var call = route.call(new ServiceRoutePolicy());
+                authority.authorize(request.getRequestHeaders().getFirst("Authorization").substring(7), call);
+                reply(request, 200, ApiResponse.ok(Map.of("action", call.action())));
+            }
+        });
         engine.createContext(SESSION, request -> {
             try (request; var authority = iam.client("engine")) {
                 var path = request.getRequestURI().getPath();
@@ -449,32 +459,43 @@ class GatewayIamPortalHttpTest {
     // ---- R-34：portal ingress /v1 用户面形状 ------------------------------------------------------
 
     /**
-     * R-34 形状卡：票源过滤器与 ingress 边界两个注册的 URL 形状同步扩 {@code /v1/apps/*}（用户面：
-     * 会话/任务列表/记忆），且只扩这一个前缀——deploy/runs/sessions 非用户面不入 portal 形状。
+     * 票源检查与身份捕获必须同时注册到应用和本人任务入口。
      */
     @Test
-    void v1AppsUserPlaneIsInsideBothPortalIngressRegistrationsAndNothingElse() {
+    void bothPortalFiltersCoverApplicationsAndOwnedTasks() {
         var source = (FilterRegistrationBean<?>) app.getBean("gatewayPortalTicketSource");
         var ingress = (FilterRegistrationBean<?>) app.getBean("gatewayPortalIngress");
         for (var registration : List.of(source, ingress)) {
             assertThat(registration.getUrlPatterns())
-                    .contains("/admin/*", "/auth/session", "/v1/apps/*");
+                    .contains("/admin/*", "/auth/session", "/v1/apps/*", "/v1/tasks/*");
             assertThat(registration.getUrlPatterns())
-                    .doesNotContain("/v1/deploy/*", "/v1/runs/*", "/v1/sessions/*", "/v1/tasks/*");
+                    .doesNotContain("/v1/deploy/*", "/v1/runs/*", "/v1/sessions/*");
         }
     }
 
-    /** R-34：票源过滤器的 portalSurface 判定扩 {@code /v1/apps/} 前缀，且仅此前缀。 */
+    /** 本人任务票源检查按契约匹配方法与路径。 */
     @Test
-    void portalSurfaceShapeCoversTheV1AppsPrefixOnly() {
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/apps/ops/sessions")).isTrue();
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/apps/ops/memories")).isTrue();
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/apps/ops")).isTrue();
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/appsx/ops")).isFalse();
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/deploy/resource-manifest")).isFalse();
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/runs/r_1")).isFalse();
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/sessions/s_1/subagents")).isFalse();
-        assertThat(PortalTicketSourceFilter.portalSurface("/v1/tasks/77/plans")).isFalse();
+    void ticketSourceFilterRecognizesOnlyRegisteredTaskOperations() {
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/apps/ops/sessions")).isTrue();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/apps/ops/memories")).isTrue();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/apps/ops")).isTrue();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/appsx/ops")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/deploy/resource-manifest")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/runs/r_1")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/sessions/s_1/subagents")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/tasks/77/plans")).isFalse();
+    }
+
+    @Test
+    void registeredTaskRoutesReceiveTheBoundOwnerTicketOverHttp() throws Exception {
+        var detail = get(TASK, iam.portal());
+        assertThat(detail.statusCode()).as(detail.body()).isEqualTo(200);
+        assertThat(Json.read(detail.body()).at("/data/action").asText()).isEqualTo("proxy.engine.get.TaskController.detail");
+        var append = postEvaluation(TASK + "/plans", iam.portal(), "{}");
+        assertThat(append.statusCode()).as(append.body()).isEqualTo(200);
+        var malformed = get(TASK + "?access_token=invalid-test-value", null);
+        assertThat(malformed.statusCode()).isEqualTo(400);
+        assertThat(Json.read(malformed.body()).path("code").asText()).isEqualTo("PORTAL_TICKET_SOURCE_INVALID");
     }
 
     /** R-34：查询串票据在 /v1/apps 用户面上同样以 400 拒绝（票源判定先于安全链）。 */
