@@ -179,7 +179,7 @@ onBeforeUnmount(stopMedia);
         />
         <PortalConversation v-if="surface === 'chat'" :key="auth.generation" :app-code="code"
           :session-id="current?.sessionId || ''" @created="onSessionCreated" />
-        <AssistantChat v-else
+        <AssistantChat v-else :key="auth.generation" :app-code="code"
           class="chat-pane"
           :session="current"
           @save-memory="openMemoryForm"

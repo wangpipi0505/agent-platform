@@ -135,6 +135,7 @@ class PlatformRoleStorageTest {
                 """, actor.tenantId(), actor.principalId(), actor.tenantId(), actor.principalId());
         assertThat(access.requireOwnedTask(actor, "agent.view", "alpha").canConfirm()).isFalse();
         assertThat(access.requireOwnedTask(actor, "agent.plan.execute", "alpha").reasonRequired()).isTrue();
+        assertThat(access.requireOwnedTask(actor, "agent.view", "alpha").reasonRequired()).isTrue();
         assertThat(access.requireOwnedTask(actor, "agent.plan.execute", "beta").reasonRequired()).isFalse();
         assertThat(access.requireOwnedTask(actor, "agent.plan.confirm", "beta").canConfirm()).isTrue();
         assertThatThrownBy(() -> access.requireOwnedTask(actor, "agent.plan.revise", "alpha")).isInstanceOf(PlatformException.class);

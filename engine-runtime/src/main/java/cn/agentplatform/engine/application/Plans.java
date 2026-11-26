@@ -287,6 +287,16 @@ public class Plans {
             "pinnedDigest", digest);
   }
 
+  /** The owner task identifies its latest appended revision even after confirmation. */
+  public java.util.Optional<Map<String, Object>> latestRevision(long taskId, Actor actor) {
+    var revisions = store.db().queryForList("""
+        select plan_id, revision from engine.plan_revision
+        where owner_task_id=? and tenant_id=? order by id desc limit 1
+        """, taskId, actor.tenantId());
+    return revisions.stream().findFirst().map(row ->
+        revisionDetail(taskId, (String) row.get("plan_id"), ((Number) row.get("revision")).intValue(), actor));
+  }
+
   /** 修订读（含历史修订确认状态与授权——评审十轮 P1-1：按该修订计算 canConfirm/canExecute）。 */
   public Map<String, Object> revisionDetail(
       long taskId, String planId, int revision, Actor actor) {

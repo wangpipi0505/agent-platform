@@ -15,7 +15,7 @@ import TaskCard from "./cards/TaskCard.vue";
 
 type TaskDetail = TaskRow;
 
-const props = defineProps<{ session: SessionView | null }>();
+const props = defineProps<{ appCode: string; session: SessionView | null }>();
 const emit = defineEmits<{
   "save-memory": [text: string]
   "session-created": [sessionId: string, title: string]
@@ -96,6 +96,7 @@ async function send() {
   try {
     const res = await guard(() =>
       submitTask({
+        appCode: props.appCode,
         requestId: crypto.randomUUID(),
         mode: mode.value,
         goal,

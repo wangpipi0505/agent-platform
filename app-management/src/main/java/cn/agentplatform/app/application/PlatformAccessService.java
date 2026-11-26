@@ -70,8 +70,9 @@ public class PlatformAccessService {
         var rows = access(identity);
         boolean execute = scope(rows, PortalTaskRoutes.EXECUTE).allows(appCode);
         boolean operate = scope(rows, PortalTaskRoutes.OPERATE).allows(appCode);
-        boolean reasonRequired = PortalTaskRoutes.EXECUTE.equals(permission) && !execute && operate;
-        if (!scope(rows, VIEW).allows(appCode) || (!reasonRequired && !scope(rows, permission).allows(appCode)))
+        boolean reasonRequired = !execute && operate;
+        boolean allowedAsOperator = PortalTaskRoutes.EXECUTE.equals(permission) && reasonRequired;
+        if (!scope(rows, VIEW).allows(appCode) || (!allowedAsOperator && !scope(rows, permission).allows(appCode)))
             throw new PlatformException(403, "PLATFORM_CAPABILITY_DENIED", "当前平台授权不允许此操作");
         return new OwnedTaskDecision(appCode, permission, reasonRequired,
                 scope(rows, PortalTaskRoutes.CONFIRM).allows(appCode), execute || operate);

@@ -54,6 +54,9 @@ export interface DemoTaskRecovery {
   blockedReasons?: string[];
 }
 export interface TaskPlanRef {
+  canConfirm?: boolean;
+  canExecute?: boolean;
+  operationReasonRequired?: boolean;
   planId: string;
   revision: number;
   digest: string;
@@ -138,7 +141,11 @@ function normalizeTask(view: any): TaskRow {
           satisfied: !!d.satisfied,
         }))
       : [],
-    plan: (view.plan as TaskPlanRef) ?? null,
+    plan: view.plan ? {
+      ...view.plan,
+      canConfirm: (view.plan.canConfirm ?? view.canConfirm) === true,
+      canExecute: (view.plan.canExecute ?? view.canExecute) === true,
+    } : null,
     recovery: (view.recovery as DemoTaskRecovery) ?? null,
     availableActions: Array.isArray(view.availableActions) ? view.availableActions.map(String) : [],
     eventWatermark: Number(view.eventWatermark ?? 0),
@@ -214,6 +221,7 @@ export async function taskEvents(taskId: string, afterSeq = 0, limit = 200) {
 
 /** 受理（真实端点）：requestId 幂等；mode 必填；会话游标随请求提交。 */
 export async function submitTask(req: {
+  appCode?: string;
   requestId: string;
   mode?: TaskMode;
   goal: string;
@@ -232,7 +240,7 @@ export async function submitTask(req: {
   if (req.sessionId) body.sessionId = req.sessionId;
   if (typeof req.sessionCursor === "number") body.sessionCursor = req.sessionCursor;
   if (req.toolPolicy) body.toolPolicy = req.toolPolicy;
-  const created = await api<any>(`/v1/apps/${encodeURIComponent(demoAppCode)}/tasks`, "POST", body);
+  const created = await api<any>(`/v1/apps/${encodeURIComponent(req.appCode ?? demoAppCode)}/tasks`, "POST", body);
   return {
     taskId: String(created?.taskId ?? created?.task_id ?? ""),
     state: (created?.state ?? "ACCEPTED") as TaskState,

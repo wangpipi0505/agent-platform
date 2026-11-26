@@ -4,8 +4,7 @@
  * 渲染（前端不自判，红线8；前端稿 §5.4 按钮状态机矩阵由 plan-buttons 纯函数承载）。
  * 确认→POST .../confirm、执行→POST /v1/tasks/{id}/execute（M5-2 切真实 API，shared/api-plan）；
  * PLAN_NOT_CONFIRMED 引导=重新确认所选版本（评审八轮 P1-1）。
- * 诚实边界：task→plan 全量读取端点缺位——计划投影经 confirmableBy=me 桥解析（仅无有效凭据
- * 修订回流），已确认且凭据有效任务刷新后无计划投影可读（plan=null，卡片如实隐藏）。
+ * 计划与操作权限随本人任务详情读取。
  */
 import { computed, onMounted, ref } from "vue";
 import { confirmPlan, executePlan, taskPlanDetail } from "../../../shared/api-plan";
@@ -20,6 +19,7 @@ const emit = defineEmits<{ executed: [executionTaskId: string, sourceTaskId: str
 const detail = ref<PlanDetail | null>(null);
 const error = ref("");
 const notice = ref("");
+const operationReason = ref("");
 const busy = ref(false);
 
 const load = async () => {
@@ -92,6 +92,7 @@ async function execute() {
   const p = plan.value;
   const d = detail.value;
   if (!p || !d || busy.value || !d.canExecute) return;
+  if (d.operationReasonRequired && !operationReason.value.trim()) return;
   busy.value = true;
   error.value = "";
   notice.value = "";
@@ -102,6 +103,7 @@ async function execute() {
         planId: p.planId,
         revision: p.revision,
         digest: p.digest,
+        operationReason: d.operationReasonRequired ? operationReason.value.trim() : undefined,
       }),
     );
     if ("error" in res) {
@@ -143,6 +145,10 @@ async function execute() {
     <p v-if="buttons?.confirm.note" class="muted note" role="status">
       {{ buttons.confirm.note }}
     </p>
+    <label v-if="detail.canExecute && detail.operationReasonRequired">
+      执行原因
+      <el-input v-model="operationReason" maxlength="256" show-word-limit />
+    </label>
     <div class="plan-actions">
       <el-tooltip
         :content="buttons?.confirm.tooltip"
@@ -169,7 +175,7 @@ async function execute() {
           <el-button
             size="small"
             type="success"
-            :disabled="buttons?.execute.disabled || busy"
+            :disabled="buttons?.execute.disabled || busy || (detail.operationReasonRequired && !operationReason.trim())"
             @click="execute"
           >
             执行所选版本

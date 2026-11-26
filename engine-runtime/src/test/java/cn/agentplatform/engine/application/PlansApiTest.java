@@ -424,6 +424,7 @@ class PlansApiTest {
         assertEquals(false, before.get("canExecute"));
         plans.confirm(tid, "plan-t3", 1, Json.tree(Map.of("requestId", "c-3", "digest", digest)), actor);
         var after = plans.revisionDetail(tid, "plan-t3", 1, actor);
+        assertEquals(after, plans.latestRevision(tid, actor).orElseThrow());
         assertEquals("CONFIRMED_VALID", ((Map<?, ?>) after.get("confirmation")).get("state"));
         assertEquals(true, after.get("canExecute"));
         assertEquals(true, after.get("canConfirm") == null || Boolean.FALSE.equals(after.get("canConfirm")) || Boolean.TRUE.equals(after.get("canConfirm")));

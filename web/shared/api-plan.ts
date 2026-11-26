@@ -2,16 +2,13 @@
  * M5-2：计划域真实 API 客户端（经网关）——F4-3 助手端计划卡 + F3-2 管理台计划详情数据面。
  *
  * 端点（engine TaskController/Plans，网关/authority 已登记）：
- *   GET  /v1/tasks?confirmableBy=me                 确认中心"计划确认"投影（taskId→planId/revision/digest 桥）
+ *   GET  /v1/tasks/{taskId}                         本人任务及最新计划修订
  *   GET  /v1/tasks/{taskId}/plans/{planId}/revisions/{revision}  修订读（含确认状态投影）
  *   POST .../confirm                                计划版本级确认（digest 校验 409 PLAN_DIGEST_CHANGED）
  *   POST /v1/tasks/{taskId}/execute                 选定计划执行（五项受理校验）
- *
- * 诚实边界（无对应真实端点，如实降级）：task→plan 全量读取端点缺位——已确认且凭据仍有效的
- * 修订不经 confirmableBy=me 回流（防回流语义），此时任务卡无计划投影可读（plan=null）。
  */
 import { useApi } from "./api";
-import { guard, taskDetail, type TaskRow, type TaskPlanRef, type ApiFailure } from "./api-task";
+import { guard, taskDetail, type TaskPlanRef, type ApiFailure } from "./api-task";
 
 export type {
   TaskMode,
@@ -33,48 +30,17 @@ export interface ConfirmableRevision {
   expiresAt?: string;
 }
 
-/** 任务详情 + 计划投影（助手端计划卡视图）：plan 经 confirmableBy=me 桥 + 修订读合并。 */
-export async function taskPlanDetail(
-  taskId: string,
-): Promise<TaskRow & { plan: TaskPlanRef | null; canConfirm: boolean; canExecute: boolean }> {
+/** 计划确认后仍可按本人任务读取最新修订与当前授权。 */
+export async function taskPlanDetail(taskId: string) {
   const detail = await taskDetail(taskId);
-  const api = useApi();
-  const plan = await resolveTaskPlan(taskId);
-  const confirmedValid = plan?.confirmation.state === "CONFIRMED_VALID";
+  const plan = detail.plan ?? null;
   return {
     ...detail,
     plan,
-    canConfirm: !!plan && !confirmedValid && plan.validationStatus === "VALID",
-    canExecute: confirmedValid && plan.validationStatus === "VALID",
+    canConfirm: plan?.canConfirm === true,
+    canExecute: plan?.canExecute === true,
+    operationReasonRequired: plan?.operationReasonRequired === true,
   };
-}
-
-/** task→plan 桥：confirmableBy=me 找到该任务的头修订→修订读取确认状态投影。 */
-async function resolveTaskPlan(taskId: string): Promise<TaskPlanRef | null> {
-  const api = useApi();
-  try {
-    const projection = await api<{ items: any[] }>("/v1/tasks?confirmableBy=me");
-    const item = (Array.isArray(projection?.items) ? projection.items : []).find(
-      (row) => String(row?.taskId) === String(taskId),
-    );
-    if (!item) return null;
-    const revision = await api<any>(
-      `/v1/tasks/${encodeURIComponent(taskId)}/plans/${encodeURIComponent(String(item.planId))}/revisions/${encodeURIComponent(String(item.revision))}`,
-    );
-    return {
-      planId: String(item.planId),
-      revision: Number(item.revision),
-      digest: String(revision?.digest ?? item.digest ?? ""),
-      validationStatus: (revision?.validationStatus ?? "PENDING") as TaskPlanRef["validationStatus"],
-      confirmation: (revision?.confirmation ?? {
-        state: item.confirmState ?? "UNCONFIRMED",
-        confirmedBy: item.confirmedBy,
-        expiresAt: item.expiresAt,
-      }) as TaskPlanRef["confirmation"],
-    };
-  } catch {
-    return null;
-  }
 }
 
 /** 计划确认（真实端点）：同号同参重放返回原凭据；digest 不符 409 PLAN_DIGEST_CHANGED。 */
@@ -93,7 +59,7 @@ export async function confirmPlan(
 /** 选定计划执行（真实端点）：未确认/过期 409 PLAN_NOT_CONFIRMED（引导重新确认）。 */
 export async function executePlan(
   taskId: string,
-  req: { requestId: string; planId: string; revision: number; digest: string },
+  req: { requestId: string; planId: string; revision: number; digest: string; operationReason?: string },
 ): Promise<{ executionTaskId: string; pinnedRevision?: number } | ApiFailure> {
   const api = useApi();
   return guard(async () => {
@@ -102,6 +68,7 @@ export async function executePlan(
       planId: req.planId,
       revision: req.revision,
       digest: req.digest,
+      operationReason: req.operationReason,
     });
     return {
       executionTaskId: String(done?.executionTaskId ?? done?.taskId ?? ""),

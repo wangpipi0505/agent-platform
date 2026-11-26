@@ -117,7 +117,14 @@ public class TaskController {
   @GetMapping("/v1/tasks/{taskId}")
   public Object detail(@PathVariable("taskId") String taskId) {
     Actor actor = Actor.current();
-    return ApiResponse.ok(tasks.detail(resolveRead(taskId, actor), actor));
+    var scope = IntegrationRuntimeRoutes.currentTaskScope(taskId);
+    if (scope != null) return ApiResponse.ok(tasks.detail(tasks.resolveIntegrationTask(taskId, actor, scope), actor));
+    var access = ownedAccess(taskId, actor);
+    var detail = tasks.detail(access.id(), actor);
+    if ("PLAN".equals(detail.get("purpose"))) {
+      plans.latestRevision(access.id(), actor).ifPresent(revision -> detail.put("plan", permittedRevision(revision, access)));
+    }
+    return ApiResponse.ok(detail);
   }
 
   /** GET /v1/tasks/{taskId}/events?afterSeq=：事件增量（排他游标，不 +1）。 */
@@ -193,10 +200,16 @@ public class TaskController {
           @PathVariable("revision") int revision) {
     Actor actor = Actor.current();
     var access = ownedAccess(taskId, actor);
-    var detail = new java.util.LinkedHashMap<>(plans.revisionDetail(access.id(), planId, revision, actor));
+    return ApiResponse.ok(permittedRevision(plans.revisionDetail(access.id(), planId, revision, actor), access));
+  }
+
+  private static java.util.Map<String, Object> permittedRevision(
+          java.util.Map<String, Object> revision, PortalOwnedTaskAccess.Access access) {
+    var detail = new java.util.LinkedHashMap<>(revision);
     detail.computeIfPresent("canConfirm", (key, value) -> Boolean.TRUE.equals(value) && access.canConfirm());
     detail.computeIfPresent("canExecute", (key, value) -> Boolean.TRUE.equals(value) && access.canExecute());
-    return ApiResponse.ok(detail);
+    detail.put("operationReasonRequired", access.reasonRequired());
+    return detail;
   }
 
   /** POST .../plans/{planId}/revisions/{revision}/confirm：计划版本级确认。 */
