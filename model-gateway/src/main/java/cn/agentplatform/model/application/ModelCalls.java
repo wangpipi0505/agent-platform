@@ -1080,7 +1080,13 @@ public class ModelCalls {
         } catch (Exception failure) {
             var error = ModelErrors.normalize(failure);
             primaryFailure = error;
-            if (!completionPersisted && dispatched.get() && logId.get()!=0) store.failed(logId.get(),error.code(),(System.nanoTime()-started)/1_000_000);
+            if (!completionPersisted && dispatched.get() && logId.get() != 0) {
+                store.failed(logId.get(), error.code(), (System.nanoTime() - started) / 1_000_000);
+                if (error.status() == 503 && "SYS-MODEL-503".equals(error.code())) {
+                    error = new ModelErrors.RecordedUnavailable();
+                    primaryFailure = error;
+                }
+            }
             if (circuit.get()!=null) {
                 if (dispatched.get()) circuits.failed(circuit.get(),provider,actor,System.nanoTime()-started,error);
                 else circuit.get().releasePermission();

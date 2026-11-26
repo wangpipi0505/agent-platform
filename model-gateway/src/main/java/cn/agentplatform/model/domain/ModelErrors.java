@@ -6,6 +6,13 @@ import cn.agentplatform.common.PlatformException;
 public final class ModelErrors {
     private ModelErrors() {}
 
+    /** Emitted to the initial-stream consumer only after the failed call has been recorded. */
+    public static final class RecordedUnavailable extends PlatformException {
+        public RecordedUnavailable() {
+            super(503, "SYS-MODEL-503", "模型供应商暂时不可用");
+        }
+    }
+
     public static PlatformException status(int status) {
         if (status == 401 || status == 403)
             return new PlatformException(401, "SYS-MODEL-401", "模型凭据无效，请管理员检查凭据引用");

@@ -1296,17 +1296,26 @@ public class TraceStore {
                 long attempt = frozen.path("attemptId").longValue();
                 relation(dispatch.runId(), node, attempt);
                 same(Json.canonical(frozen), Json.canonical(view.values().get(key("attempt-request", Long.toString(attempt)))));
-                if (invocation.get("response") == null) throw initialUnknown();
-                response = json(invocation.get("response"));
-                same(Json.canonical(response), Json.canonical(view.values().get(key("attempt-checkpoint", Long.toString(attempt))).path("initialResponse")));
-                if (!"SUCCEEDED".equals(invocation.get("status"))) throw denied();
-                // Recovery renews ownership of this exact response-bearing attempt, never creates a new invocation.
+                boolean unacknowledged = invocation.get("response") == null;
+                if (unacknowledged) {
+                    if (!"DISPATCHED".equals(invocation.get("status"))) throw denied();
+                    // The original worker can still commit while it owns the lease. After expiry
+                    // the next generation may close this attempt, but must never send it again.
+                    if (Boolean.TRUE.equals(db.queryForObject("select lease_until>clock_timestamp()"
+                            + " from engine.node_instance where id=?", Boolean.class, node))) throw initialUnknown();
+                } else {
+                    response = json(invocation.get("response"));
+                    same(Json.canonical(response), Json.canonical(view.values()
+                            .get(key("attempt-checkpoint", Long.toString(attempt))).path("initialResponse")));
+                    if (!"SUCCEEDED".equals(invocation.get("status"))) throw denied();
+                }
                 String owner = UUID.randomUUID().toString();
                 if (db.update("update engine.node_instance set lease_owner=?,lease_until=clock_timestamp()+interval '90 seconds'"
                         + " where id=? and status='RUNNING' and committed_attempt_id is null"
                         + " and (lease_until is null or lease_until<=clock_timestamp())" + dispatchFence(),
                         owner, node, dispatch.owner(), dispatch.generation()) != 1) throw new DispatchLost();
                 claim = node(view, node); claim.put("attemptId", attempt); claim.put("lease_owner", owner);
+                if (unacknowledged) claim.put("unacknowledged", true);
             } else {
                 // A paid response may need terminal recovery after its engine time budget. Only a
                 // fresh dispatch needs time left; transport separately enforces the same deadline.
@@ -1432,37 +1441,61 @@ public class TraceStore {
     }
 
     public void commitInitial(RunDispatch dispatch, Map<String, Object> claim, RetainedAuthorization proof) {
+        finishInitial(dispatch, claim, proof, null);
+    }
+
+    public void failInitial(RunDispatch dispatch, Map<String, Object> claim, RetainedAuthorization proof,
+            RuntimeClients.RecordedModelUnavailable modelFailure) {
+        finishInitial(dispatch, claim, proof, Objects.requireNonNull(modelFailure));
+    }
+
+    private void finishInitial(RunDispatch dispatch, Map<String, Object> claim, RetainedAuthorization proof,
+            RuntimeClients.RecordedModelUnavailable modelFailure) {
         String terminalStatus = protectedAtomic(proof, () -> {
             long node = number(claim, "id"), attempt = number(claim, "attemptId");
             var view = writable(dispatch.runId(), proof, node, attempt, dispatch);
             initialNode(view); initialLease(dispatch, node, attempt, claim.get("lease_owner").toString(), proof);
             var checkpoint = (com.fasterxml.jackson.databind.node.ObjectNode) view.values().get(key("attempt-checkpoint", Long.toString(attempt))).deepCopy();
-            var response = checkpoint.path("initialResponse");
-            if (!response.isObject()) throw initialUnknown();
             same(Json.canonical(claim.get("frozen")), Json.canonical(view.values().get(key("attempt-request", Long.toString(attempt)))));
-            var durable = db.queryForList("select response::text from engine.model_invocation where run_id=? and node_instance_id=?"
-                    + " and kind='MAIN' and round_no=0 and output_attempt_no=0 and sdk_attempts=1 and status='SUCCEEDED'",dispatch.runId(),node);
-            if(durable.size()!=1 || durable.getFirst().get("response")==null) throw initialUnknown();
-            same(Json.canonical(response),Json.canonical(json(durable.getFirst().get("response"))));
-            var output = (com.fasterxml.jackson.databind.node.ObjectNode) response.deepCopy();
-            JsonNode error = checkpoint.get("initialBudgetError");
-            if (error == null) error = initialBudgetError(view, 0);
-            var frozen = (JsonNode) claim.get("frozen");
-            var policy = cn.agentplatform.engine.application.ModelInputMaterials.initialOutputPolicy(
-                    Json.read(frozen.path("canonicalRequestUtf8").asText()).path("params").path("output"));
-            if (error == null && policy.json()) {
-                var verdict = policy.validate(response);
-                var diagnostic = Json.tree(policy.diagnostic(verdict, 0));
-                output.set("outputValidation", diagnostic);
-                if (verdict.valid()) output.set("structured", verdict.structured());
-                else {
-                    output.remove("structured");
-                    if (policy.onInvalid().equals("TERMINATE")) error = diagnostic;
+            com.fasterxml.jackson.databind.node.ObjectNode output = null;
+            JsonNode error;
+            boolean unknown = Boolean.TRUE.equals(claim.get("unacknowledged"));
+            if (modelFailure != null || unknown) {
+                if (db.update("""
+                        update engine.model_invocation set status=?,updated_at=now()
+                        where run_id=? and node_instance_id=? and kind='MAIN' and round_no=0
+                          and output_attempt_no=0 and sdk_attempts=1 and status='DISPATCHED' and response is null
+                        """, unknown ? "UNKNOWN" : "FAILED", dispatch.runId(), node) != 1) throw initialUnknown();
+                PlatformException problem = unknown ? initialUnknown() : modelFailure;
+                error = Json.tree(Map.of("semantic", problem.code(), "message", problem.getMessage(),
+                        "retryable", false));
+            } else {
+                var response = checkpoint.path("initialResponse");
+                if (!response.isObject()) throw initialUnknown();
+                var durable = db.queryForList("select response::text from engine.model_invocation where run_id=? and node_instance_id=?"
+                        + " and kind='MAIN' and round_no=0 and output_attempt_no=0 and sdk_attempts=1 and status='SUCCEEDED'",dispatch.runId(),node);
+                if(durable.size()!=1 || durable.getFirst().get("response")==null) throw initialUnknown();
+                same(Json.canonical(response),Json.canonical(json(durable.getFirst().get("response"))));
+                output = (com.fasterxml.jackson.databind.node.ObjectNode) response.deepCopy();
+                error = checkpoint.get("initialBudgetError");
+                if (error == null) error = initialBudgetError(view, 0);
+                var frozen = (JsonNode) claim.get("frozen");
+                var policy = cn.agentplatform.engine.application.ModelInputMaterials.initialOutputPolicy(
+                        Json.read(frozen.path("canonicalRequestUtf8").asText()).path("params").path("output"));
+                if (error == null && policy.json()) {
+                    var verdict = policy.validate(response);
+                    var diagnostic = Json.tree(policy.diagnostic(verdict, 0));
+                    output.set("outputValidation", diagnostic);
+                    if (verdict.valid()) output.set("structured", verdict.structured());
+                    else {
+                        output.remove("structured");
+                        if (policy.onInvalid().equals("TERMINATE")) error = diagnostic;
+                    }
+                    db.update("update engine.model_invocation set output_validation=?::jsonb where run_id=? and node_instance_id=?",
+                            Json.write(diagnostic), dispatch.runId(), node);
+                    checkpoint.set("outputValidation", diagnostic);
+                    appendEvent(view, "MODEL_OUTPUT_VALIDATED", Map.of("nodeInstanceId", node, "validation", diagnostic), proof);
                 }
-                db.update("update engine.model_invocation set output_validation=?::jsonb where run_id=? and node_instance_id=?",
-                        Json.write(diagnostic), dispatch.runId(), node);
-                checkpoint.set("outputValidation", diagnostic);
-                appendEvent(view, "MODEL_OUTPUT_VALIDATED", Map.of("nodeInstanceId", node, "validation", diagnostic), proof);
             }
             // Raw response is never rewritten. Derived output/diagnostic is a protected checkpoint
             // revision with the same floor and parents, committed atomically with the terminal CAS.

@@ -221,6 +221,9 @@ public class ModelController {
                 catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
             });
             event(response, "final", result);
+        } catch (cn.agentplatform.model.domain.ModelErrors.RecordedUnavailable failure) {
+            // The same terminal frame applies before the first chunk and after partial output.
+            event(response, "failed", Map.of("code", failure.code()));
         } catch (Exception e) {
             var normalized = cn.agentplatform.model.domain.ModelErrors.normalize(e);
             if (!response.isCommitted()) throw normalized;

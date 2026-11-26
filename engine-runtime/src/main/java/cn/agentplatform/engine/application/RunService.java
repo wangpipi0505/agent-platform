@@ -2548,8 +2548,17 @@ public class RunService {
             long node = TraceStore.number(claim, "id");
             activeNodes.add(node);
             try {
-                new ModelExchange(store, clients).exchangeInitial(dispatch, claim, manifest, bytes,
-                        initialMaterials, runAuthority, text -> initialChunks.publish(id, text));
+                if (Boolean.TRUE.equals(claim.get("unacknowledged"))) {
+                    store.commitInitial(dispatch, claim, runAuthority.currentRetained(id));
+                    return;
+                }
+                try {
+                    new ModelExchange(store, clients).exchangeInitial(dispatch, claim, manifest, bytes,
+                            initialMaterials, runAuthority, text -> initialChunks.publish(id, text));
+                } catch (RuntimeClients.RecordedModelUnavailable confirmed) {
+                    store.failInitial(dispatch, claim, runAuthority.currentRetained(id), confirmed);
+                    return;
+                }
                 store.commitInitial(dispatch, claim, runAuthority.currentRetained(id));
             } finally { activeNodes.remove(node); }
         } catch (RuntimeException failure) {

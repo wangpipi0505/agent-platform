@@ -1,0 +1,124 @@
+[
+  {
+    "poll": 1,
+    "result": {
+      "taskId": "task-9ec3e81643454c8f87d2",
+      "state": "RUNNING",
+      "result": null,
+      "resultSummary": "failure regression",
+      "artifacts": []
+    },
+    "detail": {
+      "taskId": "task-9ec3e81643454c8f87d2",
+      "state": "RUNNING",
+      "stateVersion": 3,
+      "mode": "AGENT",
+      "purpose": "EXECUTE",
+      "appCode": "r22e2-real-v2",
+      "goal": "failure regression",
+      "principalId": "software-a:alice",
+      "createdAt": "2026-11-26 20:58:00.40391",
+      "parentTaskId": null,
+      "role": null,
+      "subtasks": [],
+      "availableActions": [
+        "CANCEL"
+      ],
+      "recovery": null,
+      "steps": [
+        {
+          "step_id": "entry",
+          "state": "RUNNING",
+          "attempt_no": 1
+        }
+      ],
+      "dependencies": [],
+      "eventWatermark": 3,
+      "hasCompression": false
+    },
+    "at": "2026-11-26T20:58:06.8916137+08:00"
+  },
+  {
+    "poll": 2,
+    "result": {
+      "taskId": "task-9ec3e81643454c8f87d2",
+      "state": "RUNNING",
+      "result": null,
+      "resultSummary": "failure regression",
+      "artifacts": []
+    },
+    "detail": {
+      "taskId": "task-9ec3e81643454c8f87d2",
+      "state": "RUNNING",
+      "stateVersion": 3,
+      "mode": "AGENT",
+      "purpose": "EXECUTE",
+      "appCode": "r22e2-real-v2",
+      "goal": "failure regression",
+      "principalId": "software-a:alice",
+      "createdAt": "2026-11-26 20:58:00.40391",
+      "parentTaskId": null,
+      "role": null,
+      "subtasks": [],
+      "availableActions": [
+        "CANCEL"
+      ],
+      "recovery": null,
+      "steps": [
+        {
+          "step_id": "entry",
+          "state": "RUNNING",
+          "attempt_no": 1
+        }
+      ],
+      "dependencies": [],
+      "eventWatermark": 3,
+      "hasCompression": false
+    },
+    "at": "2026-11-26T20:58:13.3547836+08:00"
+  },
+  {
+    "poll": 3,
+    "result": {
+      "taskId": "task-9ec3e81643454c8f87d2",
+      "state": "FAILED",
+      "reason": "SYS-MODEL-503",
+      "retryable": false,
+      "result": null,
+      "resultSummary": "failure regression",
+      "artifacts": []
+    },
+    "detail": {
+      "taskId": "task-9ec3e81643454c8f87d2",
+      "state": "FAILED",
+      "reason": "SYS-MODEL-503",
+      "retryable": false,
+      "stateVersion": 4,
+      "mode": "AGENT",
+      "purpose": "EXECUTE",
+      "appCode": "r22e2-real-v2",
+      "goal": "failure regression",
+      "principalId": "software-a:alice",
+      "createdAt": "2026-11-26 20:58:00.40391",
+      "parentTaskId": null,
+      "role": null,
+      "subtasks": [],
+      "availableActions": [
+        "REISSUE",
+        "EXPORT"
+      ],
+      "recovery": null,
+      "steps": [
+        {
+          "step_id": "entry",
+          "state": "FAILED",
+          "attempt_no": 1
+        }
+      ],
+      "dependencies": [],
+      "eventWatermark": 5,
+      "hasCompression": false
+    },
+    "at": "2026-11-26T20:58:19.4755940+08:00"
+  }
+]

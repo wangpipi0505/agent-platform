@@ -89,7 +89,7 @@ public class RuntimeClients implements AutoCloseable {
                     .disableContentCompression().disableConnectionState()
                     .setDefaultRequestConfig(org.apache.hc.client5.http.config.RequestConfig.custom()
                             .setConnectionRequestTimeout(org.apache.hc.core5.util.Timeout.ofSeconds(1))
-                            .setResponseTimeout(org.apache.hc.core5.util.Timeout.ofSeconds(10))
+                            .setResponseTimeout(org.apache.hc.core5.util.Timeout.ofSeconds(15))
                             .setAuthenticationEnabled(false).setHardCancellationEnabled(true).build())
                     .addRequestInterceptorLast((request, entity, context) -> {
                         if (!(context.getAttribute("engine.initial.beforeSend") instanceof Runnable check))
@@ -179,11 +179,14 @@ public class RuntimeClients implements AutoCloseable {
         String event = null;
         var data = new StringBuilder();
         JsonNode answer = null;
+        boolean recordedFailure = false;
         for (;;) {
             int next = input.read();
             if (next < 0) {
-                if (used != 0 || event != null || !data.isEmpty() || answer == null) throw initialStreamInvalid();
-                gate.run(); return answer;
+                if (used != 0 || event != null || !data.isEmpty() || (answer == null && !recordedFailure)) throw initialStreamInvalid();
+                gate.run();
+                if (recordedFailure) throw new RecordedModelUnavailable();
+                return answer;
             }
             activity.run();
             if (++total > 4194304) throw initialStreamInvalid();
@@ -202,7 +205,7 @@ public class RuntimeClients implements AutoCloseable {
             if (eventBytes > 2097152) throw initialStreamInvalid();
             if (value.isEmpty()) {
                 if (event == null && data.isEmpty()) { eventBytes = 0; continue; }
-                if (event == null || data.isEmpty() || answer != null) throw initialStreamInvalid();
+                if (event == null || data.isEmpty() || answer != null || recordedFailure) throw initialStreamInvalid();
                 JsonNode body;
                 try { body = mapper.readTree(data.toString()); }
                 catch (com.fasterxml.jackson.core.JsonProcessingException invalid) { throw initialStreamInvalid(); }
@@ -211,6 +214,9 @@ public class RuntimeClients implements AutoCloseable {
                 if (event.equals("chunk")) {
                     if (body.size() != 1 || !body.path("text").isTextual()) throw initialStreamInvalid();
                     chunks.accept(body.path("text").textValue());
+                } else if ("failed".equals(event) && body.size() == 1
+                        && "SYS-MODEL-503".equals(body.path("code").textValue())) {
+                    recordedFailure = true;
                 } else if (event.equals("final")) answer = body;
                 else throw initialStreamInvalid();
                 event = null; data.setLength(0); eventBytes = 0;
@@ -223,6 +229,12 @@ public class RuntimeClients implements AutoCloseable {
                 if (!data.isEmpty()) data.append('\n');
                 data.append(value.substring(5).stripLeading());
             } else throw initialStreamInvalid();
+        }
+    }
+
+    public static final class RecordedModelUnavailable extends PlatformException {
+        private RecordedModelUnavailable() {
+            super(503, "SYS-MODEL-503", "模型供应商暂时不可用");
         }
     }
 

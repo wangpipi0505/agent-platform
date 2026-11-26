@@ -606,6 +606,7 @@ public class Tasks {
     var view = new LinkedHashMap<String, Object>();
     view.put("taskId", task.get("public_id"));
     view.put("state", state);
+    addEntryFailure(view, task, actor);
     view.put("stateVersion", task.get("state_version"));
     view.put("mode", task.get("mode"));
     view.put("purpose", task.get("purpose"));
@@ -1128,6 +1129,7 @@ public class Tasks {
     var view = new LinkedHashMap<String, Object>();
     view.put("taskId", task.get("public_id"));
     view.put("state", String.valueOf(task.get("state")));
+    addEntryFailure(view, task, actor);
     JsonNode output = null;
     if ("SUCCEEDED".equals(task.get("state")) && task.get("result_ref") != null) {
       var rows = store.db().queryForList(
@@ -1141,6 +1143,20 @@ public class Tasks {
     view.put("resultSummary", goal.length() <= 200 ? goal : goal.substring(0, 200));
     view.put("artifacts", List.of());
     return view;
+  }
+
+  private void addEntryFailure(Map<String, Object> view, Map<String, Object> task, Actor actor) {
+    if (!"FAILED".equals(task.get("state"))) return;
+    var reasons = store.db().queryForList("""
+        select r.stop_reason from engine.task_step s join engine.run r on r.id=s.run_id
+        where s.task_id=? and s.step_id=? and r.tenant_id=? and r.principal_id=? and r.app_code=?
+          and r.status='FAILED' and r.stop_reason in ('SYS-MODEL-503','MODEL_RESULT_UNKNOWN')
+        """, String.class, task.get("id"), StepExecutionMapping.ENTRY, actor.tenantId(),
+        task.get("principal_id"), task.get("app_code"));
+    if (!reasons.isEmpty()) {
+      view.put("reason", reasons.getFirst());
+      view.put("retryable", false);
+    }
   }
 
   public Map<String, Object> integrationResult(String taskId, Actor actor, TaskScope scope) {
