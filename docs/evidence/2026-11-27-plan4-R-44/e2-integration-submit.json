@@ -1,0 +1,42 @@
+{
+  "app": "satellite-planning-assistant",
+  "credentialId": 24,
+  "biz": "e2-seed-f99c033d",
+  "submit": {
+    "http": 200,
+    "code": "OK",
+    "data": {
+      "taskId": "task-4fb3e790a68b4facb572",
+      "state": "QUEUED",
+      "stateVersion": 2,
+      "mode": "AGENT",
+      "purpose": "EXECUTE",
+      "appCode": "satellite-planning-assistant",
+      "goal": "仅作文本连通性校验。只回复 OK，不检索目标、不调用工具。",
+      "principalId": "e2-seed-f99c033d:sgv-op-1",
+      "createdAt": "2026-11-27 04:02:30.730884",
+      "parentTaskId": null,
+      "role": null,
+      "subtasks": [],
+      "availableActions": [
+        "CANCEL"
+      ],
+      "recovery": null,
+      "steps": [
+        {
+          "step_id": "entry",
+          "state": "READY",
+          "attempt_no": 1
+        }
+      ],
+      "dependencies": [],
+      "eventWatermark": 2,
+      "hasCompression": false
+    },
+    "traceId": "b4bd08be-6773-4482-857c-59bb72b68158"
+  },
+  "revocation": {
+    "http": 200,
+    "code": "OK"
+  }
+}

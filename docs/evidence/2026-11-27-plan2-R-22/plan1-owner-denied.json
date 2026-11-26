@@ -1,0 +1,45 @@
+{
+  "requests": [
+    {
+      "name": "existing grants",
+      "method": "GET",
+      "path": "/admin/platform-authorization/grants?subject=operatorA",
+      "http": 200,
+      "code": "OK",
+      "traceId": "91b348d9-049d-4255-be17-164a550ba968"
+    },
+    {
+      "name": "create r22e2-real-v2",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "0dae5570-4330-4cba-9761-6b7dc0116eea",
+      "taskId": "task-df77deab783842d48e17",
+      "state": "ACCEPTED",
+      "principalId": "admin",
+      "parentTaskId": null
+    },
+    {
+      "name": "replay create",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "182445be-5049-416c-8830-ba621b38bd00",
+      "taskId": "task-df77deab783842d48e17",
+      "state": "ACCEPTED",
+      "principalId": "admin",
+      "parentTaskId": null
+    },
+    {
+      "name": "admin owner detail",
+      "method": "GET",
+      "path": "/v1/tasks/task-df77deab783842d48e17",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "traceId": "1060537b-fd55-44af-a579-e821c3c2fa2d"
+    }
+  ],
+  "sessionRevocation": 200
+}

@@ -1,0 +1,53 @@
+{
+  "steps": [
+    {
+      "name": "页面受理本人任务",
+      "http": 200,
+      "taskId": "task-5220bfcfc224423db3c5",
+      "traceId": "1a1edb03-28dc-4bc4-ad5f-1b053547beff"
+    },
+    {
+      "name": "POST /v1/tasks/task-5220bfcfc224423db3c5/plans",
+      "http": 200,
+      "code": "OK",
+      "traceId": "d1fef848-2874-4aff-b22b-abe0136485c3"
+    },
+    {
+      "name": "页面确认",
+      "http": 200,
+      "confirmSeq": 1,
+      "traceId": "0c3d7880-ed19-442e-b076-e61b1d079781"
+    },
+    {
+      "name": "PUT /admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3d194f40-fffa-46a2-b94f-c3e60ad688a4"
+    },
+    {
+      "name": "DELETE /admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "5408c566-130d-4168-b54b-b054c9e810e9"
+    },
+    {
+      "name": "操作员页面填写原因并执行",
+      "http": 200,
+      "executionTaskId": "task-8a341034669949739116",
+      "pinnedDigest": "91d0b4b1b8d1d16e33b3bdf34d335849feb803ba16de713154116e54a8a4089b",
+      "traceId": "939901c5-2d5b-4ab2-93f5-ce874216156c"
+    }
+  ],
+  "pageErrors": [
+    "Error 当前账号没有此操作权限，请联系管理员。"
+  ],
+  "httpErrors": [
+    {
+      "path": "/v1/apps/satellite-planning-assistant/memories",
+      "status": 403
+    }
+  ],
+  "child": "task-8a341034669949739116",
+  "passed": true,
+  "auditMatched": true
+}

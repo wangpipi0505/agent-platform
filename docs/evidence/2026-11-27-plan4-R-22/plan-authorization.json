@@ -1,0 +1,910 @@
+{
+  "requests": [
+    {
+      "name": "existing grants",
+      "method": "GET",
+      "path": "/admin/platform-authorization/grants?subject=operatorA",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ea247c2d-3758-4f60-9b79-e1d1391f265c"
+    },
+    {
+      "name": "create r22e2-real-v2",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ed987861-d264-45ce-9a78-e2c1a264a0e4",
+      "taskId": "task-d6d07bd5e5374847b82f",
+      "state": "ACCEPTED",
+      "principalId": "admin",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "replay create",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "817cbde0-8ba0-45c5-a4aa-836a5b883fb0",
+      "taskId": "task-d6d07bd5e5374847b82f",
+      "state": "ACCEPTED",
+      "principalId": "admin",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "same create request different goal",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 409,
+      "code": "REQUEST_REPLAY",
+      "traceId": "5e402a72-a06a-4cea-8b6e-a086f87e8388"
+    },
+    {
+      "name": "admin owner detail",
+      "method": "GET",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f",
+      "http": 200,
+      "code": "OK",
+      "traceId": "964e2462-448e-4721-aec2-af2182d1ba9b",
+      "taskId": "task-d6d07bd5e5374847b82f",
+      "state": "ACCEPTED",
+      "principalId": "admin",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "append",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/plans",
+      "http": 200,
+      "code": "OK",
+      "traceId": "a5832e6d-0469-4258-a3ec-1e9cecd09ebd",
+      "revision": 1,
+      "digest": "0015f51461238a2094915a670344f28a9090d694fa027570d200ab8ba59cfa6c",
+      "validationStatus": "VALID"
+    },
+    {
+      "name": "stale revision",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/plans",
+      "http": 409,
+      "code": "PLAN_REVISION_CONFLICT",
+      "traceId": "2996692f-a760-44f7-8aa8-1a64f56e0fe3"
+    },
+    {
+      "name": "wrong digest",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/plans/p-25000f9cd1da/revisions/1/confirm",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "c74617d1-d3bc-4b7b-8902-aa4570f2afc5"
+    },
+    {
+      "name": "confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/plans/p-25000f9cd1da/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "6ce311b3-f851-4b95-9e29-a96949d46d44",
+      "revision": 1,
+      "digest": "0015f51461238a2094915a670344f28a9090d694fa027570d200ab8ba59cfa6c",
+      "confirmSeq": 1
+    },
+    {
+      "name": "replay confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/plans/p-25000f9cd1da/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "b5d302a2-db92-4fc5-922b-d756cdd5ccc7",
+      "revision": 1,
+      "digest": "0015f51461238a2094915a670344f28a9090d694fa027570d200ab8ba59cfa6c",
+      "confirmSeq": 1
+    },
+    {
+      "name": "different digest on execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/execute",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "bfc71a77-34ac-452e-b207-fa585b98d915"
+    },
+    {
+      "name": "execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "f0b4d16d-015d-40d4-8107-3dacfdc70ee8",
+      "executionTaskId": "task-3cc82e0f0973461a8789",
+      "pinnedRevision": 1,
+      "pinnedDigest": "0015f51461238a2094915a670344f28a9090d694fa027570d200ab8ba59cfa6c"
+    },
+    {
+      "name": "replay execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "71c534c0-d78a-418a-861d-253611735941",
+      "executionTaskId": "task-3cc82e0f0973461a8789",
+      "pinnedRevision": 1,
+      "pinnedDigest": "0015f51461238a2094915a670344f28a9090d694fa027570d200ab8ba59cfa6c"
+    },
+    {
+      "name": "running plan parent",
+      "method": "GET",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f",
+      "http": 200,
+      "code": "OK",
+      "traceId": "9c803f28-4469-4667-acb0-66196b590f77",
+      "taskId": "task-d6d07bd5e5374847b82f",
+      "state": "RUNNING",
+      "principalId": "admin",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "execution child",
+      "method": "GET",
+      "path": "/v1/tasks/task-3cc82e0f0973461a8789",
+      "http": 200,
+      "code": "OK",
+      "traceId": "f1bf6dfb-ef7b-4c94-b733-b755f2fe374d",
+      "taskId": "task-3cc82e0f0973461a8789",
+      "state": "ACCEPTED",
+      "principalId": "admin",
+      "parentTaskId": "task-d6d07bd5e5374847b82f",
+      "purpose": "EXECUTE",
+      "role": "PLANNED_EXEC"
+    },
+    {
+      "name": "execution events",
+      "method": "GET",
+      "path": "/v1/tasks/task-3cc82e0f0973461a8789/events",
+      "http": 200,
+      "code": "OK",
+      "traceId": "5b795ef6-692a-4f73-904e-915dffb62d13",
+      "taskId": 78
+    },
+    {
+      "name": "execution result",
+      "method": "GET",
+      "path": "/v1/tasks/task-3cc82e0f0973461a8789/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "a6388adc-24e4-42ca-bce1-078f0c78a1b5",
+      "taskId": "task-3cc82e0f0973461a8789",
+      "state": "ACCEPTED"
+    },
+    {
+      "name": "step not yet materialized",
+      "method": "GET",
+      "path": "/v1/tasks/task-3cc82e0f0973461a8789/steps/s1/calls",
+      "http": 404,
+      "code": "TASK_STEP_NOT_FOUND",
+      "traceId": "6926ffc5-f485-444e-af7f-f398a7679179"
+    },
+    {
+      "name": "grant BUILDER",
+      "method": "PUT",
+      "path": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "fa520920-6c90-4a17-9505-5f612988e4e3"
+    },
+    {
+      "name": "create r22e2-real-v2",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "5af8426e-49f0-4b44-ba22-760613f4b196",
+      "taskId": "task-04d3c90cbb6b4280a04c",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "replay create",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "d3471f85-0a89-4176-bcff-6414f98153a9",
+      "taskId": "task-04d3c90cbb6b4280a04c",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "same create request different goal",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 409,
+      "code": "REQUEST_REPLAY",
+      "traceId": "50c95991-b47e-4ec5-96a6-f2181a6cb638"
+    },
+    {
+      "name": "append",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/plans",
+      "http": 200,
+      "code": "OK",
+      "traceId": "481abc02-f7d1-4703-81c5-8be865c8bd93",
+      "revision": 1,
+      "digest": "fb211925dd4b1e3bd0babc432ac36ae64e58ff657b7ceef8c28283755257d124",
+      "validationStatus": "VALID"
+    },
+    {
+      "name": "stale revision",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/plans",
+      "http": 409,
+      "code": "PLAN_REVISION_CONFLICT",
+      "traceId": "4d7b5732-a499-4004-8849-e31644f1c414"
+    },
+    {
+      "name": "wrong digest",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/plans/p-0d71af79689c/revisions/1/confirm",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "e61b6be1-3454-43f0-bd14-176d63cdce8f"
+    },
+    {
+      "name": "confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/plans/p-0d71af79689c/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "b9d2b2cc-c2fa-4cd8-bb16-f24b4adc1cdc",
+      "revision": 1,
+      "digest": "fb211925dd4b1e3bd0babc432ac36ae64e58ff657b7ceef8c28283755257d124",
+      "confirmSeq": 1
+    },
+    {
+      "name": "replay confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/plans/p-0d71af79689c/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "5c3c857e-2eb3-475c-b126-9e52f7f95544",
+      "revision": 1,
+      "digest": "fb211925dd4b1e3bd0babc432ac36ae64e58ff657b7ceef8c28283755257d124",
+      "confirmSeq": 1
+    },
+    {
+      "name": "different digest on execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/execute",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "f40e279a-a234-4f45-b310-97631db093ca"
+    },
+    {
+      "name": "execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "33c0c80b-afbd-4dea-984c-a7090ba774f1",
+      "executionTaskId": "task-bfb67b90df914398a9dd",
+      "pinnedRevision": 1,
+      "pinnedDigest": "fb211925dd4b1e3bd0babc432ac36ae64e58ff657b7ceef8c28283755257d124"
+    },
+    {
+      "name": "replay execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "94f92481-14fb-45c4-a3a3-ba1d5ebaad70",
+      "executionTaskId": "task-bfb67b90df914398a9dd",
+      "pinnedRevision": 1,
+      "pinnedDigest": "fb211925dd4b1e3bd0babc432ac36ae64e58ff657b7ceef8c28283755257d124"
+    },
+    {
+      "name": "running plan parent",
+      "method": "GET",
+      "path": "/v1/tasks/task-04d3c90cbb6b4280a04c",
+      "http": 200,
+      "code": "OK",
+      "traceId": "f3297871-6cde-49bd-bfab-cd52b70f7a89",
+      "taskId": "task-04d3c90cbb6b4280a04c",
+      "state": "RUNNING",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "execution child",
+      "method": "GET",
+      "path": "/v1/tasks/task-bfb67b90df914398a9dd",
+      "http": 200,
+      "code": "OK",
+      "traceId": "97e240f3-e9a5-41a2-862b-7ce9760368c6",
+      "taskId": "task-bfb67b90df914398a9dd",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": "task-04d3c90cbb6b4280a04c",
+      "purpose": "EXECUTE",
+      "role": "PLANNED_EXEC"
+    },
+    {
+      "name": "execution events",
+      "method": "GET",
+      "path": "/v1/tasks/task-bfb67b90df914398a9dd/events",
+      "http": 200,
+      "code": "OK",
+      "traceId": "6acbc192-6a11-4042-ba18-64e67f2f339d",
+      "taskId": 80
+    },
+    {
+      "name": "execution result",
+      "method": "GET",
+      "path": "/v1/tasks/task-bfb67b90df914398a9dd/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "39fb8867-64b1-47ae-9b71-6843c1ae31a8",
+      "taskId": "task-bfb67b90df914398a9dd",
+      "state": "ACCEPTED"
+    },
+    {
+      "name": "step not yet materialized",
+      "method": "GET",
+      "path": "/v1/tasks/task-bfb67b90df914398a9dd/steps/s1/calls",
+      "http": 404,
+      "code": "TASK_STEP_NOT_FOUND",
+      "traceId": "3de10069-6087-4252-8983-3cf532a7ddb7"
+    },
+    {
+      "name": "revoke BUILDER",
+      "method": "DELETE",
+      "path": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "12a455ef-9386-4af3-9301-920a7bc6f62f"
+    },
+    {
+      "name": "grant USER",
+      "method": "PUT",
+      "path": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "8a500ec5-8f9a-4b13-98f2-8f95839611ed"
+    },
+    {
+      "name": "real user",
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3ef9aa08-adfd-4647-b524-d10ee243c288",
+      "principalId": "operatorA",
+      "roles": [
+        "USER"
+      ]
+    },
+    {
+      "name": "create r22e2-real-v2",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "fad3d75d-5a03-4000-85c0-c750d6a66b87",
+      "taskId": "task-13bb1cd14147453fb887",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "replay create",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "0ae0735e-a9f7-480a-8839-85dca2996e1d",
+      "taskId": "task-13bb1cd14147453fb887",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "same create request different goal",
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 409,
+      "code": "REQUEST_REPLAY",
+      "traceId": "8c037fe7-08e3-43b5-a867-35be2eeb8605"
+    },
+    {
+      "name": "create satellite-planning-assistant",
+      "method": "POST",
+      "path": "/v1/apps/satellite-planning-assistant/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "62c772b3-662b-4c6b-a6c6-f52edc293e36",
+      "taskId": "task-c42f88d0acb74bc28599",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "replay create",
+      "method": "POST",
+      "path": "/v1/apps/satellite-planning-assistant/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "35a6c21e-195a-4f26-a898-e134c1e021e0",
+      "taskId": "task-c42f88d0acb74bc28599",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "same create request different goal",
+      "method": "POST",
+      "path": "/v1/apps/satellite-planning-assistant/tasks",
+      "http": 409,
+      "code": "REQUEST_REPLAY",
+      "traceId": "36d49fea-e622-4caa-916d-d8559443a256"
+    },
+    {
+      "name": "same app different owner",
+      "method": "GET",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f",
+      "http": 403,
+      "code": "TASK_OWNER_DENIED",
+      "traceId": "f129d9ff-fa92-461b-a469-d217cfcdd1a9"
+    },
+    {
+      "name": "different owner write",
+      "method": "POST",
+      "path": "/v1/tasks/task-d6d07bd5e5374847b82f/plans",
+      "http": 403,
+      "code": "TASK_OWNER_DENIED",
+      "traceId": "2aac8f7f-7703-494c-b28d-cc620fab4aa4"
+    },
+    {
+      "name": "append",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/plans",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3554a631-7da5-4d9e-8475-c71866e14069",
+      "revision": 1,
+      "digest": "2280cafc9b2070d1a3b1cb3d484453b2ce637c41ba742509ecfe25caa0839b9a",
+      "validationStatus": "VALID"
+    },
+    {
+      "name": "stale revision",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/plans",
+      "http": 409,
+      "code": "PLAN_REVISION_CONFLICT",
+      "traceId": "e54da204-471a-4b09-a907-e38bdd8dafb6"
+    },
+    {
+      "name": "wrong digest",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/plans/p-321f67cb2a19/revisions/1/confirm",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "6ff28e38-3699-4c30-a0bf-ec76bd874796"
+    },
+    {
+      "name": "confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/plans/p-321f67cb2a19/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "7fa9c3ab-2567-4fd4-ae0b-b25bd128fb77",
+      "revision": 1,
+      "digest": "2280cafc9b2070d1a3b1cb3d484453b2ce637c41ba742509ecfe25caa0839b9a",
+      "confirmSeq": 1
+    },
+    {
+      "name": "replay confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/plans/p-321f67cb2a19/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "413c2729-4b58-4707-871d-4f245f84dc66",
+      "revision": 1,
+      "digest": "2280cafc9b2070d1a3b1cb3d484453b2ce637c41ba742509ecfe25caa0839b9a",
+      "confirmSeq": 1
+    },
+    {
+      "name": "user version state",
+      "method": "GET",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/plans/p-321f67cb2a19/revisions/1",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3d53f498-57b3-4da9-9e6e-2cf66e726f9b",
+      "revision": 1,
+      "digest": "2280cafc9b2070d1a3b1cb3d484453b2ce637c41ba742509ecfe25caa0839b9a",
+      "confirmation": {
+        "state": "CONFIRMED_VALID",
+        "seq": 1,
+        "expiresAt": "2026-11-27T00:00:56.330+00:00",
+        "confirmedBy": "operatorA"
+      },
+      "canConfirm": false,
+      "canExecute": true,
+      "validationStatus": "VALID"
+    },
+    {
+      "name": "different digest on execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/execute",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "9f0652c9-aa50-4ad0-a960-097b75b5e391"
+    },
+    {
+      "name": "execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "9edba98f-7cc1-4957-adbd-8eda8cb53eb1",
+      "executionTaskId": "task-a6825256040f4d43b633",
+      "pinnedRevision": 1,
+      "pinnedDigest": "2280cafc9b2070d1a3b1cb3d484453b2ce637c41ba742509ecfe25caa0839b9a"
+    },
+    {
+      "name": "replay execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "281f3c40-0043-4c80-a2f3-35a7edb322d9",
+      "executionTaskId": "task-a6825256040f4d43b633",
+      "pinnedRevision": 1,
+      "pinnedDigest": "2280cafc9b2070d1a3b1cb3d484453b2ce637c41ba742509ecfe25caa0839b9a"
+    },
+    {
+      "name": "running plan parent",
+      "method": "GET",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887",
+      "http": 200,
+      "code": "OK",
+      "traceId": "fba76dc2-a285-44a3-92af-36f2384a48c4",
+      "taskId": "task-13bb1cd14147453fb887",
+      "state": "RUNNING",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "execution child",
+      "method": "GET",
+      "path": "/v1/tasks/task-a6825256040f4d43b633",
+      "http": 200,
+      "code": "OK",
+      "traceId": "874425cf-7ead-44a7-8c83-f549c14ade95",
+      "taskId": "task-a6825256040f4d43b633",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": "task-13bb1cd14147453fb887",
+      "purpose": "EXECUTE",
+      "role": "PLANNED_EXEC"
+    },
+    {
+      "name": "execution events",
+      "method": "GET",
+      "path": "/v1/tasks/task-a6825256040f4d43b633/events",
+      "http": 200,
+      "code": "OK",
+      "traceId": "56e816f9-0ed2-47bb-b386-7854d3714899",
+      "taskId": 83
+    },
+    {
+      "name": "execution result",
+      "method": "GET",
+      "path": "/v1/tasks/task-a6825256040f4d43b633/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ca1fa524-4b72-4684-b3da-44986741bc70",
+      "taskId": "task-a6825256040f4d43b633",
+      "state": "ACCEPTED"
+    },
+    {
+      "name": "step not yet materialized",
+      "method": "GET",
+      "path": "/v1/tasks/task-a6825256040f4d43b633/steps/s1/calls",
+      "http": 404,
+      "code": "TASK_STEP_NOT_FOUND",
+      "traceId": "926ddac3-4e4a-4e9a-94d1-1a635bbcaaca"
+    },
+    {
+      "name": "user parent events",
+      "method": "GET",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887/events?afterSeq=0",
+      "http": 200,
+      "code": "OK",
+      "traceId": "8e93e51a-7bc4-4ae2-b3b9-689638d9cca5",
+      "taskId": 81
+    },
+    {
+      "name": "append",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans",
+      "http": 200,
+      "code": "OK",
+      "traceId": "8bcfbefe-3403-4650-bb12-1d3c49ae5ae2",
+      "revision": 1,
+      "digest": "68c69b6f95312574253bb817344e3a44568fbcacb25a5a0137ea939ae6bd4d0f",
+      "validationStatus": "VALID"
+    },
+    {
+      "name": "stale revision",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans",
+      "http": 409,
+      "code": "PLAN_REVISION_CONFLICT",
+      "traceId": "aa331a50-ce88-4bb1-9877-b118da93d78f"
+    },
+    {
+      "name": "wrong digest",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans/p-c252aae95f26/revisions/1/confirm",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "47745e1d-95c8-4038-a2ea-2273e505f973"
+    },
+    {
+      "name": "confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans/p-c252aae95f26/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "17f219c7-ca1d-44bf-aa46-a435a7f4e40d",
+      "revision": 1,
+      "digest": "68c69b6f95312574253bb817344e3a44568fbcacb25a5a0137ea939ae6bd4d0f",
+      "confirmSeq": 1
+    },
+    {
+      "name": "replay confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans/p-c252aae95f26/revisions/1/confirm",
+      "http": 200,
+      "code": "OK",
+      "traceId": "cdb6bd45-462a-415b-a592-b86c877e9de7",
+      "revision": 1,
+      "digest": "68c69b6f95312574253bb817344e3a44568fbcacb25a5a0137ea939ae6bd4d0f",
+      "confirmSeq": 1
+    },
+    {
+      "name": "grant USER",
+      "method": "PUT",
+      "path": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "07fcf9af-261e-43ed-9e7d-3352b7c440c8"
+    },
+    {
+      "name": "owned outside scope",
+      "method": "GET",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599",
+      "http": 403,
+      "code": "PLATFORM_CAPABILITY_DENIED",
+      "traceId": "1c1d52ee-a104-4f19-83a6-cbdda4ea345f"
+    },
+    {
+      "name": "grant OPERATOR",
+      "method": "PUT",
+      "path": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "7ce0015e-0823-45f9-959c-e2a699e0b214"
+    },
+    {
+      "name": "scoped operator detail",
+      "method": "GET",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ff611ae6-f72e-4a21-be22-0c8cd14df16b",
+      "taskId": "task-c42f88d0acb74bc28599",
+      "state": "PLAN_READY",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "operator version",
+      "method": "GET",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans/p-c252aae95f26/revisions/1",
+      "http": 200,
+      "code": "OK",
+      "traceId": "c5cb5aad-cf24-4180-a866-9a53497c2ebc",
+      "revision": 1,
+      "digest": "68c69b6f95312574253bb817344e3a44568fbcacb25a5a0137ea939ae6bd4d0f",
+      "confirmation": {
+        "state": "CONFIRMED_VALID",
+        "seq": 1,
+        "expiresAt": "2026-11-27T00:00:59.658+00:00",
+        "confirmedBy": "operatorA"
+      },
+      "canConfirm": false,
+      "canExecute": true,
+      "validationStatus": "VALID"
+    },
+    {
+      "name": "operator cannot edit",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans",
+      "http": 403,
+      "code": "PLATFORM_CAPABILITY_DENIED",
+      "traceId": "ee5dc352-21a1-4da7-96c6-4dae235e6cbb"
+    },
+    {
+      "name": "operator cannot confirm",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/plans/p-c252aae95f26/revisions/1/confirm",
+      "http": 403,
+      "code": "PLATFORM_CAPABILITY_DENIED",
+      "traceId": "6682d2bc-f0d5-4b7e-bef8-966e065d4385"
+    },
+    {
+      "name": "different digest on execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/execute",
+      "http": 409,
+      "code": "PLAN_DIGEST_CHANGED",
+      "traceId": "baa8e503-8fcf-49e0-8a90-d2a9b599355e"
+    },
+    {
+      "name": "operator reason missing",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/execute",
+      "http": 400,
+      "code": "TASK_OPERATION_REASON_REQUIRED",
+      "traceId": "28d89f34-79f9-477d-ab48-fdd3708fd148"
+    },
+    {
+      "name": "execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "0911062e-66dd-4403-b853-b557438523ac",
+      "executionTaskId": "task-80ea32035d5f4eeda121",
+      "pinnedRevision": 1,
+      "pinnedDigest": "68c69b6f95312574253bb817344e3a44568fbcacb25a5a0137ea939ae6bd4d0f"
+    },
+    {
+      "name": "replay execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/execute",
+      "http": 200,
+      "code": "OK",
+      "traceId": "e6677b80-485e-4bd7-be51-3597fdc7e44c",
+      "executionTaskId": "task-80ea32035d5f4eeda121",
+      "pinnedRevision": 1,
+      "pinnedDigest": "68c69b6f95312574253bb817344e3a44568fbcacb25a5a0137ea939ae6bd4d0f"
+    },
+    {
+      "name": "running plan parent",
+      "method": "GET",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599",
+      "http": 200,
+      "code": "OK",
+      "traceId": "f16f55e0-10cc-4aa2-998d-b5c7b1cb0987",
+      "taskId": "task-c42f88d0acb74bc28599",
+      "state": "RUNNING",
+      "principalId": "operatorA",
+      "parentTaskId": null,
+      "purpose": "PLAN",
+      "role": null
+    },
+    {
+      "name": "execution child",
+      "method": "GET",
+      "path": "/v1/tasks/task-80ea32035d5f4eeda121",
+      "http": 200,
+      "code": "OK",
+      "traceId": "d9e28965-d938-4c15-b6af-a5c064454a0b",
+      "taskId": "task-80ea32035d5f4eeda121",
+      "state": "ACCEPTED",
+      "principalId": "operatorA",
+      "parentTaskId": "task-c42f88d0acb74bc28599",
+      "purpose": "EXECUTE",
+      "role": "PLANNED_EXEC"
+    },
+    {
+      "name": "execution events",
+      "method": "GET",
+      "path": "/v1/tasks/task-80ea32035d5f4eeda121/events",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3d1b8dc3-7dc3-44ce-838c-0607ce882703",
+      "taskId": 84
+    },
+    {
+      "name": "execution result",
+      "method": "GET",
+      "path": "/v1/tasks/task-80ea32035d5f4eeda121/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "77448392-a9f1-4ee6-ad48-461bfda85439",
+      "taskId": "task-80ea32035d5f4eeda121",
+      "state": "ACCEPTED"
+    },
+    {
+      "name": "step not yet materialized",
+      "method": "GET",
+      "path": "/v1/tasks/task-80ea32035d5f4eeda121/steps/s1/calls",
+      "http": 404,
+      "code": "TASK_STEP_NOT_FOUND",
+      "traceId": "a5076535-f0aa-42ce-8b07-ad31f297df53"
+    },
+    {
+      "name": "revoke USER",
+      "method": "DELETE",
+      "path": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "91e7f15a-17ea-415d-ace9-fb8dba4dc798"
+    },
+    {
+      "name": "revoked owner read",
+      "method": "GET",
+      "path": "/v1/tasks/task-13bb1cd14147453fb887",
+      "http": 403,
+      "code": "PLATFORM_CAPABILITY_DENIED",
+      "traceId": "55de491a-c61b-40fc-a842-c0631b0bf813"
+    },
+    {
+      "name": "revoke OPERATOR",
+      "method": "DELETE",
+      "path": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "be362f27-d0d0-4b70-9c92-b7b3ab05fa94"
+    },
+    {
+      "name": "revoked execute",
+      "method": "POST",
+      "path": "/v1/tasks/task-c42f88d0acb74bc28599/execute",
+      "http": 403,
+      "code": "PLATFORM_CAPABILITY_DENIED",
+      "traceId": "ba8ae4b8-21cf-4437-bafb-71ec8cea3445"
+    }
+  ],
+  "operatorTaskProjection": {
+    "planId": "p-c252aae95f26",
+    "revision": 1,
+    "digest": "68c69b6f95312574253bb817344e3a44568fbcacb25a5a0137ea939ae6bd4d0f",
+    "canConfirm": false,
+    "canExecute": true,
+    "operationReasonRequired": true
+  },
+  "operatorReasonRecorded": true,
+  "passed": true,
+  "sessionRevocation": 200
+}

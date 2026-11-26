@@ -1,0 +1,51 @@
+{
+  "steps": [
+    {
+      "name": "页面受理本人任务",
+      "http": 200,
+      "taskId": "task-72502ae6813d4a7296d3",
+      "traceId": "3f7609ec-2776-4d12-99be-1e1974157286"
+    },
+    {
+      "name": "POST /v1/tasks/task-72502ae6813d4a7296d3/plans",
+      "http": 200,
+      "code": "OK",
+      "traceId": "ae2798e4-a633-42bf-b8ed-c8723376d3ca"
+    },
+    {
+      "name": "页面确认",
+      "http": 200,
+      "confirmSeq": 1,
+      "traceId": "78c386aa-205f-4287-aba6-fe7b066f26ae"
+    },
+    {
+      "name": "PUT /admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "0054a0d7-d118-4276-a16f-ce5421c5f9b5"
+    },
+    {
+      "name": "DELETE /admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "9511f11e-7fa4-4ad0-abb8-d3b90918ab1c"
+    },
+    {
+      "name": "操作员页面填写原因并执行",
+      "http": 200,
+      "executionTaskId": "task-6439898abb014e2db171",
+      "pinnedDigest": "1e9fb6a7377ff49dc1e7301293c430468b70dd4e7b6e1b4247643178ac9b2849",
+      "traceId": "b015153c-d37c-4ee2-b5cb-78433e3f980c"
+    },
+    {
+      "name": "打开侧栏按当前应用读取记忆",
+      "path": "/v1/apps/r22e2-real-v2/memories",
+      "http": 200
+    }
+  ],
+  "pageErrors": [],
+  "httpErrors": [],
+  "child": "task-6439898abb014e2db171",
+  "passed": true,
+  "auditMatched": true
+}
