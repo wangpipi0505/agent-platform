@@ -12,3 +12,5 @@
 在独立开发栈配置能返回 503 的测试应用和已获提交权限的接入票，执行 `node scripts/acceptance/verify-model-failure.mjs`。环境变量和时序见脚本。原始 E2 对照在 [R-23 宿主超时记录](../2026-11-26-R-23/e2-host-timeout.json)。
 
 附加的[引擎中断回归](interrupted-worker.json)在模型已记 SENDING 后终止开发引擎并重启。恢复代次为 2，运行和节点均 FAILED，原因是 MODEL_RESULT_UNKNOWN。调用事实保留 UNKNOWN，实际只有一次 SDK 发送和一条模型日志。首次模型请求的 I/O 上限为 15 秒，25 秒的节点和调度租约给引擎留下在原 60 秒委托内恢复的时间。恢复仍须持有有效委托。
+
+R-48 开发提交为 `cd0da28e`（确认失败的终态）和 `7ad1637b`（首次模型调用中断的有界恢复）。在包含 R-46 提交 `ae69dbf0` 的开发栈上再次执行上述 Node 脚本。前两次读取均为 RUNNING，第三次两个接口均为 FAILED，失败原因及可重试标记一致。[脚本三次轮询原件](final-three-polls.jsonl)。

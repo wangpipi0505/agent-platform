@@ -38,3 +38,5 @@ E2 仍需用真实身份、真实模型和本次构建执行 PR-A，收集流恢
 两个主体在隔离的同一租户，经本地 authority-service 签票、网关换票和真实引擎访问两个已发布应用。auditor 读取自己的会话得到 200，observer 访问该会话得到 403，auditor 用第二个应用路径访问原会话得到 403。第二个主体也成功创建了自己在第二个应用下的会话。两处拒绝的对外响应一致，数据库按 traceId 留下 SUBJECT_MISMATCH 和 APP_MISMATCH。V238 使用独立事务写拒绝记录，受理事务回滚时仍可核对。
 
 [修改前的四项请求与空审计结果](second-subject-red.json) · [修改后的原始响应及两条 PostgreSQL 审计行](second-subject-green.json)。在开发实例为两个主体分别开会话，交叉请求 `GET /v1/apps/{app}/sessions/{session}` 后，按所用 session_id 查询 `engine.portal_session_denial` 的 principal_id、app_code、reason 和 trace_id。此批样本使用开发签名身份。真实 user-mgmt 管理员的浏览器证据另见 R-46。
+
+第二主体样本及 V238 的开发提交为 `c2a80eb7`。配置隔离 PostgreSQL 后执行 `mvn -pl engine-runtime -am test -Dtest=ChatSessionsTest,SessionEventsEndpointTest -Dsurefire.failIfNoSpecifiedTests=false`，其中 `deniedSessionAuditSurvivesRollbackOfTheRequest` 验证拒绝事务回滚后审计记录仍可读取。

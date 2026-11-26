@@ -21,3 +21,5 @@ cd web
 npm test
 npm run build
 ```
+
+R-46 开发提交为 `ae69dbf0`。同一工作树含 R-47 的 `23a4a4c6`、R-48 的 `cd0da28e` 与 `7ad1637b`，以及 R-42 第二主体样本的 `c2a80eb7`。

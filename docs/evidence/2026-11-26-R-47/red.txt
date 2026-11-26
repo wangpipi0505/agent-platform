@@ -3,7 +3,7 @@ Test set: cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest
 -------------------------------------------------------------------------------
 Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 5.369 s <<< FAILURE! -- in cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest
 cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest.publishedRunReportsDeniedApplicationWithAuthorizationCode -- Time elapsed: 0.577 s <<< FAILURE!
-org.opentest4j.AssertionFailedError: 
+org.opentest4j.AssertionFailedError:
 
 expected: "SYS-AUTH-403"
  but was: "GATEWAY_RUN_REJECTED"
@@ -13,12 +13,11 @@ expected: "SYS-AUTH-403"
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
 
 cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest.publishedRunUsesTheNormalIamAssemblyAndReportsMissingVersions -- Time elapsed: 0.218 s <<< FAILURE!
-org.opentest4j.AssertionFailedError: 
-[{"code":"GATEWAY_RUN_REJECTED","message":"运行请求未完成，请检查权限或服务状态","data":null,"traceId":null}] 
+org.opentest4j.AssertionFailedError:
+[{"code":"GATEWAY_RUN_REJECTED","message":"运行请求未完成，请检查权限或服务状态","data":null,"traceId":null}]
 expected: 404
  but was: 503
 	at cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest.publishedRunUsesTheNormalIamAssemblyAndReportsMissingVersions(GatewayIamPortalHttpTest.java:241)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-

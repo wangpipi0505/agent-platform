@@ -76,3 +76,9 @@ RUNNING ─回执未知─▶ WAITING_RECONCILIATION ─对账处置─▶ RUNNI
 ```
 
 未在本文列出的迁移/动作，实现卡（T2-2/T2-5/T2-6）按接口稿时序图固化；需新增状态值或动作枚举时，**先回写本契约与数据库稿再实现**（契约先行纪律；枚举扩展走新迁移）。
+
+## 7. 首个模型调用失败时的任务投影（R-48）
+
+模型服务持久化上游 503 并发送失败终止帧后，引擎结束相应运行和尝试。任务详情 `GET /v1/tasks/{id}` 和结果 `GET /v1/tasks/{id}/result` 均返回 `state=FAILED`、`reason=SYS-MODEL-503`、`retryable=false`。客户端可以用原 requestId 重取同一任务。
+
+若发送已登记、引擎中断且未收到终止帧，恢复方须在有效委派内取得过期租约。任务以 `MODEL_RESULT_UNKNOWN` 收口，调用事实保留 `UNKNOWN`，避免重复向供应商发送。

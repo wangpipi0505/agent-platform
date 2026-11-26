@@ -12,3 +12,5 @@
 ```sh
 mvn -pl platform-gateway -am test -Dtest=GatewayIamPortalHttpTest,GatewayPublishedRunProxyTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
+
+R-47 开发提交为 `23a4a4c6`。合入 R-46 后，两组网关测试合计 60 项通过。[最终相邻回归输出](../2026-11-26-R-46/adjacent-tests.txt)。
