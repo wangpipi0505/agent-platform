@@ -5,6 +5,8 @@ package cn.agentplatform.engine.api;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
+import cn.agentplatform.common.authority.PortalTaskRoutes;
+import cn.agentplatform.engine.infra.PortalOwnedTaskAccess;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -38,9 +40,24 @@ public class TaskController {
     this.reconciliation = reconciliation;
   }
 
+  private PortalOwnedTaskAccess portalTasks;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  void portalTasks(PortalOwnedTaskAccess access) {
+    this.portalTasks = access;
+  }
+
+  private PortalOwnedTaskAccess.Access ownedAccess(String taskId, Actor actor) {
+    var current = PortalTaskRoutes.current(taskId);
+    if (current == null) return new PortalOwnedTaskAccess.Access(tasks.resolveTaskId(taskId, actor), false, true, true);
+    if (portalTasks == null || !current.actor().equals(actor))
+      throw new PlatformException(403, "TASK_OWNER_DENIED", "无法验证任务归属");
+    return portalTasks.authorize(taskId, current);
+  }
+
   /** {taskId} 业务号→内部 id 解析（R-9⑤；形状解析归 Tasks，归属核验仍在 ownedTask）。 */
   private long resolve(String taskId, Actor actor) {
-    return tasks.resolveTaskId(taskId, actor);
+    return ownedAccess(taskId, actor).id();
   }
 
   private long resolveRead(String taskId, Actor actor) {
@@ -175,7 +192,11 @@ public class TaskController {
           @PathVariable("planId") String planId,
           @PathVariable("revision") int revision) {
     Actor actor = Actor.current();
-    return ApiResponse.ok(plans.revisionDetail(resolve(taskId, actor), planId, revision, actor));
+    var access = ownedAccess(taskId, actor);
+    var detail = new java.util.LinkedHashMap<>(plans.revisionDetail(access.id(), planId, revision, actor));
+    detail.computeIfPresent("canConfirm", (key, value) -> Boolean.TRUE.equals(value) && access.canConfirm());
+    detail.computeIfPresent("canExecute", (key, value) -> Boolean.TRUE.equals(value) && access.canExecute());
+    return ApiResponse.ok(detail);
   }
 
   /** POST .../plans/{planId}/revisions/{revision}/confirm：计划版本级确认。 */
@@ -193,7 +214,19 @@ public class TaskController {
   @PostMapping("/v1/tasks/{taskId}/execute")
   public Object executePlan(@PathVariable("taskId") String taskId, @RequestBody JsonNode req) {
     Actor actor = Actor.current();
-    return ApiResponse.ok(plans.execute(resolve(taskId, actor), req, actor));
+    var access = ownedAccess(taskId, actor);
+    if (PortalTaskRoutes.current(taskId) != null && (!req.path("requestId").isTextual()
+            || req.path("requestId").asText().isBlank() || req.path("requestId").asText().length() > 128))
+      throw new PlatformException(400, "TASK_REQUEST_INVALID", "执行请求需要有效的 requestId");
+    String reason = null;
+    if (access.reasonRequired()) {
+      var value = req.path("operationReason");
+      if (!value.isTextual() || value.textValue().isBlank() || value.textValue().length() > 256
+              || value.textValue().chars().anyMatch(Character::isISOControl))
+        throw new PlatformException(400, "TASK_OPERATION_REASON_REQUIRED", "请提供 1 至 256 字的操作原因");
+      reason = value.textValue().trim();
+    }
+    return ApiResponse.ok(plans.execute(access.id(), req, actor, reason));
   }
 
   /**

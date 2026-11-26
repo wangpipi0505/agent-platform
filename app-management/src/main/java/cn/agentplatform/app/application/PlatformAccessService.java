@@ -3,6 +3,7 @@ package cn.agentplatform.app.application;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.Json;
 import cn.agentplatform.common.PlatformException;
+import cn.agentplatform.common.authority.PortalTaskRoutes;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -60,6 +61,20 @@ public class PlatformAccessService {
             apps.addAll(row.applications());
         }
         return new ApplicationScope(false, apps);
+    }
+
+    public record OwnedTaskDecision(String appCode, String permission, boolean reasonRequired,
+                                    boolean canConfirm, boolean canExecute) {}
+
+    public OwnedTaskDecision requireOwnedTask(Actor identity, String permission, String appCode) {
+        var rows = access(identity);
+        boolean execute = scope(rows, PortalTaskRoutes.EXECUTE).allows(appCode);
+        boolean operate = scope(rows, PortalTaskRoutes.OPERATE).allows(appCode);
+        boolean reasonRequired = PortalTaskRoutes.EXECUTE.equals(permission) && !execute && operate;
+        if (!scope(rows, VIEW).allows(appCode) || (!reasonRequired && !scope(rows, permission).allows(appCode)))
+            throw new PlatformException(403, "PLATFORM_CAPABILITY_DENIED", "当前平台授权不允许此操作");
+        return new OwnedTaskDecision(appCode, permission, reasonRequired,
+                scope(rows, PortalTaskRoutes.CONFIRM).allows(appCode), execute || operate);
     }
 
     public void require(Actor identity, String capability, String appCode) {

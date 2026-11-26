@@ -60,6 +60,7 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         return switch (serviceId) {
             case "app" -> PlatformBuildRoutes.serves(serviceId, method, path) || IntegrationRuntimeRoutes.metadata(method, path);
             case "engine" -> PortalRuntimeRoutes.publishedRunApp(method, path) != null
+                    || PortalTaskRoutes.match(method, path) != null
                     || PortalRuntimeRoutes.matches(method, path) || IntegrationRuntimeRoutes.taskRead(method, path)
                     || IntegrationRuntimeRoutes.taskCancel(method, path) || IntegrationRuntimeRoutes.resultFileRead(method, path);
             case "model", "skill" -> PlatformBuildRoutes.serves(serviceId, method, path);
@@ -213,6 +214,20 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
             AuthorityProtocol.same(integrationApp, identity.path("app_code").textValue());
             AuthorityProtocol.same(IntegrationTaskRoutes.startCall(integrationApp, call.resource()), call);
             IntegrationRuntimeRoutes.requireTaskQuery(request.getRequestURI(), request.getQueryString());
+        }
+        if ("engine".equals(serviceId) && !integration && PortalTaskRoutes.ownsTemplate(request.getMethod(), template)) {
+            AuthorityProtocol.same("gateway", jwt.getClaimAsString("caller"));
+            AuthorityProtocol.same("PORTAL", operation.path("source_kind").asText());
+            AuthorityProtocol.same("PORTAL", operation.path("origin_kind").asText());
+            var matched = PortalTaskRoutes.match(request.getMethod(), request.getRequestURI());
+            if (matched == null) throw AuthorityProtocol.denied();
+            AuthorityProtocol.same(matched.call(routes), call);
+        }
+        if (PortalTaskRoutes.ACCESS_PATH.equals(template)) {
+            AuthorityProtocol.same("engine", jwt.getClaimAsString("caller"));
+            AuthorityProtocol.same("delegated", mode);
+            AuthorityProtocol.same("PORTAL", operation.path("origin_kind").asText());
+            PortalTaskRoutes.permission(call.resource());
         }
         boolean runAudit = "engine".equals(serviceId) && PlatformBuildRoutes.RUN_AUDIT.equals(template);
         if ("platform-build".equals(call.resource().kind()) || requiresBuildLookup(request)

@@ -11,6 +11,7 @@ import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import cn.agentplatform.common.authority.SubjectKey;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
+import cn.agentplatform.common.authority.PortalTaskRoutes;
 import cn.agentplatform.common.authority.ServiceCall;
 import cn.agentplatform.common.authority.ServiceRoutePolicy;
 import cn.agentplatform.gateway.application.IntegrationAccess;
@@ -130,6 +131,14 @@ public class GatewayController {
                 var ticket = integration.exchangeRuntime(req, call);
                 res.setHeader("Cache-Control", "no-store");
                 forward(req, res, call.target(), ticket.value(), body);
+                return;
+            }
+            var ownedTask = PortalTaskRoutes.match(req.getMethod(), req.getRequestURI());
+            if (ownedTask != null) {
+                var source = GatewayIngressBoundary.claimRuntime(req);
+                var ticket = authority.orElseThrow().exchange(source.sourceToken(), ownedTask.call(serviceRoutes));
+                res.setHeader("Cache-Control", "no-store");
+                forward(req, res, "engine", ticket.value());
                 return;
             }
             String evaluationTemplate = EvaluationCandidateBinding.portalTemplate(req.getMethod(), req.getRequestURI());

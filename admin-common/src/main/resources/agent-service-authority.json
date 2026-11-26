@@ -1,5 +1,17 @@
 [
  {
+  "method": "POST",
+  "template": "/internal/platform-authorization/owned-task",
+  "caller": "engine",
+  "target": "app",
+  "action": "platform.authorization.owned-task",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/PlatformAuthorizationController.java",
+  "callerSource": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/PortalOwnedTaskAccess.java",
+  "reason": "本人任务操作按当前平台角色及应用范围复核"
+ },
+ {
   "method": "GET",
   "template": "/internal/evaluations/access/{code}",
   "caller": "monitor",

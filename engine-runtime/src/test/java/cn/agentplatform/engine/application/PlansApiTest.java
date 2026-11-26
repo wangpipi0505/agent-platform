@@ -369,6 +369,20 @@ class PlansApiTest {
     }
 
     @Test
+    void ownedExecutionReplaysTheSameChildAndAuditsTheOperatorReasonOnce() {
+        long id = planTask();
+        var revision = plans.appendRevision(id, appendReq("plan-audit", 0), actor);
+        var digest = revision.get("digest").toString();
+        plans.confirm(id, "plan-audit", 1, Json.tree(Map.of("requestId", "confirm-audit", "digest", digest)), actor);
+        var execute = Json.tree(Map.of("planId", "plan-audit", "revision", 1, "digest", digest, "requestId", "execute-audit"));
+        var first = plans.execute(id, execute, actor, "scheduled validation");
+        assertEquals(first, plans.execute(id, execute, actor, "scheduled validation"));
+        assertEquals(List.of("scheduled validation"), db.queryForList(
+                "select e.payload->>'operationReason' from engine.task_event e join engine.task t on t.id=e.task_id where t.public_id=?",
+                String.class, first.get("executionTaskId")));
+    }
+
+    @Test
     void executeFiveChecksAndNotConfirmedGuidance() {
         long tid = planTask();
         var rev = plans.appendRevision(tid, appendReq("plan-t3", 0), actor);

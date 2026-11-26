@@ -82,3 +82,16 @@ RUNNING ─回执未知─▶ WAITING_RECONCILIATION ─对账处置─▶ RUNNI
 模型服务持久化上游 503 并发送失败终止帧后，引擎结束相应运行和尝试。任务详情 `GET /v1/tasks/{id}` 和结果 `GET /v1/tasks/{id}/result` 均返回 `state=FAILED`、`reason=SYS-MODEL-503`、`retryable=false`。客户端可以用原 requestId 重取同一任务。
 
 若发送已登记、引擎中断且未收到终止帧，恢复方须在有效委派内取得过期租约。任务以 `MODEL_RESULT_UNKNOWN` 收口，调用事实保留 `UNKNOWN`，避免重复向供应商发送。
+
+## 本人 PLAN 任务的门户授权
+
+网关按 HTTP 方法和完整任务路径签发门户委派。引擎按已验证租户、主体、任务业务号和持久化应用读取归属，排除集成凭据创建的任务，再以同一任务资源向 app 查询当前平台授权。不存在的任务返回 404，异主或回收授权后返回 403。平台范围按每项能力独立求取。
+
+| 操作 | 所需平台能力 | 默认平台角色 |
+| --- | --- | --- |
+| 本人任务、事件、结果、步骤调用及计划版本读取 | agent.view | ADMIN、BUILDER、USER、OPERATOR |
+| 本人修订、确认 | agent.plan.revise、agent.plan.confirm 分别判定 | ADMIN、BUILDER、USER |
+| 执行已确认的本人计划 | agent.plan.execute | ADMIN、BUILDER、USER |
+| 运维角色执行已确认的本人计划 | agent.plan.operate，执行请求带 operationReason | OPERATOR |
+
+所有操作要求该应用仍在 agent.view 范围内。修订读返回的 canConfirm、canExecute 同时受修订状态与当前授权约束。操作员执行时在子任务的 TASK_ACCEPTED 事件记录操作原因、主体及所选版本。相同执行请求号重取同一子任务。工作区草稿导入、代理他人和独立审批仍遵循各自接口的权限。

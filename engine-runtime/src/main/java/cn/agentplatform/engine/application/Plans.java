@@ -46,9 +46,13 @@ public class Plans {
    */
   public Map<String, Object> appendRevision(
       long taskId, JsonNode req, Actor actor) {
-    var task = ownedTask(taskId, actor);
+    return store.atomic(() -> appendLocked(taskId, req, actor));
+  }
+
+  private Map<String, Object> appendLocked(long taskId, JsonNode req, Actor actor) {
+    var task = lockOwnedTask(taskId, actor);
     String planId = req.path("planId").asText("");
-    if (planId.isBlank()) throw new PlatformException(400, "PLAN_ID_REQUIRED", "计划标识必填");
+    if (planId.isBlank() || planId.length() > 64) throw new PlatformException(400, "PLAN_ID_REQUIRED", "计划标识必填");
     if (!req.path("baseRevision").isNumber())
       throw new PlatformException(400, "PLAN_BASE_REVISION_REQUIRED", "baseRevision 必填（CAS 基线）");
     int baseRevision = req.path("baseRevision").asInt();
@@ -79,29 +83,30 @@ public class Plans {
     // tool_policy.allowedToolRefs 的 skill: 引用（NULL/缺省=继承发布范围，校验器跳过能力检查）
     var validation = PlanValidator.validate(goalSpec, allowedSkills(task));
     String status = validation.valid() ? "VALID" : "INVALID";
-    store.atomic(
-            () -> {
-              store.db()
-                      .update(
-                              "insert into engine.plan_revision(tenant_id,plan_id,revision,owner_task_id,"
-                                  + "base_revision,schema_version,goal_spec,validation_status,diagnostics,digest,created_by)"
-                                  + " values(?,?,?,?,?,'1.0',?::jsonb,?,?::jsonb,?,?)",
-                              actor.tenantId(),
-                              planId,
-                              newRevision,
-                              taskId,
-                              baseRevision,
-                              Json.write(goalSpec),
-                              status,
-                              validation.diagnostics().isEmpty()
-                                      ? null
-                                      : Json.write(validation.diagnostics()),
-                              digest,
-                              actor.principalId());
-              if (validation.valid()) // INVALID 不落 plan_step（见方法 javadoc 如实登记）
-                insertPlanSteps(newRevision, planId, actor.tenantId(), goalSpec);
-              return null;
-            });
+    store.db()
+            .update(
+                    "insert into engine.plan_revision(tenant_id,plan_id,revision,owner_task_id,"
+                        + "base_revision,schema_version,goal_spec,validation_status,diagnostics,digest,created_by)"
+                        + " values(?,?,?,?,?,'1.0',?::jsonb,?,?::jsonb,?,?)",
+                    actor.tenantId(),
+                    planId,
+                    newRevision,
+                    taskId,
+                    baseRevision,
+                    Json.write(goalSpec),
+                    status,
+                    validation.diagnostics().isEmpty()
+                            ? null
+                            : Json.write(validation.diagnostics()),
+                    digest,
+                    actor.principalId());
+    if (validation.valid()) {
+      insertPlanSteps(newRevision, planId, actor.tenantId(), goalSpec);
+      store.db().update("""
+              update engine.task set state='PLAN_READY',state_version=state_version+1,updated_at=now()
+              where id=? and purpose='PLAN' and state in ('ACCEPTED','NEEDS_INPUT')
+              """, taskId);
+    }
     return Map.of(
             "planId", planId,
             "revision", newRevision,
@@ -130,13 +135,17 @@ public class Plans {
   /** 计划版本级确认：同号同参重放原凭据；同号异参 409 REQUEST_REPLAY；digest 不符 409。 */
   public Map<String, Object> confirm(
       long taskId, String planId, int revision, JsonNode req, Actor actor) {
-    ownedTask(taskId, actor);
+    return store.atomic(() -> confirmLocked(taskId, planId, revision, req, actor));
+  }
+
+  private Map<String, Object> confirmLocked(long taskId, String planId, int revision, JsonNode req, Actor actor) {
+    lockOwnedTask(taskId, actor);
     var revisionRow = revisionRow(taskId, planId, revision, actor.tenantId());
     String digest = req.path("digest").asText("");
     if (!digest.equals(String.valueOf(revisionRow.get("digest"))))
       throw new PlatformException(409, "PLAN_DIGEST_CHANGED", "digest 与固化版本不符");
     String requestId = req.path("requestId").asText("");
-    if (requestId.isBlank())
+    if (requestId.isBlank() || requestId.length() > 128)
       throw new PlatformException(400, "CONFIRM_REQUEST_INVALID", "确认必须提供 requestId");
     // 去重：UNIQUE(tenant, confirmed_by, confirm_request_id)——同号同参重放原凭据
     var prior =
@@ -188,7 +197,15 @@ public class Plans {
 
   /** execute 五项受理校验（主方案 §5.6）：未确认/过期 409 PLAN_NOT_CONFIRMED。 */
   public Map<String, Object> execute(long taskId, JsonNode req, Actor actor) {
-    var task = ownedTask(taskId, actor);
+    return execute(taskId, req, actor, null);
+  }
+
+  public Map<String, Object> execute(long taskId, JsonNode req, Actor actor, String operationReason) {
+    return store.atomic(() -> executeLocked(taskId, req, actor, operationReason));
+  }
+
+  private Map<String, Object> executeLocked(long taskId, JsonNode req, Actor actor, String operationReason) {
+    var task = lockOwnedTask(taskId, actor);
     String planId = req.path("planId").asText("");
     int revision = req.path("revision").asInt(0);
     String digest = req.path("digest").asText("");
@@ -197,6 +214,19 @@ public class Plans {
       throw new PlatformException(409, "PLAN_DIGEST_CHANGED", "执行请求 digest 与固化版本不符");
     if (!"VALID".equals(String.valueOf(revisionRow.get("validation_status")))) // ③VALID
       throw new PlatformException(409, "PLAN_NOT_CONFIRMED", "所选版本未确认或凭据已过期，请重新确认");
+    String requestId = req.path("requestId").asText("");
+    if (!requestId.isBlank()) {
+      var previous = store.db().queryForList(
+              "select public_id,parent_task_id,selected_plan_revision_id from engine.task where tenant_id=? and principal_id=? and request_id=?",
+              actor.tenantId(), actor.principalId(), requestId);
+      if (!previous.isEmpty()) {
+        var previousTask = previous.getFirst();
+        if (Objects.equals(previousTask.get("parent_task_id"), task.get("id"))
+                && Objects.equals(previousTask.get("selected_plan_revision_id"), revisionRow.get("id")))
+          return Map.of("executionTaskId", previousTask.get("public_id"), "pinnedRevision", revision, "pinnedDigest", digest);
+        throw new PlatformException(409, "REQUEST_REPLAY", "请求号已用于另一项操作");
+      }
+    }
     var credentials =
             store.db()
                     .queryForList(
@@ -214,39 +244,43 @@ public class Plans {
       throw new PlatformException(409, "PLAN_NOT_CONFIRMED", "确认凭据已过期，请重新确认所选版本");
     // 执行任务（purpose=EXECUTE）继承来源任务工具上界/会话关联/发布快照——T2-5 步骤映射消费
     String executionTaskId = "task-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
-    store.atomic(
-            () -> {
-              store.db()
-                      .update(
-                              "insert into engine.task(public_id,tenant_id,principal_id,app_code,"
-                                  + "config_release_id,config_digest,mode,purpose,goal,input_ref,input_digest,"
-                                  + "session_id,state,request_id,request_digest,tool_policy,selected_plan_revision_id,role,parent_task_id)"
-                                  + " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                              executionTaskId,
-                              actor.tenantId(),
-                              actor.principalId(),
-                              task.get("app_code"),
-                              task.get("config_release_id"),
-                              task.get("config_digest"),
-                              task.get("mode"),
-                              "EXECUTE",
-                              task.get("goal"),
-                              "task-input/" + executionTaskId,
-                              task.get("input_digest"),
-                              task.get("session_id"),
-                              "ACCEPTED",
-                              req.path("requestId").asText("exec-" + executionTaskId),
-                              String.valueOf(task.get("request_digest")),
-                              task.get("tool_policy"),
-                              TraceStore.number(revisionRow, "id"),
-                              "PLANNED_EXEC",
-                              taskId);
-              store.db()
-                      .update(
-                              "update engine.task set state='RUNNING',updated_at=now() where id=? and state in ('PLAN_READY','NEEDS_INPUT')",
-                              taskId);
-              return null;
-            });
+    store.db()
+            .update(
+                    "insert into engine.task(public_id,tenant_id,principal_id,app_code,"
+                        + "config_release_id,config_digest,mode,purpose,goal,input_ref,input_digest,"
+                        + "session_id,state,request_id,request_digest,tool_policy,selected_plan_revision_id,role,parent_task_id)"
+                        + " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    executionTaskId,
+                    actor.tenantId(),
+                    actor.principalId(),
+                    task.get("app_code"),
+                    task.get("config_release_id"),
+                    task.get("config_digest"),
+                    task.get("mode"),
+                    "EXECUTE",
+                    task.get("goal"),
+                    "task-input/" + executionTaskId,
+                    task.get("input_digest"),
+                    task.get("session_id"),
+                    "ACCEPTED",
+                    req.path("requestId").asText("exec-" + executionTaskId),
+                    String.valueOf(task.get("request_digest")),
+                    task.get("tool_policy"),
+                    TraceStore.number(revisionRow, "id"),
+                    "PLANNED_EXEC",
+                    taskId);
+    int changed = store.db().update(
+            "update engine.task set state='RUNNING',state_version=state_version+1,updated_at=now() where id=? and state in ('PLAN_READY','NEEDS_INPUT')",
+            taskId);
+    if (changed != 1) throw new PlatformException(409, "TASK_STATE_CONFLICT", "当前计划状态不可执行");
+    if (operationReason != null) {
+      var audit = Json.write(Map.of("operationReason", operationReason, "principalId", actor.principalId(),
+              "parentTaskId", task.get("public_id"), "revision", revision, "digest", digest));
+      store.db().update("""
+              insert into engine.task_event(task_id,seq,type,payload,state_version)
+              select id,1,'TASK_ACCEPTED',?::jsonb,state_version from engine.task where public_id=?
+              """, audit, executionTaskId);
+    }
     return Map.of(
             "executionTaskId", executionTaskId,
             "pinnedRevision", revision,
@@ -256,7 +290,7 @@ public class Plans {
   /** 修订读（含历史修订确认状态与授权——评审十轮 P1-1：按该修订计算 canConfirm/canExecute）。 */
   public Map<String, Object> revisionDetail(
       long taskId, String planId, int revision, Actor actor) {
-    ownedTask(taskId, actor);
+    var task = ownedTask(taskId, actor);
     var row = revisionRow(taskId, planId, revision, actor.tenantId());
     var view = new LinkedHashMap<String, Object>();
     view.put("planId", planId);
@@ -287,7 +321,7 @@ public class Plans {
                       "expiresAt", c.get("expires_at"),
                       "seq", c.get("confirm_seq")));
       view.put("canConfirm", expired);
-      view.put("canExecute", !expired);
+      view.put("canExecute", !expired && Set.of("PLAN_READY", "NEEDS_INPUT").contains(task.get("state")));
     }
     return view;
   }
@@ -499,6 +533,14 @@ public class Plans {
   private int defaultExpiryHours() {
     // 凭据有效期沿用 InlineApproval 语义（默认与 ActionPlan 一致，入部署配置）——首版默认 4h
     return 4;
+  }
+
+  private Map<String, Object> lockOwnedTask(long taskId, Actor actor) {
+    var rows = store.db().queryForList(
+            "select * from engine.task where id=? and tenant_id=? and principal_id=? for update",
+            taskId, actor.tenantId(), actor.principalId());
+    if (rows.isEmpty()) throw new PlatformException(404, "TASK_NOT_FOUND", "任务不存在或无权读取");
+    return rows.getFirst();
   }
 
   private Map<String, Object> ownedTask(long taskId, Actor actor) {

@@ -7,6 +7,9 @@ import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.ApiResponse;
 import cn.agentplatform.common.authority.AuthorityContext;
 import cn.agentplatform.common.authority.PlatformBuildRoutes;
+import cn.agentplatform.common.authority.PortalTaskRoutes;
+import cn.agentplatform.common.PlatformException;
+import org.springframework.web.bind.annotation.PostMapping;
 import cn.agentplatform.common.authority.SubjectKey;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +41,18 @@ public class PlatformAuthorizationController {
         var subject = new SubjectKey(identity.tenantId(), identity.principalId());
         AuthorityContext.requireFor(identity, PlatformBuildRoutes.resource(subject));
         return ApiResponse.ok(access.session(identity));
+    }
+
+    public record TaskScopeQuery(String appCode) {}
+
+    @PostMapping("/internal/platform-authorization/owned-task")
+    public Object ownedTask(@RequestBody TaskScopeQuery query) {
+        var current = AuthorityContext.current();
+        String code = query.appCode();
+        if (code == null || !code.matches("[A-Za-z][A-Za-z0-9_-]{0,63}"))
+            throw new PlatformException(400, "APP_CODE_INVALID", "无效的应用标识");
+        String permission = PortalTaskRoutes.permission(current.call().resource());
+        return ApiResponse.ok(access.requireOwnedTask(current.actor(), permission, code));
     }
 
     @GetMapping("/admin/platform-authorization/users")

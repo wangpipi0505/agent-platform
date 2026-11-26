@@ -121,6 +121,30 @@ class PlatformRoleStorageTest {
     }
 
     @Test
+    void ownedPlanChecksUseTheGrantedApplicationAndAction() {
+        var source = new DriverManagerDataSource(TestDatabase.url("AGENT_DB_URL_ROLE_STORAGE"),
+                TestDatabase.user(), TestDatabase.password());
+        Flyway.configure().dataSource(source).schemas("app").defaultSchema("app")
+                .locations("classpath:db/migration").outOfOrder(true).load().migrate();
+        var db = new JdbcTemplate(source);
+        var access = new PlatformAccessService(db);
+        var actor = new Actor("plan-" + UUID.randomUUID(), "owner", Set.of("ADMIN"), Map.of());
+        db.update("""
+                insert into app.platform_user_role(tenant_id,subject,platform_role,app_scope,granted_by)
+                values (?,?,'OPERATOR','["alpha"]','fixture'), (?,?,'USER','["beta"]','fixture')
+                """, actor.tenantId(), actor.principalId(), actor.tenantId(), actor.principalId());
+        assertThat(access.requireOwnedTask(actor, "agent.view", "alpha").canConfirm()).isFalse();
+        assertThat(access.requireOwnedTask(actor, "agent.plan.execute", "alpha").reasonRequired()).isTrue();
+        assertThat(access.requireOwnedTask(actor, "agent.plan.execute", "beta").reasonRequired()).isFalse();
+        assertThat(access.requireOwnedTask(actor, "agent.plan.confirm", "beta").canConfirm()).isTrue();
+        assertThatThrownBy(() -> access.requireOwnedTask(actor, "agent.plan.revise", "alpha")).isInstanceOf(PlatformException.class);
+        assertThatThrownBy(() -> access.requireOwnedTask(actor, "agent.view", "gamma")).isInstanceOf(PlatformException.class);
+        db.update("update app.platform_user_role set status='REVOKED', revoked_at=now() where tenant_id=? and platform_role='USER'",
+                actor.tenantId());
+        assertThatThrownBy(() -> access.requireOwnedTask(actor, "agent.plan.confirm", "beta")).isInstanceOf(PlatformException.class);
+    }
+
+    @Test
     void managementChangesAreTenantBoundAuditedAndIdempotent() {
         var source = new DriverManagerDataSource(TestDatabase.url("AGENT_DB_URL_ROLE_STORAGE"),
                 TestDatabase.user(), TestDatabase.password());
