@@ -439,7 +439,11 @@ public final class PublishedRunProxy implements AutoCloseable {
         }
 
         void fail(int status) {
-            fail(status, "GATEWAY_RUN_REJECTED", "运行请求未完成，请检查权限或服务状态");
+            if (status == 403) {
+                fail(403, "SYS-AUTH-403", "当前授权不允许运行该应用");
+            } else {
+                fail(status, "GATEWAY_RUN_REJECTED", "运行请求未完成，请检查权限或服务状态");
+            }
         }
 
         private void fail(int status, String code, String message) {

@@ -321,7 +321,7 @@ public final class PublishedRunHttp implements AutoCloseable {
             var text=java.nio.charset.StandardCharsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
                     .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT).decode(java.nio.ByteBuffer.wrap(bytes));
             var r=JSON.readTree(text.toString());
-            if(r==null||!r.isObject()||r.size()!=4||!r.has("code")||!r.has("message")||!r.has("data")||!r.has("traceId")
+            if(r==null||!r.isObject()||!validErrorFields(r,policy)||!r.has("code")||!r.has("message")||!r.has("data")||!r.has("traceId")
                     ||!r.path("code").isTextual()||!r.path("message").isTextual()||r.path("message").textValue().length()>512
                     ||!r.path("data").isNull()||!(r.path("traceId").isNull()||r.path("traceId").isTextual()&&r.path("traceId").textValue().length()<=128))return unavailable();
             String code=r.path("code").textValue();
@@ -337,6 +337,28 @@ public final class PublishedRunHttp implements AutoCloseable {
             if(status==403&&Set.of("SYS-AUTH-403","AUTHORITY_EXPIRED","AUTHORITY_CONTEXT_MISSING","RUN_AUTHORITY_DENIED","MATERIAL_SCOPE_MISSING_OR_CHANGED","AUTHORITY_DENIED").contains(code))return new PlatformException(403,code,"当前授权不允许读取运行状态");
             return unavailable();
         }catch(Exception invalid){return unavailable();}
+    }
+
+    private static boolean validErrorFields(com.fasterxml.jackson.databind.JsonNode envelope, Policy policy) {
+        if (envelope.size() == 4) return true;
+        if (policy != Policy.PUBLISHED_METADATA) return false;
+        // ApiResponse omits null diagnostics. Never forward dependency-provided text to the caller.
+        var names = envelope.fieldNames();
+        while (names.hasNext()) {
+            String name = names.next();
+            var value = envelope.get(name);
+            switch (name) {
+                case "code", "message", "data", "traceId" -> { }
+                case "userMessage", "category" -> {
+                    if (!value.isTextual() || value.textValue().length() > 512) return false;
+                }
+                case "retryable" -> {
+                    if (!value.isBoolean()) return false;
+                }
+                default -> { return false; }
+            }
+        }
+        return true;
     }
 
     @Override

@@ -98,13 +98,19 @@ class GatewayIamPortalHttpTest {
                 reply(request, 200, ApiResponse.ok(Map.of("runId", "r_fixture")));
             }
         });
-        for (var name : List.of("draft", "missing")) {
+        for (var name : List.of("draft", "missing", "legacy", "restricted")) {
             engine.createContext("/internal/apps/" + name + "/published-metadata", request -> {
                 try (request; var authority = iam.client("app")) {
                     var call = new ServiceCall("app", MetadataSelectors.ACTION, MetadataSelectors.published("tenant-a", name));
                     authority.authorize(request.getRequestHeaders().getFirst("Authorization").substring(7), call);
                     boolean draft = name.equals("draft");
-                    reply(request, draft ? 409 : 404, new ApiResponse<>(draft ? "APP_UNAVAILABLE" : "APP_NOT_FOUND", "fixture", null, null));
+                    if (name.equals("legacy")) {
+                        reply(request, 404, new ApiResponse<>("APP_NOT_FOUND", "fixture", null, null));
+                    } else {
+                        int status = name.equals("restricted") ? 403 : draft ? 409 : 404;
+                        String code = status == 403 ? "SYS-AUTH-403" : draft ? "APP_UNAVAILABLE" : "APP_NOT_FOUND";
+                        reply(request, status, ApiResponse.error(status, code, "fixture"));
+                    }
                 }
             });
         }
@@ -230,11 +236,18 @@ class GatewayIamPortalHttpTest {
         var result = postEvaluation("/admin/apps/ops/runs", iam.portal(), "{}");
         assertThat(result.statusCode()).as(result.body()).isEqualTo(200);
         assertThat(Json.read(result.body()).at("/data/runId").asText()).isEqualTo("r_fixture");
-        for (var failure : Map.of("draft", "APP_UNAVAILABLE", "missing", "APP_NOT_FOUND").entrySet()) {
+        for (var failure : Map.of("draft", "APP_UNAVAILABLE", "missing", "APP_NOT_FOUND", "legacy", "APP_NOT_FOUND").entrySet()) {
             var rejected = postEvaluation("/admin/apps/" + failure.getKey() + "/runs", iam.portal(), "{}");
             assertThat(rejected.statusCode()).as(rejected.body()).isEqualTo(failure.getKey().equals("draft") ? 409 : 404);
             assertThat(Json.read(rejected.body()).path("code").asText()).isEqualTo(failure.getValue());
         }
+    }
+
+    @Test
+    void publishedRunReportsDeniedApplicationWithAuthorizationCode() throws Exception {
+        var denied = postEvaluation("/admin/apps/restricted/runs", iam.portal(), "{}");
+        assertThat(denied.statusCode()).as(denied.body()).isEqualTo(403);
+        assertThat(Json.read(denied.body()).path("code").asText()).isEqualTo("SYS-AUTH-403");
     }
 
     @Test
