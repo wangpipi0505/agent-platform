@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static cn.agentplatform.engine.infra.SignedEngineRequest.signedRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -232,28 +233,6 @@ class EvaluationRunPostgresTest {
             String handlerName, java.util.function.Supplier<Object> invoke) throws Exception {
         var call = PortalRuntimeRoutes.call(new ServiceRoutePolicy(), method, path);
         return signedRequest(iam, gateway, decoder, receiver, controller, method, path, handlerName, call, invoke);
-    }
-
-    private static JsonNode signedRequest(LoopbackAuthority iam, CurrentAuthorityClient gateway, TrustedJwtDecoder decoder,
-            ServiceAuthorization receiver, Object controller, String method, String path, String handlerName,
-            ServiceCall call, java.util.function.Supplier<Object> invoke) throws Exception {
-        var ticket = gateway.exchange(iam.portal(), call);
-        var handler = new HandlerMethod(controller, java.util.Arrays.stream(controller.getClass().getMethods())
-                .filter(m -> m.getName().equals(handlerName)).findFirst().orElseThrow());
-        var request = new MockHttpServletRequest(method, path);
-        request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,
-                path.replaceFirst("/apps/[^/]+", "/apps/{code}").replaceFirst("/s_[a-f0-9]{32}", "/{id}"));
-        var response = new MockHttpServletResponse();
-        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(decoder.decode(ticket.value()), List.of()));
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        try {
-            receiver.preHandle(request, response, handler);
-            return Json.tree(invoke.get()).path("data");
-        } finally {
-            receiver.afterCompletion(request, response, handler, null);
-            SecurityContextHolder.clearContext();
-            RequestContextHolder.resetRequestAttributes();
-        }
     }
 
     private static void awaitSuccess(JdbcTemplate db, String run,

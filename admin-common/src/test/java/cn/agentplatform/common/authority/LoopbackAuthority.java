@@ -707,9 +707,12 @@ public final class LoopbackAuthority implements AutoCloseable {
                             && Set.of("evaluation.run", "evaluation.turn").contains(decision.call.action()))) throw AuthorityProtocol.denied();
             return;
         }
+        boolean portalTask = "PORTAL".equals(grant.origin)
+                && IntegrationTaskRoutes.CREATE.equals(grant.originalCall.action())
+                && IntegrationTaskRoutes.versionRoot(grant.originalCall.resource());
         if(!ServiceRoutePolicy.localRunAdvance(caller,call,"delegated","DELEGATED",grant.origin)
             || !"engine".equals(grant.originalCall.target())
-            || !"proxy.engine.post.RunController.run".equals(grant.originalCall.action())
+            || !("proxy.engine.post.RunController.run".equals(grant.originalCall.action()) || portalTask)
             || !Objects.equals(grant.originalCall.resource(),call.resource()))throw AuthorityProtocol.denied();
     }
     static void route(String caller,ServiceCall call,String mode){
