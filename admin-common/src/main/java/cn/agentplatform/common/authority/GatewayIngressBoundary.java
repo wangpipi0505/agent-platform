@@ -123,7 +123,7 @@ public final class GatewayIngressBoundary implements AsyncHandlerInterceptor {
                 || !"POST".equals(r.getMethod())
                 || r.getQueryString() != null
                 || !r.getContextPath().isEmpty()
-                || !r.getRequestURI().matches("/admin/apps/[A-Za-z][A-Za-z0-9_-]{0,63}/runs"))
+                || PortalRuntimeRoutes.publishedRunApp(r.getMethod(), r.getRequestURI()) == null)
             throw denied();
         return Purpose.RUN;
     }

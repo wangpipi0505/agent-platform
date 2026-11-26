@@ -35,12 +35,24 @@ class PublishedMetadataHttpTest {
     static final AtomicInteger metadataReads=new AtomicInteger(),payloadReads=new AtomicInteger();
     static final List<String> statements=new ArrayList<>();
     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
-    @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
+    @Import({PlatformAccessService.class,PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
     static class Receiver {
         @Bean AuthorityProperties authorityProperties(){return fixture.config("app");}
         @Bean cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingSourcesRepository(JdbcTemplate jdbc){return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(jdbc,new DataSourceTransactionManager(ds));}
         @Bean DataSource dataSource(){return ds;}
-        @Bean JdbcTemplate jdbc(){return new JdbcTemplate(ds){@Override public <T> List<T> query(String sql,RowMapper<T> mapper,Object...args){statements.add(sql);if(sql.contains("candidate_sha256")&&sql.contains("left join"))metadataReads.incrementAndGet();else payloadReads.incrementAndGet();return super.query(sql,mapper,args);}};}
+        @Bean JdbcTemplate jdbc() {
+            return new JdbcTemplate(ds) {
+                @Override public <T> List<T> query(String sql, RowMapper<T> mapper, Object... args) {
+                    statements.add(sql);
+                    if (sql.contains("candidate_sha256") && sql.contains("left join")) {
+                        metadataReads.incrementAndGet();
+                    } else if (!sql.contains("from app.platform_user_role")) {
+                        payloadReads.incrementAndGet();
+                    }
+                    return super.query(sql, mapper, args);
+                }
+            };
+        }
         @Bean AppService apps(JdbcTemplate jdbc){return new AppService(jdbc,new DataSourceTransactionManager(ds),"http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1","http://127.0.0.1:1");}
         @Bean JwtDecoder decoder(){return new TrustedJwtDecoder(fixture.config("app"),fixture.clock(),true);}
         @Bean(destroyMethod="close") HttpCurrentAuthorityClient current(){return fixture.client("app");}
@@ -61,7 +73,7 @@ class PublishedMetadataHttpTest {
         app=(ServletWebServerApplicationContext)application.run();
     }
     @AfterAll static void close(){if(app!=null)app.close();if(fixture!=null)fixture.close();}
-    @BeforeEach void seed(){fixture.clearFiniteGrants();tenant="d3a0-"+UUID.randomUUID();fixture.portalActor(new Actor(tenant,"alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));seedApp(tenant,CODE,"PUBLISHED",1);seedApp(tenant,"other","PUBLISHED",1);metadataReads.set(0);payloadReads.set(0);statements.clear();}
+    @BeforeEach void seed(){fixture.clearFiniteGrants();tenant="d3a0-"+UUID.randomUUID();fixture.portalActor(new Actor(tenant,"alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));db.update("insert into app.platform_user_role(tenant_id,subject,platform_role,granted_by) values(?,'alice','USER','fixture')",tenant);seedApp(tenant,CODE,"PUBLISHED",1);seedApp(tenant,"other","PUBLISHED",1);metadataReads.set(0);payloadReads.set(0);statements.clear();}
     static void seedApp(String tenant,String code,String status,Integer version){
         db.update("insert into app.application(tenant_id,code,name,type,status,current_version_no,created_by) values(?,?,'Metadata test','CHAT',?,?,'alice')",tenant,code,status,version);
         db.update("insert into app.app_draft(tenant_id,app_id,app_code,config) select tenant_id,id,code,'{\"private\":\"payload-secret\"}'::jsonb from app.application where tenant_id=? and code=?",tenant,code);
@@ -77,6 +89,13 @@ class PublishedMetadataHttpTest {
         String source=fixture.portal();try(var gateway=fixture.client("gateway")){var t=gateway.exchange(source,query(CODE));assertThat(t.value()).isNotEqualTo(source);
         var r=request("GET",path(CODE),t.value());assertThat(r.statusCode()).as(r.body()).isEqualTo(200);
         var data=Json.read(r.body()).path("data");assertThat(data.fieldNames()).toIterable().containsExactlyInAnyOrder("appCode","versionId","versionNo","versionSha256");assertThat(data.path("versionSha256").asText()).isEqualTo(SHA);assertThat(data.path("versionId").asLong()).isPositive();assertThat(data.path("versionNo").asInt()).isEqualTo(1);assertThat(metadataReads).hasValue(1);assertThat(payloadReads).hasValue(0);assertThat(statements).allSatisfy(sql->assertThat(sql).doesNotContain("snapshot","config","definition","layout","select a.*"));}
+    }
+    @Test void scopedUserCannotDiscoverThePublishedVersionOfAnotherApp() throws Exception {
+        db.update("update app.platform_user_role set app_scope=jsonb_build_array('other') where tenant_id=?", tenant);
+        var response = request("GET", path(CODE), ticket(query(CODE)));
+        assertThat(response.statusCode()).isEqualTo(403);
+        assertThat(metadataReads).hasValue(0);
+        assertThat(payloadReads).hasValue(0);
     }
     @Test void forgedSelectorTenantCodeOrDigestCannotQueryPg()throws Exception{
         for(var resource:List.of(MetadataSelectors.published(tenant,"other"),MetadataSelectors.published("wrong-tenant",CODE),new ResourceBinding(MetadataSelectors.KIND,MetadataSelectors.published(tenant,CODE).id(),Digest.sha256("fake-descriptor")))){

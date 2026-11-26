@@ -1,0 +1,21 @@
+[INFO] Tests run: 33, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 38.13 s -- in cn.agentplatform.gateway.application.GatewayPublishedRunProxyTest
+[INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.927 s -- in cn.agentplatform.gateway.infra.GatewayIamPortalHttpTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.268 s -- in cn.agentplatform.app.application.PublishedMetadataHttpTest
+[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.723 s -- in cn.agentplatform.app.application.PublishedPayloadHttpTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.145 s -- in cn.agentplatform.engine.infra.ChatSessionsTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.128 s -- in cn.agentplatform.engine.infra.IntegrationTaskReadPostgresTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.353 s -- in cn.agentplatform.engine.infra.OutputPolicyPostgresTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.78 s -- in cn.agentplatform.engine.infra.RunSchedulerPostgresTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.180 s -- in cn.agentplatform.engine.infra.RunSchedulerTimingTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.747 s -- in cn.agentplatform.engine.infra.SessionEventsEndpointTest
+[INFO] BUILD SUCCESS
+
+npm test
+ Test Files  83 passed (83)
+      Tests  638 passed (638)
+
+npm run build
+> vue-tsc --noEmit && vite build --config admin/vite.config.ts && vite build --config webapp/vite.config.ts && vite build --config assistant.js/vite.config.ts && node shared/copy-assistant.mjs
+✓ built in 29.54s
+✓ built in 4.28s
+✓ built in 919ms

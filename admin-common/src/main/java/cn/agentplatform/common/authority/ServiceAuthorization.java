@@ -59,7 +59,8 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         String path = request.getRequestURI();
         return switch (serviceId) {
             case "app" -> PlatformBuildRoutes.serves(serviceId, method, path) || IntegrationRuntimeRoutes.metadata(method, path);
-            case "engine" -> PortalRuntimeRoutes.matches(method, path) || IntegrationRuntimeRoutes.taskRead(method, path)
+            case "engine" -> PortalRuntimeRoutes.publishedRunApp(method, path) != null
+                    || PortalRuntimeRoutes.matches(method, path) || IntegrationRuntimeRoutes.taskRead(method, path)
                     || IntegrationRuntimeRoutes.taskCancel(method, path) || IntegrationRuntimeRoutes.resultFileRead(method, path);
             case "model", "skill" -> PlatformBuildRoutes.serves(serviceId, method, path);
             case "monitor" -> EvaluationCandidateBinding.portalTemplate(method, path) != null
@@ -178,6 +179,16 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
             AuthorityProtocol.same("gateway", jwt.getClaimAsString("caller"));
             AuthorityProtocol.same("INTEGRATION", operation.path("origin_kind").asText());
             AuthorityProtocol.same(IntegrationRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI()), call);
+        }
+        String publishedApp = PortalRuntimeRoutes.publishedRunApp(request.getMethod(), request.getRequestURI());
+        if ("engine".equals(serviceId) && publishedApp != null) {
+            AuthorityProtocol.same("delegated", mode);
+            AuthorityProtocol.same("gateway", jwt.getClaimAsString("caller"));
+            AuthorityProtocol.same("PORTAL", operation.path("source_kind").textValue());
+            AuthorityProtocol.same("PORTAL", operation.path("origin_kind").textValue());
+            AuthorityProtocol.same("proxy.engine.post.RunController.run", call.action());
+            if (!IntegrationTaskRoutes.versionRoot(call.resource())
+                    || !call.resource().id().startsWith(publishedApp + "@")) throw AuthorityProtocol.denied();
         }
         boolean integration = "INTEGRATION".equals(operation.path("origin_kind").textValue());
         String integrationApp = IntegrationTaskRoutes.application(request.getMethod(), request.getRequestURI());

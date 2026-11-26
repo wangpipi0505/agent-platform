@@ -1,0 +1,57 @@
+{
+  "rows": [
+    {
+      "method": "GET",
+      "path": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "principal": "admin"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions",
+      "http": 200,
+      "code": "OK",
+      "sessionId": "s_fcae045990d945b889a46b42bf818eef"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_fcae045990d945b889a46b42bf818eef",
+      "http": 200,
+      "code": "OK",
+      "sessionId": "s_fcae045990d945b889a46b42bf818eef"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_fcae045990d945b889a46b42bf818eef/events/stream",
+      "http": 200
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/sessions/s_fcae045990d945b889a46b42bf818eef/turns",
+      "http": 200,
+      "code": "OK",
+      "runId": "r_b243cac280664e73bc044f46f41a4ef7"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/apps/r22e2-real-v2/runs",
+      "http": 200,
+      "code": "OK",
+      "runId": "r_fd5b9cdb84664d9f997b79325e15afc2"
+    },
+    {
+      "path": "/oauth/session/revoke",
+      "http": 200
+    },
+    {
+      "path": "/auth/session (revoked)",
+      "http": 401
+    },
+    {
+      "path": "/auth/session (independent)",
+      "http": 200
+    }
+  ],
+  "issues": []
+}

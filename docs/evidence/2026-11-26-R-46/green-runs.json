@@ -1,0 +1,143 @@
+{
+  "current": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/admin/apps/r22e2-real-v2/runs",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "runId": "r_1cd11cf3c84c4975809e9d6d4f221d99",
+        "appCode": "r22e2-real-v2",
+        "status": "PENDING",
+        "eventsWatermark": 0,
+        "inputs": {
+          "message": "first"
+        },
+        "output": {},
+        "fileRefs": [],
+        "error": {},
+        "errorRaw": {},
+        "versionRefs": {
+          "appVer": 1,
+          "traceId": "87d01042-bc62-479a-b547-b6677614b7b3",
+          "modelCfg": {
+            "modelEntryId": 3
+          },
+          "ontology": [],
+          "skillVers": {},
+          "flowDefSha": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "promptShas": {},
+          "promptVers": {},
+          "evalReportId": null,
+          "interpreterVer": "1.0"
+        },
+        "nodes": [
+          {
+            "id": 20,
+            "node_def_id": null,
+            "node_type": "AGENT",
+            "status": "READY",
+            "pause_seq": null,
+            "error": {},
+            "output": {},
+            "started_at": null,
+            "ended_at": null,
+            "nodeInstanceId": 20,
+            "nodeDefId": null
+          }
+        ],
+        "events": [],
+        "paused": null
+      },
+      "traceId": "87d01042-bc62-479a-b547-b6677614b7b3"
+    }
+  },
+  "implicit": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/admin/apps/r22e2-real-v2/runs",
+    "http": 200,
+    "body": {
+      "code": "OK",
+      "message": "",
+      "data": {
+        "runId": "r_0c60d81444cc402db2329c45feed876c",
+        "appCode": "r22e2-real-v2",
+        "status": "PENDING",
+        "eventsWatermark": 0,
+        "inputs": {
+          "message": "first"
+        },
+        "output": {},
+        "fileRefs": [],
+        "error": {},
+        "errorRaw": {},
+        "versionRefs": {
+          "appVer": 1,
+          "traceId": "3c3b8184-27c0-4c35-92c2-242bb8dff050",
+          "modelCfg": {
+            "modelEntryId": 3
+          },
+          "ontology": [],
+          "skillVers": {},
+          "flowDefSha": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "promptShas": {},
+          "promptVers": {},
+          "evalReportId": null,
+          "interpreterVer": "1.0"
+        },
+        "nodes": [
+          {
+            "id": 21,
+            "node_def_id": null,
+            "node_type": "AGENT",
+            "status": "READY",
+            "pause_seq": null,
+            "error": {},
+            "output": {},
+            "started_at": null,
+            "ended_at": null,
+            "nodeInstanceId": 21,
+            "nodeDefId": null
+          }
+        ],
+        "events": [],
+        "paused": null
+      },
+      "traceId": "3c3b8184-27c0-4c35-92c2-242bb8dff050"
+    }
+  },
+  "stale": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/admin/apps/r22e2-real-v2/runs",
+    "http": 409,
+    "body": {
+      "code": "APP_PUBLICATION_CHANGED",
+      "message": "应用发布版本已变化，请刷新后重试",
+      "data": null,
+      "traceId": null
+    }
+  },
+  "ungranted": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/admin/apps/r22e2-real-v2/runs",
+    "http": 403,
+    "body": {
+      "code": "SYS-AUTH-403",
+      "message": "当前授权不允许运行该应用",
+      "data": null,
+      "traceId": null
+    }
+  },
+  "ungranted-stale": {
+    "method": "POST",
+    "path": "http://127.0.0.1:18880/admin/apps/r22e2-real-v2/runs",
+    "http": 403,
+    "body": {
+      "code": "SYS-AUTH-403",
+      "message": "当前授权不允许运行该应用",
+      "data": null,
+      "traceId": null
+    }
+  }
+}

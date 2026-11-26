@@ -14,6 +14,7 @@ public final class PortalRuntimeRoutes {
     private static final String CODE = "[A-Za-z][A-Za-z0-9_-]{0,63}";
     private static final String SESSION_ID = "s_[a-f0-9]{32}";
     private static final String SESSION = "/v1/apps/{code}/sessions/{id}";
+    private static final Pattern PUBLISHED_RUN = Pattern.compile("/admin/apps/(" + CODE + ")/runs");
     private static final Pattern COLLECTION =
             Pattern.compile("/v1/apps/(" + CODE + ")/(sessions|tasks|memories)");
     private static final Pattern DETAIL = Pattern.compile(
@@ -23,6 +24,11 @@ public final class PortalRuntimeRoutes {
             SESSION, SESSION + "/turns", SESSION + "/events", SESSION + "/events/stream");
 
     private PortalRuntimeRoutes() {}
+
+    public static String publishedRunApp(String method, String path) {
+        var match = PUBLISHED_RUN.matcher(path);
+        return "POST".equals(method) && match.matches() ? match.group(1) : null;
+    }
 
     public static boolean matches(String method, String path) {
         var detail = DETAIL.matcher(path);

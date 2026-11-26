@@ -7,7 +7,7 @@ import { useTheme } from "../../shared/theme";
 import SessionList from "./SessionList.vue";
 import MyMemories from "./MyMemories.vue";
 import AssistantChat from "./AssistantChat.vue";
-import PortalConversation from "./PortalConversation.vue";
+import PortalConversation from "../../shared/PortalConversation.vue";
 import { createPortalSession, trustedPortal } from "../../shared/portal-auth";
 import type { SessionView } from "./demo-flow";
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue';
-import { useApi, useAuth } from '../../shared/api';
-import { streamEvents } from '../../debug-panel/events';
-import { readTranscript, followTranscript } from '../../shared/portal-conversation';
+import { useApi, useAuth } from './api';
+import { streamEvents } from '../debug-panel/events';
+import { readTranscript, followTranscript } from './portal-conversation';
 
 const props = defineProps<{ appCode: string; sessionId: string }>();
 const emit = defineEmits<{ created: [id: string, title: string] }>();

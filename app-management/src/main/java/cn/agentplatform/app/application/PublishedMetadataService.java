@@ -12,10 +12,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class PublishedMetadataService {
     private final JdbcTemplate db;
-    public PublishedMetadataService(JdbcTemplate db){this.db=db;}
+    private final PlatformAccessService access;
+
+    public PublishedMetadataService(JdbcTemplate db) {
+        this.db = db;
+        this.access = new PlatformAccessService(db);
+    }
     public PublishedMetadata published(String code){
         var actor=Actor.current();
         actor=AuthorityContext.requireFor(actor,MetadataSelectors.published(actor.tenantId(),code)).actor();
+        access.require(actor, PlatformAccessService.VIEW, code);
         return read(actor.tenantId(),code);
     }
 

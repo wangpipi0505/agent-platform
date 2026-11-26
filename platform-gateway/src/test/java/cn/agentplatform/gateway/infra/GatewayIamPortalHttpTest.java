@@ -95,6 +95,10 @@ class GatewayIamPortalHttpTest {
                 var call = new ServiceCall("engine", "proxy.engine.post.RunController.run",
                         new ResourceBinding("app-version", "ops@1", VERSION_SHA));
                 authority.authorize(request.getRequestHeaders().getFirst("Authorization").substring(7), call);
+                if (Json.read(new String(request.getRequestBody().readAllBytes(), StandardCharsets.UTF_8)).has("versionNo")) {
+                    reply(request, 403, ApiResponse.error(403, "SYS-AUTH-403", "engine accepts only the ticket version"));
+                    return;
+                }
                 reply(request, 200, ApiResponse.ok(Map.of("runId", "r_fixture")));
             }
         });
@@ -241,6 +245,17 @@ class GatewayIamPortalHttpTest {
             assertThat(rejected.statusCode()).as(rejected.body()).isEqualTo(failure.getKey().equals("draft") ? 409 : 404);
             assertThat(Json.read(rejected.body()).path("code").asText()).isEqualTo(failure.getValue());
         }
+    }
+
+    @Test
+    void consoleVersionMustMatchThePublishedTicketBeforeEngineAdmission() throws Exception {
+        var route = "/admin/apps/ops/runs";
+        var current = postEvaluation(route, iam.portal(), "{\"versionNo\":1,\"inputs\":{\"message\":\"hello\"}}");
+        assertThat(current.statusCode()).as(current.body()).isEqualTo(200);
+        assertThat(Json.read(current.body()).at("/data/runId").asText()).isEqualTo("r_fixture");
+        var changed = postEvaluation(route, iam.portal(), "{\"versionNo\":2}");
+        assertThat(changed.statusCode()).isEqualTo(409);
+        assertThat(Json.read(changed.body()).path("code").asText()).isEqualTo("APP_PUBLICATION_CHANGED");
     }
 
     @Test

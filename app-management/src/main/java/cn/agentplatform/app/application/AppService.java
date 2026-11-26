@@ -39,6 +39,7 @@ public class AppService {
     private final JdbcTemplate db;
     /** 发布绑定观测的持久化协作对象：只做 {@code app.publish_pin} 的读写，事务仍归本类。 */
     private final AppPublicationStore publicationStore;
+    private final PlatformAccessService platformAccess;
     /**
      * 草稿生命周期协作对象：新建/复制/保存/元数据/停启用归档回滚/删除与生命周期日志已搬入
      * {@link AppLifecycleService}，本类只保留兼容门面。发布预检与提交仍在本类，二者事务边界互不相同。
@@ -132,6 +133,7 @@ public class AppService {
         this.engineUrl = engineUrl;
         this.db = db;
         this.publicationStore = new AppPublicationStore(db);
+        this.platformAccess = new PlatformAccessService(db);
         // 生命周期子步只需读取与两条校验，用窄接口反向注入；发布预检/提交仍留在本类，
         // 因此不存在"生命周期依赖发布实现"的反向环。
         this.lifecycle =
@@ -536,6 +538,11 @@ public class AppService {
             // PG also bounds server-side statement/lock waits. FOR SHARE requires a writable tx.
             db.execute("set local statement_timeout='2000ms'");
             db.execute("set local lock_timeout='1500ms'");
+            // Delegated portal access is scoped by the platform grant. Integration identities
+            // already carry the credential's app-version binding and its verified role mapping.
+            if ("PORTAL".equals(current.operation().originKind())) {
+                platformAccess.require(actor, PlatformAccessService.VIEW, code);
+            }
             var locked = db.query(
                     "select a.id,a.code,a.status,a.current_version_no from app.application a"
                             + " where a.tenant_id=? and a.code=? for share of a",

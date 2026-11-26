@@ -17,6 +17,7 @@ import ManifestPanel from "./workspace/ManifestPanel.vue";
 import AppPublishPanel from "./workspace/AppPublishPanel.vue";
 import AppRunPanel from "./workspace/AppRunPanel.vue";
 import AppChatPanel from "./workspace/AppChatPanel.vue";
+import PortalConversation from "../../../shared/PortalConversation.vue";
 import AppRunsPanel from "./workspace/AppRunsPanel.vue";
 import {
   emptyAppDetail,
@@ -48,6 +49,8 @@ const tab = computed(() => {
 const app = ref<AppDetail>(emptyAppDetail());
 usePageTitle(() => app.value?.name || code.value || "智能体工作区");
 const flow = ref<any>();
+const livePublishedChat = computed(() =>
+  import.meta.env.VITE_MOCK !== 'true' && app.value.type === 'CHAT' && Number(app.value.currentVersionNo) > 0);
 const supportsChat = computed(() => app.value.type !== 'FLOW' || code.value === 'user-governance-assistant' || flow.value?.definition?.trigger === 'CHAT');
 const catalogs = ref({
   models: [] as any[],
@@ -488,6 +491,12 @@ onMounted(() => void load());
         @validation-change="onManifestState"
         @saved="onManifestSaved"
         @check="check"
+      />
+      <PortalConversation
+        v-else-if="livePublishedChat && (tab === 'run' || (tab === 'chat' && app.status === 'PUBLISHED'))"
+        :key="code"
+        :app-code="code"
+        session-id=""
       />
       <AppChatPanel
         v-else-if="tab === 'chat'"

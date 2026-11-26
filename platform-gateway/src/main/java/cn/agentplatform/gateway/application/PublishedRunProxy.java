@@ -263,7 +263,7 @@ public final class PublishedRunProxy implements AutoCloseable {
                                                 worker = Thread.currentThread();
                                                 workerStarts.incrementAndGet();
                                                 try {
-                                                    upstream(portal, body);
+                                                    upstream(portal, body, (com.fasterxml.jackson.databind.node.ObjectNode) node);
                                                 } finally {
                                                     observeHandles();
                                                     workerExits.incrementAndGet();
@@ -282,7 +282,8 @@ public final class PublishedRunProxy implements AutoCloseable {
             }
         }
 
-        private void upstream(GatewayIngressBoundary.PortalRequest portal, byte[] body) {
+        private void upstream(GatewayIngressBoundary.PortalRequest portal, byte[] body,
+                com.fasterxml.jackson.databind.node.ObjectNode request) {
             try {
                 synchronized (this) {
                     live();
@@ -296,6 +297,17 @@ public final class PublishedRunProxy implements AutoCloseable {
                                 cancellation);
                 synchronized (this) {
                     live();
+                }
+                // The console selects a published version. Only the current metadata proof can
+                // authorize it; the engine receives the pin in the ticket, never in client input.
+                if (request.has("versionNo")) {
+                    var selected = request.get("versionNo");
+                    if (!selected.isIntegralNumber() || !selected.canConvertToInt() || selected.intValue() < 1)
+                        throw new PlatformException(400, "INVALID_VERSION", "版本号必须为正整数");
+                    if (selected.intValue() != version.versionNo())
+                        throw new PlatformException(409, "APP_PUBLICATION_CHANGED", "应用发布版本已变化，请刷新后重试");
+                    request.remove("versionNo");
+                    body = JSON.writeValueAsBytes(request);
                 }
                 // Independent original-token exchange, never metadata grant resume or a recreated
                 // main.
@@ -342,7 +354,7 @@ public final class PublishedRunProxy implements AutoCloseable {
                 installWriter();
             } catch (PlatformException e) {
                 if (e.status() == 404 && "APP_NOT_FOUND".equals(e.code())
-                        || e.status() == 409 && "APP_UNAVAILABLE".equals(e.code())) {
+                        || e.status() == 409 && Set.of("APP_UNAVAILABLE", "APP_PUBLICATION_CHANGED").contains(e.code())) {
                     fail(e.status(), e.code(), e.getMessage());
                 } else {
                     fail(e.status());

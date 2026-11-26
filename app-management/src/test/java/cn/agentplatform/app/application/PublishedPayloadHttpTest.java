@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.*;
 /**
  * Real app receiver + actual signed authority HTTP + dedicated PG. No Gateway/RunController execution.
  * 连接坐标走 {@link TestDatabase}：D3B 专用库 URL 由 {@code AGENT_DB_URL_PAYLOAD} 显式给出
- * （库名被下方断言钉死为 agent_platform_iam_app_payload_v12 且迁移定格 V104，须先行独立准备，
+ * （库名被下方断言钉死为 agent_platform_iam_app_payload_v12 且发布读取与授权表迁移至 V126，须先行独立准备，
  * 测试不建库）；账号口令走 {@code AGENT_DB_USER}/{@code AGENT_DB_PASSWORD}；未给专用坐标时整类跳过。
  */
 @org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
@@ -52,7 +52,7 @@ class PublishedPayloadHttpTest {
     static volatile String mode="iam";
 
     @Configuration(proxyBeanMethods=false) @EnableAutoConfiguration @EnableWebSecurity
-    @Import({PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
+    @Import({PlatformAccessService.class,PublishedMetadataController.class,PublishedMetadataService.class,AppController.class,TemplateService.class,PlatformErrors.class,OnboardingApplicationSources.class,cn.agentplatform.app.infra.AppAuthorityTransport.class})
     static class Receiver {
         @Bean cn.agentplatform.app.infra.OnboardingImportSourceRepository onboardingSourcesRepository(JdbcTemplate jdbc){return new cn.agentplatform.app.infra.OnboardingImportSourceRepository(jdbc,new DataSourceTransactionManager(ds));}
         @Bean DataSource dataSource(){return ds;}
@@ -98,7 +98,7 @@ class PublishedPayloadHttpTest {
     @BeforeAll static void start()throws Exception{
         assertThat(TestDatabase.password()).isNotBlank();
         ds=new DriverManagerDataSource(TestDatabase.url("AGENT_DB_URL_PAYLOAD"),TestDatabase.user(),TestDatabase.password());
-        Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").target("104").load().migrate();db=new JdbcTemplate(ds);
+        Flyway.configure().dataSource(ds).schemas("app").defaultSchema("app").locations("classpath:db/migration").target("126").load().migrate();db=new JdbcTemplate(ds);
         assertThat(db.queryForObject("select current_database()",String.class)).isEqualTo("agent_platform_iam_app_payload_v12");
         fixture=new LoopbackAuthority();startReceiver();
     }
@@ -110,6 +110,7 @@ class PublishedPayloadHttpTest {
     @AfterAll static void close(){if(app!=null)app.close();if(fixture!=null)fixture.close();}
     @BeforeEach void seed(){
         fixture.clearFiniteGrants();fixture.ticketMutation(c->{});fixture.revoked(false);fixture.unavailable(false);tenant="d3b-"+UUID.randomUUID();fixture.portalActor(new Actor(tenant,"alice",Set.of("EDITOR"),Map.of("dataLabels",Set.of("confidential","restricted"),"region",Set.of("A"))));
+        db.update("insert into app.platform_user_role(tenant_id,subject,platform_role,granted_by) values(?,'alice','USER','fixture')",tenant);
         source=fixture.portal();seedApp(CODE,"PUBLISHED",1);seedApp("other","PUBLISHED",1);versionId=db.queryForObject("select id from app.app_version where tenant_id=? and app_code=? and version_no=1",Long.class,tenant,CODE);resetObservers();
     }
     static void resetObservers(){currents.set(0);writes.set(0);commits.set(0);statements.clear();beforeCurrent=()->{};afterCurrent=()->{};afterPayload=()->{};afterCommit=()->{};beforeSql=s->{};afterSql=s->{};}
