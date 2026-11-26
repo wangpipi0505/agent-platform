@@ -1,0 +1,24 @@
+overlays/gateway.yml
+12:    portal:
+13-      attribute-allowlist: bizSystemCode,userId
+14-      attribute-value-allowlist:
+15-        bizSystemCode: agent-platform
+16-        userId: admin
+22-      role-allowlist: ADMIN,BUILDER,OPERATOR,USER,admin
+23-      scope-allowlist: platform.access
+r22-candidates/r23-20261126/gateway-application.yml
+35:    portal:
+41-      role-allowlist: ${AGENT_PORTAL_ROLE_ALLOWLIST:EDITOR}
+42-      attribute-allowlist: ${AGENT_PORTAL_ATTRIBUTE_ALLOWLIST:region,dataLabels}
+43-      scope-allowlist: ${AGENT_PORTAL_SCOPE_ALLOWLIST:platform.access}
+      2 action=model.chat-stream
+      2 action=portal.session.read
+      4 action=proxy.engine.get.ChatSessionController.stream
+     36 action=run.advance
+      6 operation=authorize
+      2 operation=exchange
+     36 operation=resume
+     44 outcome=deny
+      2 reason=INTEGRATION_POLICY_REJECTED
+     38 reason=portal_session_revoked
+      4 reason=RESUME_GRANT_UNKNOWN

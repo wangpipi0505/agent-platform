@@ -1,0 +1,296 @@
+{
+  "app": "r22e2-real-v2",
+  "steps": [
+    {
+      "stage": "issue credential",
+      "http": 200,
+      "code": "OK",
+      "traceId": "26c44f5b-b446-4c29-81a6-0f4cbbf5c27b"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/apps/r22e2-real-v2/tasks",
+      "http": 200,
+      "code": "OK",
+      "traceId": "9ac17aa2-8137-4973-bd37-c041dbbebaaa",
+      "state": "QUEUED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "f6a2a226-8832-474a-b639-ca81b62d290e",
+      "state": "QUEUED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "66257900-c883-4922-9793-215edf18fc8b",
+      "state": "RUNNING"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "a51168ab-e76d-4bd6-9216-57832456c068",
+      "state": "RUNNING"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "06a6f380-9aac-49fe-bf82-26529d0abfa6",
+      "state": "RUNNING"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "580147ae-66e6-4b58-b2c6-aa83536d31a9",
+      "state": "SUCCEEDED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593",
+      "http": 200,
+      "code": "OK",
+      "traceId": "0f9d3cb3-8af2-4e36-aba1-420e334962db",
+      "state": "SUCCEEDED"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593/events",
+      "http": 200,
+      "code": "OK",
+      "traceId": "34c47393-3f0d-4b15-814a-774696b9b375",
+      "state": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/tasks/task-8892b0ec92ea4704a593/result",
+      "http": 200,
+      "code": "OK",
+      "traceId": "181dd29a-9386-4788-8e17-0308b013bf8a",
+      "state": "SUCCEEDED"
+    }
+  ],
+  "credentialId": 15,
+  "creation": {
+    "taskId": "task-8892b0ec92ea4704a593",
+    "state": "QUEUED",
+    "stateVersion": 2,
+    "mode": "AGENT",
+    "purpose": "EXECUTE",
+    "appCode": "r22e2-real-v2",
+    "goal": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "principalId": "e2-r45-7b2aacb5:sgv-op-1",
+    "createdAt": "2026-11-27 02:42:37.625518",
+    "parentTaskId": null,
+    "role": null,
+    "subtasks": [],
+    "availableActions": [
+      "CANCEL"
+    ],
+    "recovery": null,
+    "steps": [
+      {
+        "step_id": "entry",
+        "state": "READY",
+        "attempt_no": 1
+      }
+    ],
+    "dependencies": [],
+    "eventWatermark": 2,
+    "hasCompression": false
+  },
+  "result": {
+    "taskId": "task-8892b0ec92ea4704a593",
+    "state": "SUCCEEDED",
+    "result": {
+      "text": "R22_OK",
+      "usage": {
+        "totalTokens": 73,
+        "promptTokens": 55,
+        "completionTokens": 18
+      },
+      "admission": {
+        "exact": true,
+        "inputTokens": 243,
+        "reservedTokens": 755
+      },
+      "toolCalls": [],
+      "actualModel": {
+        "endpoint": "http://127.0.0.1:18990",
+        "modelName": "deepseek-flash",
+        "providerId": 1,
+        "modelEntryId": 1
+      },
+      "sourceEvidence": {
+        "runId": "r_b436ea55d1514d4c8870d4bc22c48159",
+        "factId": 60,
+        "producer": "model",
+        "tenantId": "demo",
+        "principalId": "e2-r45-7b2aacb5:sgv-op-1",
+        "executionPath": "MODEL_HTTP",
+        "externalTruth": "NOT_ASSESSED",
+        "invocationRef": "material:m_e6de7dfb1ea9458aba2ae7f992ab224c:MAIN",
+        "schemaVersion": 1,
+        "producerEnvironment": "REAL"
+      }
+    },
+    "resultSummary": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "artifacts": [
+      {
+        "bytes": 606,
+        "runId": "r_b436ea55d1514d4c8870d4bc22c48159",
+        "digest": "da330fcbc442ae984a74c82c95ac24ed28efdbf4e1298f8eecb11adc049305f4",
+        "mediaType": "application/json",
+        "publishedDigest": "7d495960d0810d2cb96a4652634fd53c55269c2ffd10c7a6c0be07b2e1e96e99",
+        "artifactId": "task_result_b436ea55d1514d4c8870d4bc22c48159",
+        "downloadPath": "/v1/runs/r_b436ea55d1514d4c8870d4bc22c48159/artifacts/task_result_b436ea55d1514d4c8870d4bc22c48159/download"
+      }
+    ]
+  },
+  "detail": {
+    "taskId": "task-8892b0ec92ea4704a593",
+    "state": "SUCCEEDED",
+    "stateVersion": 4,
+    "mode": "AGENT",
+    "purpose": "EXECUTE",
+    "appCode": "r22e2-real-v2",
+    "goal": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "principalId": "e2-r45-7b2aacb5:sgv-op-1",
+    "createdAt": "2026-11-27 02:42:37.625518",
+    "parentTaskId": null,
+    "role": null,
+    "subtasks": [],
+    "availableActions": [
+      "REISSUE",
+      "EXPORT"
+    ],
+    "recovery": null,
+    "steps": [
+      {
+        "step_id": "entry",
+        "state": "SUCCEEDED",
+        "attempt_no": 1
+      }
+    ],
+    "dependencies": [],
+    "eventWatermark": 5,
+    "hasCompression": false
+  },
+  "events": {
+    "nextAfterSeq": 5,
+    "events": [
+      {
+        "data": {
+          "goal": "仅回复校验字符 R22_OK。无需使用任何工具。",
+          "mode": "AGENT"
+        },
+        "type": "TASK_ACCEPTED",
+        "occurredAt": "2026-11-27 02:42:37.625518",
+        "seq": 1
+      },
+      {
+        "data": {
+          "runId": "r_b436ea55d1514d4c8870d4bc22c48159",
+          "stepId": "entry"
+        },
+        "type": "STEP_READY",
+        "occurredAt": "2026-11-27 02:42:37.625518",
+        "seq": 2
+      },
+      {
+        "data": {
+          "owner": "task-81a3d5e6-b7e8-4239-80ec-51b78497d563",
+          "stepId": "entry",
+          "generation": 1
+        },
+        "type": "STEP_STARTED",
+        "occurredAt": "2026-11-27 02:42:37.960071",
+        "seq": 3
+      },
+      {
+        "data": {
+          "state": "SUCCEEDED",
+          "stepId": "entry",
+          "generation": 1,
+          "resultDigest": "da330fcbc442ae984a74c82c95ac24ed28efdbf4e1298f8eecb11adc049305f4"
+        },
+        "type": "STEP_FINISHED",
+        "occurredAt": "2026-11-27 02:42:45.49154",
+        "seq": 4
+      },
+      {
+        "data": {
+          "runId": "r_b436ea55d1514d4c8870d4bc22c48159",
+          "state": "SUCCEEDED"
+        },
+        "type": "TASK_FINISHED",
+        "occurredAt": "2026-11-27 02:42:45.49154",
+        "seq": 5
+      }
+    ],
+    "taskId": 47,
+    "truncated": false
+  },
+  "afterRestart": {
+    "taskId": "task-8892b0ec92ea4704a593",
+    "state": "SUCCEEDED",
+    "result": {
+      "text": "R22_OK",
+      "usage": {
+        "totalTokens": 73,
+        "promptTokens": 55,
+        "completionTokens": 18
+      },
+      "admission": {
+        "exact": true,
+        "inputTokens": 243,
+        "reservedTokens": 755
+      },
+      "toolCalls": [],
+      "actualModel": {
+        "endpoint": "http://127.0.0.1:18990",
+        "modelName": "deepseek-flash",
+        "providerId": 1,
+        "modelEntryId": 1
+      },
+      "sourceEvidence": {
+        "runId": "r_b436ea55d1514d4c8870d4bc22c48159",
+        "factId": 60,
+        "producer": "model",
+        "tenantId": "demo",
+        "principalId": "e2-r45-7b2aacb5:sgv-op-1",
+        "executionPath": "MODEL_HTTP",
+        "externalTruth": "NOT_ASSESSED",
+        "invocationRef": "material:m_e6de7dfb1ea9458aba2ae7f992ab224c:MAIN",
+        "schemaVersion": 1,
+        "producerEnvironment": "REAL"
+      }
+    },
+    "resultSummary": "仅回复校验字符 R22_OK。无需使用任何工具。",
+    "artifacts": [
+      {
+        "publishedDigest": "7d495960d0810d2cb96a4652634fd53c55269c2ffd10c7a6c0be07b2e1e96e99",
+        "mediaType": "application/json",
+        "digest": "da330fcbc442ae984a74c82c95ac24ed28efdbf4e1298f8eecb11adc049305f4",
+        "runId": "r_b436ea55d1514d4c8870d4bc22c48159",
+        "bytes": 606,
+        "downloadPath": "/v1/runs/r_b436ea55d1514d4c8870d4bc22c48159/artifacts/task_result_b436ea55d1514d4c8870d4bc22c48159/download",
+        "artifactId": "task_result_b436ea55d1514d4c8870d4bc22c48159"
+      }
+    ]
+  },
+  "credentialRevocation": {
+    "http": 200,
+    "code": "OK"
+  }
+}

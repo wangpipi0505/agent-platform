@@ -1,0 +1,89 @@
+{
+  "before-grant-app": {
+    "method": "GET",
+    "path": "/v1/apps/r22e2-real-v2/sessions",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "dcad2a8e-e872-4097-b791-af9d03ed9478"
+  },
+  "existing-grants": {
+    "method": "GET",
+    "path": "/admin/platform-authorization/grants?subject=operatorA",
+    "http": 200,
+    "code": "OK",
+    "traceId": "a9d64e5b-23a4-40cc-b4b1-2e3b0e796010"
+  },
+  "grant-operator": {
+    "method": "PUT",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "a8478da1-019d-4f0f-bbd8-2fa15130fd95"
+  },
+  "owner-identity": {
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 200,
+    "code": "OK",
+    "traceId": "18bf6550-6405-4d23-b2fb-3ffd4d0a3768",
+    "principalId": "admin",
+    "roles": [
+      "ADMIN"
+    ],
+    "pages": [
+      "/assets/mcp",
+      "/platform/authorizations",
+      "/model/management",
+      "/model/prompt-templates",
+      "/skills",
+      "/assets/plugins",
+      "/evaluations",
+      "/apps",
+      "/audit",
+      "/assets/rules"
+    ],
+    "capabilities": [
+      "skill.manage",
+      "agent.build",
+      "auth.grant",
+      "agent.publish",
+      "audit.read",
+      "model.manage",
+      "agent.view",
+      "plugin.manage"
+    ]
+  },
+  "second-identity": {
+    "method": "GET",
+    "path": "/auth/session",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "758b1772-0aab-4a7c-a93f-1e11ec566da5"
+  },
+  "owner-create": {
+    "method": "POST",
+    "path": "/v1/apps/r22e2-real-v2/sessions",
+    "http": 200,
+    "code": "OK",
+    "traceId": "191ffa07-fe36-4cbc-9efc-02b6070d2af4",
+    "sessionId": "s_252d8a9d65ab4439891a641145f58f10"
+  },
+  "second-create": {
+    "method": "POST",
+    "path": "/v1/apps/satellite-planning-assistant/sessions",
+    "http": 403,
+    "code": "SYS-AUTH-403",
+    "traceId": "411ebd5c-1a7b-4610-9f72-a75344f6b89f"
+  },
+  "revoke-grant": {
+    "method": "DELETE",
+    "path": "/admin/platform-authorization/grants",
+    "http": 200,
+    "code": "OK",
+    "traceId": "a2c981a9-aec8-4ac1-96a9-9e9c86aafbaf"
+  },
+  "revoke-operator-session": {
+    "http": 200,
+    "code": null
+  }
+}

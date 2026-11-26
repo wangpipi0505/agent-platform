@@ -74,6 +74,30 @@ class PortalClaimMapperTest {
             }finally{SecurityContextHolder.clearContext();}
         }
     }
+    @Test void signedSubjectDeterminesPortalUserOwnershipForEachLogin() throws Exception {
+        try (var issuer = new LoopbackIssuer()) {
+            var base = issuer.config().portal();
+            var ceiling = Map.of("bizSystemCode", Set.of("platform"), "userId", Set.of("{sub}"));
+            var profile = new AuthorityProperties.Portal(true, base.issuer(), base.jwksUri(), base.audience(),
+                    base.clientId(), base.roleAllowlist(), ceiling.keySet(), ceiling, base.scopeAllowlist());
+            var mapper = new PortalClaimMapper(profile);
+            var claims = issuer.portal(TrustedJwtDecoderTest.NOW);
+            for (String subject : List.of("admin", "operatorA")) {
+                claims.put("sub", subject);
+                claims.put("attributes", Map.of("bizSystemCode", List.of("platform"), "userId", List.of(subject)));
+                assertThat(mapper.map(jwt(claims)).actor().attributes().get("userId")).containsExactly(subject);
+            }
+            for (var attributes : List.of(
+                    Map.of("bizSystemCode", List.of("platform")),
+                    Map.of("bizSystemCode", List.of("platform"), "userId", List.of("admin")),
+                    Map.of("bizSystemCode", List.of("platform"), "userId", List.of("operatorA", "admin")),
+                    Map.of("bizSystemCode", List.of("other"), "userId", List.of("operatorA")))) {
+                claims.put("attributes", attributes);
+                assertThatThrownBy(() -> mapper.map(jwt(claims))).isInstanceOf(PlatformException.class);
+            }
+        }
+    }
+
     @Test void knownOwnershipValuesRequireExactSingleSignedValuesAndLabelsCannotDisappear()throws Exception{
         try(var issuer=new LoopbackIssuer()){
             var base=issuer.config().portal();

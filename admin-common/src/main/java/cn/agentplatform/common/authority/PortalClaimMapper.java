@@ -19,7 +19,12 @@ public final class PortalClaimMapper {
         roles.removeAll(Set.of("SERVICE","GATEWAY_AUTH"));
         var attrs=attributes(c.get("attributes"));
         // Sensitivity labels remain obligations even when absent from the permission allowlist.
-        var mapped=ClaimCeiling.attributes(attrs,portal.attributeValueAllowlist());
+        var ownershipLimits = portal.attributeValueAllowlist();
+        if (Set.of("{sub}").equals(ownershipLimits.get("userId"))) {
+            ownershipLimits = new HashMap<>(ownershipLimits);
+            ownershipLimits.put("userId", Set.of(subject));
+        }
+        var mapped = ClaimCeiling.attributes(attrs, ownershipLimits);
         var scopes=new HashSet<>(scopes(c.get("scope")));scopes.retainAll(portal.scopeAllowlist());
         return new Mapped(new Actor(tenant,subject,roles,mapped),Set.copyOf(scopes));
     }
