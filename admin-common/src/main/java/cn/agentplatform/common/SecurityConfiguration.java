@@ -171,9 +171,7 @@ public class SecurityConfiguration {
             if (!trusted) return authorities.convert(jwt);
             var result = new ArrayList<GrantedAuthority>();
             if ("user".equals(jwt.getClaimAsString("token_use"))) {
-                jwt.getClaimAsStringList("roles").stream()
-                        .filter(role -> !Set.of("SERVICE", "GATEWAY_AUTH").contains(role))
-                        .forEach(role -> result.add(new SimpleGrantedAuthority("ROLE_" + role)));
+                // The portal scope admits a verified identity; app resolves its platform grants.
                 String scope = jwt.getClaimAsString("scope");
                 if (scope != null && !scope.isEmpty())
                     Arrays.stream(scope.split(" ")).forEach(s -> result.add(new SimpleGrantedAuthority("SCOPE_" + s)));

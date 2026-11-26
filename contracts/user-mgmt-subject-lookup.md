@@ -16,3 +16,9 @@
 `deploy/compose-test.yaml` 透传目录地址、绑定租户和密钥配置。通过此编排启动时，设置
 `AGENT_AUTHORITY_IDENTITY_URL` 和 `AGENT_AUTHORITY_IDENTITY_SUBJECT_KEY_REF=env:AGENT_SECRET_USER_MGMT_SUBJECT_LOOKUP`，
 并由部署环境注入 `AGENT_SECRET_USER_MGMT_SUBJECT_LOOKUP`。
+
+## 门户身份与应用授权
+
+真实目录的角色用于校验账号及展示身份。门户签名凭据中的目录角色不授予 Spring 角色或服务间委派权限，已签发且仍有效的门户凭据遵循同一规则。签名主体、身份源可用性、租户、属性约束、票据期限及单登录撤销照常核验。
+
+平台在 app 的有效授权表按租户、主体、能力及应用范围判定访问。门户的会话、任务与记忆入口每次请求都读取当前应用可见范围，已有会话的详情、轮次与重连也重新判定。随后由引擎按应用及本人会话核对归属。接入方仍使用集成档案的签名作用域与角色映射。

@@ -102,6 +102,8 @@ class PlatformRoleStorageTest {
                     + " values('tenant-a',?,'BUILDER','[\"app-a\"]','fixture')", subject);
             assertThat(access.session(Actor.current()).roles()).containsExactly("BUILDER");
             assertThat(access.session(Actor.current()).globalRoles()).isEmpty();
+            assertThat(access.session(Actor.current()).viewScope().allows("app-a")).isTrue();
+            assertThat(access.session(Actor.current()).viewScope().allows("other-app")).isFalse();
             assertThat(access.session(Actor.current()).capabilities()).doesNotContain("skill.manage", "plugin.manage");
             assertThat(access.scope(Actor.current(), PlatformAccessService.VIEW).codes())
                     .containsExactly("app-a");

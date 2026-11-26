@@ -13,6 +13,23 @@ import java.util.*;
 /** PLAT-12：subject 快照的不可变、拷贝语义与映射键确定性（guard/审计/出站共用同一份）。 */
 public class ActorSubjectSnapshotTest {
     @Test
+    void portalActorDoesNotRecoverPrivilegesFromDirectoryRoleNames() {
+        var jwt = Jwt.withTokenValue("verified-portal").header("alg", "RS256")
+                .subject("directory-user").claim("tenant_id", "demo").claim("token_use", "user")
+                .claim("roles", List.of("ADMIN", "user_manager")).build();
+        var context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new JwtAuthenticationToken(jwt, List.of(
+                new org.springframework.security.core.authority.SimpleGrantedAuthority("SCOPE_platform.access"))));
+        var previous = SecurityContextHolder.getContext();
+        try {
+            SecurityContextHolder.setContext(context);
+            assertThat(Actor.current().roles()).isEmpty();
+        } finally {
+            SecurityContextHolder.setContext(previous);
+        }
+    }
+
+    @Test
     void snapshotIsImmutableAndIsolatedFromCallerOwnedCollections() {
         Set<String> roles = new HashSet<>(List.of("EDITOR"));
         Map<String, Set<String>> attributes = new HashMap<>();

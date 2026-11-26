@@ -100,6 +100,22 @@ class DelegatedSubjectTokenTest extends DelegatedTestSupport {
         return sign(overrides);
     }
 
+    @Test
+    void directoryRolesDoNotGrantPlatformRolesOnPortalDelegation() {
+        long now = Instant.now().getEpochSecond();
+        var source = sign(Map.of("roles", List.of("common_user", "ADMIN"), "iat", now, "nbf", now, "exp", now + 300));
+        var response = postJson("/internal/authorize", basic(GATEWAY, GATEWAY_SECRET),
+                body("authorize", call(APP, ACTION), "directory-role", Map.of("subject_token", source)));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        var jwks = new ObjectMapper().valueToTree(keys.jwks());
+        var claims = TestJwt.verifiedClaims(response.getBody().get("assertion").asText(),
+                "agent-authority-decision+jwt", TestJwt.publicKey(jwks.get("keys").get(0)));
+        assertThat(claims.get("sub").asText()).isEqualTo(DelegatedTickets.SUBJECT);
+        assertThat(claims.get("roles").isArray()).isTrue();
+        assertThat(claims.get("roles").size()).isZero();
+        assertThat(claims.at("/initial_ceiling/roles").size()).isZero();
+    }
+
     private String sign(Map<String, Object> overrides) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("iss", ISSUER);

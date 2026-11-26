@@ -1624,7 +1624,10 @@ public final class DelegatedAuthority {
         String subjectClient = identity.clientId();
         String tenantId = required(claims, "tenant_id");
         String principalId = required(claims, "sub");
-        Set<String> roles = rolesOf(claims.get("roles"));
+        // Directory roles describe the authenticated identity. Only app's current grants
+        // confer platform permissions, including for login tokens issued before this change.
+        rolesOf(claims.get("roles"));
+        Set<String> roles = Set.of();
         Map<String, Set<String>> attributes = attributesOf(claims.get("attributes"));
         Map<String, Object> actor = actor(tenantId, principalId, roles, attributes);
         // 回显给客户端的 initial_ceiling 必须是 Actor 形状：客户端用 actor() 反序列化后重算

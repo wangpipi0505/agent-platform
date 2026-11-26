@@ -159,6 +159,8 @@ public class GatewayController {
             }
             if (PortalRuntimeRoutes.matches(req.getMethod(), req.getRequestURI())) {
                 var source = GatewayIngressBoundary.claimRuntime(req);
+                var client = authority.orElseThrow(() -> new PlatformException(
+                        503, "DEPENDENCY_UNAVAILABLE", "门户运行授权服务暂不可用"));
                 var call = PortalRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());
                 if ("proxy.engine.post.TaskController.create".equals(call.action())) {
                     var metadata = taskMetadata == null ? null : taskMetadata.getIfAvailable();
@@ -166,10 +168,15 @@ public class GatewayController {
                         throw new PlatformException(503, "DEPENDENCY_UNAVAILABLE", "应用发布查询暂不可用");
                     var version = metadata.lookup(source.sourceToken(), source.subject(), call.resource().id());
                     call = new ServiceCall(call.target(), call.action(), version.resource());
+                } else {
+                    if (platformAccess == null)
+                        throw new PlatformException(503, "PLATFORM_ACCESS_UNAVAILABLE", "平台授权暂不可用");
+                    // The matched route fixes the app code; reads and reconnects need a current grant too.
+                    String appCode = req.getRequestURI().split("/", 5)[3];
+                    var lookup = PlatformBuildRoutes.call(serviceRoutes, "GET", PlatformBuildRoutes.SESSION, source.subject());
+                    platformAccess.requireApplicationView(client.exchange(source.sourceToken(), lookup), source.subject(), appCode);
                 }
-                var ticket = authority.orElseThrow(() -> new PlatformException(
-                        503, "DEPENDENCY_UNAVAILABLE", "门户运行授权服务暂不可用"))
-                        .exchange(source.sourceToken(), call);
+                var ticket = client.exchange(source.sourceToken(), call);
                 forward(req, res, call.target(), ticket.value());
                 return;
             }

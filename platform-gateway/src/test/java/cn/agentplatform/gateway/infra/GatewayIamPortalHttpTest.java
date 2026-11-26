@@ -17,6 +17,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -61,6 +62,11 @@ class GatewayIamPortalHttpTest {
     private static final String CANDIDATE_SHA = Digest.sha256("r37-evaluation-candidate");
     private static final String SESSION = "/v1/apps/ops/sessions/s_0123456789abcdef0123456789abcdef";
     private static String base;
+
+    @BeforeEach
+    void resetTestGrants() {
+        iam.clearFiniteGrants();
+    }
 
     @BeforeAll
     static void boot() throws Exception {
@@ -266,6 +272,13 @@ class GatewayIamPortalHttpTest {
     }
 
     @Test
+    void portalSessionReadRequiresCurrentApplicationGrant() throws Exception {
+        var denied = get(SESSION.replace("/ops/", "/restricted/"), iam.portal());
+        assertThat(denied.statusCode()).as(denied.body()).isEqualTo(403);
+        assertThat(Json.read(denied.body()).path("code").asText()).isEqualTo("PLATFORM_CAPABILITY_DENIED");
+    }
+
+    @Test
     void exactPortalSessionRoutesCarryTheCursorAndRequireALiveTicket() throws Exception {
         assertThat(get(SESSION, iam.portal()).statusCode()).isEqualTo(200);
         assertThat(postEvaluation(SESSION + "/turns", iam.portal(), "{}").statusCode()).isEqualTo(200);
@@ -341,7 +354,8 @@ class GatewayIamPortalHttpTest {
             String bearer = request.getRequestHeaders().getFirst("Authorization");
             var actor = authority.authorize(bearer.substring("Bearer ".length()), call).actor();
             var result = Map.of("tenantId", actor.tenantId(), "principalId", actor.principalId(),
-                    "roles", List.of("BUILDER"), "capabilities", List.of("agent.build"), "pages", List.of("/apps"));
+                    "roles", List.of("BUILDER"), "capabilities", List.of("agent.build", "agent.view"), "pages", List.of("/apps"),
+                    "viewScope", Map.of("all", false, "codes", List.of("ops")));
             byte[] body = Json.write(ApiResponse.ok(result)).getBytes(StandardCharsets.UTF_8);
             request.getResponseHeaders().set("Content-Type", "application/json");
             request.sendResponseHeaders(200, body.length);

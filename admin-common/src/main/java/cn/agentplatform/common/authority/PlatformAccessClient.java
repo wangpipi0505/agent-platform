@@ -43,6 +43,15 @@ public final class PlatformAccessClient {
         requireCapability(session(ticket, subject), capability);
     }
 
+    public void requireApplicationView(ServiceTicket ticket, SubjectKey subject, String appCode) {
+        var access = session(ticket, subject);
+        requireCapability(access, "agent.view");
+        var scope = access.path("viewScope");
+        if (!scope.path("all").isBoolean() || !scope.path("codes").isArray()) throw unavailable();
+        if (!scope.path("all").booleanValue() && !contains(scope.path("codes"), appCode))
+            throw new PlatformException(403, "PLATFORM_CAPABILITY_DENIED", "当前平台授权不允许访问此应用");
+    }
+
     boolean isGlobalAdministrator(ServiceTicket ticket, SubjectKey subject, String capability) {
         var access = session(ticket, subject);
         requireCapability(access, capability);

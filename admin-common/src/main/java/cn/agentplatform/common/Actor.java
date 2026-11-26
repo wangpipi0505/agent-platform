@@ -37,8 +37,13 @@ public record Actor(
         }
         Set<String> roles = new HashSet<>();
         Object roleClaim = jwt.getClaims().get("roles");
-        if (roleClaim instanceof Collection<?> list)
+        if ("user".equals(jwt.getClaimAsString("token_use"))) {
+            auth.getAuthorities().stream().map(a -> a.getAuthority())
+                    .filter(name -> name.startsWith("ROLE_"))
+                    .forEach(name -> roles.add(name.substring(5)));
+        } else if (roleClaim instanceof Collection<?> list) {
             list.forEach(r -> roles.add(String.valueOf(r)));
+        }
         if ("RS256".equals(jwt.getHeaders().get("alg")))
             roles.removeAll(Set.of("SERVICE", "GATEWAY_AUTH"));
         Map<String, Set<String>> attrs = new HashMap<>();
