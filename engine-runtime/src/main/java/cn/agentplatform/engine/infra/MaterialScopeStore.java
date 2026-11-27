@@ -251,7 +251,8 @@ public final class MaterialScopeStore {
                                 + " run_id=?",
                             b.runId());
             if (checks.get("blocked_reason") != null) throw denied();
-            same(proof.current().decisionId(), checks.get("last_decision_id"));
+            if (!proof.current().decisionId().equals(checks.get("last_decision_id")))
+                throw new RunAuthorityStore.CurrentObservationChanged();
         }
     }
 

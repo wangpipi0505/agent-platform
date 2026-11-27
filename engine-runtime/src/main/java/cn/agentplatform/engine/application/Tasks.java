@@ -9,11 +9,13 @@ import cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope;
 import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.authority.PortalTaskRoutes;
-import cn.agentplatform.engine.infra.TraceStore;
 import cn.agentplatform.engine.infra.PortalRuntimeAccess.Scope;
+import cn.agentplatform.engine.infra.RunAuthorityStore;
+import cn.agentplatform.engine.infra.TraceStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -929,11 +931,20 @@ public class Tasks {
                 """, Long.class, taskId, StepExecutionMapping.ENTRY);
         if (!protectedRuns.isEmpty()) {
           long run = protectedRuns.getFirst();
-          var proof = runAuthority.currentRetained(run);
-          store.cancelPortalTaskEntry(taskId, run, StepExecutionMapping.ENTRY, actor, proof, (state, version) -> {
-            if (!markCancelled(taskId, state, version, actor))
-              throw new IllegalStateException("TASK_CANCEL_STATE_CHANGED");
-          });
+          for (int attempt = 1; ; attempt++) {
+            try {
+              var proof = runAuthority.currentRetained(run);
+              store.cancelPortalTaskEntry(taskId, run, StepExecutionMapping.ENTRY, actor, proof, (state, version) -> {
+                if (!markCancelled(taskId, state, version, actor))
+                  throw new IllegalStateException("TASK_CANCEL_STATE_CHANGED");
+              });
+              break;
+            } catch (RunAuthorityStore.CurrentObservationChanged | ConcurrencyFailureException concurrent) {
+              if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(ownedTask(taskId, actor).get("state"))) break;
+              if (attempt == 3)
+                throw new PlatformException(409, "STATE_VERSION_CONFLICT", "任务状态正在更新，请重试取消");
+            }
+          }
           return detail(taskId, actor);
         }
       }

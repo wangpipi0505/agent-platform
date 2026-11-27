@@ -379,6 +379,13 @@ public final class RunAuthorityStore {
     static void hash(String s){if(s==null||!s.matches("[a-f0-9]{64}"))throw denied();}
     static void same(Object a,Object b){if(!Objects.equals(a,b))throw denied();}
     public static PlatformException denied(){return new PlatformException(403,"RUN_AUTHORITY_DENIED","运行授权或材料范围不匹配");}
+
+    /** A concurrent authority check replaced this observation, so it cannot authorize a write. */
+    public static final class CurrentObservationChanged extends PlatformException {
+        public CurrentObservationChanged() {
+            super(403, "RUN_AUTHORITY_DENIED", "运行授权或材料范围不匹配");
+        }
+    }
 }
 
 

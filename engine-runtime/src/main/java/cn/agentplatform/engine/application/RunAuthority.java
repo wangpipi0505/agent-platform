@@ -77,7 +77,8 @@ public final class RunAuthority {
         }
         // Local CAS/commit/infrastructure errors retain their real type; they are not new online
         // denials.
-        if (!store.recordCheck(binding, proof, null, backoff)) throw RunAuthorityStore.denied();
+        if (!store.recordCheck(binding, proof, null, backoff))
+            throw new RunAuthorityStore.CurrentObservationChanged();
         proof.requireVerified();
         return proof;
     }
