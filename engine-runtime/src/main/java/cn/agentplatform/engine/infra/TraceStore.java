@@ -850,7 +850,8 @@ public class TraceStore {
                       join engine.task_dispatch d on d.task_id=t.id and d.step_id=?
                       join engine.run r on r.id=d.run_id and r.tenant_id=t.tenant_id
                         and r.principal_id=t.principal_id and r.app_code=t.app_code
-                      where t.id=? and r.id=? and r.trigger_type='TASK'
+                      where t.id=? and r.id=? and r.trigger_type in ('TASK','CHAT')
+                        and r.snapshot->'chatSession' is null
                         and t.tenant_id=? and t.principal_id=?
                         and not exists (select 1 from engine.task_integration_scope s where s.task_id=t.id)
                       for update of t
@@ -863,7 +864,8 @@ public class TraceStore {
             String state = (String) row.get("state");
             if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state)) return null;
             var view = writable(run, proof);
-            if (!"PORTAL".equals(view.binding().sourceKind())) throw denied();
+            if (!"PORTAL".equals(view.binding().sourceKind())
+                    || !"app-version".equals(view.binding().root().kind())) throw denied();
             int cancelled = db.update("""
                     update engine.run set status='CANCELLED',stop_reason='USER_CANCEL',ended_at=now()
                     where id=? and status not in ('SUCCEEDED','FAILED','CANCELLED')
