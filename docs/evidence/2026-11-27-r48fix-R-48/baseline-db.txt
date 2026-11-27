@@ -1,0 +1,18 @@
+           task            | task_state | reason_code |                run                 | status | invocation | sdk_attempts | model_log | error_code | send_seq 
+---------------------------+------------+-------------+------------------------------------+--------+------------+--------------+-----------+------------+----------
+ task-da52b2a09d614cdfaa0d | FAILED     |             | r_321d778e6c4043bea54ae8f926832ffd | FAILED | UNKNOWN    |            1 |           |            |         
+(1 row)
+
+ seq |       type       |          created_at           | seconds_since_start 
+-----+------------------+-------------------------------+---------------------
+   1 | RUN_STARTED      | 2026-11-27 01:14:27.515193+00 |               0.621
+   2 | NODE_STARTED     | 2026-11-27 01:14:27.515193+00 |               0.621
+   3 | MODEL_DISPATCHED | 2026-11-27 01:14:27.515193+00 |               0.621
+   4 | NODE_FAILED      | 2026-11-27 01:14:53.38507+00  |              26.491
+   5 | RUN_FINISHED     | 2026-11-27 01:14:53.38507+00  |              26.491
+(5 rows)
+
+model
+      1 HttpMediaTypeNotAcceptableException
+      3 initialTokenCount
+engine

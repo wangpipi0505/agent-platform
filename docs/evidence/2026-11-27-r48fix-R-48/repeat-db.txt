@@ -1,0 +1,19 @@
+           task            | task_state | reason_code |                run                 | status | invocation | sdk_attempts | model_log | error_code | send_seq 
+---------------------------+------------+-------------+------------------------------------+--------+------------+--------------+-----------+------------+----------
+ task-09bfe605cca748daab22 | FAILED     |             | r_c9eb344ee3bf4e82b52fd0c4ad48c4b8 | FAILED | FAILED     |            1 |           |            |         
+(1 row)
+
+ seq |       type       |          created_at           | seconds_since_start 
+-----+------------------+-------------------------------+---------------------
+   1 | RUN_STARTED      | 2026-11-27 01:25:22.555627+00 |               0.585
+   2 | NODE_STARTED     | 2026-11-27 01:25:22.555627+00 |               0.585
+   3 | MODEL_DISPATCHED | 2026-11-27 01:25:22.555627+00 |               0.585
+   4 | NODE_FAILED      | 2026-11-27 01:25:25.082307+00 |               3.112
+   5 | RUN_FINISHED     | 2026-11-27 01:25:25.082307+00 |               3.112
+(5 rows)
+
+  stop_reason  | retryable | sdk_attempts | provider_logs | reservations 
+---------------+-----------+--------------+---------------+--------------
+ SYS-MODEL-503 | false     |            1 |             0 |            0
+(1 row)
+
