@@ -1,0 +1,264 @@
+PostgreSQL namespace id: 014772e6462f3eb7ecb23c5d3f1faf2aed45c38b5f7c4e33f3eed145a49531bc
+Ready: s4_e2e
+Ready: loopback relays
+Ready: isolated real authority
+Ready: app
+Ready: engine
+Ready: skill
+Ready: model
+Ready: monitor
+Ready: gateway
+Imported scoped source rows: model.provider 1
+Imported scoped source rows: model.entry 1
+Imported scoped source rows: model.binding_snapshot 1
+Imported scoped source rows: app.application 3
+Imported scoped source rows: app.app_draft 3
+Imported scoped source rows: app.app_version 3
+Isolated IAM roles: ADMIN,USER model entry: deepseek-flash
+
+S-4 directed IAM regression
+
+S1 直接任务链
+  [PASS] 真实 ADMIN 受理 AGENT
+  [PASS] 受理返回公共任务号
+  [PASS] 受理或排队状态
+  [PASS] 同请求号同参数重放
+  [PASS] 重放返回原任务
+  [PASS] 同号异参拒绝
+  [PASS] 同号异参拒绝原因码
+  [PASS] 本人任务详情
+  [PASS] 详情事件水位
+  [PASS] 任务事件增量
+  [PASS] 受理事件可读
+  [PASS] 追赶事件游标
+  [PASS] 游标之后无重放
+  [PASS] 真实模型任务结果
+  [PASS] 真实 DeepSeek 执行终态
+  [PASS] 受理独立取消恢复样本
+  [PASS] 控制样本任务号
+  [PASS] 其他真实主体无法操作任务 cancel
+  [PASS] 其他真实主体无法操作任务 cancel原因码
+  [PASS] 其他真实主体无法操作任务 resume
+  [PASS] 其他真实主体无法操作任务 resume原因码
+  [FAIL] 本人取消（期望 200，实际 403；RUN_AUTHORITY_DENIED）
+  [FAIL] 取消写入终态（期望 CANCELLED，实际 undefined）
+  [FAIL] 本人重复取消（期望 200，实际 403；RUN_AUTHORITY_DENIED）
+  [FAIL] 重复取消复用状态版本（期望 true，实际 false）
+  [PASS] 本人恢复查询终态
+
+S2 计划修订与执行
+  [PASS] PLAN 任务受理
+  [PASS] PLAN 任务标识
+  [PASS] 本人追加计划修订
+  [PASS] 计划校验有效
+  [PASS] 首个计划修订
+  [PASS] 过期基线拒绝
+  [PASS] 过期基线拒绝原因码
+  [PASS] 追加第二个修订
+  [PASS] 修订顺序
+  [PASS] 确认摘要错误拒绝
+  [PASS] 确认摘要错误拒绝原因码
+  [PASS] 后续绑定真实计划摘要
+  [PASS] 本人确认计划
+  [PASS] 确认回执带期限
+  [PASS] 确认请求重放
+  [PASS] 重放复用确认凭据
+  [PASS] 计划修订回读
+  [PASS] 确认状态投影
+  [PASS] 已确认计划可执行
+  [PASS] 执行须绑定确认摘要
+  [PASS] 执行已确认修订
+  [PASS] 执行钉住修订
+  [PASS] 执行钉住摘要
+  [PASS] 执行任务公共号
+  [PASS] 执行子任务详情
+  [PASS] 执行子任务用途
+  [PASS] 执行任务回指父计划
+  [PASS] 执行任务事件
+  [PASS] 执行任务事件投影
+
+S3 记忆域
+  [PASS] USER 私有保存 200
+  [PASS] 保存即 ACTIVE
+  [PASS] 同号同参保存幂等（同 memoryId）
+  [PASS] 同号异参保存 409
+  [PASS] 保存重放语义 REQUEST_REPLAY
+  [PASS] USER 写共享 403
+  [PASS] 共享写语义 SCOPE_WRITE_DENIED
+  [PASS] 策略收窄下 ADMIN 写共享同样 403（当前策略 writeScopes 不含 SHARED）
+  [PASS] 策略收窄语义一致 SCOPE_WRITE_DENIED
+  [PASS] 本人列表可见
+  [PASS] 列表项不含正文（单条读正文）
+  [PASS] 他人 PRIVATE 条目对 ADMIN 列表不可见
+  [PASS] q 检索命中
+  [PASS] 单条读取含正文
+  [PASS] 单条接口返回正文
+  [PASS] 过期 CAS 409
+  [PASS] CAS 语义 MEMORY_VERSION_CONFLICT
+  [PASS] CAS 命中更新 200
+  [PASS] 版本推进到 2
+  [PASS] 策略收窄下共享条目读 403（含种子 SHARED 条目）
+  [PASS] 共享读收窄语义 MEMORY_FORBIDDEN
+  [PASS] 非所有人删私有条目 403
+  [PASS] 删除权语义 MEMORY_DELETE_FORBIDDEN
+  [PASS] 所有者撤销 200
+  [PASS] 状态 REVOKED
+  [PASS] REVOKED 退出检索
+  [PASS] REVOKED 单条读取 404（先撤销检索资格）
+  [PASS] 删除必须 requestId（参数校验）
+  [PASS] 删除参数语义 MEMORY_DELETE_REQUEST_INVALID
+  [PASS] 删除即撤销（所有人撤销权）
+  [PASS] 重复删除幂等
+
+S4 插件发现闭环
+  [PASS] ADMIN 登记来源 200
+  [PASS] 来源初始 ACTIVE
+  [PASS] USER 登记来源 403（ADMIN 门）
+  [PASS] discover 受理 202 QUEUED
+  [PASS] 受理态 QUEUED
+  [PASS] 批次号单调起点 1
+  [PASS] 轮询 discovery 至 SUCCEEDED
+  [PASS] 差异确认门材料：changes.added 含 plugin/version/versionId
+  [PASS] 目录版本初始 DISCOVERED
+  [PASS] enable 200（执行器发布版本随成功批次展示过差异→过门）
+  [PASS] 版本 ENABLED
+  [PASS] grant 200（能力子集=版本能力）
+  [PASS] 授权态 GRANTED
+  [PASS] 重复授权 409
+  [PASS] 重复授权语义 PLUGIN_GRANT_EXISTS
+  [PASS] revoke 200
+  [PASS] 撤权态 REVOKED（记录保留不删除）
+  [PASS] 来源列表投影 200（末态留档）
+  [PASS] 登记来源在列表可见
+
+S5 MCP 连接
+  [PASS] 登记 200
+  [PASS] 回执含连接编码
+  [PASS] 初始修订 1
+  [PASS] 同码重复登记 409
+  [PASS] 冲突语义 MCP_CONNECTION_CONFLICT
+  [PASS] USER 登记连接 403（ADMIN 门）
+  [PASS] 配置变更 200
+  [PASS] 端点变更 revision+1（修订绑定纪律）
+  [PASS] 按次建连 test 200（结果投影）
+  [PASS] 未登记传输场景：test FAILED
+  [PASS] 失败携带具体类别 UNREACHABLE（桩不静默成功）
+  [PASS] discover 按次语义同步返回
+  [PASS] 发现整批作废（FAILED）
+  [PASS] 上一代目录原样保留（catalogPreserved）
+  [PASS] 目录查询 200
+  [PASS] 目录差异查询 200（diff 面）
+  [PASS] 差异投影可读
+  [PASS] 无已发布目录时审核 409（先完成一次发现的前置）
+  [PASS] 审核前置语义 MCP_CONNECTION_STATE（catalogBatch=0）
+
+S6 确认中心
+  [PASS] ADMIN 读取确认中心计数
+  [PASS] 四项计数与合计一致
+  [PASS] USER 无管理计数权
+  [PASS] 隔离库临时分配 BUILDER
+  [PASS] 真实门户会话读到 BUILDER
+  [PASS] 已授权 BUILDER 读取计数
+  [PASS] BUILDER 无权读取授权应用以外的管理计数
+  [PASS] BUILDER 无权读取授权应用以外的管理计数原因码
+  [PASS] 回收 BUILDER
+  [PASS] PLAN 任务受理
+  [PASS] PLAN 任务标识
+  [PASS] 本人追加计划修订
+  [PASS] 计划校验有效
+  [PASS] USER 本人待确认修订列表
+  [PASS] 确认前本人修订进入列表
+  [PASS] 确认前重新计数
+  [PASS] 计划计数增加
+  [PASS] 确认待办使用实际摘要
+  [PASS] USER 确认本人修订
+  [PASS] 确认后读取列表
+  [PASS] 已确认修订退出待办
+  [PASS] 确认后重新计数
+  [PASS] 确认后计划计数减少 1
+  [PASS] 拒绝未知待办筛选
+  [PASS] 拒绝未知待办筛选原因码
+
+S7 集成服务
+  [PASS] 真实授权管理签发集成凭据
+  [PASS] 后端合法出票
+  [PASS] 拒绝未登记 Origin
+  [PASS] 错误凭据拒绝
+  [PASS] 集成票受理任务
+  [PASS] 集成任务标识
+  [PASS] 集成任务详情
+  [PASS] 集成任务事件
+  [PASS] 集成任务结果读取
+  [PASS] 集成票无恢复权限
+  [PASS] 集成票跨应用受理拒绝
+  [PASS] 集成票计划受理拒绝
+  [PASS] 签发自然过期样本
+  [PASS] 权威签发的短票带有效期
+  [PASS] 到期前短票正常读取
+  [PASS] 真实短票自然到期返回 401
+  [PASS] 签发仍在有效期内的撤销样本
+  [PASS] 撤销前新票有效
+  [PASS] 集成凭据撤销
+  [PASS] 撤销之后旧集成票不可再用
+
+S8 角色矩阵
+  [PASS] ADMIN 资源清单
+  [PASS] USER 不能读取部署资源清单
+  [PASS] 隔离库临时分配 BUILDER
+  [PASS] 真实门户会话读到 BUILDER
+  [PASS] BUILDER 资源清单
+  [PASS] BUILDER 无权读取授权应用以外的资源清单
+  [PASS] BUILDER 无权读取授权应用以外的资源清单原因码
+  [PASS] BUILDER 无模型供应商配置权
+  [PASS] 回收 BUILDER
+  [PASS] 隔离库临时分配 OPERATOR
+  [PASS] 真实门户会话读到 OPERATOR
+  [PASS] OPERATOR 资源清单
+  [PASS] OPERATOR 无权读取授权应用以外的资源清单
+  [PASS] OPERATOR 无权读取授权应用以外的资源清单原因码
+  [PASS] OPERATOR 本人会话
+  [PASS] OPERATOR 本人会话诊断视图
+  [PASS] 回收 OPERATOR
+  [PASS] USER 本人会话
+  [PASS] USER 无会话诊断视图权限
+  [PASS] 他人会话受归属保护
+  [PASS] USER 管理入口拒绝 /admin/plugin-sources
+  [PASS] USER 管理入口拒绝 /admin/mcp-connections/s4-placeholder/test
+  [PASS] USER 管理入口拒绝 /admin/model-providers
+  [PASS] USER 管理入口拒绝 /admin/apps/r22e2-real-v2/integration/credentials
+  [PASS] 真实授权管理签发集成凭据
+  [PASS] SERVICE 真实接入出票
+  [PASS] SERVICE 管理入口拒绝 /v1/deploy/resource-manifest?appCode=satellite-planning-assistant
+  [PASS] SERVICE 管理入口拒绝 /admin/plugin-sources
+  [PASS] SERVICE 管理入口拒绝 /admin/confirmation-center/counts
+  [PASS] 回收 SERVICE 样本凭据
+  [PASS] USER 独立任务
+  [PASS] 他人任务受归属保护
+{"executed":8,"passed":7,"assertions":191,"failedAssertions":4}
+
+Database isolation and model invocation
+none
+s4_e2e
+deepseek|deepseek-flash|SUCCEEDED|3
+
+Protected task cancellation persistence
+SUCCEEDED|SUCCEEDED|DONE|0|0
+Isolated authority JWKS HTTP 200
+Isolated portal session revoked: ADMIN 200
+Isolated portal session revoked: USER 200
+Revoked temporary directory key: USER 31
+Isolated services, database, and directory keys cleaned
+Verified isolated containers and credentials removed
+
+Main database isolation
+test_tasks|0
+test_credentials|0
+agent-platform-v12/platform-gateway:cand-20261127-25e60699 healthy
+agent-platform-v12/app-management:cand-20261127-25e60699 healthy
+agent-platform-v12/engine-runtime:cand-20261127-25e60699 healthy
+agent-platform-v12/skill-registry:cand-20261127-25e60699 healthy
+agent-platform-v12/model-gateway:cand-20261127-25e60699 healthy
+agent-platform-v12/monitor:cand-20261127-25e60699 healthy
+agent-platform-v12/authority-service:cand-20261127-25e60699 healthy
+agent-platform-v12/frontend:cand-20261127-25e60699 healthy
+R-22 release gate setting unchanged

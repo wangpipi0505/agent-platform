@@ -1,0 +1,57 @@
+2026-11-27T19:12:12+0800
+
+[P3.1] Eight running images and health
+/agent-platform-gateway agent-platform-v12/platform-gateway:cand-20261127-489b5a17 sha256:7826b00410d03af9ff1d72d5655dd6dde89e61ebda17d70c8b9656fd3c4e25a0 healthy
+/agent-platform-app agent-platform-v12/app-management:cand-20261127-489b5a17 sha256:c04bcdd8801ee1281b20dd9750c3407fb30ae8e0a8d71a966de689191e4b279b healthy
+/agent-platform-engine agent-platform-v12/engine-runtime:cand-20261127-489b5a17 sha256:e68aa298412570fb41c61c32391962a4830a8d8b5e2ce5d153ea2d247414d551 healthy
+/agent-platform-skill agent-platform-v12/skill-registry:cand-20261127-489b5a17 sha256:60de21a7b82883c111064cd835ddc2962c92b99dc87f7649d4c489a174b93027 healthy
+/agent-platform-model agent-platform-v12/model-gateway:cand-20261127-489b5a17 sha256:f82a251a27d33e4c58ccd35b97ad46898b1d6685367624d822c77fb3976c88d1 healthy
+/agent-platform-monitor agent-platform-v12/monitor:cand-20261127-489b5a17 sha256:dec962756c87cf02bf5bff48d3ef292d95f2a5a6e1050522f7541237f1e26c60 healthy
+/agent-platform-authority agent-platform-v12/authority-service:cand-20261127-489b5a17 sha256:cf3e405314b76d2da81088de191e187cbdd1227386cd0a4be732a2a004641795 healthy
+/agent-platform-frontend agent-platform-v12/frontend:cand-20261127-489b5a17 sha256:46cbf2ff971258f97341f498f8a473511fb4f1a3221d0033cace251b8500c378 healthy
+
+[P3.2] Successful Flyway head (schema|non-seed|full|all successful)
+app|128|901|t
+engine|238|901|t
+skill|322|901|t
+model|306|306|t
+monitor|506|506|t
+authority_schema_count|0
+
+[P3.4] Portal routes and deployed asset hashes
+healthz 200
+console/ 200
+assistant.js 979c64dc3649bd9f24fa7ca147fe21493a112acd17bd6459298cc04ba3417ce3
+console/index.html ccf2df77cf55de6ae7daf79e171aa767a3c357a9a85db8a5f9151284ea1aaea0
+w/index.html c53303753a6d99ff2016078a2a124e6b1eeed3b3f2ec6f96e0fa715763fd90b3
+embed/manifest.txt 1f501f4f3aae147b8e30199696a51b6827b500fe1bbfbea3a87e7f5cb019a574
+w/assets/index-DFJsT2Ul.js eea9ac7635ba4c9fea8729699fca7c195740891cfb1edac353c686457280e7f3
+w/assets/mock-transport-BElXWTSs.js ca731cb6e375353ad6baa8fd6b599659326d6dab7d1b2f133b5765a6ef47908e
+
+[P3.5] Prometheus active platform targets
+[{"health": "up", "job": "platform-services", "url": "http://127.0.0.1:18183/actuator/prometheus"}, {"health": "up", "job": "platform-services", "url": "http://127.0.0.1:18185/actuator/prometheus"}, {"health": "up", "job": "platform-services", "url": "http://127.0.0.1:18181/actuator/prometheus"}, {"health": "up", "job": "platform-services", "url": "http://127.0.0.1:18182/actuator/prometheus"}, {"health": "up", "job": "platform-services", "url": "http://127.0.0.1:18184/actuator/prometheus"}, {"health": "up", "job": "platform-services", "url": "http://127.0.0.1:18180/actuator/prometheus"}]
+management_targets 6 up 6
+
+[P3.6] Expected profiles and credential state
+demo-integration-governance|user-governance-assistant|APPROVED
+demo-integration-r22e2|r22e2-real-v2|APPROVED
+demo-integration-satellite|satellite-planning-assistant|APPROVED
+1|satellite-planning-assistant|space-visibility|ACTIVE
+2|user-governance-assistant|space-visibility|ACTIVE
+3|r22e2-real-v2|space-visibility|ACTIVE
+ACTIVE|3
+REVOKED|27
+
+[P3.7] Existing application pointers and candidate hashes
+r22e2-real-v1|CHAT|DRAFT||
+r22e2-real-v2|CHAT|PUBLISHED|1|7d495960d0810d2cb96a4652634fd53c55269c2ffd10c7a6c0be07b2e1e96e99
+satellite-planning-assistant|CHAT|PUBLISHED|2|1b16043e34ab0e56cea3fe32a9b1bb97ce4b6e42a8ebb8142976ed71f9dc94a0
+user-governance-assistant|FLOW|PUBLISHED|1|2f53531358932d45f7affd57473d0b0575d0e4144268a46b154b9f7bf270ab4c
+Before deployment
+user-governance-assistant|FLOW|PUBLISHED|1
+r22e2-real-v1|CHAT|DRAFT|\N
+r22e2-real-v2|CHAT|PUBLISHED|1
+satellite-planning-assistant|CHAT|PUBLISHED|2
+
+Compose base checksum unchanged
+017277169f152076c1e8f490156c4a492736eba218fc4a3904b36a1133bf2fbf  compose-test.yaml
