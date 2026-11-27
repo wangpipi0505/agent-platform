@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "admin": {
+      "principalId": "admin",
+      "roles": [
+        "ADMIN"
+      ],
+      "pages": [
+        "/assets/rules",
+        "/assets/mcp",
+        "/platform/authorizations",
+        "/model/management",
+        "/model/prompt-templates",
+        "/skills",
+        "/assets/plugins",
+        "/evaluations",
+        "/apps",
+        "/audit"
+      ],
+      "capabilities": [
+        "skill.manage",
+        "plugin.manage",
+        "audit.read",
+        "auth.grant",
+        "agent.plan.confirm",
+        "agent.build",
+        "model.manage",
+        "agent.plan.execute",
+        "agent.plan.revise",
+        "agent.view",
+        "agent.publish"
+      ]
+    },
+    "user": {
+      "principalId": "operatorA",
+      "roles": [
+        "USER"
+      ],
+      "pages": [
+        "/apps"
+      ],
+      "capabilities": [
+        "agent.plan.execute",
+        "agent.plan.confirm",
+        "agent.plan.revise",
+        "agent.view"
+      ]
+    }
+  },
+  "planId": "browser-1795723266983",
+  "userGrantRevoked": true,
+  "adminTicketRevokeHttp": 200,
+  "userTicketRevokeHttp": 200
+}

@@ -43,6 +43,7 @@ export function mint(env, tenant, roles, sub, extra = {}) {
 }
 
 export function identities(env) {
+  if (env.portalTokens) return env.portalTokens;
   return {
     ADMIN: mint(env, DEMO_TENANT, ['ADMIN'], 'e2e-admin'),
     BUILDER: mint(env, DEMO_TENANT, ['BUILDER'], 'e2e-builder'),

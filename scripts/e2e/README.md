@@ -130,3 +130,28 @@ scripts/e2e/
 ├── scenarios/s1..s8.mjs   # 八场景剧本（每场景 export meta+run）
 └── shim/src/cn/agentplatform/engine/m53shim/MemoriesInstanceSupplierShim.java
 ```
+
+
+## 八、E2 真实 IAM 与隔离库
+
+在 E2 执行主机使用当前候选镜像。以下命令中的目录是本轮示例。准备脚本新建独立 PostgreSQL 和 Redis，只读导入三个演示应用的当前发布快照及已配置的 DeepSeek 引用。网关和各服务共享隔离网络命名空间。临时出口只连现有 user-mgmt 与 DeepSeek。真实 authority 使用独立签名密钥签发本轮门户票据。
+
+```bash
+suite=/path/to/agent-platform/scripts/e2e
+revision=cb378202
+candidate=cand-20261127-$revision
+scenario_dir=/home/agent-platform/r22-candidates/$candidate/s4-retest
+
+trap 'python3 "$suite/provision-iam.py" cleanup "$candidate" "$scenario_dir"' EXIT
+python3 "$suite/provision-iam.py" start "$candidate" "$scenario_dir"
+docker run --rm --network "container:agent-platform-s4-$revision-pg" \
+  -e E2E_GATEWAY=http://127.0.0.1:18090 -e E2E_ENGINE=http://127.0.0.1:18090 \
+  -v "$suite:/suite:ro" -v "$scenario_dir:/result" -w /result \
+  node:22-bookworm-slim node /suite/run-iam.mjs
+```
+
+报告保存在工作目录的 `m5-3-e2e-report.json`，包含八场景逐项断言、失败原因及公共任务号。运行器在场景之间保留失败并继续执行，报告落盘后失败以非零退出码表示。清理移除临时票据、目录密钥、隔离库与服务。
+
+缺省使用已确认的测试用户 `operatorA` 验 USER。BUILDER、OPERATOR 在隔离授权库中依次授予、核对并回收。已具备单独获准的目录测试账号时，可分别设置 `E2E_BUILDER_SUBJECT` 和 `E2E_OPERATOR_SUBJECT`。SERVICE 通过真实集成签发接口取得短票。
+
+IAM 版保留八个业务场景，按当前公开接口用公共任务号、真实签发短票与计划状态推进。记忆、插件和 MCP 使用既有断言。直接任务受理或排队以本轮回执和落库事件共同核对。单次运行的断言数按 IAM 脚本生成，旧 dev-hmac 的 208 项报告是历史基线。上游拒绝后无法到达的业务断言按失败记录。

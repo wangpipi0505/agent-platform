@@ -1,0 +1,24 @@
+PostgreSQL namespace id: a34ca06484232b7a30775056eaf930fd5659d50c2ca109d86f5ccfdbcbed9668
+Ready: s4_e2e
+Ready: loopback relays
+Ready: isolated real authority
+Ready: app
+Ready: engine
+Ready: skill
+Ready: model
+Ready: monitor
+Ready: gateway
+Imported scoped source rows: model.provider 1
+Imported scoped source rows: model.entry 1
+Imported scoped source rows: model.binding_snapshot 1
+Imported scoped source rows: app.application 3
+Imported scoped source rows: app.app_draft 3
+Imported scoped source rows: app.app_version 3
+Isolated IAM roles: ADMIN,USER model entry: deepseek-flash
+["CMD-SHELL","java -cp /opt/health HealthProbe http://127.0.0.1:18086/.well-known/jwks.json"]
+Reusable provisioner reproduced the isolation and real IAM bootstrap.
+Isolated authority JWKS HTTP 200
+Isolated portal session revoked: ADMIN 200
+Isolated portal session revoked: USER 200
+Revoked temporary directory key: USER 29
+Isolated services, database, and directory keys cleaned

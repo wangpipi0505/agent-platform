@@ -1,0 +1,1143 @@
+{
+  "results": [
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/prompt-templates",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/model-entries",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/skills",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/assets/rules",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/apps/satellite-planning-assistant/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v1/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/user-governance-assistant/rules",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/platform/authorizations",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/prompt-templates",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/model-entries",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/skills",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/assets/rules",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/satellite-planning-assistant/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/user-governance-assistant/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v1/rules",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/platform/authorizations",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/prompt-templates",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/model-entries",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/skills",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/assets/rules",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v1/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/user-governance-assistant/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/satellite-planning-assistant/rules",
+          "status": 200
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/rules",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/platform/authorizations",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%94%A8%E6%88%B7%E4%B8%8E%E6%8E%88%E6%9D%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%94%A8%E6%88%B7%E4%B8%8E%E6%8E%88%E6%9D%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 200
+        }
+      ],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%94%A8%E6%88%B7%E4%B8%8E%E6%8E%88%E6%9D%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "reads": [],
+      "apiMatch": true,
+      "passed": true
+    }
+  ],
+  "failures": [],
+  "admin": {
+    "pages": [
+      "/assets/rules",
+      "/assets/mcp",
+      "/platform/authorizations",
+      "/model/management",
+      "/model/prompt-templates",
+      "/skills",
+      "/assets/plugins",
+      "/evaluations",
+      "/apps",
+      "/audit"
+    ],
+    "capabilities": [
+      "skill.manage",
+      "plugin.manage",
+      "audit.read",
+      "auth.grant",
+      "agent.plan.confirm",
+      "agent.build",
+      "model.manage",
+      "agent.plan.execute",
+      "agent.plan.revise",
+      "agent.view",
+      "agent.publish"
+    ],
+    "navigation": [
+      {
+        "width": 1440,
+        "menu": [
+          "智能体管理",
+          "技能库",
+          "提示词模板",
+          "规则管理",
+          "插件与来源",
+          "MCP 连接",
+          "模型管理",
+          "审计记录",
+          "用户与授权",
+          "评测中心"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": true
+      },
+      {
+        "width": 1024,
+        "menu": [
+          "智能体管理",
+          "技能库",
+          "提示词模板",
+          "规则管理",
+          "插件与来源",
+          "MCP 连接",
+          "模型管理",
+          "审计记录",
+          "用户与授权",
+          "评测中心"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": true
+      },
+      {
+        "width": 768,
+        "menu": [
+          "智能体管理",
+          "技能库",
+          "提示词模板",
+          "规则管理",
+          "插件与来源",
+          "MCP 连接",
+          "模型管理",
+          "审计记录",
+          "用户与授权",
+          "评测中心"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": true
+      }
+    ]
+  },
+  "user": {
+    "pages": [
+      "/apps"
+    ],
+    "capabilities": [
+      "agent.plan.execute",
+      "agent.plan.confirm",
+      "agent.plan.revise",
+      "agent.view"
+    ],
+    "navigation": [
+      {
+        "width": 1440,
+        "menu": [
+          "智能体管理"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": false
+      },
+      {
+        "width": 1024,
+        "menu": [
+          "智能体管理"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": false
+      },
+      {
+        "width": 768,
+        "menu": [
+          "智能体管理"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": false
+      }
+    ]
+  },
+  "passed": true
+}

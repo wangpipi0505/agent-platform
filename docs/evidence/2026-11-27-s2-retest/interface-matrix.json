@@ -1,0 +1,51 @@
+[
+  {
+    "role": "ADMIN",
+    "method": "GET",
+    "route": "/admin/apps/r22e2-real-v2/manifest?allowMissing=true",
+    "expected": 200,
+    "http": 200,
+    "code": "OK"
+  },
+  {
+    "role": "ADMIN",
+    "method": "GET",
+    "route": "/admin/apps/r22e2-real-v2/manifests",
+    "expected": 200,
+    "http": 200,
+    "code": "OK"
+  },
+  {
+    "role": "ADMIN",
+    "method": "GET",
+    "route": "/admin/apps/r22e2-real-v2/rules",
+    "expected": 200,
+    "http": 200,
+    "code": "OK"
+  },
+  {
+    "role": "USER",
+    "method": "GET",
+    "route": "/admin/apps/r22e2-real-v2/manifest?allowMissing=true",
+    "expected": 403,
+    "http": 403,
+    "code": "PLATFORM_CAPABILITY_DENIED"
+  },
+  {
+    "role": "USER",
+    "method": "GET",
+    "route": "/admin/apps/r22e2-real-v2/rules",
+    "expected": 403,
+    "http": 403,
+    "code": "PLATFORM_CAPABILITY_DENIED"
+  },
+  {
+    "role": "USER",
+    "method": "GET",
+    "route": "/admin/classifications",
+    "expected": 200,
+    "http": 200,
+    "code": "OK",
+    "onlyBusinessCategories": true
+  }
+]
