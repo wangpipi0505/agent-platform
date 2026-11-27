@@ -2552,7 +2552,7 @@ public class RunService {
             try {
                 new ModelExchange(store, clients).exchangeInitial(dispatch, claim, manifest, bytes,
                         initialMaterials, runAuthority, text -> initialChunks.publish(id, text));
-            } catch (RuntimeClients.RecordedModelUnavailable confirmed) {
+            } catch (RuntimeClients.ConfirmedModelUnavailable confirmed) {
                 store.failInitial(dispatch, claim, runAuthority.currentRetained(id), confirmed);
                 return;
             }

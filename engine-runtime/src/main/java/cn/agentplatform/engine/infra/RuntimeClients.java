@@ -179,13 +179,13 @@ public class RuntimeClients implements AutoCloseable {
         String event = null;
         var data = new StringBuilder();
         JsonNode answer = null;
-        boolean recordedFailure = false;
+        String failureCode = null;
         for (;;) {
             int next = input.read();
             if (next < 0) {
-                if (used != 0 || event != null || !data.isEmpty() || (answer == null && !recordedFailure)) throw initialStreamInvalid();
+                if (used != 0 || event != null || !data.isEmpty() || (answer == null && failureCode == null)) throw initialStreamInvalid();
                 gate.run();
-                if (recordedFailure) throw new RecordedModelUnavailable();
+                if (failureCode != null) throw new ConfirmedModelUnavailable(failureCode);
                 return answer;
             }
             activity.run();
@@ -205,7 +205,7 @@ public class RuntimeClients implements AutoCloseable {
             if (eventBytes > 2097152) throw initialStreamInvalid();
             if (value.isEmpty()) {
                 if (event == null && data.isEmpty()) { eventBytes = 0; continue; }
-                if (event == null || data.isEmpty() || answer != null || recordedFailure) throw initialStreamInvalid();
+                if (event == null || data.isEmpty() || answer != null || failureCode != null) throw initialStreamInvalid();
                 JsonNode body;
                 try { body = mapper.readTree(data.toString()); }
                 catch (com.fasterxml.jackson.core.JsonProcessingException invalid) { throw initialStreamInvalid(); }
@@ -214,9 +214,11 @@ public class RuntimeClients implements AutoCloseable {
                 if (event.equals("chunk")) {
                     if (body.size() != 1 || !body.path("text").isTextual()) throw initialStreamInvalid();
                     chunks.accept(body.path("text").textValue());
-                } else if ("failed".equals(event) && body.size() == 1
-                        && "SYS-MODEL-503".equals(body.path("code").textValue())) {
-                    recordedFailure = true;
+                } else if ("failed".equals(event)) {
+                    var code = body.path("code").textValue();
+                    if (body.size() != 1 || !("SYS-MODEL-503".equals(code) || "SYS-MODEL-504".equals(code)))
+                        throw initialStreamInvalid();
+                    failureCode = code;
                 } else if (event.equals("final")) answer = body;
                 else throw initialStreamInvalid();
                 event = null; data.setLength(0); eventBytes = 0;
@@ -232,9 +234,10 @@ public class RuntimeClients implements AutoCloseable {
         }
     }
 
-    public static final class RecordedModelUnavailable extends PlatformException {
-        private RecordedModelUnavailable() {
-            super(503, "SYS-MODEL-503", "模型供应商暂时不可用");
+    public static final class ConfirmedModelUnavailable extends PlatformException {
+        private ConfirmedModelUnavailable(String code) {
+            super("SYS-MODEL-504".equals(code) ? 504 : 503, code,
+                    "SYS-MODEL-504".equals(code) ? "模型供应商响应超时" : "模型供应商暂时不可用");
         }
     }
 

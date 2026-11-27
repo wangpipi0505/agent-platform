@@ -1083,7 +1083,7 @@ public class ModelCalls {
             if (!completionPersisted && dispatched.get() && logId.get() != 0) {
                 store.failed(logId.get(), error.code(), (System.nanoTime() - started) / 1_000_000);
                 if (error.status() == 503 && "SYS-MODEL-503".equals(error.code())) {
-                    error = new ModelErrors.RecordedUnavailable();
+                    error = ModelErrors.confirmedUnavailable(503);
                     primaryFailure = error;
                 }
             }
@@ -1188,17 +1188,26 @@ public class ModelCalls {
             java.net.http.HttpResponse<byte[]> response;
             try { response=future.get(Math.max(1,Math.min(10000,remaining(deadline).toMillis())),java.util.concurrent.TimeUnit.MILLISECONDS); }
             catch (java.util.concurrent.TimeoutException timeout) {
-                future.cancel(true); throw new PlatformException(504,"SYS-MODEL-504","模型计量超时");
+                future.cancel(true);
+                throw ModelErrors.confirmedUnavailable(504);
             } catch (java.util.concurrent.ExecutionException failure) {
-                throw ModelErrors.normalize(failure.getCause());
+                throw initialTokenizerFailure(ModelErrors.normalize(failure.getCause()));
             } finally { if (!future.isDone()) future.cancel(true); }
-            if(response.statusCode()!=200)throw ModelErrors.status(response.statusCode());
+            if (response.statusCode() != 200) throw initialTokenizerFailure(ModelErrors.status(response.statusCode()));
             var count=Json.read(new String(response.body(),java.nio.charset.StandardCharsets.UTF_8));
             if(!count.path("count").isIntegralNumber() || !count.path("count").canConvertToInt() || count.path("count").intValue()<1
                     || !semanticSha.equals(count.path("request_sha256").asText())) throw promptInvalid();
             return count.path("count").intValue();
         } catch(InterruptedException e){Thread.currentThread().interrupt();throw new PlatformException(503,"SYS-MODEL-503","模型计量暂不可用");}
         finally { closeInitialHttp(http); }
+    }
+
+    private static PlatformException initialTokenizerFailure(PlatformException failure) {
+        // Exact tokenization precedes quota reservation and provider dispatch.
+        return switch (failure.code()) {
+            case "SYS-MODEL-503", "SYS-MODEL-504" -> ModelErrors.confirmedUnavailable(failure.status());
+            default -> failure;
+        };
     }
 
     private int countTokens(JsonNode request, Map<String, Object> entry, Actor actor) {

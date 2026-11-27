@@ -6,11 +6,16 @@ import cn.agentplatform.common.PlatformException;
 public final class ModelErrors {
     private ModelErrors() {}
 
-    /** Emitted to the initial-stream consumer only after the failed call has been recorded. */
-    public static final class RecordedUnavailable extends PlatformException {
-        public RecordedUnavailable() {
-            super(503, "SYS-MODEL-503", "模型供应商暂时不可用");
+    /** Terminal receipt for a proven pre-dispatch failure or a durably recorded failure. */
+    public static final class ConfirmedUnavailable extends PlatformException {
+        private ConfirmedUnavailable(PlatformException failure) {
+            super(failure.status(), failure.code(), failure.getMessage());
         }
+    }
+
+    public static ConfirmedUnavailable confirmedUnavailable(int status) {
+        if (status != 503 && status != 504) throw new IllegalArgumentException("Unexpected model failure status");
+        return new ConfirmedUnavailable(status(status));
     }
 
     public static PlatformException status(int status) {

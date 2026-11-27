@@ -1150,7 +1150,7 @@ public class Tasks {
     var reasons = store.db().queryForList("""
         select r.stop_reason from engine.task_step s join engine.run r on r.id=s.run_id
         where s.task_id=? and s.step_id=? and r.tenant_id=? and r.principal_id=? and r.app_code=?
-          and r.status='FAILED' and r.stop_reason in ('SYS-MODEL-503','MODEL_RESULT_UNKNOWN')
+          and r.status='FAILED' and r.stop_reason in ('SYS-MODEL-503','SYS-MODEL-504','MODEL_RESULT_UNKNOWN')
         """, String.class, task.get("id"), StepExecutionMapping.ENTRY, actor.tenantId(),
         task.get("principal_id"), task.get("app_code"));
     if (!reasons.isEmpty()) {

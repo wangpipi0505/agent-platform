@@ -34,22 +34,28 @@ class ModelFailureTaskPostgresTest {
 
     @Test
     void confirmedModel503ReachesBothTaskViews() throws Exception {
-        exercise(false);
+        exercise("SYS-MODEL-503");
+    }
+
+    @Test
+    void confirmedTokenizerTimeoutReachesBothTaskViews() throws Exception {
+        exercise("SYS-MODEL-504");
     }
 
     @Test
     void interruptedModelCallIsClosedByTheNextWorkerWithoutResending() throws Exception {
-        exercise(true);
+        exercise(null);
     }
 
-    private void exercise(boolean interrupted) throws Exception {
+    private void exercise(String modelFailure) throws Exception {
+        boolean interrupted = modelFailure == null;
         var source = new DriverManagerDataSource(EngineTestDatabase.url(),
                 EngineTestDatabase.user(), EngineTestDatabase.password());
         Flyway.configure().dataSource(source).schemas("engine").defaultSchema("engine")
                 .locations("classpath:db/migration").outOfOrder(true).load().migrate();
         var db = new JdbcTemplate(source);
         var calls = new AtomicInteger();
-        var model = controlledModel(calls, interrupted);
+        var model = controlledModel(calls, modelFailure);
         var origin = "http://127.0.0.1:" + model.getAddress().getPort();
         var actor = new Actor("tenant-a", "alice", Set.of("USER"),
                 Map.of("region", Set.of("A"), "dataLabels", Set.of("initial")));
@@ -119,7 +125,7 @@ class ModelFailureTaskPostgresTest {
                 assertThat(recoverableBeforeGrantExpiry).as("node lease fits within the runtime grant").isTrue();
             }
             dispatcher.pollEntries();
-            String reason = interrupted ? "MODEL_RESULT_UNKNOWN" : "SYS-MODEL-503";
+            String reason = interrupted ? "MODEL_RESULT_UNKNOWN" : modelFailure;
             assertThat(List.of(tasks.detail(taskId, actor), tasks.result(taskId, actor))).allSatisfy(view ->
                     assertThat(view).containsEntry("state", "FAILED").containsEntry("reason", reason).containsEntry("retryable", false));
             assertThat(db.queryForList("select status, sdk_attempts from engine.model_invocation where run_id=?", runId))
@@ -131,14 +137,15 @@ class ModelFailureTaskPostgresTest {
         }
     }
 
-    private static HttpServer controlledModel(AtomicInteger calls, boolean interrupted) throws java.io.IOException {
+    private static HttpServer controlledModel(AtomicInteger calls, String modelFailure) throws java.io.IOException {
         var model = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         model.createContext("/internal/model/chat/stream", exchange -> {
             try (exchange) {
                 exchange.getRequestBody().readAllBytes();
                 calls.incrementAndGet();
-                // A recorded upstream 503 has a terminal frame. A lost reply has no receipt.
-                String frames = interrupted ? "event: final\n" : "event: failed\ndata: {\"code\":\"SYS-MODEL-503\"}\n\n";
+                // Confirmed failures have a terminal frame. A lost reply has no receipt.
+                String frames = modelFailure == null ? "event: final\n"
+                        : "event: failed\ndata: " + Json.write(Map.of("code", modelFailure)) + "\n\n";
                 var bytes = frames.getBytes(StandardCharsets.UTF_8);
                 exchange.getResponseHeaders().set("Content-Type", "text/event-stream");
                 exchange.sendResponseHeaders(200, bytes.length);

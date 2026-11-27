@@ -188,7 +188,8 @@ class InitialStreamIntegrationTest {
             var response=f.http.send(java.net.http.HttpRequest.newBuilder(f.url(f.selected())).timeout(Duration.ofSeconds(19))
                     .header("Authorization","Bearer "+f.ticket).header("Content-Type","application/json")
                     .POST(java.net.http.HttpRequest.BodyPublishers.ofByteArray(f.request)).build(),java.net.http.HttpResponse.BodyHandlers.ofString());
-            assertThat(response.statusCode()).isEqualTo(504);
+            assertThat(response.statusCode()).isEqualTo(200);
+            assertThat(response.body()).contains("event:failed", "SYS-MODEL-504").doesNotContain("event:final");
             long elapsed=Duration.ofNanos(System.nanoTime()-started).toMillis();assertThat(elapsed).isLessThan(18000);
             long until=System.nanoTime()+Duration.ofSeconds(2).toNanos();
             while(!Files.exists(f.dir.resolve("tokenizer-peer-cancelled"))&&System.nanoTime()<until)Thread.sleep(20);

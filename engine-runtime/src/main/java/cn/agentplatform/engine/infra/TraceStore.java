@@ -1465,12 +1465,12 @@ public class TraceStore {
     }
 
     public void failInitial(RunDispatch dispatch, Map<String, Object> claim, RetainedAuthorization proof,
-            RuntimeClients.RecordedModelUnavailable modelFailure) {
+            RuntimeClients.ConfirmedModelUnavailable modelFailure) {
         finishInitial(dispatch, claim, proof, Objects.requireNonNull(modelFailure));
     }
 
     private void finishInitial(RunDispatch dispatch, Map<String, Object> claim, RetainedAuthorization proof,
-            RuntimeClients.RecordedModelUnavailable modelFailure) {
+            RuntimeClients.ConfirmedModelUnavailable modelFailure) {
         String terminalStatus = protectedAtomic(proof, () -> {
             long node = number(claim, "id"), attempt = number(claim, "attemptId");
             var view = writable(dispatch.runId(), proof, node, attempt, dispatch);
