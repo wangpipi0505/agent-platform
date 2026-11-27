@@ -7,6 +7,7 @@ import cn.agentplatform.common.*;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 import cn.agentplatform.common.authority.PortalTaskRoutes;
 import cn.agentplatform.engine.infra.PortalOwnedTaskAccess;
+import cn.agentplatform.engine.infra.PortalRuntimeAccess;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -41,10 +42,16 @@ public class TaskController {
   }
 
   private PortalOwnedTaskAccess portalTasks;
+  private PortalRuntimeAccess runtime;
 
   @org.springframework.beans.factory.annotation.Autowired(required = false)
   void portalTasks(PortalOwnedTaskAccess access) {
     this.portalTasks = access;
+  }
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  void runtime(PortalRuntimeAccess access) {
+    this.runtime = access;
   }
 
   private PortalOwnedTaskAccess.Access ownedAccess(String taskId, Actor actor) {
@@ -100,17 +107,24 @@ public class TaskController {
           @RequestParam(value = "pageSize", required = false) String pageSize,
           @RequestParam(value = "confirmableBy", required = false) String confirmableBy) {
     Actor actor = Actor.current();
+    var grant = runtime == null ? null : runtime.current();
+    if (grant != null && (grant.view().empty() || appCode != null && !appCode.isBlank())) {
+      grant.requireView(appCode);
+    }
     if (confirmableBy != null && !confirmableBy.isBlank()) {
       if (!"me".equals(confirmableBy))
         throw new cn.agentplatform.common.PlatformException(
                 400, "TASK_CONFIRMABLE_INVALID", "confirmableBy 仅支持 me");
       return ApiResponse.ok(
               java.util.Map.of(
-                      "items", tasks.confirmableRevisions(appCode, actor),
+                      "items", grant == null ? tasks.confirmableRevisions(appCode, actor)
+                              : tasks.confirmableRevisions(appCode, actor, grant.view(),
+                                      grant.scope(java.util.Set.of("ADMIN", "APPROVER"))),
                       "appCode", appCode == null ? "" : appCode));
     }
-    return ApiResponse.ok(
-            tasks.list(state, appCode, from, to, principalId, page, pageSize, actor));
+    return ApiResponse.ok(grant == null ? tasks.list(state, appCode, from, to, principalId, page, pageSize, actor)
+            : tasks.list(state, appCode, from, to, principalId, page, pageSize, actor,
+                    grant.view(), grant.scope(java.util.Set.of("ADMIN"))));
   }
 
   /** GET /v1/tasks/{taskId}：详情（服务端计算 availableActions + recovery 角色投影）。 */

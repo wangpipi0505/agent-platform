@@ -2,6 +2,7 @@ package cn.agentplatform.engine.api;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.engine.application.*;
+import cn.agentplatform.engine.infra.PortalRuntimeAccess;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -11,9 +12,22 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class MemoryController {
     private final Memories memories;
+    private PortalRuntimeAccess runtime;
 
     public MemoryController(Memories memories) {
         this.memories = memories;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void runtime(PortalRuntimeAccess access) {
+        this.runtime = access;
+    }
+
+    private PortalRuntimeAccess.Grant requireView(String code) {
+        if (runtime == null) return null;
+        var grant = runtime.current();
+        grant.requireView(code);
+        return grant;
     }
 
     /** 列表：scope/status/tags/q/sessionId 过滤+分页；先权限过滤再检索；列表不含正文。 */
@@ -37,6 +51,7 @@ public class MemoryController {
             @PathVariable String code,
             @PathVariable String memoryId,
             @RequestParam(required = false) String sessionId) {
+        requireView(code);
         return ApiResponse.ok(memories.get(code, memoryId, sessionId, Actor.current()));
     }
 
@@ -50,7 +65,10 @@ public class MemoryController {
     @PatchMapping("/v1/apps/{code}/memories/{memoryId}")
     public Object patch(
             @PathVariable String code, @PathVariable String memoryId, @RequestBody JsonNode body) {
-        return ApiResponse.ok(memories.patch(code, memoryId, body, Actor.current()));
+        var grant = requireView(code);
+        var actor = Actor.current();
+        boolean admin = grant == null ? actor.roles().contains("ADMIN") : grant.rolesFor(code).contains("ADMIN");
+        return ApiResponse.ok(memories.patch(code, memoryId, body, actor, admin));
     }
 
     /** 删除：先置 REVOKED 立即退出检索，异步清理正文；幂等（重复删除返回原终态）。 */
@@ -59,6 +77,8 @@ public class MemoryController {
             @PathVariable String code,
             @PathVariable String memoryId,
             @RequestBody(required = false) JsonNode body) {
-        return ApiResponse.ok(memories.delete(code, memoryId, body, Actor.current()));
+        var grant = requireView(code);
+        var actor = Actor.current();
+        return ApiResponse.ok(memories.delete(code, memoryId, body, grant == null ? actor : grant.actorFor(actor, code)));
     }
 }

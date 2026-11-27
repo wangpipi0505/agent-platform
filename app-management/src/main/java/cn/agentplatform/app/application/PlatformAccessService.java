@@ -53,6 +53,16 @@ public class PlatformAccessService {
         return scope(access(identity), capability);
     }
 
+    public java.util.Map<String, ApplicationScope> runtime(Actor identity) {
+        var byRole = new java.util.TreeMap<String, ApplicationScope>();
+        var rows = access(identity);
+        for (var role : rows.stream().map(AccessRow::role).distinct().toList()) {
+            var permitted = scope(rows.stream().filter(row -> role.equals(row.role())).toList(), VIEW);
+            if (permitted.all() || !permitted.codes().isEmpty()) byRole.put(role, permitted);
+        }
+        return java.util.Map.copyOf(byRole);
+    }
+
     private static ApplicationScope scope(List<AccessRow> rows, String capability) {
         var apps = new TreeSet<String>();
         for (var row : rows) {
@@ -72,7 +82,9 @@ public class PlatformAccessService {
         boolean operate = scope(rows, PortalTaskRoutes.OPERATE).allows(appCode);
         boolean reasonRequired = !execute && operate;
         boolean allowedAsOperator = PortalTaskRoutes.EXECUTE.equals(permission) && reasonRequired;
-        if (!scope(rows, VIEW).allows(appCode) || (!allowedAsOperator && !scope(rows, permission).allows(appCode)))
+        boolean permitted = PortalTaskRoutes.CONTROL.equals(permission)
+                || allowedAsOperator || scope(rows, permission).allows(appCode);
+        if (!scope(rows, VIEW).allows(appCode) || !permitted)
             throw new PlatformException(403, "PLATFORM_CAPABILITY_DENIED", "当前平台授权不允许此操作");
         return new OwnedTaskDecision(appCode, permission, reasonRequired,
                 scope(rows, PortalTaskRoutes.CONFIRM).allows(appCode), execute || operate);

@@ -9,6 +9,7 @@ import cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope;
 import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.engine.infra.TraceStore;
+import cn.agentplatform.engine.infra.PortalRuntimeAccess.Scope;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -419,25 +420,28 @@ public class Tasks {
           String page,
           String pageSize,
           Actor actor) {
+    return list(state, appCode, from, to, principalId, page, pageSize, actor, Scope.ALL,
+            actor.roles().contains("ADMIN") ? Scope.ALL : Scope.NONE);
+  }
+
+  public Map<String, Object> list(String state, String appCode, String from, String to, String principalId,
+                                 String page, String pageSize, Actor actor, Scope eligible, Scope wide) {
     if (state != null && !state.isBlank() && !TASK_STATES.contains(state))
       throw new PlatformException(400, "TASK_STATE_INVALID", "state 不在 13 值任务状态机内");
     if (from != null && !from.isBlank() && !from.matches("\\d{4}-\\d{2}-\\d{2}([T ].*)?"))
       throw new PlatformException(400, "INVALID_INPUT", "开始时间格式无效");
     if (to != null && !to.isBlank() && !to.matches("\\d{4}-\\d{2}-\\d{2}([T ].*)?"))
       throw new PlatformException(400, "INVALID_INPUT", "结束时间格式无效");
-    boolean admin = actor.roles().contains("ADMIN");
     // principalId 过滤仅 ADMIN 可用（范围只来自当前身份，照 RunService.page 先例拒绝自报范围）
     if (principalId != null && !principalId.isBlank()) {
-      if (!admin && !principalId.equals(actor.principalId()))
+      if (wide.empty() && !principalId.equals(actor.principalId()))
         throw new PlatformException(403, "TASK_SCOPE_FORBIDDEN", "任务查询范围仅来自当前身份");
       if (principalId.length() > 128) throw new PlatformException(400, "INVALID_INPUT", "principalId 过长");
     }
-    var where =
-            new StringBuilder(" from engine.task t where t.tenant_id=?"
-                    + (admin ? "" : " and t.principal_id=?"));
+    var where = new StringBuilder(" from engine.task t where t.tenant_id=?");
     var args = new ArrayList<Object>();
     args.add(actor.tenantId());
-    if (!admin) args.add(actor.principalId());
+    restrictVisible(where, args, eligible, wide, actor.principalId());
     if (principalId != null && !principalId.isBlank()) {
       where.append(" and t.principal_id=?");
       args.add(principalId);
@@ -492,15 +496,18 @@ public class Tasks {
    * 其余角色限提交人本人（同 {@link #list} 口径）。计数与四类列表共用本投影（角标一致性契约）。
    */
   public List<Map<String, Object>> confirmableRevisions(String appCode, Actor actor) {
-    boolean tenantWide = actor.roles().contains("ADMIN") || actor.roles().contains("APPROVER");
+    var wide = Roles.hasAny(actor, Roles.ADMIN, Roles.APPROVER) ? Scope.ALL : Scope.NONE;
+    return confirmableRevisions(appCode, actor, Scope.ALL, wide);
+  }
+
+  public List<Map<String, Object>> confirmableRevisions(String appCode, Actor actor, Scope eligible, Scope wide) {
     var condition =
             new StringBuilder(
                     " join engine.task t on t.id=pr.owner_task_id"
-                            + " where t.tenant_id=? and t.state='PLAN_READY'"
-                            + (tenantWide ? "" : " and t.principal_id=?"));
+                            + " where t.tenant_id=? and t.state='PLAN_READY'");
     var args = new ArrayList<Object>();
     args.add(actor.tenantId());
-    if (!tenantWide) args.add(actor.principalId());
+    restrictVisible(condition, args, eligible, wide, actor.principalId());
     if (appCode != null && !appCode.isBlank()) {
       condition.append(" and t.app_code=?");
       args.add(appCode);
@@ -554,6 +561,15 @@ public class Tasks {
       items.add(item);
     }
     return items;
+  }
+
+  private static void restrictVisible(StringBuilder sql, List<Object> args, Scope eligible, Scope wide,
+                                      String principal) {
+    if (!eligible.all()) sql.append(" and ").append(eligible.predicate("t.app_code", args));
+    if (!wide.all()) {
+      args.add(principal);
+      sql.append(" and (t.principal_id=? or ").append(wide.predicate("t.app_code", args)).append(")");
+    }
   }
 
   /** goal 摘要（列表项不携带全量目标文本；≤200 字截断）。 */

@@ -60,9 +60,9 @@ public class ResourceManifestService {
             store.db()
                     .queryForList(
                             "select public_id,config_release_id,config_digest,snapshot from engine.chat_session"
-                                + " where app_code=? and config_release_id is not null"
+                                + " where tenant_id=? and app_code=? and config_release_id is not null"
                                 + " order by created_at desc limit 1",
-                            appCode);
+                            actor.tenantId(), appCode);
     JsonNode manifest;
     String pinnedDigest;
     if (snapshotRows.isEmpty()) {

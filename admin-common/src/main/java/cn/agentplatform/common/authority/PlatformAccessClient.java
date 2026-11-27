@@ -22,16 +22,25 @@ public final class PlatformAccessClient {
     }
 
     public JsonNode session(ServiceTicket ticket, SubjectKey subject) {
+        var access = read(PlatformBuildRoutes.SESSION, ticket, subject);
+        if (access.path("roles").isArray() && access.path("capabilities").isArray()
+                && access.path("pages").isArray()) return access;
+        throw unavailable();
+    }
+
+    public JsonNode runtime(ServiceTicket ticket, SubjectKey subject) {
+        return read(PortalRuntimeRoutes.ACCESS_PATH, ticket, subject).path("roleScopes");
+    }
+
+    private JsonNode read(String path, ServiceTicket ticket, SubjectKey subject) {
         try {
-            var envelope = app.get().uri(PlatformBuildRoutes.SESSION)
+            var envelope = app.get().uri(path)
                     .headers(headers -> headers.setBearerAuth(ticket.value()))
                     .retrieve().body(JsonNode.class);
             if (envelope != null && "OK".equals(envelope.path("code").asText())) {
                 var access = envelope.path("data");
                 if (subject.tenantId().equals(access.path("tenantId").asText())
-                        && subject.principalId().equals(access.path("principalId").asText())
-                        && access.path("roles").isArray() && access.path("capabilities").isArray()
-                        && access.path("pages").isArray()) return access;
+                        && subject.principalId().equals(access.path("principalId").asText())) return access;
             }
         } catch (RestClientException unavailable) {
             throw unavailable();

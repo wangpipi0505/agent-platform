@@ -8,6 +8,7 @@ import cn.agentplatform.common.ApiResponse;
 import cn.agentplatform.common.authority.AuthorityContext;
 import cn.agentplatform.common.authority.PlatformBuildRoutes;
 import cn.agentplatform.common.authority.PortalTaskRoutes;
+import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.PlatformException;
 import org.springframework.web.bind.annotation.PostMapping;
 import cn.agentplatform.common.authority.SubjectKey;
@@ -41,6 +42,15 @@ public class PlatformAuthorizationController {
         var subject = new SubjectKey(identity.tenantId(), identity.principalId());
         AuthorityContext.requireFor(identity, PlatformBuildRoutes.resource(subject));
         return ApiResponse.ok(access.session(identity));
+    }
+
+    @GetMapping(PortalRuntimeRoutes.ACCESS_PATH)
+    public Object runtime() {
+        var current = AuthorityContext.current();
+        var actor = Actor.current();
+        AuthorityContext.requireFor(actor, current.call().resource());
+        return ApiResponse.ok(Map.of("tenantId", actor.tenantId(), "principalId", actor.principalId(),
+                "roleScopes", access.runtime(actor)));
     }
 
     public record TaskScopeQuery(String appCode) {}

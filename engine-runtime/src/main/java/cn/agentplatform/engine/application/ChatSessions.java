@@ -21,6 +21,12 @@ public class ChatSessions {
     private final cn.agentplatform.engine.harness.session.SessionStore turnEvents;
     // H1-9：活动 SSE 观察流（每连接一个泵；closeSessionStreams/@PreDestroy 收口）。
     private final Set<StreamPump> streams = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private PortalRuntimeAccess runtime;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void runtime(PortalRuntimeAccess access) {
+        this.runtime = access;
+    }
     /** :ping 心跳间隔（接口稿 §7：15s）；独立部署可调，测试经反射改短。 */
     @org.springframework.beans.factory.annotation.Value("${agent.session.sse.heartbeat-millis:15000}")
     long heartbeatMillis = 15000;
@@ -620,7 +626,8 @@ public class ChatSessions {
 
     /** 诊断视图角色门：仅 OPERATOR/ADMIN（R-17：角色判定引 §3.1 授权目录常量）；无权 403 并记一条拒绝审计（拒绝原因入日志）。 */
     private void requireDiagnosticRole(String code, String id, Actor actor) {
-        if (Roles.hasAny(actor, Roles.OPERATOR, Roles.ADMIN)) return;
+        var effective = runtime == null ? actor : runtime.current().actorFor(actor, code);
+        if (Roles.hasAny(effective, Roles.OPERATOR, Roles.ADMIN)) return;
         // 引擎无独立审计表（审计归口 monitor，§5.7 卡接线）；先落结构化审计日志行保证可追溯。
         org.slf4j.LoggerFactory.getLogger(ChatSessions.class)
                 .warn(

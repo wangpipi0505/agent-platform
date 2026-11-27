@@ -53,7 +53,7 @@ public class PortalOwnedTaskAccess {
         }
         var root = current.call().resource();
         String permission = PortalTaskRoutes.permission(root);
-        if (!"agent.view".equals(permission) && !"PLAN".equals(row.get("purpose")))
+        if (PortalTaskRoutes.requiresPlan(permission) && !"PLAN".equals(row.get("purpose")))
             throw new PlatformException(409, "TASK_NOT_PLAN", "此操作需要计划任务");
         // Only the engine selects the application, from the same owned record used for the operation.
         String code = (String) row.get("app_code");

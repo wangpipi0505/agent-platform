@@ -17,7 +17,12 @@ class PortalTaskRoutesTest {
         assertThat(PortalTaskRoutes.match("POST", TASK + "/plans").permission()).isEqualTo("agent.plan.revise");
         assertThat(PortalTaskRoutes.match("POST", TASK + "/execute").permission()).isEqualTo("agent.plan.execute");
         assertThat(PortalTaskRoutes.match("POST", TASK + "/result")).isNull();
-        assertThat(PortalTaskRoutes.match("POST", TASK + "/cancel")).isNull();
+        var cancel = PortalTaskRoutes.match("POST", TASK + "/cancel");
+        var resume = PortalTaskRoutes.match("POST", TASK + "/resume");
+        assertThat(cancel).isNotNull();
+        assertThat(resume).isNotNull();
+        assertThat(cancel.call(policy).resource()).isNotEqualTo(resume.call(policy).resource());
+        assertThat(PortalTaskRoutes.match("GET", TASK + "/cancel")).isNull();
         assertThat(PortalTaskRoutes.match("GET", TASK + "/plans/%2F/revisions/1")).isNull();
         assertThat(PortalTaskRoutes.match("GET", "/v1/tasks/42")).isNull();
     }

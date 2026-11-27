@@ -342,6 +342,10 @@ public class Memories {
      * 且策略 writeScopes 含 SHARED（USER 不写 SHARED）。
      */
     public Map<String, Object> patch(String code, String memoryId, JsonNode body, Actor actor) {
+        return patch(code, memoryId, body, actor, actor.roles().contains("ADMIN"));
+    }
+
+    public Map<String, Object> patch(String code, String memoryId, JsonNode body, Actor actor, boolean admin) {
         JsonNode expected = body.path("expectedVersion");
         if (!expected.isInt() || expected.intValue() < 1)
             throw new PlatformException(400, "MEMORY_EXPECTED_VERSION_INVALID", "必须提供正整数 expectedVersion");
@@ -366,7 +370,6 @@ public class Memories {
         String current = String.valueOf(row.get("status"));
         if ("REVOKED".equals(current)) throw notFound(memoryId);
         boolean owner = actor.principalId().equals(row.get("owner_id"));
-        boolean admin = actor.roles().contains("ADMIN");
         String scope = String.valueOf(row.get("scope"));
 
         if ((hasContent || hasTags || hasExpires)) {
@@ -428,8 +431,6 @@ public class Memories {
             throw new PlatformException(400, "MEMORY_DELETE_REQUEST_INVALID", "必须提供 requestId（≤128 字）");
         var row = repository.findById(actor.tenantId(), memoryId);
         if (row == null || !code.equals(row.get("workspace_code"))) throw notFound(memoryId);
-        if ("REVOKED".equals(String.valueOf(row.get("status"))))
-            return Map.of("memoryId", memoryId, "status", "REVOKED");
         boolean owner = actor.principalId().equals(row.get("owner_id"));
         boolean allowed =
                 "PRIVATE".equals(row.get("scope")) ? owner : owner || actor.roles().contains("ADMIN");
@@ -438,6 +439,8 @@ public class Memories {
                     "scope=" + row.get("scope") + " owner=" + owner);
             throw new PlatformException(403, "MEMORY_DELETE_FORBIDDEN", "无权删除该记忆");
         }
+        if ("REVOKED".equals(String.valueOf(row.get("status"))))
+            return Map.of("memoryId", memoryId, "status", "REVOKED");
         repository.revoke(actor.tenantId(), memoryId);
         return Map.of("memoryId", memoryId, "status", "REVOKED");
     }

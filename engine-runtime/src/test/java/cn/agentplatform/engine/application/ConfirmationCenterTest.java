@@ -321,6 +321,21 @@ class ConfirmationCenterTest {
     }
 
     @Test
+    void scopedAdministratorCountsOnlyAuthorizedApplications() {
+        fourDomainFixtures();
+        var grant = new cn.agentplatform.engine.infra.PortalRuntimeAccess.Grant(Map.of("ADMIN",
+                new cn.agentplatform.engine.infra.PortalRuntimeAccess.Scope(false, Set.of("h41-app1"))));
+        var counts = center.counts(null, ADMIN, grant);
+        assertEquals(2, counts.get("publishReview"));
+        assertEquals(1, counts.get("highRisk"));
+        assertEquals(1, counts.get("planConfirmation"));
+        assertEquals(2, counts.get("draftMemory"));
+        var denied = org.junit.jupiter.api.Assertions.assertThrows(cn.agentplatform.common.PlatformException.class,
+                () -> center.counts("h41-app2", ADMIN, grant));
+        assertEquals(403, denied.status());
+    }
+
+    @Test
     void fourClassCountsByRoleWithTotalSumAndReadOnlyPublishVisibility() throws Exception {
         fourDomainFixtures();
         // ADMIN：发布 3（VALIDATED+APPROVED 计、ACTIVE 不计）、高危 2、计划确认 2、DRAFT 记忆 2

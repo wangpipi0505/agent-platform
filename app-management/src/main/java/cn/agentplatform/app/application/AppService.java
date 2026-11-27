@@ -508,7 +508,8 @@ public class AppService {
         var received = current.call().resource();
         boolean applicationRead = "app-runtime".equals(received.kind());
         boolean runtimeRead = applicationRead
-                || cn.agentplatform.common.authority.PortalRuntimeRoutes.sessionForApp(received, code);
+                || cn.agentplatform.common.authority.PortalRuntimeRoutes.sessionForApp(received, code)
+                || cn.agentplatform.common.authority.PortalRuntimeRoutes.memoryForApp(received, code);
         if (applicationRead && !cn.agentplatform.common.authority.PortalRuntimeRoutes.appResource(code).equals(received))
             throw error(403, "AUTHORITY_RESOURCE_MISMATCH", "发布资源与授权不匹配");
         var observed = publishedMetadata(actor.tenantId(), code);

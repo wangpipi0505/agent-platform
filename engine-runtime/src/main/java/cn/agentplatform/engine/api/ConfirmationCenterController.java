@@ -2,6 +2,7 @@ package cn.agentplatform.engine.api;
 
 import cn.agentplatform.common.*;
 import cn.agentplatform.engine.application.ConfirmationCenterService;
+import cn.agentplatform.engine.infra.PortalRuntimeAccess;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -14,14 +15,21 @@ import org.springframework.web.bind.annotation.*;
 public class ConfirmationCenterController {
 
     private final ConfirmationCenterService confirmationCenter;
+    private PortalRuntimeAccess runtime;
 
     public ConfirmationCenterController(ConfirmationCenterService confirmationCenter) {
         this.confirmationCenter = confirmationCenter;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void runtime(PortalRuntimeAccess access) {
+        this.runtime = access;
+    }
+
     /** GET /admin/confirmation-center/counts?appCode=：四类未分页总数+total=Σ。 */
     @GetMapping("/admin/confirmation-center/counts")
     public Object counts(@RequestParam(value = "appCode", required = false) String appCode) {
-        return ApiResponse.ok(confirmationCenter.counts(appCode, Actor.current()));
+        return ApiResponse.ok(confirmationCenter.counts(appCode, Actor.current(),
+                runtime == null ? null : runtime.current()));
     }
 }

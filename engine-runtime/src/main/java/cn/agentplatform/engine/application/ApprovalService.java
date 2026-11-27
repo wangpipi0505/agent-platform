@@ -25,6 +25,10 @@ public class ApprovalService {
     }
 
     public List<Map<String, Object>> list(Actor actor) {
+        return list(actor, appCode -> actor.roles());
+    }
+
+    public List<Map<String, Object>> list(Actor actor, java.util.function.Function<String, Set<String>> rolesForApp) {
         List<Map<String, Object>> result = new ArrayList<>();
         for (var row :
                 store.db()
@@ -44,7 +48,7 @@ public class ApprovalService {
                     context = TraceStore.json(row.remove("approval_context"));
             JsonNode roles =
                     context.has("callId") ? context.path("roles") : definition.path("confirmRoles");
-            if (!permitted(roles, actor)) continue;
+            if (!permitted(roles, rolesForApp.apply((String) row.get("appCode")))) continue;
             JsonNode snapshot =
                     context.has("callId") ? context : TraceStore.json(row.get("snapshot"));
             row.remove("snapshot");
@@ -69,7 +73,11 @@ public class ApprovalService {
     }
 
     private boolean permitted(JsonNode roles, Actor actor) {
-        for (JsonNode role : roles) if (actor.roles().contains(role.asText())) return true;
+        return permitted(roles, actor.roles());
+    }
+
+    private boolean permitted(JsonNode roles, Set<String> effectiveRoles) {
+        for (JsonNode role : roles) if (effectiveRoles.contains(role.asText())) return true;
         return false;
     }
 

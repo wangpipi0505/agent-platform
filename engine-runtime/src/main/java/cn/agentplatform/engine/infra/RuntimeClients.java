@@ -5,6 +5,7 @@ import cn.agentplatform.common.authority.*;
 import cn.agentplatform.common.authority.HttpCurrentAuthorityClient.RetainedAuthorization;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Set;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -375,6 +376,7 @@ public class RuntimeClients implements AutoCloseable {
         if (!iam) return get("app", "/internal/apps/" + code + "/published", actor);
         var current = AuthorityContext.current();
         var resource = PortalRuntimeRoutes.isPinnedTaskCall(current.call(), code) || PortalRuntimeRoutes.isSessionTurn(current)
+                || PortalRuntimeRoutes.memoryForApp(current.call().resource(), code)
                 ? current.call().resource() : PortalRuntimeRoutes.appResource(code);
         var retained = AuthorityContext.requireInitialFor(actor, resource);
         return published(code, retained);
@@ -388,6 +390,9 @@ public class RuntimeClients implements AutoCloseable {
         var root = current.call().resource();
         boolean runtimeRead = PortalRuntimeRoutes.permitsPublishedRead(current.call().action())
                 && PortalRuntimeRoutes.appResource(code).equals(root)
+                || Set.of("proxy.engine.get.MemoryController.get", "proxy.engine.patch.MemoryController.patch")
+                       .contains(current.call().action())
+                    && PortalRuntimeRoutes.memoryForApp(root, code)
                 || PortalRuntimeRoutes.isSessionTurn(current) && PortalRuntimeRoutes.sessionForApp(root, code);
         boolean runRead = ("proxy.engine.post.RunController.run".equals(current.call().action())
                 && "app-version".equals(root.kind())

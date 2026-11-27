@@ -229,6 +229,12 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
             AuthorityProtocol.same("PORTAL", operation.path("origin_kind").asText());
             PortalTaskRoutes.permission(call.resource());
         }
+        if (PortalRuntimeRoutes.ACCESS_PATH.equals(template)) {
+            AuthorityProtocol.same("engine", jwt.getClaimAsString("caller"));
+            AuthorityProtocol.same("delegated", mode);
+            AuthorityProtocol.same("PORTAL", operation.path("origin_kind").textValue());
+            AuthorityProtocol.same(PortalRuntimeRoutes.accessCall(call.resource()), call);
+        }
         boolean runAudit = "engine".equals(serviceId) && PlatformBuildRoutes.RUN_AUDIT.equals(template);
         if ("platform-build".equals(call.resource().kind()) || requiresBuildLookup(request)
                 || PlatformBuildRoutes.SESSION.equals(template) || runAudit) {
@@ -252,7 +258,8 @@ public final class ServiceAuthorization implements AsyncHandlerInterceptor {
         if ("engine".equals(serviceId) && "gateway".equals(jwt.getClaimAsString("caller"))
                 && "PORTAL".equals(operation.path("origin_kind").asText())
                 && PortalRuntimeRoutes.ownsTemplate(template)) {
-            var expected = PortalRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI());
+            var expected = PortalRuntimeRoutes.call(routes, request.getMethod(), request.getRequestURI(),
+                    request.getParameterValues("appCode"));
             if (!PortalRuntimeRoutes.isPinnedTaskCall(call, expected.resource().id()))
                 AuthorityProtocol.same(expected, call);
             else AuthorityProtocol.same(expected.action(), call.action());

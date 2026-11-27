@@ -4,6 +4,8 @@ import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.PlatformException;
 import cn.agentplatform.common.Roles;
 import cn.agentplatform.engine.infra.TraceStore;
+import cn.agentplatform.engine.infra.PortalRuntimeAccess.Grant;
+import cn.agentplatform.engine.infra.PortalRuntimeAccess.Scope;
 
 import org.springframework.stereotype.Service;
 
@@ -45,6 +47,8 @@ import java.util.*;
  */
 @Service
 public class ConfirmationCenterService {
+  private static final Set<String> ENTRY_ROLES = Set.of("ADMIN", "APPROVER", "BUILDER");
+  private static final Set<String> TENANT_ROLES = Set.of("ADMIN", "APPROVER");
 
   private final TraceStore store;
   private final ApprovalService approvals;
@@ -57,13 +61,28 @@ public class ConfirmationCenterService {
   }
 
   public Map<String, Object> counts(String appCode, Actor actor) {
-    requireEntry(actor, appCode);
+    return counts(appCode, actor, null);
+  }
+
+  public Map<String, Object> counts(String appCode, Actor actor, Grant grant) {
     String code = normalizedWorkspace(appCode);
-    boolean admin = Roles.has(actor, Roles.ADMIN);
-    int publishReview = countPublishReview(code, actor, admin);
-    int highRisk = countHighRisk(code, actor);
-    int planConfirmation = tasks.confirmableRevisions(code, actor).size();
-    int draftMemory = countDraftMemory(code, actor, admin);
+    Scope eligible = grant == null ? Scope.ALL : grant.scope(ENTRY_ROLES);
+    if (grant == null) {
+      if (!Roles.hasAny(actor, Roles.ADMIN, Roles.APPROVER, Roles.BUILDER, Roles.EDITOR))
+        reject(actor, code);
+    } else if (eligible.empty() || code != null && !eligible.allows(code)) {
+      reject(actor, code);
+    }
+    Scope wide = grant == null
+            ? (Roles.hasAny(actor, Roles.ADMIN, Roles.APPROVER) ? Scope.ALL : Scope.NONE)
+            : grant.scope(TENANT_ROLES);
+    Scope admin = grant == null
+            ? (Roles.has(actor, Roles.ADMIN) ? Scope.ALL : Scope.NONE) : grant.scope(Set.of("ADMIN"));
+    int publishReview = countPublishReview(code, actor, eligible, wide);
+    int highRisk = countHighRisk(code, actor, grant, eligible);
+    int planConfirmation = grant == null ? tasks.confirmableRevisions(code, actor).size()
+            : tasks.confirmableRevisions(code, actor, eligible, wide).size();
+    int draftMemory = countDraftMemory(code, actor, eligible, admin);
     var out = new LinkedHashMap<String, Object>();
     out.put("publishReview", publishReview);
     out.put("highRisk", highRisk);
@@ -74,8 +93,7 @@ public class ConfirmationCenterService {
   }
 
   /** 管理台确认中心入口门：ADMIN/APPROVER/BUILDER(EDITOR) 可读（R-17：判定引 §3.1 授权目录常量）；越权 403+审计。 */
-  private void requireEntry(Actor actor, String appCode) {
-    if (Roles.hasAny(actor, Roles.ADMIN, Roles.APPROVER, Roles.BUILDER, Roles.EDITOR)) return;
+  private void reject(Actor actor, String appCode) {
     org.slf4j.LoggerFactory.getLogger(ConfirmationCenterService.class)
             .warn(
                     "AUDIT CONFIRMATION_CENTER_FORBIDDEN tenant={} principal={} roles={} appCode={}",
@@ -99,8 +117,7 @@ public class ConfirmationCenterService {
    * APPROVER 覆盖本租户（APPROVER 只读可见=可见但不可办理，审批动作 ADMIN 门）；其余
    * 角色（BUILDER）限提交人本人（created_by 收窄）。
    */
-  private int countPublishReview(String code, Actor actor, boolean admin) {
-    boolean tenantWide = Roles.hasAny(actor, Roles.ADMIN, Roles.APPROVER);
+  private int countPublishReview(String code, Actor actor, Scope eligible, Scope wide) {
     // R-17 计数口径：按业务号 release_id 去重（count(distinct)）——同号重复提交不重复计数。
     // 现状核实：app.integration_config_release 主键 (tenant_id, release_id) 一行业务号一行，
     // validate/approve 为同行 CAS 状态迁移不新增行，此去重为口径显式化与防御性收口。
@@ -108,9 +125,10 @@ public class ConfirmationCenterService {
             + " and r.status in ('VALIDATED','APPROVED')");
     var args = new ArrayList<Object>();
     args.add(actor.tenantId());
-    if (!tenantWide) {
-      where.append(" and r.created_by=?");
+    if (!eligible.all()) where.append(" and ").append(eligible.predicate("r.app_code", args));
+    if (!wide.all()) {
       args.add(actor.principalId());
+      where.append(" and (r.created_by=? or ").append(wide.predicate("r.app_code", args)).append(")");
     }
     if (code != null) {
       where.append(" and r.app_code=?");
@@ -126,26 +144,24 @@ public class ConfirmationCenterService {
   }
 
   /** 高危确认计数：与 InlineApproval 四类列表共用 ApprovalService.list 同一待办条件。 */
-  private int countHighRisk(String code, Actor actor) {
-    var items = approvals.list(actor);
+  private int countHighRisk(String code, Actor actor, Grant grant, Scope eligible) {
+    var items = grant == null ? approvals.list(actor)
+            : approvals.list(actor, app -> eligible.allows(app) ? grant.rolesFor(app) : Set.of());
     if (code == null) return items.size();
     return (int) items.stream().filter(item -> code.equals(item.get("appCode"))).count();
   }
 
   /** DRAFT 记忆计数：共享层=ADMIN（+本人条目），私有层=来源用户（owner_id）。 */
-  private int countDraftMemory(String code, Actor actor, boolean admin) {
+  private int countDraftMemory(String code, Actor actor, Scope eligible, Scope admin) {
     var where =
             new StringBuilder(
                     " from engine.memory_entry m where m.tenant_id=? and m.status='DRAFT'");
     var args = new ArrayList<Object>();
     args.add(actor.tenantId());
-    if (admin) {
-      where.append(" and (m.scope='SHARED' or m.owner_id=?)");
-      args.add(actor.principalId());
-    } else {
-      where.append(" and m.owner_id=?");
-      args.add(actor.principalId());
-    }
+    if (!eligible.all()) where.append(" and ").append(eligible.predicate("m.workspace_code", args));
+    args.add(actor.principalId());
+    where.append(" and (m.owner_id=? or (m.scope='SHARED' and ")
+            .append(admin.predicate("m.workspace_code", args)).append("))");
     if (code != null) {
       where.append(" and m.workspace_code=?");
       args.add(code);

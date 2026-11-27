@@ -170,7 +170,8 @@ public class GatewayController {
                 var source = GatewayIngressBoundary.claimRuntime(req);
                 var client = authority.orElseThrow(() -> new PlatformException(
                         503, "DEPENDENCY_UNAVAILABLE", "门户运行授权服务暂不可用"));
-                var call = PortalRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI());
+                var call = PortalRuntimeRoutes.call(serviceRoutes, req.getMethod(), req.getRequestURI(),
+                        req.getParameterValues("appCode"));
                 if ("proxy.engine.post.TaskController.create".equals(call.action())) {
                     var metadata = taskMetadata == null ? null : taskMetadata.getIfAvailable();
                     if (metadata == null)

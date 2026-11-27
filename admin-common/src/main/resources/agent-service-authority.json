@@ -1,5 +1,17 @@
 [
  {
+  "method": "GET",
+  "template": "/internal/platform-authorization/runtime",
+  "caller": "engine",
+  "target": "app",
+  "action": "platform.authorization.runtime",
+  "mode": "delegated",
+  "integrationAllowed": false,
+  "source": "app-management/src/main/java/cn/agentplatform/app/api/PlatformAuthorizationController.java::runtime",
+  "callerSource": "engine-runtime/src/main/java/cn/agentplatform/engine/infra/PortalRuntimeAccess.java::current",
+  "reason": "R-51 运行端以入站绑定查询当前主体的平台应用角色范围"
+ },
+ {
   "method": "POST",
   "template": "/internal/platform-authorization/owned-task",
   "caller": "engine",

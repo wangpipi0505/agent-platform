@@ -27,6 +27,7 @@ const admin = client(portalTokens.ADMIN, { base });
 const user = client(portalTokens.USER, { base });
 const grantPath = '/admin/platform-authorization/grants';
 const records = [];
+const authorization = [];
 const results = [];
 const report = 'm5-3-e2e-report.json';
 const env = { portalTokens };
@@ -97,6 +98,11 @@ async function directTask(check) {
     ...body, requestId: 's4-s1-control-' + runId(), goal: 'E2E task control.',
   }), 200, '受理独立取消恢复样本');
   const controlId = requiredId(check, control?.taskId, '控制样本任务号');
+  const ownerOnly = new Check('R51', authorization);
+  for (const operation of ['cancel','resume']) {
+    http(ownerOnly, await user.post(taskPath(controlId) + '/' + operation, {}), 403,
+      '其他真实主体无法操作任务 ' + operation, 'TASK_OWNER_DENIED');
+  }
   const cancelled = http(check, await admin.post(taskPath(controlId) + '/cancel', {}), 200, '本人取消');
   check.eq(cancelled?.state, 'CANCELLED', '取消写入终态');
   const repeat = http(check, await admin.post(taskPath(controlId) + '/cancel', {}), 200, '本人重复取消');
@@ -307,7 +313,7 @@ async function saveReport() {
     setup:config, identityKinds:Object.keys(portalTokens), executed:results.length,
     passed:results.filter((result) => result.status === 'PASS').length,
     assertions:records.length, failedAssertions:records.filter((record) => !record.ok).length,
-    results, records,
+    results, records, authorization,
   };
   await writeFile(report + '.tmp', JSON.stringify(summary, null, 2) + '\n', {mode:0o600});
   await rename(report + '.tmp', report);
@@ -348,4 +354,4 @@ for (const [id,name,run] of scenarios) {
 const summary = await saveReport();
 console.log(JSON.stringify({executed:summary.executed,passed:summary.passed,assertions:summary.assertions,
   failedAssertions:summary.failedAssertions}));
-process.exitCode = summary.executed === 8 && summary.passed === 8 ? 0 : 1;
+process.exitCode = summary.executed === 8 && summary.passed === 8 && authorization.every((record) => record.ok) ? 0 : 1;

@@ -13,14 +13,16 @@ public final class PortalTaskRoutes {
     private static final String BASE = "/v1/tasks/{taskId}";
     private static final String REVISION = "/plans/{planId}/revisions/{revision}";
     private static final String READ = "agent.view";
+    public static final String CONTROL = "agent.task.control";
     private static final String WRITE = "agent.plan.revise";
     public static final String CONFIRM = "agent.plan.confirm";
     public static final String EXECUTE = "agent.plan.execute";
     public static final String OPERATE = "agent.plan.operate";
-    private static final Set<String> PERMISSIONS = Set.of(READ, WRITE, CONFIRM, EXECUTE);
+    private static final Set<String> PERMISSIONS = Set.of(READ, CONTROL, WRITE, CONFIRM, EXECUTE);
     private static final List<Route> ROUTES = List.of(
             route("GET", "", READ), route("GET", "/events", READ), route("GET", "/result", READ),
             route("GET", "/steps/{stepId}/calls", READ), route("GET", REVISION, READ),
+            route("POST", "/cancel", CONTROL), route("POST", "/resume", CONTROL),
             route("POST", "/plans", WRITE), route("POST", REVISION + "/confirm", CONFIRM),
             route("POST", "/execute", EXECUTE));
 
@@ -65,6 +67,10 @@ public final class PortalTaskRoutes {
         if (parts.length != 2 || !parts[0].matches("task-[0-9a-f]{20}") || !PERMISSIONS.contains(parts[1]))
             throw AuthorityProtocol.denied();
         return parts[1];
+    }
+
+    public static boolean requiresPlan(String permission) {
+        return Set.of(WRITE, CONFIRM, EXECUTE).contains(permission);
     }
 
     public static VerifiedAuthority current(String taskId) {
