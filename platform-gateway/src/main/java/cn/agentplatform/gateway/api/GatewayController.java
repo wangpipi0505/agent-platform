@@ -178,7 +178,7 @@ public class GatewayController {
                         throw new PlatformException(503, "DEPENDENCY_UNAVAILABLE", "应用发布查询暂不可用");
                     var version = metadata.lookup(source.sourceToken(), source.subject(), call.resource().id());
                     call = new ServiceCall(call.target(), call.action(), version.resource());
-                } else {
+                } else if (!PortalRuntimeRoutes.QUERY_KIND.equals(call.resource().kind())) {
                     if (platformAccess == null)
                         throw new PlatformException(503, "PLATFORM_ACCESS_UNAVAILABLE", "平台授权暂不可用");
                     // The matched route fixes the app code; reads and reconnects need a current grant too.

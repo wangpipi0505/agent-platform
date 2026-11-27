@@ -8,6 +8,7 @@ import cn.agentplatform.common.authority.IntegrationRuntimeRoutes;
 import cn.agentplatform.common.authority.IntegrationRuntimeRoutes.TaskScope;
 import cn.agentplatform.common.authority.IntegrationTaskRoutes;
 import cn.agentplatform.common.authority.PortalRuntimeRoutes;
+import cn.agentplatform.common.authority.PortalTaskRoutes;
 import cn.agentplatform.engine.infra.TraceStore;
 import cn.agentplatform.engine.infra.PortalRuntimeAccess.Scope;
 
@@ -61,6 +62,12 @@ public class Tasks {
    */
   private final cn.agentplatform.engine.infra.RuntimeClients clients;
   private final TaskAgentExecution agentExecution;
+  private RunAuthority runAuthority;
+
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  void runAuthority(RunAuthority authority) {
+    this.runAuthority = authority;
+  }
 
   // T2-11：活动任务事件 SSE 观察流（每连接一个泵；closeTaskStreams/@PreDestroy 收口）。
   private final Set<TaskEventPump> taskStreams = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -910,6 +917,27 @@ public class Tasks {
 
   /** 取消：运行/等待态→CANCELLED（CAS state_version）；终态幂等返回原状。 */
   public Map<String, Object> cancel(long taskId, JsonNode req, Actor actor) {
+    if (runAuthority != null) {
+      var task = ownedTask(taskId, actor);
+      var current = PortalTaskRoutes.current((String) task.get("public_id"));
+      if (current != null && "proxy.engine.post.TaskController.cancel".equals(current.call().action())) {
+        if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(task.get("state"))) return detail(taskId, actor);
+        var protectedRuns = store.db().queryForList("""
+                select d.run_id from engine.task_dispatch d
+                  join engine.run_authority a on a.run_id=d.run_id
+                where d.task_id=? and d.step_id=?
+                """, Long.class, taskId, StepExecutionMapping.ENTRY);
+        if (!protectedRuns.isEmpty()) {
+          long run = protectedRuns.getFirst();
+          var proof = runAuthority.currentRetained(run);
+          store.cancelPortalTaskEntry(taskId, run, StepExecutionMapping.ENTRY, actor, proof, (state, version) -> {
+            if (!markCancelled(taskId, state, version, actor))
+              throw new IllegalStateException("TASK_CANCEL_STATE_CHANGED");
+          });
+          return detail(taskId, actor);
+        }
+      }
+    }
     store.atomic(() -> {
       var task = ownedTask(taskId, actor, true);
       String state = String.valueOf(task.get("state"));

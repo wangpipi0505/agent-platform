@@ -221,7 +221,8 @@ public class GatewayIamPortalConfiguration {
     FilterRegistrationBean<PortalTicketSourceFilter> gatewayPortalTicketSource() {
         var registration = new FilterRegistrationBean<>(new PortalTicketSourceFilter());
         registration.setOrder(SecurityProperties.DEFAULT_FILTER_ORDER - 1);
-        registration.addUrlPatterns("/admin/*", "/auth/session", "/v1/apps/*", "/v1/tasks/*");
+        registration.addUrlPatterns("/admin/*", "/auth/session", "/v1/apps/*", "/v1/tasks/*",
+                "/v1/deploy/resource-manifest");
         registration.setName("gatewayPortalTicketSource");
         return registration;
     }
@@ -237,7 +238,8 @@ public class GatewayIamPortalConfiguration {
         var registration = new FilterRegistrationBean<>(capture);
         registration.setOrder(SecurityProperties.DEFAULT_FILTER_ORDER + 1);
         registration.setDispatcherTypes(DispatcherType.REQUEST, DispatcherType.ASYNC);
-        registration.addUrlPatterns("/admin/*", "/auth/session", "/v1/apps/*", "/v1/tasks/*");
+        registration.addUrlPatterns("/admin/*", "/auth/session", "/v1/apps/*", "/v1/tasks/*",
+                "/v1/deploy/resource-manifest");
         registration.setName("gatewayPortalIngress");
         return registration;
     }

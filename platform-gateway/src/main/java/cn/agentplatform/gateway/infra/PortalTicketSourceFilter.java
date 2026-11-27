@@ -2,6 +2,7 @@ package cn.agentplatform.gateway.infra;
 
 import cn.agentplatform.common.ApiResponse;
 import cn.agentplatform.common.Json;
+import cn.agentplatform.common.authority.PortalRuntimeRoutes;
 import cn.agentplatform.common.authority.PortalTaskRoutes;
 
 import jakarta.servlet.FilterChain;
@@ -42,7 +43,7 @@ final class PortalTicketSourceFilter extends OncePerRequestFilter {
     static boolean portalSurface(String method, String path) {
         return path != null
                 && (path.startsWith("/admin/") || path.equals("/auth/session") || path.startsWith("/v1/apps/")
-                    || PortalTaskRoutes.match(method, path) != null);
+                    || PortalTaskRoutes.match(method, path) != null || PortalRuntimeRoutes.query(method, path));
     }
 
     @Override

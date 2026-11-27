@@ -840,6 +840,66 @@ public class TraceStore {
                 proof, () -> (int) appendEvent(writable(run, proof), type, payload, proof));
     }
 
+    /** An owned task and its retained run commit cancellation together with protected trace facts. */
+    public void cancelPortalTaskEntry(long task, long run, String entryStep, Actor actor,
+            RetainedAuthorization proof, java.util.function.ObjIntConsumer<String> finishTask) {
+        protectedAtomic(proof, () -> {
+            var rows = db.queryForList("""
+                    select t.public_id,t.state,t.state_version
+                      from engine.task t
+                      join engine.task_dispatch d on d.task_id=t.id and d.step_id=?
+                      join engine.run r on r.id=d.run_id and r.tenant_id=t.tenant_id
+                        and r.principal_id=t.principal_id and r.app_code=t.app_code
+                      where t.id=? and r.id=? and r.trigger_type='TASK'
+                        and t.tenant_id=? and t.principal_id=?
+                        and not exists (select 1 from engine.task_integration_scope s where s.task_id=t.id)
+                      for update of t
+                    """, entryStep, task, run, actor.tenantId(), actor.principalId());
+            if (rows.size() != 1) throw denied();
+            var row = rows.getFirst();
+            var current = PortalTaskRoutes.current((String) row.get("public_id"));
+            if (current == null || !current.actor().equals(actor)
+                    || !"proxy.engine.post.TaskController.cancel".equals(current.call().action())) throw denied();
+            String state = (String) row.get("state");
+            if (Set.of("SUCCEEDED", "FAILED", "CANCELLED").contains(state)) return null;
+            var view = writable(run, proof);
+            if (!"PORTAL".equals(view.binding().sourceKind())) throw denied();
+            int cancelled = db.update("""
+                    update engine.run set status='CANCELLED',stop_reason='USER_CANCEL',ended_at=now()
+                    where id=? and status not in ('SUCCEEDED','FAILED','CANCELLED')
+                    """, run);
+            if (cancelled == 0) return null;
+            var nodes = db.queryForList("""
+                    update engine.node_instance set status='CANCELLED',ended_at=now()
+                    where run_id=? and status not in ('SUCCEEDED','FAILED','SKIPPED','ABANDONED','CANCELLED')
+                    returning id
+                    """, Long.class, run);
+            for (long node : nodes) append(view, "node-state", Long.toString(node), proof);
+            db.update("""
+                    update engine.tool_call set status='ABANDONED'
+                    where run_id=? and status in ('REGISTERED','EXECUTING')
+                    """, run);
+            appendEvent(view, "RUN_FINISHED", Map.of("status", "CANCELLED"), proof);
+            db.update("""
+                    update engine.task_step set state='CANCELLED',state_version=state_version+1,updated_at=now()
+                    where task_id=? and step_id=? and state not in ('SUCCEEDED','FAILED','CANCELLED')
+                    """, task, entryStep);
+            db.update("""
+                    update engine.task_dispatch set state='DONE',updated_at=now()
+                    where task_id=? and step_id=? and state<>'DONE'
+                    """, task, entryStep);
+            finishTask.accept(state, ((Number) row.get("state_version")).intValue());
+            // Both the control request and the retained run proof must still be current at commit.
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void beforeCommit(boolean readOnly) {
+                    if (!current.equals(AuthorityContext.current())) throw denied();
+                    proof.requireVerified();
+                }
+            });
+            return null;
+        });
+    }
+
     /** Concrete insertion seam for N3. It never attaches initial authority to an existing node. */
     public long createNode(
             long run,

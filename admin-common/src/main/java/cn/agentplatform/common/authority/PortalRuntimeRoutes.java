@@ -41,11 +41,15 @@ public final class PortalRuntimeRoutes {
     }
 
     public static boolean matches(String method, String path) {
-        if ("GET".equals(method) && QUERY_PATHS.contains(path)) return true;
+        if (query(method, path)) return true;
         if (memoryMethod(method) && MEMORY_PATH.matcher(path).matches()) return true;
         var detail = DETAIL.matcher(path);
         if (detail.matches()) return detailMethod(method, detail.group(3));
         return ("GET".equals(method) || "POST".equals(method)) && COLLECTION.matcher(path).matches();
+    }
+
+    public static boolean query(String method, String path) {
+        return "GET".equals(method) && QUERY_PATHS.contains(path);
     }
 
     public static ServiceCall call(ServiceRoutePolicy routes, String method, String path) {
@@ -53,7 +57,7 @@ public final class PortalRuntimeRoutes {
     }
 
     public static ServiceCall call(ServiceRoutePolicy routes, String method, String path, String[] appCodes) {
-        if ("GET".equals(method) && QUERY_PATHS.contains(path)) {
+        if (query(method, path)) {
             if (appCodes != null && appCodes.length != 1) throw AuthorityProtocol.denied();
             String app = appCodes == null ? "" : appCodes[0];
             if (RESOURCE_MANIFEST.equals(path) || !app.isEmpty()) MetadataSelectors.code(app);

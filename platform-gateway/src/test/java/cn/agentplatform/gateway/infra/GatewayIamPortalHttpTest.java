@@ -77,6 +77,19 @@ class GatewayIamPortalHttpTest {
                 Map.of("region", Set.of("A"), "dataLabels", Set.of("confidential"))));
         engine = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         engine.createContext("/v1/apps/ops/", GatewayIamPortalHttpTest::respondAsEngine);
+        for (var query : List.of("/v1/tasks", "/admin/confirmation-center/counts", "/v1/deploy/resource-manifest")) {
+            engine.createContext(query, request -> {
+                try (request; var authority = iam.client("engine")) {
+                    var uri = request.getRequestURI();
+                    String[] selection = uri.getQuery() != null && uri.getQuery().startsWith("appCode=")
+                            ? new String[]{uri.getQuery().substring("appCode=".length())} : null;
+                    var call = cn.agentplatform.common.authority.PortalRuntimeRoutes.call(
+                            new ServiceRoutePolicy(), "GET", uri.getPath(), selection);
+                    authority.authorize(request.getRequestHeaders().getFirst("Authorization").substring(7), call);
+                    reply(request, 200, ApiResponse.ok(Map.of("path", uri.toString())));
+                }
+            });
+        }
         engine.createContext(TASK, request -> {
             try (request; var authority = iam.client("engine")) {
                 var route = PortalTaskRoutes.match(request.getRequestMethod(), request.getRequestURI().getPath());
@@ -462,12 +475,13 @@ class GatewayIamPortalHttpTest {
      * 票源检查与身份捕获必须同时注册到应用和本人任务入口。
      */
     @Test
-    void bothPortalFiltersCoverApplicationsAndOwnedTasks() {
+    void bothPortalFiltersCoverApplicationsOwnedTasksAndResourceManifest() {
         var source = (FilterRegistrationBean<?>) app.getBean("gatewayPortalTicketSource");
         var ingress = (FilterRegistrationBean<?>) app.getBean("gatewayPortalIngress");
         for (var registration : List.of(source, ingress)) {
             assertThat(registration.getUrlPatterns())
-                    .contains("/admin/*", "/auth/session", "/v1/apps/*", "/v1/tasks/*");
+                    .contains("/admin/*", "/auth/session", "/v1/apps/*", "/v1/tasks/*",
+                            "/v1/deploy/resource-manifest");
             assertThat(registration.getUrlPatterns())
                     .doesNotContain("/v1/deploy/*", "/v1/runs/*", "/v1/sessions/*");
         }
@@ -480,10 +494,28 @@ class GatewayIamPortalHttpTest {
         assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/apps/ops/memories")).isTrue();
         assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/apps/ops")).isTrue();
         assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/appsx/ops")).isFalse();
-        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/deploy/resource-manifest")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/deploy/resource-manifest")).isTrue();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/deploy/resource-manifest/extra")).isFalse();
+        assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/tasks")).isTrue();
         assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/runs/r_1")).isFalse();
         assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/sessions/s_1/subagents")).isFalse();
         assertThat(PortalTicketSourceFilter.portalSurface("GET", "/v1/tasks/77/plans")).isFalse();
+    }
+
+    @Test
+    void runtimeQueriesBindTheSelectorAndReachEngineForApplicationScopedPortalUsers() throws Exception {
+        for (var path : List.of("/v1/tasks?confirmableBy=me", "/admin/confirmation-center/counts",
+                "/v1/deploy/resource-manifest?appCode=ops")) {
+            var response = get(path, iam.portal());
+            assertThat(response.statusCode()).as(path + " " + response.body()).isEqualTo(200);
+            assertThat(Json.read(response.body()).at("/data/path").asText()).isEqualTo(path);
+        }
+        var duplicate = get("/v1/deploy/resource-manifest?appCode=ops&appCode=other", iam.portal());
+        assertThat(duplicate.statusCode()).isEqualTo(403);
+        assertThat(get("/v1/deploy/resource-manifest", iam.portal()).statusCode()).isEqualTo(400);
+        var misplaced = get("/v1/deploy/resource-manifest?appCode=ops&access_token=invalid-test-value", null);
+        assertThat(misplaced.statusCode()).isEqualTo(400);
+        assertThat(Json.read(misplaced.body()).path("code").asText()).isEqualTo("PORTAL_TICKET_SOURCE_INVALID");
     }
 
     @Test
@@ -555,7 +587,7 @@ class GatewayIamPortalHttpTest {
             assertThat(response.statusCode()).as(header + ": " + response.body()).isEqualTo(403);
         }
         for (String unavailable : List.of("/v1/apps/ops/runs", "/v1/apps/ops/tasks/detail",
-                "/v1/deploy/resource-manifest", "/v1/runs/r_0123456789abcdef0123456789abcdef",
+                "/v1/deploy/resource-manifest/extra", "/v1/runs/r_0123456789abcdef0123456789abcdef",
                 "/v1/sessions/session-1")) {
             assertThat(get(unavailable, iam.portal()).statusCode()).as(unavailable).isEqualTo(403);
         }

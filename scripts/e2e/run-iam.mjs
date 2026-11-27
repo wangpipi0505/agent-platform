@@ -171,6 +171,9 @@ async function confirmations(check) {
   http(check, await user.get(counts), 403, 'USER 无管理计数权');
   await withRole(check, 'BUILDER', async (builder) => {
     http(check, await builder.get(counts), 200, '已授权 BUILDER 读取计数');
+    const authorizationCheck = new Check('R51', authorization);
+    http(authorizationCheck, await builder.get(counts + '?appCode=r51-outside-scope'), 403,
+      'BUILDER 无权读取授权应用以外的管理计数', 'CONFIRMATION_CENTER_FORBIDDEN');
   });
   const plan = await newPlan(check, user, 's4-s6', [step('first')]);
   const select = '/v1/tasks?confirmableBy=me';
@@ -268,10 +271,16 @@ async function roleMatrix(check) {
   http(check, await user.get(manifest), 403, 'USER 不能读取部署资源清单');
   await withRole(check, 'BUILDER', async (builder) => {
     http(check, await builder.get(manifest), 200, 'BUILDER 资源清单');
+    const authorizationCheck = new Check('R51', authorization);
+    http(authorizationCheck, await builder.get('/v1/deploy/resource-manifest?appCode=r51-outside-scope'), 403,
+      'BUILDER 无权读取授权应用以外的资源清单', 'RESOURCE_MANIFEST_FORBIDDEN');
     http(check, await builder.post('/admin/model-providers', {}), 403, 'BUILDER 无模型供应商配置权');
   });
   await withRole(check, 'OPERATOR', async (operator) => {
     http(check, await operator.get(manifest), 200, 'OPERATOR 资源清单');
+    const authorizationCheck = new Check('R51', authorization);
+    http(authorizationCheck, await operator.get('/v1/deploy/resource-manifest?appCode=r51-outside-scope'), 403,
+      'OPERATOR 无权读取授权应用以外的资源清单', 'RESOURCE_MANIFEST_FORBIDDEN');
     const session = http(check, await operator.post('/v1/apps/' + app + '/sessions', {}), 200, 'OPERATOR 本人会话');
     if (session?.sessionId) {
       http(check, await operator.get('/v1/apps/' + app + '/sessions/' + session.sessionId + '/events?surfaceOnly=false'),
