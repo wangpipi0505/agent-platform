@@ -18,6 +18,8 @@ public class IntegrationPolicyResolver {
         var rows=db.query("select /* credentialId */ id,tenant_id,app_code,biz_system_code,status,secret_ref,claim_limits,allowed_origins,role_mapping,policy_revision from app.integration_credential where id=? and tenant_id=? and app_code=? and biz_system_code=?",
             (r,n)->{
                 String version=r.getLong("id")+":"+r.getLong("policy_revision");
+                if (request.expectedPolicyVersion() != null && "REVOKED".equals(r.getString("status")))
+                    throw new PlatformException(410, "POLICY_CREDENTIAL_REVOKED", "集成凭据已撤销");
                 if(request.expectedPolicyVersion()!=null&&!request.expectedPolicyVersion().equals(version))throw new PlatformException(409,"POLICY_VERSION_CHANGED","策略版本已变更");
                 JsonNode limits=Json.read(r.getString("claim_limits")),origins=Json.read(r.getString("allowed_origins"));
                 JsonNode mapping=Json.read(r.getString("role_mapping"));

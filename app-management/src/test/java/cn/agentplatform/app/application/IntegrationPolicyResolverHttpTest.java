@@ -111,6 +111,9 @@ class IntegrationPolicyResolverHttpTest {
         var old=requestBody("alice");old.put("expectedPolicyVersion",id+":1");assertThat(resolve(old).statusCode()).isEqualTo(409);
         var gone=resolve(requestBody("alice"));assertThat(Json.read(gone.body()).path("subjectAllowed").asBoolean()).isFalse();
         var revoked=admin("POST","/admin/apps/"+APP+"/integration/credentials/"+BIZ+"/revoke","/admin/apps/{code}/integration/credentials/{biz}/revoke",credentialResource(),"");assertThat(revoked.statusCode()).as(revoked.body()).isEqualTo(200);assertThat(db.queryForObject("select policy_revision from app.integration_credential where id=?",Long.class,id)).isEqualTo(3);
+        var previouslyIssued = requestBody("bob");
+        previouslyIssued.put("expectedPolicyVersion", id + ":2");
+        assertThat(resolve(previouslyIssued).statusCode()).isEqualTo(410);
     }
 
     @Test void mappedBusinessRolesAreReadFromTheCredentialAndInvalidateOldPolicy() throws Exception {

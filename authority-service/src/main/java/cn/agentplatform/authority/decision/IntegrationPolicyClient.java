@@ -100,6 +100,9 @@ public final class IntegrationPolicyClient {
                     .headers(headers -> headers.setBearerAuth(proof)).body(body)
                     .exchange((query, result) -> {
                         var status = result.getStatusCode();
+                        if (status.value() == 410)
+                            throw new AuthorityException(401, "INTEGRATION_TICKET_EXPIRED",
+                                    "集成凭据已撤销，请重新出票", "INTEGRATION_CREDENTIAL_REVOKED");
                         if (Set.of(403, 404, 409).contains(status.value())) throw denied();
                         if (!status.is2xxSuccessful()) throw unavailable();
                         byte[] bytes = result.getBody().readNBytes(MAX_RESPONSE_BYTES + 1);
