@@ -1,0 +1,16 @@
+id:1
+event:turn/start
+data:{"turn":1}
+
+id:2
+event:user/message
+data:{"content":{"message":"Reply with exactly 甲 and no other text."}}
+
+id:3
+event:assistant/message
+data:{"runId":"r_8683f76abd4341909610ed675131aaf5","content":"甲"}
+
+id:4
+event:turn/end
+data:{"turn":1,"runId":"r_8683f76abd4341909610ed675131aaf5","reason":"completed","status":"SUCCEEDED"}
+

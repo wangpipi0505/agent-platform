@@ -1,0 +1,80 @@
+{
+  "revision": "57945918",
+  "polls": [
+    {
+      "poll": 1,
+      "detail": {
+        "http": 200,
+        "state": "FAILED",
+        "reason": "SYS-MODEL-503",
+        "retryable": false
+      },
+      "result": {
+        "http": 200,
+        "state": "FAILED",
+        "reason": "SYS-MODEL-503",
+        "retryable": false
+      }
+    }
+  ],
+  "workspaceRetest": [
+    {
+      "path": "/admin/apps/r22e2-real-v2/manifest",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "trace": null
+    },
+    {
+      "path": "/admin/apps/r22e2-real-v2/rules",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "trace": null
+    }
+  ],
+  "R47": [
+    {
+      "app": "r22e2-real-v1",
+      "http": 409,
+      "code": "APP_UNAVAILABLE",
+      "trace": null,
+      "passed": true
+    },
+    {
+      "app": "e2-scenario-no-such-app",
+      "http": 404,
+      "code": "APP_NOT_FOUND",
+      "trace": null,
+      "passed": true
+    },
+    {
+      "app": "r22e2-real-v2",
+      "http": 200,
+      "code": "OK",
+      "trace": "9a13d101-e131-47b5-ab08-e125e2561270",
+      "passed": true,
+      "runId": "r_819f659084d84e80aa38b3faa2b9ffcc",
+      "terminal": {
+        "status": "SUCCEEDED",
+        "reason": "FINAL_ANSWER"
+      }
+    }
+  ],
+  "credentialIssue": {
+    "http": 200,
+    "code": "OK"
+  },
+  "credentialRevocation": {
+    "http": 200,
+    "code": "OK"
+  },
+  "adminTicketRevokeHttp": 200,
+  "firstAttemptError": "'apiKey'",
+  "R48Submit": {
+    "http": 200,
+    "code": "OK"
+  },
+  "taskId": "task-d29a9ab3730743c7849f",
+  "idempotent": true,
+  "R48Passed": true,
+  "proxyRestored": true
+}

@@ -1,0 +1,62 @@
+From https://github.com/wangpipi0505/agent-platform
+ * branch              upgrade/20261103 -> FETCH_HEAD
+Updating 3350ac4e..57945918
+Fast-forward
+ .../authority/PublishedAdmissionFixtureMain.java   |     7 +-
+ docs/evidence/2026-11-27-R-50/README.md            |    40 +
+ docs/evidence/2026-11-27-R-50/baseline.json        |  6379 +++++++++
+ docs/evidence/2026-11-27-R-50/class-results.md     |    47 +
+ docs/evidence/2026-11-27-R-50/full-suite.json      | 13740 +++++++++++++++++++
+ docs/evidence/2026-11-27-R-50/phase-results.json   |   506 +
+ .../engine/infra/RunAuthorityStore.java            |    24 +-
+ .../application/ChatSessionConfigPinTest.java      |     4 +-
+ .../application/PortalChildEventsHttpTest.java     |    26 +-
+ .../application/RunSnapshotAssemblyTest.java       |     2 +
+ .../engine/application/SubagentPlanningTest.java   |    30 +-
+ .../session/FlywayLegacyUpgradeEvidenceTest.java   |    12 +-
+ .../engine/infra/ActionPlanPostgresTest.java       |   196 +-
+ .../engine/infra/ChatTurnEventLinkageTest.java     |    19 +-
+ .../engine/infra/EngineTestDatabase.java           |    12 +
+ .../infra/EvaluationConversationSessionTest.java   |     3 +-
+ .../infra/FlowMaterialDatabasePreflightTest.java   |   122 +-
+ .../infra/FlowMaterialStatusPostgresTest.java      |     4 +-
+ .../engine/infra/InitialChatAdmissionFixture.java  |     7 +-
+ .../InitialChatAdmissionHttpPostgresTest.java      |    21 +-
+ .../engine/infra/ModelFailureTaskPostgresTest.java |    16 +-
+ .../infra/ModelInputMaterialPostgresTest.java      |     5 +-
+ .../infra/OwnedFlowMaterialsPostgresTest.java      |     3 +-
+ .../infra/PortalChildEventsPostgresTest.java       |     2 +-
+ .../infra/PortalRunEventWindowPostgresTest.java    |    16 +-
+ .../infra/PublishedAdmissionHttpPostgresTest.java  |     2 +-
+ .../infra/RunAdmissionBoundaryPostgresTest.java    |     6 +-
+ .../engine/infra/RunAdmissionHttpTest.java         |     6 +-
+ .../engine/infra/RunAuthorityFixture.java          |     4 +-
+ .../engine/infra/RunEventReaderPostgresTest.java   |    18 +-
+ .../infra/RunInputValidationPostgresTest.java      |    18 +-
+ .../RunObservationMetadataHttpPostgresTest.java    |    13 +-
+ .../RunObservationStatusHttpPostgresTest.java      |     4 +-
+ .../infra/RuntimeClientsPublishedHttpTest.java     |     4 +-
+ .../engine/infra/SessionEventsEndpointTest.java    |     3 +
+ .../engine/infra/SessionSseBackpressureTest.java   |    68 +-
+ .../engine/infra/TestInputHttpTest.java            |     4 +
+ .../engine/infra/TracePostgresTest.java            |     5 +-
+ scripts/test.ps1                                   |     9 +-
+ 39 files changed, 21049 insertions(+), 358 deletions(-)
+ create mode 100644 docs/evidence/2026-11-27-R-50/README.md
+ create mode 100644 docs/evidence/2026-11-27-R-50/baseline.json
+ create mode 100644 docs/evidence/2026-11-27-R-50/class-results.md
+ create mode 100644 docs/evidence/2026-11-27-R-50/full-suite.json
+ create mode 100644 docs/evidence/2026-11-27-R-50/phase-results.json
+To https://github.com/wangpipi0505/agent-platform.git
+   3350ac4e..57945918  upgrade/20261103 -> upgrade/20261103
+ * [new tag]           r-scenario-candidate-20261127-57945918 -> r-scenario-candidate-20261127-57945918
+git status --short
+git log origin/upgrade/20261103..HEAD
+git rev-parse HEAD origin/upgrade/20261103
+579459180e911daccd85a243de45175d4aee7e3f
+579459180e911daccd85a243de45175d4aee7e3f
+git ls-remote origin candidate branch and tag
+fatal: unable to access 'https://github.com/wangpipi0505/agent-platform.git/': schannel: server closed abruptly (missing close_notify)
+579459180e911daccd85a243de45175d4aee7e3f	refs/heads/upgrade/20261103
+5d8b6d9414a39170d019166aea7a8b791a5c68b4	refs/tags/r-scenario-candidate-20261127-57945918
+579459180e911daccd85a243de45175d4aee7e3f	refs/tags/r-scenario-candidate-20261127-57945918^{}

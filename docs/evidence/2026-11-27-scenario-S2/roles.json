@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "admin": {
+      "principalId": "admin",
+      "roles": [
+        "ADMIN"
+      ],
+      "pages": [
+        "/apps",
+        "/evaluations",
+        "/assets/plugins",
+        "/skills",
+        "/model/prompt-templates",
+        "/model/management",
+        "/platform/authorizations",
+        "/assets/mcp",
+        "/assets/rules",
+        "/audit"
+      ],
+      "capabilities": [
+        "agent.plan.revise",
+        "agent.plan.execute",
+        "model.manage",
+        "agent.build",
+        "agent.plan.confirm",
+        "auth.grant",
+        "audit.read",
+        "plugin.manage",
+        "skill.manage",
+        "agent.publish",
+        "agent.view"
+      ]
+    },
+    "user": {
+      "principalId": "operatorA",
+      "roles": [
+        "USER"
+      ],
+      "pages": [
+        "/apps"
+      ],
+      "capabilities": [
+        "agent.plan.confirm",
+        "agent.plan.execute",
+        "agent.view",
+        "agent.plan.revise"
+      ]
+    }
+  },
+  "planId": "browser-1795723266983"
+}

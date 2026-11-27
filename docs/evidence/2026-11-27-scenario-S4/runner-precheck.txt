@@ -1,0 +1,23 @@
+STATIC PRECHECK ONLY. NO E2 REQUESTS.
+SYNTAX_OK scripts/e2e/run-all.mjs
+SYNTAX_OK scripts/e2e/lib/harness.mjs
+SYNTAX_OK scripts/e2e/scenarios/s1-direct-task.mjs
+SYNTAX_OK scripts/e2e/scenarios/s2-plan-task.mjs
+SYNTAX_OK scripts/e2e/scenarios/s3-memory-domain.mjs
+SYNTAX_OK scripts/e2e/scenarios/s4-plugin-discovery.mjs
+SYNTAX_OK scripts/e2e/scenarios/s5-mcp-connection.mjs
+SYNTAX_OK scripts/e2e/scenarios/s6-confirmation-center.mjs
+SYNTAX_OK scripts/e2e/scenarios/s7-integration-service.mjs
+SYNTAX_OK scripts/e2e/scenarios/s8-role-matrix.mjs
+579459180e911daccd85a243de45175d4aee7e3f
+scripts/e2e/scenarios/s2-plan-task.mjs:51:  pgOne(env, `update engine.task set state='PLAN_READY' where id=${tid} and state='ACCEPTED'`);
+scripts/e2e/lib/harness.mjs:4: * 按 ServiceTokens 同构形状铸造 HS256 用户票据（iss=agent-platform-v12, aud=agent-platform,
+scripts/e2e/lib/harness.mjs:24:export const GATEWAY = process.env.E2E_GATEWAY || 'http://127.0.0.1:18480';
+scripts/e2e/lib/harness.mjs:41:  const signing = b64({ alg: 'HS256', typ: 'JWT' }) + '.' + b64(claims);
+scripts/e2e/lib/harness.mjs:97:  return execFileSync(PSQL, ['-h', '127.0.0.1', '-p', '25432', '-U', env.AGENT_DB_USER, '-d', 'm53_e2e', '-At', '-v', 'ON_ERROR_STOP=1', '-c', sql],
+scripts/e2e/lib/harness.mjs:105:  return execFileSync(PSQL, ['-h', '127.0.0.1', '-p', '25432', '-U', env.AGENT_DB_USER, '-d', 'm53_e2e', '-v', 'ON_ERROR_STOP=1', '-c', sql],
+scripts/e2e/run-all.mjs:4: * m53_e2e 已建（全链迁移+V901 种子由各服务启动时 Flyway 自举）。
+scripts/e2e/run-all.mjs:78:  const stub = spawn(process.execPath, [path.join(import.meta.dirname, 'fixtures', 'model-stub.mjs'), String(MODEL_STUB_PORT)], { stdio: ['ignore', 'pipe', 'pipe'] });
+scripts/e2e/run-all.mjs:124:    stack: { gateway: GATEWAY, engine: 'http://127.0.0.1:18482', database: 'm53_e2e@127.0.0.1:25432' },
+scripts/e2e/scenarios/s1-direct-task.mjs:61:  pgOne(env, `update engine.task set state='WAITING_EXTERNAL' where id=${t2id} and state='ACCEPTED'`);
+scripts/e2e/scenarios/s1-direct-task.mjs:75:  pgOne(env, `update engine.task set state='WAITING_EXTERNAL' where id=${t3id} and state='ACCEPTED'`);

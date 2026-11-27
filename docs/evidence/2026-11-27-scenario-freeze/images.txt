@@ -1,0 +1,36 @@
+candidate commit 11/27/2026 11:19:33 +08:00
+docker images --digests
+REPOSITORY                             TAG                      DIGEST                                                                    IMAGE ID       CREATED         SIZE
+agent-platform-v12/authority-service   cand-20261127-57945918   sha256:51cf3e86b41f9f5bee3662b30321bde0313c3cb63e1e1b0d8436eaafccc6830b   51cf3e86b41f   4 minutes ago   585MB
+agent-platform-v12/monitor             cand-20261127-57945918   sha256:3932e79a7d6fac316953f7546e1998ddd6c3f4f64a7c4a78b89cea3b92881875   3932e79a7d6f   4 minutes ago   605MB
+agent-platform-v12/model-gateway       cand-20261127-57945918   sha256:773fd13a8adad23b798089a61fcb6d5f6bd121f92312f760ff476c9a2d5bb570   773fd13a8ada   4 minutes ago   643MB
+agent-platform-v12/skill-registry      cand-20261127-57945918   sha256:735bde7fd0fcff2facb03fb9340d6a86c6ad33674337f480c7db0549ab425534   735bde7fd0fc   4 minutes ago   699MB
+agent-platform-v12/engine-runtime      cand-20261127-57945918   sha256:672590a4faed10f4e8b739a5e726002d002f1e881e7605ddf63c8578b7db4dc4   672590a4faed   4 minutes ago   631MB
+agent-platform-v12/app-management      cand-20261127-57945918   sha256:594b93cb32e83b14d3f76cf69984a42a865022f745d954cb16600752c6636dcd   594b93cb32e8   4 minutes ago   606MB
+agent-platform-v12/platform-gateway    cand-20261127-57945918   sha256:aef385f2a69f71ae23f2551093c5ec855298b5ebf4d5cee979a2a3115db9d1f0   aef385f2a69f   4 minutes ago   604MB
+agent-platform-v12/frontend            cand-20261127-57945918   sha256:5c284b7ed684be792459638568dcbd112437b93925857526fc5e949f5ba5ac68   5c284b7ed684   5 minutes ago   173MB
+agent-platform-v12/skill-registry:cand-20261127-57945918 sha256:735bde7fd0fcff2facb03fb9340d6a86c6ad33674337f480c7db0549ab425534 2026-11-27T03:54:20.824635979Z 579459180e911daccd85a243de45175d4aee7e3f
+agent-platform-v12/model-gateway:cand-20261127-57945918 sha256:773fd13a8adad23b798089a61fcb6d5f6bd121f92312f760ff476c9a2d5bb570 2026-11-27T03:54:28.232687062Z 579459180e911daccd85a243de45175d4aee7e3f
+agent-platform-v12/monitor:cand-20261127-57945918 sha256:3932e79a7d6fac316953f7546e1998ddd6c3f4f64a7c4a78b89cea3b92881875 2026-11-27T03:54:33.75116425Z 579459180e911daccd85a243de45175d4aee7e3f
+agent-platform-v12/authority-service:cand-20261127-57945918 sha256:51cf3e86b41f9f5bee3662b30321bde0313c3cb63e1e1b0d8436eaafccc6830b 2026-11-27T03:54:37.998981221Z 579459180e911daccd85a243de45175d4aee7e3f
+agent-platform-v12/frontend:cand-20261127-57945918 sha256:5c284b7ed684be792459638568dcbd112437b93925857526fc5e949f5ba5ac68 2026-11-27T03:53:27.137451335Z 579459180e911daccd85a243de45175d4aee7e3f
+agent-platform-v12/platform-gateway:cand-20261127-57945918 sha256:aef385f2a69f71ae23f2551093c5ec855298b5ebf4d5cee979a2a3115db9d1f0 2026-11-27T03:54:01.282308103Z 579459180e911daccd85a243de45175d4aee7e3f
+agent-platform-v12/app-management:cand-20261127-57945918 sha256:594b93cb32e83b14d3f76cf69984a42a865022f745d954cb16600752c6636dcd 2026-11-27T03:54:06.31092377Z 579459180e911daccd85a243de45175d4aee7e3f
+agent-platform-v12/engine-runtime:cand-20261127-57945918 sha256:672590a4faed10f4e8b739a5e726002d002f1e881e7605ddf63c8578b7db4dc4 2026-11-27T03:54:12.19856011Z 579459180e911daccd85a243de45175d4aee7e3f
+docker save agent-platform-v12/skill-registry:cand-20261127-57945918 agent-platform-v12/model-gateway:cand-20261127-57945918 agent-platform-v12/monitor:cand-20261127-57945918 agent-platform-v12/authority-service:cand-20261127-57945918 agent-platform-v12/frontend:cand-20261127-57945918 agent-platform-v12/platform-gateway:cand-20261127-57945918 agent-platform-v12/app-management:cand-20261127-57945918 agent-platform-v12/engine-runtime:cand-20261127-57945918
+a2400353801fdbf4c2cd3583aad397e9e182076f8747a5ddf18cf7f46bf47a32  images.tar.gz
+Frontend asset SHA-256 matches the r48 frozen E2 snapshot
+979c64dc3649bd9f24fa7ca147fe21493a112acd17bd6459298cc04ba3417ce3  assistant.js
+fb857cb4ec6df571a117d62af5f62a69db52f4f5e2b04873b596c7db88d83b5d  console/index.html
+c53303753a6d99ff2016078a2a124e6b1eeed3b3f2ec6f96e0fa715763fd90b3  w/index.html
+1f501f4f3aae147b8e30199696a51b6827b500fe1bbfbea3a87e7f5cb019a574  embed/manifest.txt
+eea9ac7635ba4c9fea8729699fca7c195740891cfb1edac353c686457280e7f3  w/assets/index-DFJsT2Ul.js
+ca731cb6e375353ad6baa8fd6b599659326d6dab7d1b2f133b5765a6ef47908e  w/assets/mock-transport-BElXWTSs.js
+agent-platform-v12/skill-registry:cand-20261127-57945918 sha256:a75f2ec33193a3691d39f8c50da770ba54807f5f3a004b3ed52a13ed701a6a0b
+agent-platform-v12/model-gateway:cand-20261127-57945918 sha256:b69cd57ce48b3e5236c371ea4a0adbff6a2539495c30be109a24123cdd7c4405
+agent-platform-v12/monitor:cand-20261127-57945918 sha256:a76318adbdcef3faabc26e3d26e2c2e78e14034992e200d36efd46b294000bdc
+agent-platform-v12/authority-service:cand-20261127-57945918 sha256:3399454094c013f6c3afb5e092cc2b7ce3b595945f27cc34e635b77abddea25e
+agent-platform-v12/frontend:cand-20261127-57945918 sha256:47f7c105bb4ae7e247d4fa58ea80f7c328f52a92711608c9d258a3541d29bd64
+agent-platform-v12/platform-gateway:cand-20261127-57945918 sha256:ab0932bfbe1ec29c38bd660983001ca939ec1c210c2746b9f2146fdf27952e1d
+agent-platform-v12/app-management:cand-20261127-57945918 sha256:e49a79f31135a88975a76bc90412316219bb1be4cb7b9fa3be627f981ed9244a
+agent-platform-v12/engine-runtime:cand-20261127-57945918 sha256:28f6d51ba10fb5fb14b4b50b15669ad77f768acf96afaace1d15f15d1185320e

@@ -1,0 +1,103 @@
+r49-suite.tar.gz: OK
+127.0.0.1:5432 - accepting connections
+579459180e911daccd85a243de45175d4aee7e3f
+05:20:02.644 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
+05:20:03.007 [main] INFO com.zaxxer.hikari.pool.HikariPool -- HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@560348e6
+05:20:03.009 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Start completed.
+05:20:03.357 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:32768/scenario_r49_test (PostgreSQL 16.16)
+05:20:03.430 [main] INFO org.flywaydb.core.internal.database.base.Schema -- Creating schema "engine" ...
+05:20:03.438 [main] INFO org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory -- Creating Schema History table "engine"."flyway_schema_history" ...
+05:20:03.507 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": null
+05:20:03.508 [main] WARN org.flywaydb.core.internal.command.DbMigrate -- outOfOrder mode is active. Migration of schema "engine" may not be reproducible.
+05:20:03.533 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "200 - engine"
+05:20:03.539 [main] WARN org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: schema "engine" already exists, skipping (SQL State: 42P06 - Error Code: 0)
+05:20:03.579 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "201 - engine tool approval"
+05:20:03.591 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "202 - engine controlled draft test"
+05:20:03.602 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "203 - engine frozen call contract"
+05:20:03.611 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "204 - engine fact recovery schedule"
+05:20:03.620 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "205 - engine model projection"
+05:20:03.632 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "206 - engine debug controls"
+05:20:03.642 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "207 - engine model usage ledger"
+05:20:03.650 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "208 - engine chat sessions"
+05:20:03.660 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "209 - engine readonly retry budget"
+05:20:03.668 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "210 - engine controlled reproduction"
+05:20:03.678 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "211 - engine controlled model provenance"
+05:20:03.687 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "212 - engine exact skill connection"
+05:20:03.697 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "213 - engine model output policy"
+05:20:03.709 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "214 - named test inputs"
+05:20:03.722 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "215 - run scheduler"
+05:20:03.740 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "216 - run authority initial materials"
+05:20:03.759 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "217 - run flow materials"
+05:20:03.779 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "218 - initial model input material"
+05:20:03.792 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "219 - initial request utf8"
+05:20:03.802 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "220 - run error structured"
+05:20:03.812 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "221 - action plan execute key"
+05:20:03.827 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "222 - run context pack"
+05:20:03.837 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "223 - engine quota window"
+05:20:03.848 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "224 - action plan two principals"
+05:20:03.859 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "225 - business intent execute claim"
+05:20:03.873 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "226 - tool call binding refs"
+05:20:03.875 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "tool_call_binding_refs_array" of relation "tool_call" does not exist, skipping
+05:20:03.887 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "227 - run config release"
+05:20:03.890 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "run_config_digest_shape" of relation "run" does not exist, skipping
+05:20:03.891 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "run_config_reference_pair" of relation "run" does not exist, skipping
+05:20:03.892 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "run_environment_binding_revs_array" of relation "run" does not exist, skipping
+05:20:03.901 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "chat_session_config_digest_shape" of relation "chat_session" does not exist, skipping
+05:20:03.902 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "chat_session_config_reference_pair" of relation "chat_session" does not exist, skipping
+05:20:03.903 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "chat_session_environment_binding_revs_array" of relation "chat_session" does not exist, skipping
+05:20:03.912 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "228 - goal outcome"
+05:20:03.916 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "goal_outcome_readback_shape" of relation "goal_outcome" does not exist, skipping
+05:20:03.918 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: constraint "goal_outcome_achieved_readback" of relation "goal_outcome" does not exist, skipping
+05:20:03.928 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "229 - harness session log"
+05:20:03.940 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: trigger "session_event_append_only_guard" for relation "engine.session_event" does not exist, skipping
+05:20:03.966 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "230 - task plan family"
+05:20:03.987 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: trigger "plan_revision_immutable_guard" for relation "engine.plan_revision" does not exist, skipping
+05:20:03.993 [main] INFO org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor -- DB: trigger "plan_step_immutable_guard" for relation "engine.plan_step" does not exist, skipping
+05:20:04.032 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "231 - memory spill"
+05:20:04.052 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "232 - evaluation run authority"
+05:20:04.059 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "233 - evaluation grant generations"
+05:20:04.070 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "234 - task integration scope"
+05:20:04.078 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "235 - integration task control audit"
+05:20:04.086 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "236 - integration run authority source"
+05:20:04.092 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "237 - portal chat run authority"
+05:20:04.098 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "238 - portal session denial"
+05:20:04.106 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Migrating schema "engine" to version "901 - demo seed"
+05:20:04.119 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Successfully applied 40 migrations to schema "engine", now at version v901 (execution time 00:00.290s)
+05:20:11.619 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown initiated...
+05:20:11.622 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown completed.
+05:20:11.637 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-2 - Starting...
+05:20:11.658 [main] INFO com.zaxxer.hikari.pool.HikariPool -- HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@6968c1d6
+05:20:11.659 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-2 - Start completed.
+05:20:11.678 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:32768/scenario_r49_test (PostgreSQL 16.16)
+05:20:11.710 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 41 migrations (execution time 00:00.024s)
+05:20:11.743 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": 901
+05:20:11.743 [main] WARN org.flywaydb.core.internal.command.DbMigrate -- outOfOrder mode is active. Migration of schema "engine" may not be reproducible.
+05:20:11.744 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "engine" is up to date. No migration necessary.
+05:20:17.340 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-2 - Shutdown initiated...
+05:20:17.342 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-2 - Shutdown completed.
+05:20:17.345 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-3 - Starting...
+05:20:17.367 [main] INFO com.zaxxer.hikari.pool.HikariPool -- HikariPool-3 - Added connection org.postgresql.jdbc.PgConnection@7e62cfa3
+05:20:17.368 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-3 - Start completed.
+05:20:17.385 [main] INFO org.flywaydb.core.FlywayExecutor -- Database: jdbc:postgresql://127.0.0.1:32768/scenario_r49_test (PostgreSQL 16.16)
+05:20:17.411 [main] INFO org.flywaydb.core.internal.command.DbValidate -- Successfully validated 41 migrations (execution time 00:00.019s)
+05:20:17.438 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Current version of schema "engine": 901
+05:20:17.438 [main] WARN org.flywaydb.core.internal.command.DbMigrate -- outOfOrder mode is active. Migration of schema "engine" may not be reproducible.
+05:20:17.438 [main] INFO org.flywaydb.core.internal.command.DbMigrate -- Schema "engine" is up to date. No migration necessary.
+05:20:22.874 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-3 - Shutdown initiated...
+05:20:22.876 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-3 - Shutdown completed.
+
+Test run finished after 20450 ms
+[         2 containers found      ]
+[         0 containers skipped    ]
+[         2 containers started    ]
+[         0 containers aborted    ]
+[         2 containers successful ]
+[         0 containers failed     ]
+[         3 tests found           ]
+[         0 tests skipped         ]
+[         3 tests started         ]
+[         0 tests aborted         ]
+[         3 tests successful      ]
+[         0 tests failed          ]
+
+isolated database cleanup incomplete

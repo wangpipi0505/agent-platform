@@ -1,0 +1,219 @@
+{
+  "portal": "http://192.168.1.2:18091",
+  "candidate": "57945918",
+  "calls": [
+    {
+      "method": "GET",
+      "route": "/admin/platform-authorization/grants?subject=operatorA",
+      "http": 200,
+      "code": "OK",
+      "traceId": "66cf439b-37cd-4341-8e22-b1f2ecc3530c"
+    },
+    {
+      "method": "PUT",
+      "route": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "826dae51-0405-4473-b81d-cd17465998cc"
+    },
+    {
+      "method": "GET",
+      "route": "/auth/session",
+      "http": 200,
+      "code": "OK",
+      "traceId": "703e501e-391f-4769-b714-071a23e4ad87"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/apps/r22e2-real-v2/sessions",
+      "http": 200,
+      "code": "OK",
+      "traceId": "c9416f93-92a0-4e95-9e66-324c25b76a39"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "8fb417e7-c787-436c-b53b-f01605c22ef4"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "5b4daf39-a136-4857-a19d-a52d862ea38b"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "aec2b2a9-4d1f-4a61-ae51-3663081cfcf5"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "c9cb9848-b3e6-43c7-a1c7-7e8fdb4331e2"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "01734eeb-c2e1-4384-b70b-108f6e451276"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933/turns",
+      "http": 200,
+      "code": "OK",
+      "traceId": "99686c78-32c6-4460-af12-2c0e3899e3d0"
+    },
+    {
+      "method": "GET",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933",
+      "http": 200,
+      "code": "OK",
+      "traceId": "3dcb309e-0d57-4e87-a122-5b823692b8fd"
+    },
+    {
+      "method": "GET",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "traceId": "177d9cc6-2f92-4cad-8c66-54de04435215"
+    },
+    {
+      "method": "GET",
+      "route": "/v1/apps/satellite-planning-assistant/sessions/s_b7de2a9dc53f4343a0e520ea83814933",
+      "http": 403,
+      "code": "SYS-AUTH-403",
+      "traceId": "c1ac7973-2b89-4739-8ce9-8429d4e645e7"
+    },
+    {
+      "method": "GET",
+      "route": "/v1/apps/r22e2-real-v2/sessions/s_b7de2a9dc53f4343a0e520ea83814933",
+      "http": 401,
+      "code": "IAM_AUTHORITY_UNAUTHORIZED",
+      "traceId": "c14e5eb3-72cd-4993-9a8e-7c5518d25de7"
+    },
+    {
+      "method": "DELETE",
+      "route": "/admin/platform-authorization/grants",
+      "http": 200,
+      "code": "OK",
+      "traceId": "d1b1bb69-4e41-4dfb-9705-a83e8da90468"
+    }
+  ],
+  "turns": [
+    {
+      "turn": 1,
+      "runId": "r_8683f76abd4341909610ed675131aaf5",
+      "frameIds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "terminal": {
+        "status": "SUCCEEDED",
+        "reason": "FINAL_ANSWER",
+        "text": "甲",
+        "outputType": "object"
+      },
+      "deduped": true,
+      "textExpected": true
+    },
+    {
+      "turn": 2,
+      "runId": "r_9965cdb8ca5a474ebcc4f2685cf7a091",
+      "frameIds": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "terminal": {
+        "status": "SUCCEEDED",
+        "reason": "FINAL_ANSWER",
+        "text": "乙",
+        "outputType": "object"
+      },
+      "deduped": true,
+      "textExpected": true
+    },
+    {
+      "turn": 3,
+      "runId": "r_7d8b7b6ab7f3430a8420854d77760ec3",
+      "frameIds": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "terminal": {
+        "status": "SUCCEEDED",
+        "reason": "FINAL_ANSWER",
+        "text": "丙",
+        "outputType": "object"
+      },
+      "deduped": true,
+      "textExpected": true
+    }
+  ],
+  "passed": true,
+  "principal": {
+    "principalId": "operatorA",
+    "roles": [
+      "USER"
+    ],
+    "tenantId": "demo"
+  },
+  "sessionId": "s_b7de2a9dc53f4343a0e520ea83814933",
+  "continuation": {
+    "afterSeq": 2,
+    "firstAfterResume": 3,
+    "watermark": 12,
+    "eventIds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "turnEndCount": 3
+  },
+  "audit": [
+    {
+      "principal_id": "admin",
+      "app_code": "r22e2-real-v2",
+      "session_id": "s_b7de2a9dc53f4343a0e520ea83814933",
+      "reason": "SUBJECT_MISMATCH",
+      "trace_id": "177d9cc6-2f92-4cad-8c66-54de04435215"
+    },
+    {
+      "principal_id": "operatorA",
+      "app_code": "satellite-planning-assistant",
+      "session_id": "s_b7de2a9dc53f4343a0e520ea83814933",
+      "reason": "APP_MISMATCH",
+      "trace_id": "c1ac7973-2b89-4739-8ce9-8429d4e645e7"
+    }
+  ],
+  "revocationHttp": 200,
+  "revokedTicketHttp": 401,
+  "revocationRecorded": true,
+  "passed09": true,
+  "passedLedger403": false,
+  "roleGrantRevoked": true,
+  "cleanupAdminTicketHttp": 200
+}

@@ -1,0 +1,26 @@
+[Candidate nginx routing]
+agent-platform-v12/frontend:cand-20261127-57945918 null healthy
+/home/agent-platform/r22-candidates/cand-20261127-57945918/nginx.conf -> /etc/nginx/nginx-e2.conf
+
+State      Recv-Q Send-Q Local Address:Port               Peer Address:Port              
+LISTEN     0      128          *:18091                    *:*                   users:(("nginx",pid=31864,fd=5),("nginx",pid=31847,fd=5))
+5:  include /etc/nginx/mime.types;
+15:    listen 18091; # R-28：E2 host 网络对外入口
+17:    root /usr/share/nginx/cand-20261127-57945918-html/;
+20:    location = /healthz { default_type text/plain; return 200 'ok'; }
+21:    location = / { return 302 /console/; }
+22:    location = /console { return 302 /console/; }
+23:    location ^~ /console/ { try_files $uri /console/index.html; }
+24:    location /w/ { try_files $uri /w/index.html; }
+25:    location = /assistant.js { add_header Cache-Control 'no-cache'; try_files $uri =404; }
+26:    location /embed/ { add_header Cache-Control 'public, max-age=31536000, immutable'; try_files $uri =404; }
+28:    location /actuator { return 404; }
+29:    location /internal { return 404; }
+30:    location = /auth/dev-token { return 404; }
+31:    location ~ ^/(admin/|v1/|embed/ticket$|auth/) {
+42:    location / { return 404; }
+
+[Frontend icon response]
+favicon.ico 404 text/html
+console/favicon.ico 200 text/html
+w/favicon.ico 200 text/html

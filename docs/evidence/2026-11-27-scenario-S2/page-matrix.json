@@ -1,0 +1,1262 @@
+{
+  "results": [
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/manifest"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/assets/rules",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/user-governance-assistant/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/satellite-planning-assistant/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v1/rules"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/user-governance-assistant/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/satellite-planning-assistant/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v1/rules",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/platform/authorizations",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/manifest"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/assets/rules",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/satellite-planning-assistant/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v1/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/user-governance-assistant/rules"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/satellite-planning-assistant/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v1/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/user-governance-assistant/rules",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/platform/authorizations",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": false,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": false,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/manifest"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": true,
+      "observed": false,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/assets/rules",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/satellite-planning-assistant/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/user-governance-assistant/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/rules"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v1/rules"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/satellite-planning-assistant/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/user-governance-assistant/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/rules",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/apps/r22e2-real-v1/rules",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": true,
+      "observed": false,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/platform/authorizations",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/classifications"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/manifest"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/prompt-templates"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/classifications"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/skills"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/model-entries"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/prompt-templates",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/classifications",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/skills",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/model-entries",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%94%A8%E6%88%B7%E4%B8%8E%E6%8E%88%E6%9D%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/classifications"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": true,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/manifest"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/prompt-templates"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/classifications"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/skills"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/model-entries"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/prompt-templates",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/classifications",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/skills",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/model-entries",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%94%A8%E6%88%B7%E4%B8%8E%E6%8E%88%E6%9D%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "console",
+      "route": "/apps",
+      "expected": true,
+      "observed": false,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/classifications"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/classifications",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "workspace",
+      "route": "/apps/r22e2-real-v2",
+      "expected": true,
+      "observed": false,
+      "denied": false,
+      "overflow": false,
+      "hash": "#/apps/r22e2-real-v2",
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/apps/r22e2-real-v2/manifest"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/classifications"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/prompt-templates"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/skills"
+        },
+        {
+          "text": "Failed to load resource: the server responded with a status of 403 ()",
+          "url": "http://192.168.1.2:18091/admin/model-entries"
+        }
+      ],
+      "pageErrors": [],
+      "httpErrors": [
+        {
+          "pathname": "/admin/apps/r22e2-real-v2/manifest",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/classifications",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/prompt-templates",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/skills",
+          "status": 403
+        },
+        {
+          "pathname": "/admin/model-entries",
+          "status": 403
+        }
+      ],
+      "counts": [],
+      "passed": false
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "tasks",
+      "route": "/tasks",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E4%BB%BB%E5%8A%A1%E5%B7%A5%E4%BD%9C%E5%8F%B0",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "plan",
+      "route": "/plans/browser-1795723266983",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%A1%E5%88%92%E8%AF%A6%E6%83%85",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "memory",
+      "route": "/assets/memories",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%AE%B0%E5%BF%86%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "confirmations",
+      "route": "/approvals",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%A1%AE%E8%AE%A4%E4%B8%AD%E5%BF%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "assets",
+      "route": "/assets/rules",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "authorization",
+      "route": "/platform/authorizations",
+      "expected": false,
+      "observed": false,
+      "denied": true,
+      "overflow": false,
+      "hash": "#/not-found?denied=%E7%94%A8%E6%88%B7%E4%B8%8E%E6%8E%88%E6%9D%83",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpErrors": [],
+      "counts": [],
+      "passed": true
+    }
+  ],
+  "failures": [
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "workspace"
+    },
+    {
+      "role": "admin",
+      "width": 1440,
+      "name": "assets"
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "workspace"
+    },
+    {
+      "role": "admin",
+      "width": 1024,
+      "name": "assets"
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "console"
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "workspace"
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "assets"
+    },
+    {
+      "role": "admin",
+      "width": 768,
+      "name": "authorization"
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "console"
+    },
+    {
+      "role": "user",
+      "width": 1440,
+      "name": "workspace"
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "console"
+    },
+    {
+      "role": "user",
+      "width": 1024,
+      "name": "workspace"
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "console"
+    },
+    {
+      "role": "user",
+      "width": 768,
+      "name": "workspace"
+    }
+  ],
+  "admin": {
+    "pages": [
+      "/apps",
+      "/evaluations",
+      "/assets/plugins",
+      "/skills",
+      "/model/prompt-templates",
+      "/model/management",
+      "/platform/authorizations",
+      "/assets/mcp",
+      "/assets/rules",
+      "/audit"
+    ],
+    "capabilities": [
+      "agent.plan.revise",
+      "agent.plan.execute",
+      "model.manage",
+      "agent.build",
+      "agent.plan.confirm",
+      "auth.grant",
+      "audit.read",
+      "plugin.manage",
+      "skill.manage",
+      "agent.publish",
+      "agent.view"
+    ],
+    "navigation": [
+      {
+        "width": 1440,
+        "menu": [
+          "智能体管理",
+          "技能库",
+          "提示词模板",
+          "规则管理",
+          "插件与来源",
+          "MCP 连接",
+          "模型管理",
+          "审计记录",
+          "用户与授权",
+          "评测中心"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": true
+      },
+      {
+        "width": 1024,
+        "menu": [
+          "智能体管理",
+          "技能库",
+          "提示词模板",
+          "规则管理",
+          "插件与来源",
+          "MCP 连接",
+          "模型管理",
+          "审计记录",
+          "用户与授权",
+          "评测中心"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": true
+      },
+      {
+        "width": 768,
+        "menu": [
+          "智能体管理",
+          "技能库",
+          "提示词模板",
+          "规则管理",
+          "插件与来源",
+          "MCP 连接",
+          "模型管理",
+          "审计记录",
+          "用户与授权",
+          "评测中心"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": true
+      }
+    ]
+  },
+  "user": {
+    "pages": [
+      "/apps"
+    ],
+    "capabilities": [
+      "agent.plan.confirm",
+      "agent.plan.execute",
+      "agent.view",
+      "agent.plan.revise"
+    ],
+    "navigation": [
+      {
+        "width": 1440,
+        "menu": [
+          "智能体管理"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": false
+      },
+      {
+        "width": 1024,
+        "menu": [
+          "智能体管理"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": false
+      },
+      {
+        "width": 768,
+        "menu": [
+          "智能体管理"
+        ],
+        "badge": [],
+        "counts": [],
+        "badgeMatch": true,
+        "adminMenu": false
+      }
+    ]
+  },
+  "passed": false
+}
