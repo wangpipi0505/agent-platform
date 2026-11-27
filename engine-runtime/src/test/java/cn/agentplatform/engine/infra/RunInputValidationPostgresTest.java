@@ -52,13 +52,17 @@ class RunInputValidationPostgresTest {
                 Thread.sleep(10);
             runs.cancel(id, ACTOR);
         }
-        for (String id : createdSessions) {
-            TracePostgresTest.db.update("delete from engine.chat_turn where session_id=?", id);
-            TracePostgresTest.db.update(
-                    "delete from engine.chat_session where public_id=? and tenant_id=?",
-                    id,
-                    ACTOR.tenantId());
-        }
+        TracePostgresTest.store.atomic(() -> {
+            var db = TracePostgresTest.db;
+            db.execute("alter table engine.session_event disable trigger session_event_append_only_guard");
+            for (String id : createdSessions) {
+                db.update("delete from engine.session_event where session_id=?", id);
+                db.update("delete from engine.chat_turn where session_id=?", id);
+                db.update("delete from engine.chat_session where public_id=? and tenant_id=?", id, ACTOR.tenantId());
+            }
+            db.execute("alter table engine.session_event enable trigger session_event_append_only_guard");
+            return null;
+        });
     }
 
     static Stream<Arguments> invalidChatInputs() {

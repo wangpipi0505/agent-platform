@@ -235,12 +235,12 @@ class RuntimeClientsPublishedHttpTest {
     void explicitLegacyConstructionKeepsKnownAppSkillModelRoutes() throws Exception {
         var output = java.nio.file.Files.createTempFile("n4a-engine-legacy", ".log");
         var child = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin", "java.exe").toString(),
-                "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp", "-cp", System.getProperty("java.class.path"), RuntimeClientsPublishedHttpTest.class.getName(), "legacy-routes")
+                "-Dfile.encoding=UTF-8", "-cp", System.getProperty("java.class.path"), RuntimeClientsPublishedHttpTest.class.getName(), "legacy-routes")
                 .redirectErrorStream(true).redirectOutput(output.toFile()).start();
         try {
             boolean finished = child.waitFor(30, TimeUnit.SECONDS);
             if (!finished) { child.destroyForcibly(); assertThat(child.waitFor(5, TimeUnit.SECONDS)).isTrue(); }
-            String raw = java.nio.file.Files.readString(output); System.out.print(raw);
+            String raw = new String(java.nio.file.Files.readAllBytes(output), java.nio.charset.StandardCharsets.UTF_8);
             assertThat(finished).as("bounded engine legacy child").isTrue();
             assertThat(child.exitValue()).as(raw).isZero();
             assertThat(raw).contains("N4A_ENGINE_EXECUTED=legacy-routes");

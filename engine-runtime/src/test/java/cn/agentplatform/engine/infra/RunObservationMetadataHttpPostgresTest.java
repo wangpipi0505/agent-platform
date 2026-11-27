@@ -179,9 +179,9 @@ class RunObservationMetadataHttpPostgresTest {
             // node_instance/chat_turn/model_invocation/tool_call/model_input_snapshot——不读任何
             // payload 列；payload 读取形态（select */::text 大字段）与 run_event/attempt/for update
             // 仍绝对禁用。
-            assertThat(s.sql()).startsWith("select ");assertThat(s.sql()).doesNotContain("select *","snapshot::","inputs::","version_refs::","output::","error::","run_event","engine.attempt"," for update");
+            assertThat(s.sql()).startsWith("select ");assertThat(s.sql()).doesNotContain("select *","snapshot::","inputs::","eval_candidate::","a.*","version_refs::","output::","error::","run_event","engine.attempt"," for update");
             assertThat(s.isolation()).isEqualTo(Connection.TRANSACTION_REPEATABLE_READ);assertThat(s.readOnly()).isTrue();assertThat(s.autoCommit()).isFalse();
-            assertThat(s.sql()).matches("(?s)select (r\\.id,r\\.public_id,.*from engine\\.run r where r\\.public_id=.*|r\\.id,r\\.public_id,.*a\\.\\* from engine\\.run r join engine\\.run_authority.*|tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine\\.material_scope.*)");
+            assertThat(s.sql()).matches("(?s)select (r\\.id,r\\.public_id,.*from engine\\.run r where r\\.public_id=.*|r\\.id,r\\.public_id,.*null as eval_candidate,.*from engine\\.run r join engine\\.run_authority.*|tenant_id,producer,kind,material_id,material_version,payload_sha256,scope_sha256,scope::text as scope from engine\\.material_scope.*)");
         });
         assertThat(statements.stream().map(Sql::connection).distinct().count()).isEqualTo(1);
     }
@@ -381,9 +381,12 @@ class RunObservationMetadataHttpPostgresTest {
     }
     @Test void actualInvalidDigestAndRootKindInPostgresAreDeniedWithoutReadingPayload()throws Exception {
         for(String column:List.of("root_kind","resource_digest")){
-            long id=create();String run=publicId(id);String constraint="run_authority_"+column+"_check";
+            long id=create();String run=publicId(id);String constraint=column.equals("root_kind")?"run_authority_root_type":"run_authority_resource_digest_check";
             String original=column.equals("root_kind")?"app-version":ROOT.versionDigest();String invalid=column.equals("root_kind")?"run-snapshot":"x".repeat(64);
-            String expression=column.equals("root_kind")?"root_kind='app-version'":"resource_digest ~ '^[a-f0-9]{64}$'";
+            String definition = db.queryForObject("""
+                    select pg_get_constraintdef(oid) from pg_constraint
+                    where conrelid = 'engine.run_authority'::regclass and conname = ?
+                    """, String.class, constraint);
             var ticket=ticket(run);
             db.execute("alter table engine.run_authority drop constraint "+constraint);
             try{
@@ -392,7 +395,7 @@ class RunObservationMetadataHttpPostgresTest {
                 System.out.println("O1A_PG_ILLEGAL_CONTROL="+Json.write(Map.of("column",column,"status",response.statusCode(),"sql",List.copyOf(statements))));
             }finally{
                 bypass("update engine.run_authority set "+column+"='"+original+"' where run_id=?",id);
-                db.execute("alter table engine.run_authority add constraint "+constraint+" check ("+expression+")");
+                db.execute("alter table engine.run_authority add constraint "+constraint+" "+definition);
             }
         }
     }

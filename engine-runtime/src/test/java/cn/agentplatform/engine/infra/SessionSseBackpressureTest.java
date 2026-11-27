@@ -181,43 +181,36 @@ class SessionSseBackpressureTest {
         fail("会话 " + sid + " 的 SSE 泵未在期限内收口");
     }
 
-    /**
-     * 轮询等待审计行出现（泵线程异步写日志）。读取在 ChatSessions logger 监视器内完成——
-     * 泵线程的 logback append 亦持有同一 logger 锁，构成 happens-before 边，保证跨线程可见。
-     */
-    private static void awaitAuditLine(
-            ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender,
-            String marker,
-            String... mustContain)
+    private static void awaitAuditLine(AuditCapture appender, String marker, String... mustContain)
             throws Exception {
-        long deadline = System.currentTimeMillis() + 10000;
-        var logger = org.slf4j.LoggerFactory.getLogger(ChatSessions.class);
-        while (System.currentTimeMillis() < deadline) {
-            boolean found;
-            synchronized (logger) {
-                found = audited(appender, marker, mustContain);
-            }
-            if (found) return;
+        long deadline = System.nanoTime() + java.time.Duration.ofSeconds(10).toNanos();
+        while (System.nanoTime() < deadline) {
+            if (audited(appender, marker, mustContain)) return;
             Thread.sleep(20);
         }
         fail("审计行未出现 `" + marker + "`: " + appender.list);
     }
 
-    /** logback 审计捕获器（照 SessionEventsEndpointTest 先例）。 */
-    private static ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>
-            attachAudit() {
-        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ChatSessions.class);
-        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
-        appender.start();
-        logger.addAppender(appender);
-        return appender;
-    }
+    private static final class AuditCapture
+            extends ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>
+            implements AutoCloseable {
+        private final ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ChatSessions.class);
+        private final ch.qos.logback.classic.Level previous = logger.getLevel();
 
-    private static void detachAudit(
-            ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender) {
-        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ChatSessions.class);
-        logger.detachAppender(appender);
-        appender.stop();
+        private AuditCapture() {
+            list = new java.util.concurrent.CopyOnWriteArrayList<>();
+            logger.setLevel(ch.qos.logback.classic.Level.WARN);
+            start();
+            logger.addAppender(this);
+        }
+
+        @Override
+        public void close() {
+            logger.detachAppender(this);
+            logger.setLevel(previous);
+            stop();
+        }
     }
 
     private static boolean audited(
@@ -261,9 +254,8 @@ class SessionSseBackpressureTest {
         setConfig(service, "maxBufferedEvents", 5);
         var mvc = mvc(service);
         String url = "/v1/apps/" + code + "/sessions/" + sid + "/events/stream";
-        var appender = attachAudit();
         MvcResult first = null;
-        try {
+        try (var appender = new AuditCapture()) {
         first = mvc.perform(get(url)).andExpect(request().asyncStarted()).andReturn();
         // 首批 ≤200 帧先出（有界发送）；id:200 出现说明第一批已落。
         awaitContent(first, "id:200");
@@ -278,8 +270,6 @@ class SessionSseBackpressureTest {
                 "unreadBacklog=10",
                 "limit=5");
         awaitStreamsClosed(service, sid);
-        } finally {
-            detachAudit(appender);
         }
         assertEquals(
                 200, mvc.perform(asyncDispatch(first)).andReturn().getResponse().getStatus(),
@@ -314,8 +304,7 @@ class SessionSseBackpressureTest {
         var first = mvc.perform(get(url)).andExpect(request().asyncStarted()).andReturn();
         var second = mvc.perform(get(url)).andExpect(request().asyncStarted()).andReturn();
         // 第 3 条：429+审计。
-        var appender = attachAudit();
-        try {
+        try (var appender = new AuditCapture()) {
             var third = mvc.perform(get(url)).andReturn().getResponse();
             assertEquals(429, third.getStatus(), third.getContentAsString(StandardCharsets.UTF_8));
             assertEquals(
@@ -340,8 +329,6 @@ class SessionSseBackpressureTest {
                             "active=2",
                             "limit=2"),
                     "超限拒绝必须记审计行: " + appender.list);
-        } finally {
-            detachAudit(appender);
         }
         // 既有连接不受拒绝影响：仍正常出帧。
         awaitContent(first, "id:1");
@@ -385,8 +372,7 @@ class SessionSseBackpressureTest {
                 after - baseline < 256L * 1024 * 1024,
                 "50 连接堆增量应有界: baseline=" + baseline + " after=" + after);
         // 默认上限=50：第 51 个连接被 429 拒绝。
-        var appender = attachAudit();
-        try {
+        try (var appender = new AuditCapture()) {
             var rejected = mvc.perform(get(url)).andReturn().getResponse();
             assertEquals(429, rejected.getStatus(), rejected.getContentAsString(StandardCharsets.UTF_8));
             assertEquals(
@@ -395,8 +381,6 @@ class SessionSseBackpressureTest {
             assertTrue(
                     audited(appender, "AUDIT SESSION_SSE_CONNECTION_LIMIT", "active=50", "limit=50"),
                     "默认上限拒绝也记审计行");
-        } finally {
-            detachAudit(appender);
         }
         assertEquals(50, service.closeSessionStreams(sid), "一次收口全部 50 条连接");
         awaitStreamsClosed(service, sid);

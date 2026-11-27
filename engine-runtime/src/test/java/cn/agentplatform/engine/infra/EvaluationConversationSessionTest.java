@@ -93,7 +93,8 @@ class EvaluationConversationSessionTest {
             identity(tenant,"evaluator",false); call(endpoint,request,403);
             identity(tenant,"evaluator",true);
             request.put("turnNo",3); call(endpoint,request,429);
-            RunService iam=mock(RunService.class); when(iam.iamEnabled()).thenReturn(true);
+            RunService iam = spy(runs);
+            doReturn(true).when(iam).iamEnabled();
             call(mvc(new ChatSessions(store,clients,iam)),request,403);
             assertEquals(2,db.queryForObject("select count(*) from engine.chat_turn where session_id=?",Integer.class,session));
         } finally {scheduler.close(); clients.close();}

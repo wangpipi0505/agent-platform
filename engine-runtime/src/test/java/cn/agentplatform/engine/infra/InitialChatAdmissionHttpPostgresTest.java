@@ -124,14 +124,27 @@ class InitialChatAdmissionHttpPostgresTest {
         control("recover-current");
         until=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
         JsonNode after;
-        do{after=control("poll");if(unknown?after.path("workerFailure").asText().equals("MODEL_RESULT_UNKNOWN"):after.path("run").path("status").asText().equals("SUCCEEDED"))break;Thread.sleep(100);}while(System.nanoTime()<until);
+        String expectedStatus=unknown?"FAILED":"SUCCEEDED";
+        do {
+            after=control("poll");
+            if(expectedStatus.equals(after.path("run").path("status").asText()))break;
+            Thread.sleep(100);
+        }while(System.nanoTime()<until);
+        assertThat(after.path("run").path("status").asText()).isEqualTo(expectedStatus);
         assertThat(after.path("dispatchGeneration").asLong()).isGreaterThan(before.path("dispatchGeneration").asLong());
         assertThat(after.path("attempts").asInt()).isEqualTo(1);
         assertThat(after.path("providerRequests").asInt()).isEqualTo(unknown?0:1);
         assertThat(after.path("invocations").get(0).path("id")).isEqualTo(before.path("invocations").get(0).path("id"));
-        if(unknown){assertThat(after.path("workerFailure").asText()).isEqualTo("MODEL_RESULT_UNKNOWN");assertThat(after.path("invocations").get(0).path("status").asText()).isEqualTo("DISPATCHED");}
-        else{assertThat(after.path("run").path("status").asText()).isEqualTo("SUCCEEDED");assertThat(control("status").path("httpStatus").asInt()).isEqualTo(200);}
-    }    @Test void concurrentDuplicateAndReconstructedReceiverReplayOneResult()throws Exception {
+        if(unknown){
+            assertThat(after.path("run").path("stop_reason").asText()).isEqualTo("MODEL_RESULT_UNKNOWN");
+            assertThat(after.path("invocations").get(0).path("status").asText()).isEqualTo("UNKNOWN");
+            assertThat(after.path("invocations").get(0).path("sdk_attempts").asInt()).isEqualTo(1);
+        }else{
+            assertThat(control("status").path("httpStatus").asInt()).isEqualTo(200);
+        }
+    }
+
+    @Test void concurrentDuplicateAndReconstructedReceiverReplayOneResult()throws Exception {
         try(var executor=java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
             var a=executor.submit(()->control("chat"));var b=executor.submit(()->control("chat"));
             var first=a.get();var second=b.get();

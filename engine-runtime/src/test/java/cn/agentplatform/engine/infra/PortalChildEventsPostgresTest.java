@@ -75,7 +75,7 @@ public class PortalChildEventsPostgresTest {
         }
     }
     @Test void realConcurrentWriterIsOnlyVisibleInNextSnapshotAndNoEncodingSqlExists()throws Exception{
-        try(var f=new Fixture()){var b=f.seed();try(var session=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var child=session.open()){
+        try(var f=new Fixture()){var b=f.delegate.seed(0, 2);try(var session=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var child=session.open()){
             var once=new AtomicBoolean();f.observe();f.delegate.source.onQuery=q->{if(q.contains("engine.material_scope")&&once.compareAndSet(false,true))PortalRunEventWindowPostgresTest.outside(()->f.finish(b.runId()));};
             var first=packets(encode(f,child,0,"same-rr-before-terminal")).get(1);assertThat(first.metadata().path("state").path("status").asText()).isEqualTo("PENDING");assertThat(first.metadata().path("window").path("watermark").longValue()).isEqualTo(1);f.delegate.source.onQuery=q->{};
             var next=packets(encode(f,child,1,"same-rr-after-terminal")).get(1);assertThat(next.metadata().path("state").path("status").asText()).isEqualTo("FAILED");assertThat(next.header().path("eventSeq").longValue()).isEqualTo(2);

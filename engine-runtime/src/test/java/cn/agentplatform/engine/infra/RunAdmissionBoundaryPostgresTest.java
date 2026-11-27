@@ -19,7 +19,7 @@ class RunAdmissionBoundaryPostgresTest {
 
     @BeforeAll
     static void connect() throws Exception {
-        TracePostgresTest.connect();
+        TracePostgresTest.connect(EngineTestDatabase.isolatedUrl("agent_platform_admission_boundary_test"));
     }
 
     @BeforeEach
@@ -44,6 +44,8 @@ class RunAdmissionBoundaryPostgresTest {
             try (var held = scheduler.reserveInteractive()) {
                 var actor =
                         new Actor("engine-test", "alice", Set.of("EDITOR", "SERVICE"), Map.of());
+                int existingCalls = TracePostgresTest.db.queryForObject(
+                        "select count(*) from engine.tool_call", Integer.class);
                 var error =
                         assertThrows(
                                 RunAdmissionRejected.class,
@@ -60,7 +62,7 @@ class RunAdmissionBoundaryPostgresTest {
                                 "select count(*) from engine.run where tenant_id='engine-test'",
                                 Integer.class));
                 assertEquals(
-                        0,
+                        existingCalls,
                         TracePostgresTest.db.queryForObject(
                                 "select count(*) from engine.tool_call", Integer.class));
             }

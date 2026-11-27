@@ -11,13 +11,14 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * PLAT-15（方案 §4.15 / 契约 §14）：写操作两段的引擎侧验收——actionPlan 盖章与 V221 唯一约束、
- * EXECUTE 的 digest/过期/确认强度三重门（全部"拒绝即无副作用"）、高危二次确认、审计回写，
+ * EXECUTE 的 digest/过期/确认强度三重门（全部"拒绝即无副作用"）、高危双主体审批、审计回写，
  * 以及旧技能（无 approval 声明）缺省 SINGLE_STEP 的零回归锚点。
  */
 @EnabledIfEnvironmentVariable(named = "ENGINE_PG_TEST", matches = "true")
@@ -76,8 +77,17 @@ class ActionPlanPostgresTest {
         db.update("delete from engine.run where tenant_id='engine-test'");
     }
 
-    /** 冻结词表里的写技能：confirmRoles 可变（高危强度用例声明单角色，双角色用例声明两个）。 */
+    @AfterEach
+    void clearIdentity() {
+        SecurityContextHolder.clearContext();
+    }
+
+    /** 冻结写技能的角色与风险声明。 */
     long run(List<String> confirmRoles) {
+        return run(confirmRoles, "STANDARD");
+    }
+
+    long run(List<String> confirmRoles, String risk) {
         long id =
                 db.queryForObject(
                         "insert into"
@@ -90,7 +100,7 @@ class ActionPlanPostgresTest {
         tool.put("code", "lookup");
         tool.put("skillVersionId", 42);
         tool.put("contractDigest", Digest.sha256("fixture-contract"));
-        tool.put("execution", Map.of("confirmRoles", confirmRoles));
+        tool.put("execution", Map.of("confirmRoles", confirmRoles, "approval", Map.of("risk", risk)));
         db.update(
                 "update engine.run set snapshot=?::jsonb where id=?",
                 Json.write(Map.of("config", Map.of("tools", List.of(tool)))),
@@ -441,134 +451,72 @@ class ActionPlanPostgresTest {
     }
 
     @Test
-    void highRiskRequiresTwoRolesOrDoubleConfirmBeforeAndAtExecute() {
-        long r = run(List.of("APPROVER")), n = node(r);
-        var lease = store.claim(n, "A");
-        requestApproval(r, n, lease, plan("HIGH"));
-        long cid =
-                db.queryForObject(
-                        "select id from engine.tool_call where run_id=?", Long.class, r);
-        String publicId =
-                db.queryForObject("select public_id from engine.run where id=?", String.class, r);
-        var item = pending(publicId, n);
-        // 单角色 + 无二次确认：审批即拒（403），副作用不发生。
-        var weak =
-                assertThrows(
-                        PlatformException.class,
-                        () ->
-                                new ApprovalService(store)
-                                        .approve(
-                                                publicId,
-                                                n,
-                                                Json.tree(
-                                                        Map.of(
-                                                                "approved", true,
-                                                                "requestId", "weak",
-                                                                "snapshotDigest", item.get("snapshotDigest"))),
-                                                approver));
-        assertEquals("CONFIRM_STRENGTH_INSUFFICIENT", weak.code());
-        assertEquals(403, weak.status());
-        assertEquals(
-                "PREPARED",
-                db.queryForObject("select status from engine.action_plan where call_id=?", String.class, cid));
-        // 单角色 + 二次确认：批准通过，确认人与标记落审计。
-        new ApprovalService(store)
-                .approve(
-                        publicId,
-                        n,
-                        Json.tree(
-                                Map.of(
-                                        "approved", true,
-                                        "requestId", "double-ok",
-                                        "snapshotDigest", item.get("snapshotDigest"),
-                                        "doubleConfirmed", true)),
-                        approver);
-        var plan = db.queryForMap("select * from engine.action_plan where call_id=?", cid);
-        assertEquals("APPROVED", plan.get("status"));
-        assertEquals(true, plan.get("double_confirmed"));
-        // EXECUTE 门复查：claim 必须携带正确 executeKey；强度已满足则放行。
-        var executeLease = requeue(n);
-        var calls = new ToolCalls(store);
-        var req = call(r, n, executeLease);
-        calls.register(req.register(), actor);
-        var missingKey = new LinkedHashMap<>(req.claimBody());
-        var required =
-                assertThrows(
-                        PlatformException.class, () -> calls.claim(cid, Json.tree(missingKey), actor));
-        assertEquals("EXECUTE_KEY_REQUIRED", required.code());
-        var withKey = new LinkedHashMap<>(req.claimBody());
-        withKey.put("executeKey", plan.get("execute_key"));
-        assertEquals(true, calls.claim(cid, Json.tree(withKey), actor).get("claimed"));
-        // 审批事件带 actionPlanId 与 risk（方案 §4.15 第5项审计）。
-        boolean audited = false;
-        for (var event :
-                db.queryForList(
-                        "select type,payload from engine.run_event where run_id=? and type='APPROVAL_DONE'",
-                        r)) {
-            var payload = TraceStore.json(event.get("payload"));
-            if (payload.path("actionPlanId").asLong() == ((Number) plan.get("id")).longValue()) {
-                assertEquals("HIGH", payload.path("risk").asText());
-                audited = true;
-            }
-        }
-        assertTrue(audited);
+    void singlePrincipalAndDoubleConfirmationKeepHighRiskPlanPending() {
+        long r = run(List.of("APPROVER"), "HIGH"), n = node(r);
+        requestApproval(r, n, store.claim(n, "A"), plan("HIGH"));
+        String publicId = db.queryForObject("select public_id from engine.run where id=?", String.class, r);
+        Object digest = pending(publicId, n).get("snapshotDigest");
+
+        assertEquals("WAITING_APPROVAL", vote(publicId, n, digest, approver, "first", false).get("status"));
+        assertEquals("WAITING_APPROVAL", vote(publicId, n, digest, approver, "same-person", true).get("status"));
+        var plan = db.queryForMap("select * from engine.action_plan where run_id=?", r);
+        assertEquals("PREPARED", plan.get("status"));
+        assertEquals(1, TraceStore.json(plan.get("approvals")).size());
+        assertNull(plan.get("execute_granted_at"));
     }
 
     @Test
-    void twoDeclaredRolesSatisfyHighRiskWithoutDoubleConfirm() {
-        long r = run(List.of("APPROVER")), n = node(r);
-        db.update(
-                "update engine.run set snapshot=?::jsonb where id=?",
-                Json.write(
-                        Map.of(
-                                "config",
-                                Map.of(
-                                        "tools",
-                                        List.of(
-                                                Map.of(
-                                                        "code",
-                                                        "lookup",
-                                                        "skillVersionId",
-                                                        42,
-                                                        "contractDigest",
-                                                        Digest.sha256("fixture-contract"),
-                                                        "execution",
-                                                        Map.of(
-                                                                "confirmRoles",
-                                                                List.of("APPROVER", "SEC_AUDITOR"))))))),
-                r);
+    void twoVerifiedPrincipalsApproveHighRiskAndExecutionStillRequiresCurrentAuthority() {
+        long r = run(List.of("APPROVER", "SEC_AUDITOR"), "HIGH"), n = node(r);
         var lease = store.claim(n, "A");
         var calls = new ToolCalls(store);
         var req = call(r, n, lease);
         long cid = TraceStore.number(calls.register(req.register(), actor), "callId");
-        var confirmation = new LinkedHashMap<String, Object>();
-        confirmation.put("roles", List.of("APPROVER", "SEC_AUDITOR"));
-        confirmation.put("parametersDigest", Digest.sha256(Json.canonical(Map.of("x", 1))));
-        confirmation.put("actionPlan", plan("HIGH"));
-        calls.requestApproval(cid, Json.tree(confirmation), actor);
-        String publicId =
-                db.queryForObject("select public_id from engine.run where id=?", String.class, r);
-        var item = pending(publicId, n);
-        // 双角色确认强度：无需 doubleConfirmed 即可批准并执行。
-        new ApprovalService(store)
-                .approve(
-                        publicId,
-                        n,
-                        Json.tree(
-                                Map.of(
-                                        "approved", true,
-                                        "requestId", "two-roles",
-                                        "snapshotDigest", item.get("snapshotDigest"))),
-                        approver);
-        var executeLease = requeue(n);
-        req = call(r, n, executeLease);
-        calls.register(req.register(), actor);
-        String executeKey =
-                db.queryForObject(
-                        "select execute_key from engine.action_plan where call_id=?", String.class, cid);
-        var withKey = new LinkedHashMap<>(req.claimBody());
-        withKey.put("executeKey", executeKey);
-        assertEquals(true, calls.claim(cid, Json.tree(withKey), actor).get("claimed"));
+        calls.requestApproval(
+                cid,
+                Json.tree(Map.of(
+                        "roles", List.of("APPROVER", "SEC_AUDITOR"),
+                        "parametersDigest", Digest.sha256(Json.canonical(Map.of("x", 1))),
+                        "actionPlan", plan("HIGH"))),
+                actor);
+        String publicId = db.queryForObject("select public_id from engine.run where id=?", String.class, r);
+        Object digest = pending(publicId, n).get("snapshotDigest");
+        var auditor = new Actor("engine-test", "carol", Set.of("SEC_AUDITOR"), Map.of());
+
+        assertEquals("WAITING_APPROVAL", vote(publicId, n, digest, approver, "first", false).get("status"));
+        assertEquals("RUNNING", vote(publicId, n, digest, auditor, "second", false).get("status"));
+        var plan = db.queryForMap("select * from engine.action_plan where call_id=?", cid);
+        assertEquals("APPROVED", plan.get("status"));
+        assertEquals(false, plan.get("double_confirmed"));
+        assertEquals(2, TraceStore.json(plan.get("approvals")).size());
+
+        var execution = call(r, n, requeue(n));
+        calls.register(execution.register(), actor);
+        var withKey = new LinkedHashMap<>(execution.claimBody());
+        withKey.put("executeKey", plan.get("execute_key"));
+        var denied = assertThrows(PlatformException.class, () -> calls.claim(cid, Json.tree(withKey), actor));
+        assertEquals("APPROVAL_CURRENT_AUTHORITY_REQUIRED", denied.code());
+        assertEquals("REGISTERED", db.queryForObject("select status from engine.tool_call where id=?", String.class, cid));
+        assertTrue(db.queryForList(
+                        "select payload from engine.run_event where run_id=? and type='APPROVAL_DONE'", r)
+                .stream()
+                .map(event -> TraceStore.json(event.get("payload")))
+                .anyMatch(payload -> payload.path("actionPlanId").asLong() == ((Number) plan.get("id")).longValue()
+                        && "HIGH".equals(payload.path("risk").asText())));
+    }
+
+    private Map<String, Object> vote(
+            String publicId, long node, Object digest, Actor voter, String requestId, boolean doubleConfirmed) {
+        HighRiskTwoPrincipalTest.requestIdentity(voter);
+        return new ApprovalService(store).approve(
+                publicId,
+                node,
+                Json.tree(Map.of(
+                        "approved", true,
+                        "requestId", requestId,
+                        "snapshotDigest", digest,
+                        "doubleConfirmed", doubleConfirmed)),
+                voter);
     }
 
     @Test

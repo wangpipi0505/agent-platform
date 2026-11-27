@@ -39,15 +39,19 @@ class PortalRunEventWindowPostgresTest {
             store=new RunAuthorityStore(source,auth.iam.clock());
             trace=new TraceStore(db,new DataSourceTransactionManager(source),auth.iam.clock());reader=new RunEventReader(source);
         }
-        JsonNode snapshot(int pad) {
+        JsonNode snapshot(int pad, int nodesCount) {
             ObjectNode snap=Json.object();snap.put("appCode","app-a");snap.put("type","FLOW");snap.put("versionNo",1);snap.put("appVersionId",4294967297L);snap.put("candidateSha256",RunEventReaderAuthorityFixture.ROOT.versionDigest());snap.set("config",Json.object());
             var definition=Json.object();var nodes=definition.putArray("nodes");var edges=definition.putArray("edges");
-            for(int i=0;i<15;i++){String id=nodeId(i);var n=nodes.addObject().put("id",id).put("type",i==0?"START":i==14?"END":"CODE");if(i>0&&i<14)n.put("expression","1");if(i>0)edges.addObject().put("from",nodeId(i-1)).put("to",id);}
+            for(int i=0;i<nodesCount;i++){String id=nodeId(i,nodesCount);var n=nodes.addObject().put("id",id).put("type",i==0?"START":i==nodesCount-1?"END":"CODE");if(i>0&&i<nodesCount-1)n.put("expression","1");if(i>0)edges.addObject().put("from",nodeId(i-1,nodesCount)).put("to",id);}
             if(pad>0)((ObjectNode)nodes.get(1)).put("padding","x".repeat(pad));snap.set("definition",definition);return snap;
         }
-        static String nodeId(int i){return i==0?"start":i==14?"end":"c%02d".formatted(i);}
+        static String nodeId(int i,int nodesCount){return i==0?"start":i==nodesCount-1?"end":"c%02d".formatted(i);}
         RunAuthorityStore.Binding seed(int pad) {
-            var snap=snapshot(pad);GraphRules.requirePublishedFlow(snap);
+            return seed(pad, 15);
+        }
+
+        RunAuthorityStore.Binding seed(int pad, int nodesCount) {
+            var snap=snapshot(pad, nodesCount);GraphRules.requirePublishedFlow(snap);
             var sentinel=new IllegalStateException("C_DAG_STORAGE_SENTINEL");
             var validating=new TraceStore(db,new DataSourceTransactionManager(source),auth.iam.clock()){@Override public <T>T atomic(java.util.function.Supplier<T> w){throw sentinel;}};
             try(var idle=new RunScheduler(validating){@Override public Admission reserveInteractive(){throw new AssertionError("NO_QUEUE");}@Override public void created(long id,Admission a){throw new AssertionError("NO_WAKE");}}){
@@ -59,7 +63,7 @@ class PortalRunEventWindowPostgresTest {
             long run=auth.admitted(p->tx.execute(s->{
                 var budget=Json.tree(Map.of("limits",Map.of("maxSteps",25,"modelCalls",40,"totalTokens",200000,"totalDurationMs",600000,"maxDepth",2),"consumed",Map.of("steps",0,"modelCalls",0,"tokens",0,"depth",0),"deadline",auth.iam.clock().instant().plusSeconds(599).toString()));
                 long id=store.createPublished(p,snap,Json.read("{\"privateInput\":\"not-consumed\"}"),Json.read("{\"appVer\":1}"),budget,"FULL",UUID.randomUUID().toString(),Set.of("initial"));
-                for(int i=0;i<15;i++)trace.createNode(id,nodeId(i),i+1,i==0?"START":i==14?"END":"CODE",snap.path("definition").path("nodes").get(i),p);return id;
+                for(int i=0;i<nodesCount;i++)trace.createNode(id,nodeId(i,nodesCount),i+1,i==0?"START":i==nodesCount-1?"END":"CODE",snap.path("definition").path("nodes").get(i),p);return id;
             }));
             append(run,"C_FIRST",Json.read("{\"integer\":123456789012345678901234567890,\"text\":\"观察\"}"));return store.load(run);
         }
@@ -120,7 +124,7 @@ class PortalRunEventWindowPostgresTest {
         }}
     }
     @Test void concurrentLegalTerminalWriterIsInvisibleUntilNextCompleteReadWindow()throws Exception{
-        try(var f=new Fixture()){var b=f.seed(0);try(var r=f.open(b,0)){
+        try(var f=new Fixture()){var b=f.seed(0, 2);try(var r=f.open(b,0)){
             var once=new AtomicBoolean();f.source.start();f.source.onQuery=q->{if(q.contains("engine.material_scope")&&once.compareAndSet(false,true))outside(()->f.finish(b.runId()));};
             try(var e=f.reader.readWindow(r,0)){e.consume(v->{assertThat(v.window().status()).isEqualTo("PENDING");assertThat(v.window().watermark()).isEqualTo(1);assertThat(v.info().seq()).isEqualTo(1);});}
             f.source.onQuery=q->{};try(var e=f.reader.readWindow(r,1)){e.consume(v->{assertThat(v.window().status()).isEqualTo("FAILED");assertThat(v.window().watermark()).isEqualTo(2);assertThat(v.info().seq()).isEqualTo(2);assertThat(v.window().drained()).isFalse();});}

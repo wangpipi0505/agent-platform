@@ -162,7 +162,7 @@ public final class RunAuthorityStore {
         // load(true) reads authority control (including the old grant and initial ceiling) and
         // validates all three manifests. The query never resumes that grant or checks its block.
         Binding binding;
-        try{binding=load(db,((Number)row.get("id")).longValue(),true);}
+        try{binding=load(db,((Number)row.get("id")).longValue(),true,true);}
         catch(IllegalArgumentException|ClassCastException|NullPointerException corruptMetadata){throw denied();}
         same(owner,binding.owner());same(publicId,binding.publicId());
         return binding;
@@ -196,18 +196,29 @@ public final class RunAuthorityStore {
             w.live();return binding;
         }catch(DateTimeException invalid){throw denied();}
     }
-    static Binding load(JdbcTemplate db,long runId,boolean complete){
-        var rows=db.queryForList("""
+    static Binding load(JdbcTemplate db, long runId, boolean complete) {
+        return load(db, runId, complete, false);
+    }
+
+    private static Binding load(JdbcTemplate db, long runId, boolean complete, boolean observation) {
+        // Observers have already checked the run lifecycle. Keep raw evaluation material out
+        // of this projection, even when a stored authority row claims a different root type.
+        String candidateColumn = observation ? "null as eval_candidate" : "r.eval_candidate::text";
+        var rows = db.queryForList("""
                 select r.id,r.public_id,r.tenant_id as run_tenant,r.principal_id as run_principal,
-                    r.app_code,r.app_version_id as run_version,r.trigger_type,r.eval_candidate::text,
-                    r.snapshot #>> '{chatSession,sessionId}' as session_id,a.*,
+                    r.app_code,r.app_version_id as run_version,r.trigger_type,%s,
+                    r.snapshot #>> '{chatSession,sessionId}' as session_id,
+                    a.tenant_id,a.principal_id,a.initial_ceiling,a.root_kind,a.root_id,a.candidate_rev,
+                    a.app_version_id,a.app_version_no,a.initial_ceiling_sha256,a.accepted_snapshot_sha256,
+                    a.resource_digest,a.source_kind,a.admission_decision_id,a.authorization_version,
+                    a.operation_id,a.check_version,a.blocked_reason,a.retry_not_before,
                     coalesce(g.grant_ref,a.grant_ref) as active_grant_ref,
                     coalesce(g.grant_expires_at,a.grant_expires_at) as active_grant_expires_at,
                     coalesce(g.origin_authentication_id,a.origin_authentication_id) as active_origin_id
                 from engine.run r join engine.run_authority a on a.run_id=r.id
                 left join engine.evaluation_grant_generation g on g.run_id=a.run_id and g.generation=a.active_generation
                 where r.id=?
-                """,runId);
+                """.formatted(candidateColumn), runId);
         if(rows.size()!=1)throw denied();var r=rows.getFirst();
         Actor initial=parseInitial(Json.read(r.get("initial_ceiling").toString()));
         var owner=new SubjectKey(str(r,"tenant_id"),str(r,"principal_id"));same(owner,new SubjectKey(initial.tenantId(),initial.principalId()));
@@ -223,6 +234,7 @@ public final class RunAuthorityStore {
         hash(initialSha);hash(snapshotSha);hash(candidate);same(initialSha,MaterialAuthorization.ceilingSha256(initial));
         var root = new ResourceBinding(kind, str(r, "root_id"), candidate);
         if (EvaluationCandidateBinding.KIND.equals(kind)) {
+            if (observation) throw denied();
             same("EVALUATION", str(r, "trigger_type"));
             same(null, r.get("run_version"));
             same(root, EvaluationCandidateBinding.of(str(r, "app_code"), ((Number) r.get("candidate_rev")).longValue(), candidate));

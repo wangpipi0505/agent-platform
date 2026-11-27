@@ -142,11 +142,22 @@ class PortalChildEventsHttpTest {
     @Test void privateBlockingGetWriteFlushAndCompleteRetainRealReaderFrameAndSlotUntilExit()throws Exception{
         for(String stage:List.of("get","write","flush","complete"))try(var f=new PortalChildEventsPostgresTest.Fixture();var callers=Executors.newFixedThreadPool(2)){
             fixture=f;var b=f.seed();f.finish(b.runId());var h=new Hooks(stage);hooks=h;
-            try(var a=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var c=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var probe=f.auth.open(b.owner(),b.publicId(),b.snapshotSha(),0);var server=start()){
+            try(var a=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var c=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),0);var server=start()){
                 var first=callers.submit(()->request(server,b.publicId(),a.ticket,MIME));var second=callers.submit(()->request(server,b.publicId(),c.ticket,MIME));assertThat(h.entered.await(6,TimeUnit.SECONDS)).as(stage).isTrue();var actual=server.getBean(RunEventReader.class);var bus=server.getBean(ChunkBus.class);
-                server.getBean(PortalRunEventsService.class).close();assertThatThrownBy(()->actual.readNext(probe,0)).as(stage).isInstanceOf(RunEventReader.CapacityFailure.class);assertThat(PortalChildEventsPostgresTest.frames(bus)).isEqualTo(60);assertThatThrownBy(()->bus.subscribe(999)).isInstanceOf(PlatformException.class);assertThat(h.exits).hasValue(0);
+                server.getBean(PortalRunEventsService.class).close();
+                try (var probe = f.auth.open(b.owner(), b.publicId(), b.snapshotSha(), 0)) {
+                    assertThatThrownBy(() -> actual.readNext(probe, 0))
+                            .as(stage).isInstanceOf(RunEventReader.CapacityFailure.class);
+                }
+                assertThat(PortalChildEventsPostgresTest.frames(bus)).isEqualTo(60);assertThatThrownBy(()->bus.subscribe(999)).isInstanceOf(PlatformException.class);assertThat(h.exits).hasValue(0);
                 h.release.countDown();first.get(8,TimeUnit.SECONDS);second.get(8,TimeUnit.SECONDS);long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);while(h.exits.get()!=2&&System.nanoTime()<until)Thread.sleep(10);assertThat(h.exits).hasValue(2);assertThat(PortalChildEventsPostgresTest.frames(bus)).isEqualTo(62);
-                try(var one=actual.readNext(probe,0).orElseThrow();var two=actual.readNext(probe,0).orElseThrow();var x=bus.subscribe(998);var y=bus.subscribe(999)){}
+                try (var probe = f.auth.open(b.owner(), b.publicId(), b.snapshotSha(), 0);
+                        var one = actual.readNext(probe, 0).orElseThrow();
+                        var two = actual.readNext(probe, 0).orElseThrow();
+                        var x = bus.subscribe(998);
+                        var y = bus.subscribe(999)) {
+                    // Both reader permits and both frame slots can be borrowed again.
+                }
             }finally{h.release.countDown();hooks=null;}
         }
     }
@@ -155,7 +166,7 @@ class PortalChildEventsHttpTest {
     @Test void privateFreshQueuedCapacityBeforeHelloReturnsBoundedJsonUntilCompleteExits()throws Exception{
         try(var f=new PortalChildEventsPostgresTest.Fixture();var callers=Executors.newSingleThreadExecutor()){
             fixture=f;var b=f.seed();var h=new Hooks("complete",1);hooks=h;var workers=new CountDownLatch(2);var release=new CountDownLatch(1);
-            try(var child=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),1);var probe=f.auth.open(b.owner(),b.publicId(),b.snapshotSha(),0);var server=start()){
+            try(var child=new PortalChildEventsAuthorityFixture(f.auth,b.owner(),b.publicId(),b.snapshotSha(),1);var server=start()){
                 try{
                 var pool=executor(server.getBean(PortalRunEventsService.class));
                 for(int i=0;i<2;i++)pool.execute(()->{workers.countDown();boolean done=false;while(!done)try{done=release.await(100,TimeUnit.MILLISECONDS);}catch(InterruptedException ignored){}});
@@ -164,7 +175,12 @@ class PortalChildEventsHttpTest {
                 // independently see the real writer's newly oversized payload on fresh RR.
                 f.append(b.runId(),"LARGE_FRESH","x".repeat(262144));release.countDown();assertThat(h.entered.await(6,TimeUnit.SECONDS)).isTrue();
                 var bus=server.getBean(ChunkBus.class);var reader=server.getBean(RunEventReader.class);assertThat(PortalChildEventsPostgresTest.frames(bus)).isEqualTo(61);assertThat(h.exits).hasValue(0);
-                try(var one=reader.readNext(probe,0).orElseThrow();var two=reader.readNext(probe,0).orElseThrow();var slot=bus.subscribe(100)){assertThatThrownBy(()->bus.subscribe(101)).isInstanceOf(PlatformException.class);}
+                try (var probe = f.auth.open(b.owner(), b.publicId(), b.snapshotSha(), 0);
+                        var one = reader.readNext(probe, 0).orElseThrow();
+                        var two = reader.readNext(probe, 0).orElseThrow();
+                        var slot = bus.subscribe(100)) {
+                    assertThatThrownBy(() -> bus.subscribe(101)).isInstanceOf(PlatformException.class);
+                }
                 var expected=Json.write(new ApiResponse<>("EVENT_LIMIT","事件观察不可用",null,null));
                 // The fixed small JSON has physically written/flushed before complete;
                 // no packet, receipt, state or watermark may be exposed on this branch.

@@ -23,7 +23,10 @@ class TracePostgresTest {
 
     @BeforeAll
     static void connect() throws Exception {
-        String url = EngineTestDatabase.url();
+        connect(EngineTestDatabase.url());
+    }
+
+    static void connect(String url) {
         var ds =
                 new DriverManagerDataSource(
                         url, EngineTestDatabase.user(), EngineTestDatabase.password());

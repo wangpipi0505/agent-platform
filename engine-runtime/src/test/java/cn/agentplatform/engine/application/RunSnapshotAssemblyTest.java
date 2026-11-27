@@ -35,6 +35,8 @@ class RunSnapshotAssemblyTest {
             context.registerBean(FlowDriver.class, () -> mock(FlowDriver.class));
             context.registerBean(AgentDriver.class, () -> mock(AgentDriver.class));
             context.registerBean(RunScheduler.class, () -> mock(RunScheduler.class));
+            context.registerBean(ModelInputMaterials.class, () -> mock(ModelInputMaterials.class));
+            context.registerBean(ChunkBus.class, () -> mock(ChunkBus.class));
             context.register(
                     RunSnapshotService.class,
                     RunAdmissionService.class,

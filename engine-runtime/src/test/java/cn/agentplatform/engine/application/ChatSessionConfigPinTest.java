@@ -1,6 +1,7 @@
 package cn.agentplatform.engine.application;
 
 import cn.agentplatform.common.*;
+import cn.agentplatform.engine.infra.TraceStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -10,13 +11,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 /** INT-06：会话固定配置版本后，轮次不得改挂到另一套配置；未固定会话不接受轮次临时指定。 */
 class ChatSessionConfigPinTest {
     private static final String DIGEST =
             "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-    private final ChatSessions sessions = new ChatSessions(null, null, null);
+    private final ChatSessions sessions = new ChatSessions(mock(TraceStore.class), null, null);
 
     private static Map<String, Object> pinned(String releaseId, String digest, String environment) {
         Map<String, Object> row = new HashMap<>();

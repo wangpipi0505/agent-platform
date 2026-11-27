@@ -41,6 +41,18 @@ public final class EngineTestDatabase {
         return base.replaceFirst("(?<=:25432/)[^?]+", "agent_platform_engine_test");
     }
 
+    static String isolatedUrl(String database) {
+        if (!database.matches("agent_platform_[a-z_]+_test")) {
+            throw new IllegalArgumentException("Expected a dedicated test database name");
+        }
+        String baseline = url();
+        var admin = new JdbcTemplate(new DriverManagerDataSource(baseline, user(), password()));
+        if (admin.queryForObject("select count(*) from pg_database where datname=?", Integer.class, database) == 0) {
+            admin.execute("create database " + database);
+        }
+        return baseline.replaceFirst("/[^/?]+(?=\\?|$)", "/" + database);
+    }
+
     public static String user() {
         return System.getenv().getOrDefault("AGENT_DB_USER", "agent_v12");
     }

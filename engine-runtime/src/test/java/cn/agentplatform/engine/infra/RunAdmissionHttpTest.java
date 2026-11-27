@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Real HTTP + Nimbus verification + dedicated PG. No model/skill provider is used. */
+@ActiveProfiles("test")
 @SpringBootTest(
         classes = EngineApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -43,7 +44,10 @@ class RunAdmissionHttpTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry p) throws Exception {
-        p.add("spring.datasource.url", EngineTestDatabase::url);
+        p.add("agent.security.mode", () -> "test");
+        p.add("agent.security.service-id", () -> "engine");
+        String url = EngineTestDatabase.isolatedUrl("agent_platform_admission_http_test");
+        p.add("spring.datasource.url", () -> url);
         p.add("spring.datasource.username", EngineTestDatabase::user);
         p.add("spring.datasource.password", EngineTestDatabase::password);
         p.add("agent.scheduler.interactive-workers", () -> 1);

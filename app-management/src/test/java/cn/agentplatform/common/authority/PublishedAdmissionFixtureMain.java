@@ -59,6 +59,7 @@ public final class PublishedAdmissionFixtureMain {
     @Import({
         PublishedMetadataController.class,
         PublishedMetadataService.class,
+        PlatformAccessService.class,
         AppController.class,
         TemplateService.class,
         PlatformErrors.class
@@ -244,7 +245,6 @@ public final class PublishedAdmissionFixtureMain {
                     .schemas("app")
                     .defaultSchema("app")
                     .locations("classpath:db/migration")
-                    .target("104")
                     .load()
                     .migrate();
             var rows =
@@ -306,6 +306,11 @@ public final class PublishedAdmissionFixtureMain {
                     if (!tenant.startsWith("n3-"))
                         throw new IllegalArgumentException("FINITE_TENANT_REQUIRED");
                     if (action.equals("seed")) {
+                        db.update(
+                                "insert into app.platform_user_role(tenant_id,subject,platform_role,app_scope,granted_by)"
+                                        + " values(?,'alice','USER',?::jsonb,'published-admission-fixture')",
+                                tenant,
+                                Json.write(List.of(CODE)));
                         db.update(
                                 "insert into"
                                     + " app.application(tenant_id,code,name,type,status,current_version_no,created_by)"

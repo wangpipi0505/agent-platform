@@ -286,7 +286,7 @@ class PublishedAdmissionHttpPostgresTest {
         child =
                 new ProcessBuilder(
                                 Path.of(System.getProperty("java.home"), "bin/java.exe").toString(),
-                                "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                                "-Dfile.encoding=UTF-8",
                                 "-cp",
                                 cp,
                                 "cn.agentplatform.common.authority.PublishedAdmissionFixtureMain")

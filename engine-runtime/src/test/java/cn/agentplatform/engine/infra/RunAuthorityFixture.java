@@ -45,7 +45,9 @@ final class RunAuthorityFixture implements AutoCloseable {
  <T>T admitted(ServiceCall call,Function<RetainedAuthorization,T> work)throws Exception{
   ServiceTicket ticket;try(var admissionGateway=iam.client("gateway")){ticket=admissionGateway.exchange(iam.portal(),call);}
   try(var decoder=new TrustedJwtDecoder(iam.config("engine"),iam.clock(),true)){
-   var request=new MockHttpServletRequest("POST","/admin/apps/app-a/runs");var response=new MockHttpServletResponse();
+   String app = call.resource().id().split("@", 2)[0];
+   var request = new MockHttpServletRequest("POST", "/admin/apps/" + app + "/runs");
+   var response = new MockHttpServletResponse();
    request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,"/admin/apps/{code}/runs");
    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
    SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(decoder.decode(ticket.value()),List.of()));

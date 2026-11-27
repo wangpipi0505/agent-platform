@@ -82,6 +82,7 @@ class FlowMaterialStatusPostgresTest {
                             "output",
                             "fileRefs",
                             "error",
+                            "errorRaw",
                             "versionRefs",
                             "nodes",
                             "events",
@@ -104,7 +105,8 @@ class FlowMaterialStatusPostgresTest {
                             "started_at",
                             "ended_at",
                             "nodeInstanceId",
-                            "nodeDefId");
+                            "nodeDefId",
+                            "durationMs");
             assertThat(((Number) nodes.getFirst().get("nodeInstanceId")).longValue())
                     .isEqualTo(i.node());
             assertThat(nodes.getFirst().get("ended_at")).isInstanceOf(java.sql.Timestamp.class);

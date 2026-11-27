@@ -12,7 +12,14 @@ $env:ENGINE_PG_TEST='true'
 $env:PGPASSWORD=$env:AGENT_DB_PASSWORD
 $agentPg=Join-Path $agentRoot '.tools/postgresql-16.15/pgsql/bin'
 # 所有名字为显式白名单；不连接/清理运行开发库或任何既有数据库。
-foreach($agentTestDb in @('agent_platform_model_test','agent_platform_engine_test')){
+$agentTestDatabases=@(
+ 'agent_platform_model_test',
+ 'agent_platform_engine_test',
+ 'agent_platform_iam_engine_v12',
+ 'agent_platform_iam_flow_material_v12',
+ 'agent_platform_iam_owned_flow_v12'
+)
+foreach($agentTestDb in $agentTestDatabases){
  $agentFound=& (Join-Path $agentPg 'psql.exe') -h 127.0.0.1 -p 25432 -U agent_v12 -d postgres -At -c "select 1 from pg_database where datname='$agentTestDb'"
  if($agentFound -ne '1'){& (Join-Path $agentPg 'createdb.exe') -h 127.0.0.1 -p 25432 -U agent_v12 $agentTestDb;if($LASTEXITCODE -ne 0){throw "创建专用测试库失败：$agentTestDb"}}
 }

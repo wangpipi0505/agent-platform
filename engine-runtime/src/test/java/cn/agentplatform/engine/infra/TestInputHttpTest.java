@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.net.httpserver.HttpServer;
 
 import org.junit.jupiter.api.*;
+import org.springframework.test.context.ActiveProfiles;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -26,6 +27,7 @@ import java.util.concurrent.atomic.*;
 
 /** Real authenticated HTTP and dedicated PostgreSQL. Upstream fixture is test-only. */
 @EnabledIfEnvironmentVariable(named = "AGENT_DB_PASSWORD", matches = ".+")
+@ActiveProfiles("test")
 @SpringBootTest(
         classes = EngineApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -46,6 +48,8 @@ class TestInputHttpTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry p) throws Exception {
+        p.add("agent.security.mode", () -> "test");
+        p.add("agent.security.service-id", () -> "engine");
         var admin =
                 new JdbcTemplate(
                         new DriverManagerDataSource(

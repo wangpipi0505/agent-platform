@@ -308,6 +308,8 @@ class SessionEventsEndpointTest {
         event(sid, 1, "system/message", "{\"content\":\"诊断\"}");
         var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ChatSessions.class);
         var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        var previousLevel = logger.getLevel();
+        logger.setLevel(ch.qos.logback.classic.Level.WARN);
         appender.start();
         logger.addAppender(appender);
         try {
@@ -316,6 +318,7 @@ class SessionEventsEndpointTest {
             assertEquals("SESSION_DIAGNOSTIC_VIEW_FORBIDDEN", body.path("code").asText());
         } finally {
             logger.detachAppender(appender);
+            logger.setLevel(previousLevel);
             appender.stop();
         }
         var audited =

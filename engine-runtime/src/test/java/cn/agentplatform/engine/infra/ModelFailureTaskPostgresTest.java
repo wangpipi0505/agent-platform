@@ -9,6 +9,8 @@ import cn.agentplatform.engine.api.TaskController;
 import cn.agentplatform.engine.application.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.net.httpserver.HttpServer;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -22,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import static cn.agentplatform.engine.infra.SignedEngineRequest.signedRequest;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,9 +49,18 @@ class ModelFailureTaskPostgresTest {
     }
 
     private void exercise(String modelFailure) throws Exception {
+        var config = new HikariConfig();
+        config.setJdbcUrl(EngineTestDatabase.url());
+        config.setUsername(EngineTestDatabase.user());
+        config.setPassword(EngineTestDatabase.password());
+        config.setMaximumPoolSize(4);
+        try (var source = new HikariDataSource(config)) {
+            exercise(source, modelFailure);
+        }
+    }
+
+    private void exercise(HikariDataSource source, String modelFailure) throws Exception {
         boolean interrupted = modelFailure == null;
-        var source = new DriverManagerDataSource(EngineTestDatabase.url(),
-                EngineTestDatabase.user(), EngineTestDatabase.password());
         Flyway.configure().dataSource(source).schemas("engine").defaultSchema("engine")
                 .locations("classpath:db/migration").outOfOrder(true).load().migrate();
         var db = new JdbcTemplate(source);

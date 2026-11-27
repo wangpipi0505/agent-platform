@@ -447,20 +447,26 @@ class SubagentPlanningTest {
         var before = receipt(c1);
         var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(SubagentPlanning.class);
         var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        var previousLevel = logger.getLevel();
+        logger.setLevel(ch.qos.logback.classic.Level.WARN);
         appender.start();
         logger.addAppender(appender);
-        // 重复回执（同子任务同结果，父已合并=迟到）：返回原记录，审计保留，不覆盖。
-        var dup = planning.settle(s1, "COMPLETED", rev1, null);
-        assertTrue((Boolean) dup.get("duplicate"));
-        assertTrue((Boolean) dup.get("late"), "父任务已合并后到达→late 标记");
-        // 冲突回执（同子任务异结果）：审计后仍返回原记录。
-        long revOther = candidate(c1, 2);
-        var conflict = planning.settle(s1, "COMPLETED", revOther, null);
-        assertTrue((Boolean) conflict.get("conflict"));
-        assertFalse((Boolean) conflict.get("duplicate"));
-        assertTrue((Boolean) conflict.get("late"));
-        logger.detachAppender(appender);
-        appender.stop();
+        try {
+            // 重复回执（同子任务同结果，父已合并=迟到）：返回原记录，审计保留，不覆盖。
+            var dup = planning.settle(s1, "COMPLETED", rev1, null);
+            assertTrue((Boolean) dup.get("duplicate"));
+            assertTrue((Boolean) dup.get("late"), "父任务已合并后到达→late 标记");
+            // 冲突回执（同子任务异结果）：审计后仍返回原记录。
+            long revOther = candidate(c1, 2);
+            var conflict = planning.settle(s1, "COMPLETED", revOther, null);
+            assertTrue((Boolean) conflict.get("conflict"));
+            assertFalse((Boolean) conflict.get("duplicate"));
+            assertTrue((Boolean) conflict.get("late"));
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(previousLevel);
+            appender.stop();
+        }
         // 已提交候选与合并决定原样（库稿"重复回执返回原记录；迟到/冲突保留审计不覆盖"）。
         var after = receipt(c1);
         assertEquals(before.get("candidate_revision_id"), after.get("candidate_revision_id"));

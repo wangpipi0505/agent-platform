@@ -57,15 +57,16 @@ class ChatTurnEventLinkageTest {
     @AfterEach
     void clean() {
         SchedulerTestResources.close();
-        db.update("delete from engine.reproduction");
-        db.update("delete from engine.model_invocation");
-        db.update("delete from engine.attempt_note");
-        db.update("delete from engine.run_event");
-        db.update("delete from engine.tool_call");
-        db.update("delete from engine.attempt");
-        db.update("delete from engine.node_instance");
-        db.update("delete from engine.run_authority");
-        db.update("delete from engine.run");
+        String runs = "select id from engine.run where tenant_id='engine-test' and app_code='h2-app'";
+        String nodes = "select id from engine.node_instance where run_id in (" + runs + ")";
+        db.update("delete from engine.model_invocation where run_id in (" + runs + ")");
+        db.update("delete from engine.attempt_note where node_instance_id in (" + nodes + ")");
+        db.update("delete from engine.run_event where run_id in (" + runs + ")");
+        db.update("delete from engine.tool_call where run_id in (" + runs + ")");
+        db.update("delete from engine.attempt where node_instance_id in (" + nodes + ")");
+        db.update("delete from engine.node_instance where run_id in (" + runs + ")");
+        db.update("delete from engine.run_authority where run_id in (" + runs + ")");
+        db.update("delete from engine.run where id in (" + runs + ")");
         db.execute("ALTER TABLE engine.session_event DISABLE TRIGGER session_event_append_only_guard");
         db.update("delete from engine.session_event where session_id like 'h2_%'");
         db.execute("ALTER TABLE engine.session_event ENABLE TRIGGER session_event_append_only_guard");

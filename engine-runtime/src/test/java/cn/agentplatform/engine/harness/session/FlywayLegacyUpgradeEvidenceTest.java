@@ -217,14 +217,12 @@ class FlywayLegacyUpgradeEvidenceTest {
                 fkText.stream().anyMatch(d -> d.contains("tool_call(id)")),
                 "spill_artifact.call_id 必须外键到 engine.tool_call(id)");
 
-        String version =
+        assertEquals(
+                1L,
                 db.queryForObject(
-                        "select coalesce(max(version),'none') from engine.flyway_schema_history"
-                            + " where success",
-                        String.class);
-        System.out.println("[T2-8 dual-path] engine schema at version " + version);
-        assertNotNull(version);
-        assertEquals("231", version, "engine schema 必须迁移到 V231");
+                        "select count(*) from engine.flyway_schema_history where version='231' and success",
+                        Long.class),
+                "V231 必须成功执行");
     }
 
     private static String constraintDef(JdbcTemplate db, String conname, String relname) {

@@ -612,13 +612,12 @@ class ModelInputMaterialPostgresTest {
             new ProcessBuilder(
                     java.nio.file.Path.of(System.getProperty("java.home"), "bin/java.exe")
                         .toString(),
-                    "-Djdk.net.unixdomain.tmpdir=V:/.local/tmp",
+                    "-Dfile.encoding=UTF-8",
                     "-cp",
                     System.getProperty("java.class.path"),
                     ModelInputMaterialFixture.class.getName(),
                     input.toString())
-                .directory(java.nio.file.Path.of("G:/207/项目/算法重组工具/代码/agent-platform").toFile())
-                .redirectErrorStream(true)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
                 .start();
         assertThat(process.waitFor(15, TimeUnit.SECONDS)).isTrue();
         String result =

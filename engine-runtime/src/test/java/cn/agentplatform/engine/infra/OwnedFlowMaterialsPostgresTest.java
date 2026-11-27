@@ -475,7 +475,8 @@ class OwnedFlowMaterialsPostgresTest {
             f.db.update("update engine.run set dispatch_next_at=clock_timestamp() where id=?", run);
             w.scheduler.poll();
             w.await();
-            assertThat(f.iam.requestAttempts()).isEqualTo(calls + 4);
+            // Routing, the empty ready-node scan, and aggregation each obtain their own current proof.
+            assertThat(f.iam.requestAttempts()).isEqualTo(calls + 6);
             assertThat(f.db.queryForObject("select count(*) from engine.attempt", Long.class))
                     .isEqualTo(attempts);
             assertThat(

@@ -174,8 +174,9 @@ public final class InitialChatAdmissionFixture implements AutoCloseable {
     Map<String,Object> published()throws Exception {
         var call=new ServiceCall("engine","proxy.engine.post.RunController.run",FrozenModelBindingProducerFixture.ROOT);
         var ticket=producer.gateway.exchange(producer.iam.portal(300),call);
+        String code=FrozenModelBindingProducerFixture.ROOT.id().split("@")[0];
         try(var decoder=new TrustedJwtDecoder(producer.iam.config("engine"),producer.iam.clock(),true)){
-            var request=new org.springframework.mock.web.MockHttpServletRequest("POST","/admin/apps/control/runs");
+            var request=new org.springframework.mock.web.MockHttpServletRequest("POST","/admin/apps/"+code+"/runs");
             var response=new org.springframework.mock.web.MockHttpServletResponse();
             request.setAttribute(org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,"/admin/apps/{code}/runs");
             org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(new org.springframework.web.context.request.ServletRequestAttributes(request));
@@ -185,7 +186,7 @@ public final class InitialChatAdmissionFixture implements AutoCloseable {
             try {
                 guard.preHandle(request,response,handler);
                 var proof=AuthorityContext.requireInitialFor(Actor.current(),FrozenModelBindingProducerFixture.ROOT);
-                var source=clients.published(FrozenModelBindingProducerFixture.ROOT.id().split("@")[0],proof);
+                var source=clients.published(code,proof);
                 var frozen=FrozenModels.reference(source,source.path("config").path("modelEntryId").asLong());
                 publishedSource=source.deepCopy();
                 return Map.of("type",source.path("type").asText(),"versionId",source.path("appVersionId").asLong(),"hasFrozenModel",frozen.path("bindingId").asLong()>0);
@@ -274,7 +275,7 @@ public final class InitialChatAdmissionFixture implements AutoCloseable {
 
     Map<String,Object> facts(){
         var result=new LinkedHashMap<String,Object>();result.put("admittedCount",producer.db.queryForObject("select count(*) from engine.run where app_code=? and trigger_type='CHAT'",Integer.class,FrozenModelBindingProducerFixture.ROOT.id().split("@")[0]));result.put("selectedRun",selectedRun);result.put("workerFailure",workerFailure);result.put("chunks",List.copyOf(chunksSeen));
-        if(selectedRun>0){result.put("run",producer.db.queryForMap("select public_id,trigger_type,mode,status,event_seq from engine.run where id=?",selectedRun));
+        if(selectedRun>0){result.put("run",producer.db.queryForMap("select public_id,trigger_type,mode,status,event_seq,stop_reason from engine.run where id=?",selectedRun));
             result.put("nodes",producer.db.queryForList("select node_type,node_def_id,step_seq,definition::text from engine.node_instance where run_id=?",selectedRun));
             result.put("attempts",producer.db.queryForObject("select count(*) from engine.attempt a join engine.node_instance n on n.id=a.node_instance_id where n.run_id=?",Integer.class,selectedRun));}
         try{result.put("providerRequests",Files.exists(dir.resolve("provider-events.jsonl"))?Files.readAllLines(dir.resolve("provider-events.jsonl")).size():0);}catch(java.io.IOException failure){throw new java.io.UncheckedIOException(failure);}
