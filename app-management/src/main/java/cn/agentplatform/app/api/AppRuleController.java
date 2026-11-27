@@ -1,8 +1,10 @@
 package cn.agentplatform.app.api;
 
+import cn.agentplatform.app.application.PlatformAccessService;
 import cn.agentplatform.app.application.RuleAssets;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.ApiResponse;
+import cn.agentplatform.common.authority.AuthorityProperties;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +20,13 @@ import java.util.Map;
 public class AppRuleController {
 
     private final RuleAssets rules;
+    private final AuthorityProperties authority;
+    private final PlatformAccessService access;
 
-    public AppRuleController(RuleAssets rules) {
+    public AppRuleController(RuleAssets rules, AuthorityProperties authority, PlatformAccessService access) {
         this.rules = rules;
+        this.authority = authority;
+        this.access = access;
     }
 
     /** requireRole("ADMIN")：规则决定运行时行为边界，先鉴权再看请求体。 */
@@ -30,8 +36,10 @@ public class AppRuleController {
 
     @GetMapping
     public Object list(@PathVariable String code) {
-        admin();
-        return ApiResponse.ok(rules.list(Actor.current(), code));
+        var actor = Actor.current();
+        if ("iam".equals(authority.mode())) access.require(actor, PlatformAccessService.BUILD, code);
+        else actor.requireRole("ADMIN");
+        return ApiResponse.ok(rules.list(actor, code));
     }
 
     @PostMapping

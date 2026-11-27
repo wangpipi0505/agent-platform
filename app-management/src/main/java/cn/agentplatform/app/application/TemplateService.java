@@ -6,6 +6,7 @@ import cn.agentplatform.app.domain.AppRules;
 import cn.agentplatform.common.*;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -252,6 +253,17 @@ public class TemplateService {
                 "select kind,code,name from app.classification where tenant_id=? order by"
                     + " kind,code",
                 tenant());
+    }
+
+    public List<Map<String, Object>> applicationClassifications(Set<String> appCodes) {
+        // A scoped viewer can filter visible applications by category without seeing the tenant catalog.
+        return new NamedParameterJdbcTemplate(db).queryForList("""
+                select c.kind,c.code,c.name from app.classification c
+                where c.tenant_id=:tenant and c.kind='BIZ_CATEGORY'
+                  and exists (select 1 from app.application a where a.tenant_id=c.tenant_id
+                              and a.code in (:apps) and a.biz_category=c.code)
+                order by c.code
+                """, Map.of("tenant", tenant(), "apps", appCodes));
     }
 
     public Map<String, Object> classification(Map<String, Object> body) {

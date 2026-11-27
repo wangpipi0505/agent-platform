@@ -2,7 +2,7 @@
 import BusinessCategorySelect from "../../BusinessCategorySelect.vue";
 import { computed, onMounted, ref } from "vue";
 import ApplicationHistory from "../../ApplicationHistory.vue";
-import { useApi } from "../../../../shared/api";
+import { useApi, useAuth } from "../../../../shared/api";
 import { displayTime, statusLabel } from "../resources/resource-format";
 
 const props = defineProps<{
@@ -14,14 +14,16 @@ const props = defineProps<{
 }>();
 
 const api = useApi();
+const auth = useAuth();
 const skills = ref<any[]>([]);
 const models = ref<any[]>([]);
 const templates = ref<any[]>([]);
 onMounted(async () => {
+  const capabilities = auth.user?.capabilities as string[] | undefined;
   const results = await Promise.allSettled([
-    api<any[]>("/admin/skills"),
-    api<any[]>("/admin/model-entries"),
-    api<any[]>("/admin/prompt-templates"),
+    !capabilities || capabilities.includes("skill.manage") ? api<any[]>("/admin/skills") : [],
+    !capabilities || capabilities.includes("model.manage") ? api<any[]>("/admin/model-entries") : [],
+    !capabilities || auth.can("edit") ? api<any[]>("/admin/prompt-templates") : [],
   ]);
   if (results[0].status === "fulfilled") skills.value = results[0].value || [];
   if (results[1].status === "fulfilled") models.value = results[1].value || [];
@@ -143,7 +145,7 @@ async function versionAction(versionNo:number,action:'restore'|'activate') {
       </p>
     </div>
     <div class="panel">
-      <el-collapse>
+      <el-collapse v-if="auth.can('edit')">
         <el-collapse-item title="编辑智能体名称与分类">
           <el-form label-position="left" label-width="6rem">
             <el-form-item label="名称"><el-input v-model="app.name" /></el-form-item>

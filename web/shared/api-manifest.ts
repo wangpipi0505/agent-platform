@@ -18,13 +18,13 @@ const demoMode = () =>
   typeof import.meta.env?.VITE_MOCK === "string" && import.meta.env.VITE_MOCK !== "false";
 
 /** 读 manifest（真实端点；演示模式经 mock-manifest）。 */
-export async function fetchManifest(code: string): Promise<ManifestGetView> {
+export async function fetchManifest(code: string): Promise<ManifestGetView | null> {
   if (demoMode()) {
     const { mockManifestGet } = await import("./mock-manifest");
     return mockManifestGet(code);
   }
   const api = useApi();
-  return api<any>(`/admin/apps/${encodeURIComponent(code)}/manifest`) as Promise<ManifestGetView>;
+  return api<ManifestGetView | null>(`/admin/apps/${encodeURIComponent(code)}/manifest?allowMissing=true`);
 }
 
 /** 保存 manifest（真实端点；CAS/409/issues 语义由服务端裁决，错误以抛出呈现）。返回形状=ManifestSaveResult。 */

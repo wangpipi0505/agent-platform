@@ -6,6 +6,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PlatformBuildRoutesTest {
     @Test
+    void workspaceReadsUseRegisteredApplicationRoutes() {
+        var routes = new ServiceRoutePolicy();
+        var subject = new SubjectKey("tenant", "editor");
+        assertThat(PlatformBuildRoutes.template("GET", "/admin/apps/example/manifest"))
+                .isEqualTo("/admin/apps/{code}/manifest");
+        assertThat(PlatformBuildRoutes.template("GET", "/admin/apps/example/manifests"))
+                .isEqualTo("/admin/apps/{code}/manifests");
+        var rules = PlatformBuildRoutes.template("GET", "/admin/apps/example/rules");
+        assertThat(rules).isEqualTo("/admin/apps/{code}/rules");
+        assertThat(PlatformBuildRoutes.call(routes, "GET", rules, subject).target()).isEqualTo("app");
+        assertThat(PlatformBuildRoutes.template("GET", "/admin/apps/example/manifest/extra")).isNull();
+        assertThat(PlatformBuildRoutes.template("POST", "/admin/apps/example/rules")).isNull();
+    }
+
+    @Test
     void integrationCredentialManagementStaysOnTheAppBuildSurface() {
         var issue = PlatformBuildRoutes.template("POST", "/admin/apps/example/integration/credentials");
         assertThat(issue).isEqualTo("/admin/apps/{code}/integration/credentials");

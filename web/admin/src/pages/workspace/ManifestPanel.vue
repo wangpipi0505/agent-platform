@@ -217,25 +217,21 @@ async function loadManifest() {
   resetMessages();
   loadError.value = "";
   try {
-    const view = await fetchManifest(props.code);
-    originalManifest.value = view.manifest ?? {};
-    draft.value = normalizeDraft(originalManifest.value);
+    const view = await fetchManifest(props.code).catch((problem: unknown) => {
+      // A server built before the optional read still returns MANIFEST_NOT_FOUND.
+      if (problem && typeof problem === "object" && "code" in problem && problem.code === "MANIFEST_NOT_FOUND")
+        return null;
+      throw problem;
+    });
+    originalManifest.value = view?.manifest ?? {};
+    draft.value = normalizeDraft(view?.manifest);
     draftBaseline.value = JSON.stringify(draft.value);
-    head.value = { revision: view.revision, digest: view.digest || "" };
-    exists.value = true;
+    head.value = { revision: view?.revision ?? 0, digest: view?.digest ?? "" };
+    exists.value = Boolean(view);
   } catch (e: any) {
-    if (e?.status === 404 || e?.code === "MANIFEST_NOT_FOUND") {
-      // 应用还没有 manifest：给空白草稿（首次保存 baseRevision=0），联动不禁提交发布。
-      originalManifest.value = {};
-      draft.value = normalizeDraft(undefined);
-      draftBaseline.value = JSON.stringify(draft.value);
-      head.value = { revision: 0, digest: "" };
-      exists.value = false;
-    } else {
-      loadError.value = e?.message || "manifest 读取失败，请稍后重试";
-      head.value = null;
-      exists.value = false;
-    }
+    loadError.value = e?.message || "manifest 读取失败，请稍后重试";
+    head.value = null;
+    exists.value = false;
   } finally {
     loading.value = false;
     loaded.value = true;

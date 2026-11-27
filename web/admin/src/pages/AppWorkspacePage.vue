@@ -469,7 +469,7 @@ onMounted(() => void load());
       </nav>
       <section class="workspace-content page-scroll">
       <AppOverviewPanel
-        v-if="tab === 'overview'"
+        v-if="tab === 'overview' && refreshKey"
         :app="app"
         :code="code"
         :versions="versions"
@@ -482,7 +482,7 @@ onMounted(() => void load());
       <!-- F3-5：概览 manifest 分区卡（卡面口径「概览 manifest 分区卡编辑」——紧跟概览分区同屏；
            :key=code 切换智能体时重挂载重读；校验状态经 validation-change 联动智能体头）。 -->
       <ManifestPanel
-        v-if="tab === 'overview'"
+        v-if="tab === 'overview' && refreshKey && auth.can('edit')"
         ref="manifestPanelRef"
         :key="code"
         :code="code"

@@ -247,8 +247,7 @@ it("任务a步数≤6：列表→工作区→分区编辑→保存→预检→�
   );
   const workspace = read("admin/src/pages/AppWorkspacePage.vue");
   // 步2 工作区概览锚点同屏 manifest 分区卡（无需额外导航步）
-  expect(workspace).toContain('v-if="tab === \'overview\'"');
-  expect(workspace).toContain("<ManifestPanel");
+  expect(workspace).toMatch(/<ManifestPanel\s+v-if="tab === 'overview' && refreshKey && auth\.can\('edit'\)"/);
   // 步3 七分区受控编辑 + 步4 保存（CAS PUT 在 ManifestPanel，上一用例已锁）
   expect(read("admin/src/pages/workspace/ManifestPanel.vue")).toContain("@click=\"save\"");
   // 步5 预检：智能体头既有 [预检] + 分区卡同屏「运行发布预检」

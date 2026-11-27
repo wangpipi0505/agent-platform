@@ -258,7 +258,12 @@ public class AppController {
 
     @GetMapping("/admin/classifications")
     public Object classifications() {
-        require(PlatformAccessService.VIEW, null);
+        if (iam()) {
+            var scope = access().scope(Actor.current(), PlatformAccessService.VIEW);
+            if (!scope.all() && scope.codes().isEmpty())
+                throw AppService.error(403, "PLATFORM_CAPABILITY_DENIED", "当前平台授权不允许此操作");
+            if (!scope.all()) return ApiResponse.ok(templates.applicationClassifications(scope.codes()));
+        }
         return ApiResponse.ok(templates.classifications());
     }
 

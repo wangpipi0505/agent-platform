@@ -1,8 +1,10 @@
 package cn.agentplatform.app.api;
 
+import cn.agentplatform.app.application.PlatformAccessService;
 import cn.agentplatform.app.application.WorkspaceManifests;
 import cn.agentplatform.common.Actor;
 import cn.agentplatform.common.ApiResponse;
+import cn.agentplatform.common.authority.AuthorityProperties;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -20,31 +22,35 @@ import java.util.Map;
 public class WorkspaceManifestController {
 
     private final WorkspaceManifests manifests;
+    private final AuthorityProperties authority;
+    private final PlatformAccessService access;
 
-    public WorkspaceManifestController(WorkspaceManifests manifests) {
+    public WorkspaceManifestController(WorkspaceManifests manifests, AuthorityProperties authority,
+                                       PlatformAccessService access) {
         this.manifests = manifests;
+        this.authority = authority;
+        this.access = access;
     }
 
-    /** requireRole("EDITOR")：工作区编辑面（BUILDER=现 EDITOR 口径，ADMIN 放行），先鉴权再看请求体。 */
-    private void builder() {
-        Actor.current().requireRole("EDITOR");
+    private Actor builder(String code) {
+        var actor = Actor.current();
+        if ("iam".equals(authority.mode())) access.require(actor, PlatformAccessService.BUILD, code);
+        else actor.requireRole("EDITOR");
+        return actor;
     }
 
     @GetMapping("/manifest")
-    public Object get(@PathVariable String code) {
-        builder();
-        return ApiResponse.ok(manifests.get(Actor.current(), code));
+    public Object get(@PathVariable String code, @RequestParam(defaultValue = "false") boolean allowMissing) {
+        return ApiResponse.ok(manifests.get(builder(code), code, allowMissing));
     }
 
     @PutMapping("/manifest")
     public Object put(@PathVariable String code, @RequestBody Map<String, Object> body) {
-        builder();
-        return ApiResponse.ok(manifests.put(Actor.current(), code, body));
+        return ApiResponse.ok(manifests.put(builder(code), code, body));
     }
 
     @GetMapping("/manifests")
     public Object versions(@PathVariable String code) {
-        builder();
-        return ApiResponse.ok(manifests.versions(Actor.current(), code));
+        return ApiResponse.ok(manifests.versions(builder(code), code));
     }
 }

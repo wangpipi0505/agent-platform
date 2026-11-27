@@ -46,9 +46,13 @@ public class WorkspaceManifests {
     // ---------- 查询 ----------
 
     public Map<String, Object> get(Actor actor, String appCode) {
+        return get(actor, appCode, false);
+    }
+
+    public Map<String, Object> get(Actor actor, String appCode, boolean allowMissing) {
         requireApp(actor, appCode);
-        Head head = head(actor, appCode);
-        return view(appCode, head);
+        return allowMissing ? store.head(actor, appCode).map(head -> view(appCode, head)).orElse(null)
+                : view(appCode, head(actor, appCode));
     }
 
     public Map<String, Object> versions(Actor actor, String appCode) {
